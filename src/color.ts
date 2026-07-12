@@ -3,37 +3,58 @@ import { clamp } from "./util.js";
 
 export type Color = [number, number, number];
 
+function at3(color: Color, index: number): number {
+	const value = color[index];
+	if (value === undefined) {
+		throw new Error("unreachable: index must be 0, 1, or 2");
+	}
+	return value;
+}
+
 export function fromString(str: string): Color {
-	let cached: Color, r;
-	if (str in CACHE) {
-		cached = CACHE[str];
-	} else {
-		if (str.charAt(0) == "#") {
-			// hex rgb
-
-			const matched = str.match(/[0-9a-f]/gi) || [];
-			const values = matched.map((x: string) => parseInt(x, 16));
-			if (values.length == 3) {
-				cached = values.map((x: number) => x * 17) as Color;
-			} else {
-				for (let i = 0; i < 3; i++) {
-					values[i + 1] += 16 * values[i];
-					values.splice(i, 1);
-				}
-				cached = values as Color;
-			}
-		} else if ((r = str.match(/rgb\(([0-9, ]+)\)/i))) {
-			// decimal rgb
-			cached = r[1].split(/\s*,\s*/).map((x: string) => parseInt(x)) as Color;
-		} else {
-			// html name
-			cached = [0, 0, 0];
-		}
-
-		CACHE[str] = cached;
+	const cached = CACHE[str];
+	if (cached !== undefined) {
+		return cached.slice() as Color;
 	}
 
-	return cached.slice() as Color;
+	let computed: Color;
+	const rgbMatch = str.match(/rgb\(([0-9, ]+)\)/i);
+	if (str.charAt(0) === "#") {
+		// hex rgb
+		const matched = str.match(/[0-9a-f]/gi) ?? [];
+		const values = matched.map((x) => Number.parseInt(x, 16));
+		if (values.length === 3) {
+			computed = values.map((x) => x * 17) as Color;
+		} else {
+			for (let i = 0; i < 3; i++) {
+				const current = values[i];
+				const next = values[i + 1];
+				if (current === undefined || next === undefined) {
+					throw new Error(
+						"unreachable: hex color must have exactly 6 digits at this point",
+					);
+				}
+				values[i + 1] = next + 16 * current;
+				values.splice(i, 1);
+			}
+			computed = values as Color;
+		}
+	} else if (rgbMatch) {
+		// decimal rgb
+		const group = rgbMatch[1];
+		if (group === undefined) {
+			throw new Error("unreachable: rgb() regex must capture group 1");
+		}
+		computed = group
+			.split(/\s*,\s*/)
+			.map((x) => Number.parseInt(x, 10)) as Color;
+	} else {
+		// html name
+		computed = [0, 0, 0];
+	}
+
+	CACHE[str] = computed;
+	return computed.slice() as Color;
 }
 
 /**
@@ -42,8 +63,8 @@ export function fromString(str: string): Color {
 export function add(color1: Color, ...colors: Color[]): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < colors.length; j++) {
-			result[i] += colors[j][i];
+		for (const color of colors) {
+			result[i] = at3(result, i) + at3(color, i);
 		}
 	}
 	return result;
@@ -54,8 +75,8 @@ export function add(color1: Color, ...colors: Color[]): Color {
  */
 export function add_(color1: Color, ...colors: Color[]): Color {
 	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < colors.length; j++) {
-			color1[i] += colors[j][i];
+		for (const color of colors) {
+			color1[i] = at3(color1, i) + at3(color, i);
 		}
 	}
 	return color1;
@@ -67,10 +88,10 @@ export function add_(color1: Color, ...colors: Color[]): Color {
 export function multiply(color1: Color, ...colors: Color[]): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < colors.length; j++) {
-			result[i] *= colors[j][i] / 255;
+		for (const color of colors) {
+			result[i] = (at3(result, i) * at3(color, i)) / 255;
 		}
-		result[i] = Math.round(result[i]);
+		result[i] = Math.round(at3(result, i));
 	}
 	return result;
 }
@@ -80,10 +101,10 @@ export function multiply(color1: Color, ...colors: Color[]): Color {
  */
 export function multiply_(color1: Color, ...colors: Color[]): Color {
 	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < colors.length; j++) {
-			color1[i] *= colors[j][i] / 255;
+		for (const color of colors) {
+			color1[i] = (at3(color1, i) * at3(color, i)) / 255;
 		}
-		color1[i] = Math.round(color1[i]);
+		color1[i] = Math.round(at3(color1, i));
 	}
 	return color1;
 }
@@ -94,7 +115,9 @@ export function multiply_(color1: Color, ...colors: Color[]): Color {
 export function interpolate(color1: Color, color2: Color, factor = 0.5): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
-		result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+		result[i] = Math.round(
+			at3(result, i) + factor * (at3(color2, i) - at3(color1, i)),
+		);
 	}
 	return result;
 }
@@ -111,7 +134,7 @@ export function interpolateHSL(
 	const hsl1 = rgb2hsl(color1);
 	const hsl2 = rgb2hsl(color2);
 	for (let i = 0; i < 3; i++) {
-		hsl1[i] += factor * (hsl2[i] - hsl1[i]);
+		hsl1[i] = at3(hsl1, i) + factor * (at3(hsl2, i) - at3(hsl1, i));
 	}
 	return hsl2rgb(hsl1);
 }
@@ -124,11 +147,16 @@ export const lerpHSL = interpolateHSL;
  * @param diff Set of standard deviations
  */
 export function randomize(rng: Rng, color: Color, diff: number | Color): Color {
-	const uniformDiff =
-		diff instanceof Array ? null : Math.round(rng.getNormal(0, diff));
 	const result = color.slice() as Color;
-	for (let i = 0; i < 3; i++) {
-		result[i] += uniformDiff ?? Math.round(rng.getNormal(0, diff[i]));
+	if (Array.isArray(diff)) {
+		for (let i = 0; i < 3; i++) {
+			result[i] = at3(result, i) + Math.round(rng.getNormal(0, at3(diff, i)));
+		}
+	} else {
+		const uniformDiff = Math.round(rng.getNormal(0, diff));
+		for (let i = 0; i < 3; i++) {
+			result[i] = at3(result, i) + uniformDiff;
+		}
 	}
 	return result;
 }
@@ -141,13 +169,13 @@ export function rgb2hsl(color: Color): Color {
 	const g = color[1] / 255;
 	const b = color[2] / 255;
 
-	const max = Math.max(r, g, b),
-		min = Math.min(r, g, b);
-	let h = 0,
-		s,
-		l = (max + min) / 2;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	let h = 0;
+	let s: number;
+	const l = (max + min) / 2;
 
-	if (max == min) {
+	if (max === min) {
 		s = 0; // achromatic
 	} else {
 		const d = max - min;
@@ -169,12 +197,13 @@ export function rgb2hsl(color: Color): Color {
 	return [h, s, l];
 }
 
-function hue2rgb(p: number, q: number, t: number) {
-	if (t < 0) t += 1;
-	if (t > 1) t -= 1;
-	if (t < 1 / 6) return p + (q - p) * 6 * t;
-	if (t < 1 / 2) return q;
-	if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+function hue2rgb(p: number, q: number, t: number): number {
+	let normalized = t;
+	if (normalized < 0) normalized += 1;
+	if (normalized > 1) normalized -= 1;
+	if (normalized < 1 / 6) return p + (q - p) * 6 * normalized;
+	if (normalized < 1 / 2) return q;
+	if (normalized < 2 / 3) return p + (q - p) * (2 / 3 - normalized) * 6;
 	return p;
 }
 
@@ -182,28 +211,28 @@ function hue2rgb(p: number, q: number, t: number) {
  * Converts an HSL color value to RGB. Expects 0..1 inputs, produces 0..255 outputs.
  */
 export function hsl2rgb(color: Color): Color {
-	let l = color[2];
+	const l = color[2];
 
-	if (color[1] == 0) {
-		l = Math.round(l * 255);
-		return [l, l, l];
-	} else {
-		const s = color[1];
-		const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-		const p = 2 * l - q;
-		const r = hue2rgb(p, q, color[0] + 1 / 3);
-		const g = hue2rgb(p, q, color[0]);
-		const b = hue2rgb(p, q, color[0] - 1 / 3);
-		return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+	if (color[1] === 0) {
+		const gray = Math.round(l * 255);
+		return [gray, gray, gray];
 	}
+
+	const s = color[1];
+	const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+	const p = 2 * l - q;
+	const r = hue2rgb(p, q, color[0] + 1 / 3);
+	const g = hue2rgb(p, q, color[0]);
+	const b = hue2rgb(p, q, color[0] - 1 / 3);
+	return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-export function toRGB(color: Color) {
+export function toRGB(color: Color): string {
 	const clamped = color.map((x) => clamp(x, 0, 255));
 	return `rgb(${clamped.join(",")})`;
 }
 
-export function toHex(color: Color) {
+export function toHex(color: Color): string {
 	const clamped = color.map((x) =>
 		clamp(x, 0, 255).toString(16).padStart(2, "0"),
 	);

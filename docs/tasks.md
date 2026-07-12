@@ -17,8 +17,9 @@
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **`npm run typecheck`のエラー数の推移**: 396件(Stage 1)→ 377件(3.1)→ 367件(3.2)→ 357件(3.3)→ 290件(3.4)→ **43件(Stage 3.5完了時点、`map/`分が解消)**。残る43件は全て`src/color.ts`・`src/lighting.ts`(どのステージにも明記されていない、Stage 3.4でfov型変更に最小限追随しただけの未変換ファイル)。`map/`自体は型エラーゼロを達成。
-- **`npm run lint`のerror数の推移**: 250件(Stage 1)→ 236件(3.1)→ 233件(3.2)→ 212件(3.3)→ 169件(3.4)→ **14件(Stage 3.5完了時点)**。残る14件も同様に`src/color.ts`・`src/lighting.ts`(11件)と`tests/run.js`(3件、旧Jasmineランナー。`tests/spec/engine.js`が残っている間は削除できない)のみ。
+- **`npm run typecheck`のエラー数の推移**: 396件(Stage 1)→ 377件(3.1)→ 367件(3.2)→ 357件(3.3)→ 290件(3.4)→ 43件(3.5)→ **0件(Stage 3.6完了時点)**。
+- **`npm run lint`のerror数の推移**: 250件(Stage 1)→ 236件(3.1)→ 233件(3.2)→ 212件(3.3)→ 169件(3.4)→ 14件(3.5)→ **0件(Stage 3.6完了時点)**。
+- **rot.jsフォーク全体のクラスベースコードの関数型変換がStage 3.6で完了し、typecheck/lintともにゼロ達成。**
 - **`rng.ts`のトランジション用互換シムは削除済み。** `map/`が全てStage 3.5で明示引数`rng`受け取りに移行完了したため、`src/rng.ts`のデフォルトexport(事前生成済み`Rng`インスタンス)と`src/index.ts`からの再exportを削除した。これでコードベース全体からグローバル可変RNG参照が完全になくなった。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)
@@ -33,7 +34,7 @@
 - [x] `text.test.ts`(Stage 3.3と同時)
 - [x] `color.test.ts`(旧spec移植。`randomize`のシグネチャ変更(`rng`引数追加)に追随)
 - [x] `stringgenerator.test.ts`(旧specなし、新規作成。決定論性・`clear()`の挙動・word modeを検証)
-- [ ] `engine.test.ts`(小さめ、任意のタイミングで)
+- [x] `engine.test.ts`(Stage 3.6と同時。旧`tests/spec/engine.js`を移植。これが最後のJasmine specだったため、`tests/`(旧Jasmineランナー一式)を完全に削除)
 - [x] `fov/fov.test.ts`(Stage 3.4と同時。discrete/precise/recursive(360/180/90度)全て検証)
 - [x] `path/path.test.ts`(Stage 3.4と同時。Dijkstra/A*の4/6/8-topology、A*の効率性テスト(400 visits)も含めて移植)
 - [x] `scheduler/scheduler.test.ts`(Stage 3.4と同時。Simple/Speed/Action全て、Zero-ID actorケースも移植)
@@ -81,7 +82,7 @@
 - [x] `rogue.ts`: クラス→`createRogueMap(width,height,rng,options)`ファクトリ。**変換中に発見・修正したバグ**: `_connectRooms`の外側`do-while`ループ(ランダムウォークで接続先セルを広げていくロジック)を最初`while(false)`と誤って書いてしまい1パスしか回らなくなっていたが、原型を再確認して`while(dirToCheck.length > 0)`という正しい継続条件に修正済み(テストは通っていたが、たまたま影響が出にくいケースだった可能性があるため要注意の修正点として記録)
 - [x] **`encodePointKey`共有ヘルパーは導入しなかった**: 元々`digger.ts`/`uniform.ts`は`"x,y"`区切り、`cellular.ts`は`"x.y"`区切りと、ファイルごとに異なるキー形式を使っていたため、1つの共有関数に統一すると動作変更になってしまう。代わりに各ファイル内でテンプレートリテラル(`` `${x},${y}` ``等)を一貫して使うことで、直書き文字列結合によるタイポリスクという当初の懸念は解消した
 - [x] RNG互換シムからの移行完了(`map/`の全ファイルが`rng`を明示引数で受け取る)。`src/rng.ts`のデフォルトexportを削除(Stage 3.2参照)
-- [ ] **どのステージにも明記されていない残り**: `src/lighting.ts`・`src/engine.ts`はまだクラスのまま(それぞれ3.4のfov/scheduler型変更への追随のみ実施)。関数型に変換するかは要検討(現状は動くのでブロッカーではない)。typecheck/lintの残存エラー(43件/14件、全てこの2ファイル)もこれに付随する
+- [x] `src/lighting.ts`・`src/engine.ts`(どのステージにも明記されていなかった残り)もStage 3.6で関数型に変換完了。詳細は下記参照
 
 ## Stage 4 — Result型エラーハンドリング(完了)
 
@@ -92,6 +93,16 @@
 - [x] throwのまま残す箇所にコメントを追加: `fov.ts`の`getCircle`の不正topology、`path/astar.ts`の`distance`の不正topology、`map/features.ts`の`createRoomAt`のdx/dy不正値。いずれも「型システムが正しく機能していれば到達しないはずの呼び出し側バグ」であることを明記
 - [x] `src/index.ts`から`Result`/`ok`/`err`/`NoPathFound`/`GenerationTimedOut`を公開APIとしてexport
 - [x] `path/path.test.ts`・`map/dungeon.test.ts`にResult型の成功/失敗ケースのテストを追加(Uniformの`generation-timed-out`は、10x10マップに100x100のroomWidth/roomHeightを指定して確実にタイムアウトさせるテストで検証)
+
+## Stage 3.6 — 残っていたクラス(`lighting.ts`/`engine.ts`)+`color.ts`の後始末(完了)
+
+Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末。これでコードベース全体のtypecheck/lintがゼロになった。
+
+- [x] `color.ts`: タプル(`Color`)への数値変数インデックスアクセスに`at3()`ヘルパーを導入。`randomize()`のunion型(`number|Color`)インデックスアクセスを`Array.isArray()`分岐に書き換え。暗黙any・代入式内代入・`==`・`instanceof Array`もあわせて解消
+- [x] `lighting.ts`: `Lighting`クラス→`createLighting(reflectivityCallback, options)`ファクトリに変換。`"x,y"`キー解析を`parseKey()`ヘルパーに、`LightColor`タプルへのアクセスを`at3()`ヘルパーに集約。`setFOV()`未呼び出しで`compute()`した場合、原型は`undefined`呼び出しで暗黙的にクラッシュしていたが、明示的なthrowに変更(呼び出し側のバグであることが分かりやすくなった、という意図的な改善)
+- [x] `engine.ts`: `Engine`クラス→`createEngine(scheduler)`ファクトリに変換。ロックカウンタをクロージャ変数に
+- [x] `engine.test.ts`(Stage 2参照)を追加し、旧`tests/spec/engine.js`を移植。これで全Jasmine specの移植が完了したため、`tests/`(旧Jasmineランナー一式: `run.js`, `index.html`, `spec/`)を完全に削除
+- [x] `src/index.ts`の公開APIを`createLighting`/`createEngine`のフラットな名前付きexportに更新
 
 ## Stage 5 — 新レンダラー(`src/renderer/`、Ink採用)
 

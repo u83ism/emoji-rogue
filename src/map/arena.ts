@@ -1,19 +1,19 @@
-import Map, { type CreateCallback } from "./map.js";
+import type { CreateCallback } from "./map.js";
 
 /**
- * @class Simple empty rectangular room
- * @augments ROT.Map
+ * Simple empty rectangular room.
  */
-export default class Arena extends Map {
-	create(callback: CreateCallback) {
-		const w = this._width - 1;
-		const h = this._height - 1;
-		for (let i = 0; i <= w; i++) {
-			for (let j = 0; j <= h; j++) {
-				const empty = i && j && i < w && j < h;
-				callback(i, j, empty ? 0 : 1);
-			}
+export function createArenaMap(
+	width: number,
+	height: number,
+	callback: CreateCallback,
+): void {
+	const w = width - 1;
+	const h = height - 1;
+	for (let i = 0; i <= w; i++) {
+		for (let j = 0; j <= h; j++) {
+			const empty = i && j && i < w && j < h;
+			callback(i, j, empty ? 0 : 1);
 		}
-		return this;
 	}
 }

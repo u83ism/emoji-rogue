@@ -1,31 +1,18 @@
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "../constants.js";
+export type CreateCallback = (x: number, y: number, contents: number) => void;
 
-export type CreateCallback = (x: number, y: number, contents: number) => any;
-
-export default abstract class Map {
-	_width: number;
-	_height: number;
-
-	/**
-	 * @class Base map generator
-	 * @param {int} [width=ROT.DEFAULT_WIDTH]
-	 * @param {int} [height=ROT.DEFAULT_HEIGHT]
-	 */
-	constructor(width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT) {
-		this._width = width;
-		this._height = height;
-	}
-
-	abstract create(callback?: CreateCallback): void;
-
-	_fillMap(value: number) {
-		const map: number[][] = [];
-		for (let i = 0; i < this._width; i++) {
-			map.push([]);
-			for (let j = 0; j < this._height; j++) {
-				map[i].push(value);
-			}
+/** A width x height grid filled with `value`. */
+export function fillMap(
+	width: number,
+	height: number,
+	value: number,
+): number[][] {
+	const map: number[][] = [];
+	for (let i = 0; i < width; i++) {
+		const column: number[] = [];
+		for (let j = 0; j < height; j++) {
+			column.push(value);
 		}
-		return map;
+		map.push(column);
 	}
+	return map;
 }

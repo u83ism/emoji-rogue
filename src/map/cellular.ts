@@ -1,274 +1,149 @@
 import { DIRS } from "../constants.js";
-import RNG from "../rng.js";
-import Map, { type CreateCallback } from "./map.js";
+import type { Rng } from "../rng.js";
+import type { CreateCallback } from "./map.js";
+import { fillMap } from "./map.js";
 
-interface Options {
+export interface CellularOptions {
+	/** List of neighbor counts for a new cell to be born in empty space */
 	born: number[];
+	/** List of neighbor counts for an existing cell to survive */
 	survive: number[];
 	topology: 4 | 6 | 8;
 }
 
-type ConnectionCallback = (from: Point, to: Point) => void;
+export type ConnectionCallback = (from: Point, to: Point) => void;
 
 type Point = [number, number];
-type PointMap = { [key: string]: Point };
+type PointMap = Record<string, Point>;
+
+function toXy(pair: readonly number[] | undefined): [number, number] {
+	if (pair === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	const [dx, dy] = pair;
+	if (dx === undefined || dy === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	return [dx, dy];
+}
+
+export interface CellularMap {
+	/** Fill the map with random values; probability is the chance [0,1] for a cell to become alive. */
+	randomize(rng: Rng, probability: number): void;
+	setOptions(options: Partial<CellularOptions>): void;
+	set(x: number, y: number, value: number): void;
+	create(callback?: CreateCallback): void;
+	/** Make sure every non-wall space is accessible. */
+	connect(
+		rng: Rng,
+		callback: CreateCallback | undefined,
+		value?: number,
+		connectionCallback?: ConnectionCallback,
+	): void;
+}
 
 /**
- * @class Cellular automaton map generator
- * @augments ROT.Map
- * @param {int} [width=ROT.DEFAULT_WIDTH]
- * @param {int} [height=ROT.DEFAULT_HEIGHT]
- * @param {object} [options] Options
- * @param {int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
- * @param {int[]} [options.survive] List of neighbor counts for an existing  cell to survive
- * @param {int} [options.topology] Topology 4 or 6 or 8
+ * Cellular automaton map generator.
  */
-export default class Cellular extends Map {
-	_options: Options;
-	_dirs: number[][];
-	_map: number[][];
+export function createCellularMap(
+	width: number,
+	height: number,
+	options: Partial<CellularOptions> = {},
+): CellularMap {
+	const resolvedOptions: CellularOptions = {
+		born: [5, 6, 7, 8],
+		survive: [4, 5, 6, 7, 8],
+		topology: 8,
+		...options,
+	};
+	const dirs = DIRS[resolvedOptions.topology].map(toXy);
+	let map = fillMap(width, height, 0);
 
-	constructor(width: number, height: number, options: Partial<Options> = {}) {
-		super(width, height);
-		this._options = {
-			born: [5, 6, 7, 8],
-			survive: [4, 5, 6, 7, 8],
-			topology: 8,
-		};
-		this.setOptions(options);
-
-		this._dirs = DIRS[this._options.topology];
-		this._map = this._fillMap(0);
+	function getCell(x: number, y: number): number {
+		const column = map[x];
+		if (column === undefined) throw new Error("cellular map: x out of range");
+		const value = column[y];
+		if (value === undefined) throw new Error("cellular map: y out of range");
+		return value;
 	}
 
-	/**
-	 * Fill the map with random values
-	 * @param {float} probability Probability for a cell to become alive; 0 = all empty, 1 = all full
-	 */
-	randomize(probability: number) {
-		for (let i = 0; i < this._width; i++) {
-			for (let j = 0; j < this._height; j++) {
-				this._map[i][j] = RNG.getUniform() < probability ? 1 : 0;
-			}
-		}
-		return this;
+	function setCell(x: number, y: number, value: number): void {
+		const column = map[x];
+		if (column === undefined) throw new Error("cellular map: x out of range");
+		column[y] = value;
 	}
 
-	/**
-	 * Change options.
-	 * @see ROT.Map.Cellular
-	 */
-	setOptions(options: Partial<Options>) {
-		Object.assign(this._options, options);
-	}
-
-	set(x: number, y: number, value: number) {
-		this._map[x][y] = value;
-	}
-
-	create(callback?: CreateCallback) {
-		const newMap = this._fillMap(0);
-		const born = this._options.born;
-		const survive = this._options.survive;
-
-		for (let j = 0; j < this._height; j++) {
-			let widthStep = 1;
-			let widthStart = 0;
-			if (this._options.topology == 6) {
-				widthStep = 2;
-				widthStart = j % 2;
-			}
-
-			for (let i = widthStart; i < this._width; i += widthStep) {
-				const cur = this._map[i][j];
-				const ncount = this._getNeighbors(i, j);
-
-				if (cur && survive.indexOf(ncount) != -1) {
-					/* survive */
-					newMap[i][j] = 1;
-				} else if (!cur && born.indexOf(ncount) != -1) {
-					/* born */
-					newMap[i][j] = 1;
-				}
-			}
-		}
-
-		this._map = newMap;
-		callback && this._serviceCallback(callback);
-	}
-
-	_serviceCallback(callback: CreateCallback) {
-		for (let j = 0; j < this._height; j++) {
-			let widthStep = 1;
-			let widthStart = 0;
-			if (this._options.topology == 6) {
-				widthStep = 2;
-				widthStart = j % 2;
-			}
-			for (let i = widthStart; i < this._width; i += widthStep) {
-				callback(i, j, this._map[i][j]);
-			}
-		}
-	}
-
-	/**
-	 * Get neighbor count at [i,j] in this._map
-	 */
-	_getNeighbors(cx: number, cy: number) {
+	function getNeighbors(cx: number, cy: number): number {
 		let result = 0;
-		for (let i = 0; i < this._dirs.length; i++) {
-			const dir = this._dirs[i];
-			const x = cx + dir[0];
-			const y = cy + dir[1];
-
-			if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
-				continue;
-			}
-			result += this._map[x][y] == 1 ? 1 : 0;
+		for (const [dx, dy] of dirs) {
+			const x = cx + dx;
+			const y = cy + dy;
+			if (x < 0 || x >= width || y < 0 || y >= height) continue;
+			result += getCell(x, y) === 1 ? 1 : 0;
 		}
-
 		return result;
 	}
 
-	/**
-	 * Make sure every non-wall space is accessible.
-	 * @param {function} callback to call to display map when do
-	 * @param {int} value to consider empty space - defaults to 0
-	 * @param {function} callback to call when a new connection is made
-	 */
-	connect(
-		callback: CreateCallback,
-		value: number,
-		connectionCallback?: ConnectionCallback,
-	) {
-		if (!value) value = 0;
-
-		const allFreeSpace: Point[] = [];
-		const notConnected: PointMap = {};
-
-		// find all free space
-		let widthStep = 1;
-		let widthStarts = [0, 0];
-		if (this._options.topology == 6) {
-			widthStep = 2;
-			widthStarts = [0, 1];
-		}
-		for (let y = 0; y < this._height; y++) {
-			for (let x = widthStarts[y % 2]; x < this._width; x += widthStep) {
-				if (this._freeSpace(x, y, value)) {
-					const p = [x, y] as Point;
-					notConnected[this._pointKey(p)] = p;
-					allFreeSpace.push([x, y]);
-				}
+	function serviceCallback(callback: CreateCallback): void {
+		for (let j = 0; j < height; j++) {
+			let widthStep = 1;
+			let widthStart = 0;
+			if (resolvedOptions.topology === 6) {
+				widthStep = 2;
+				widthStart = j % 2;
+			}
+			for (let i = widthStart; i < width; i += widthStep) {
+				callback(i, j, getCell(i, j));
 			}
 		}
-		const start = allFreeSpace[RNG.getUniformInt(0, allFreeSpace.length - 1)];
-
-		const key = this._pointKey(start);
-		const connected: PointMap = {};
-		connected[key] = start;
-		delete notConnected[key];
-
-		// find what's connected to the starting point
-		this._findConnected(connected, notConnected, [start], false, value);
-
-		while (Object.keys(notConnected).length > 0) {
-			// find two points from notConnected to connected
-			const p = this._getFromTo(connected, notConnected);
-			const from = p[0]; // notConnected
-			const to = p[1]; // connected
-
-			// find everything connected to the starting point
-			const local: PointMap = {};
-			local[this._pointKey(from)] = from;
-			this._findConnected(local, notConnected, [from], true, value);
-
-			// connect to a connected cell
-			const tunnelFn =
-				this._options.topology == 6
-					? this._tunnelToConnected6
-					: this._tunnelToConnected;
-			tunnelFn.call(
-				this,
-				to,
-				from,
-				connected,
-				notConnected,
-				value,
-				connectionCallback,
-			);
-
-			// now all of local is connected
-			for (const k in local) {
-				const pp = local[k];
-				this._map[pp[0]][pp[1]] = value;
-				connected[k] = pp;
-				delete notConnected[k];
-			}
-		}
-
-		callback && this._serviceCallback(callback);
 	}
 
-	/**
-	 * Find random points to connect. Search for the closest point in the larger space.
-	 * This is to minimize the length of the passage while maintaining good performance.
-	 */
-	_getFromTo(connected: PointMap, notConnected: PointMap): Point[] {
-		let from: Point = [0, 0],
-			to: Point = [0, 0],
-			d: number;
-		const connectedKeys = Object.keys(connected);
-		const notConnectedKeys = Object.keys(notConnected);
-		for (let i = 0; i < 5; i++) {
-			if (connectedKeys.length < notConnectedKeys.length) {
-				const keys = connectedKeys;
-				to = connected[keys[RNG.getUniformInt(0, keys.length - 1)]];
-				from = this._getClosest(to, notConnected);
-			} else {
-				const keys = notConnectedKeys;
-				from = notConnected[keys[RNG.getUniformInt(0, keys.length - 1)]];
-				to = this._getClosest(from, connected);
-			}
-			d =
-				(from[0] - to[0]) * (from[0] - to[0]) +
-				(from[1] - to[1]) * (from[1] - to[1]);
-			if (d < 64) {
-				break;
-			}
-		}
-		// console.log(">>> connected=" + to + " notConnected=" + from + " dist=" + d);
-		return [from, to];
+	function freeSpace(x: number, y: number, value: number): boolean {
+		return (
+			x >= 0 && x < width && y >= 0 && y < height && getCell(x, y) === value
+		);
 	}
 
-	_getClosest(point: Point, space: PointMap) {
-		let minPoint = null;
-		let minDist = null;
-		for (const k in space) {
-			const p = space[k];
+	function pointKey(p: Point): string {
+		return `${p[0]}.${p[1]}`;
+	}
+
+	function getClosest(point: Point, space: PointMap): Point {
+		let minPoint: Point | null = null;
+		let minDist = Number.POSITIVE_INFINITY;
+		for (const key of Object.keys(space)) {
+			const p = space[key];
+			if (p === undefined) continue;
 			const d =
 				(p[0] - point[0]) * (p[0] - point[0]) +
 				(p[1] - point[1]) * (p[1] - point[1]);
-			if (minDist == null || d < minDist) {
+			if (d < minDist) {
 				minDist = d;
 				minPoint = p;
 			}
 		}
-		return minPoint as Point;
+		if (minPoint === null) {
+			throw new Error(
+				"cellular map: no closest point found in a non-empty space",
+			);
+		}
+		return minPoint;
 	}
 
-	_findConnected(
+	function findConnected(
 		connected: PointMap,
 		notConnected: PointMap,
-		stack: Point[],
+		stackInput: Point[],
 		keepNotConnected: boolean,
 		value: number,
-	) {
+	): void {
+		const stack = stackInput.slice();
 		while (stack.length > 0) {
-			const p = stack.splice(0, 1)[0];
+			const p = stack.shift();
+			if (p === undefined) throw new Error("unreachable: stack is non-empty");
 			let tests: Point[];
 
-			if (this._options.topology == 6) {
+			if (resolvedOptions.topology === 6) {
 				tests = [
 					[p[0] + 2, p[1]],
 					[p[0] + 1, p[1] - 1],
@@ -286,92 +161,99 @@ export default class Cellular extends Map {
 				];
 			}
 
-			for (let i = 0; i < tests.length; i++) {
-				const key = this._pointKey(tests[i]);
+			for (const candidate of tests) {
+				const key = pointKey(candidate);
 				if (
 					connected[key] == null &&
-					this._freeSpace(tests[i][0], tests[i][1], value)
+					freeSpace(candidate[0], candidate[1], value)
 				) {
-					connected[key] = tests[i];
+					connected[key] = candidate;
 					if (!keepNotConnected) {
 						delete notConnected[key];
 					}
-					stack.push(tests[i]);
+					stack.push(candidate);
 				}
 			}
 		}
 	}
 
-	_tunnelToConnected(
+	function getFromTo(
+		rng: Rng,
+		connected: PointMap,
+		notConnected: PointMap,
+	): [Point, Point] {
+		let from: Point = [0, 0];
+		let to: Point = [0, 0];
+		const connectedKeys = Object.keys(connected);
+		const notConnectedKeys = Object.keys(notConnected);
+		for (let i = 0; i < 5; i++) {
+			if (connectedKeys.length < notConnectedKeys.length) {
+				const key = rng.getItem(connectedKeys);
+				to = key !== null ? (connected[key] ?? to) : to;
+				from = getClosest(to, notConnected);
+			} else {
+				const key = rng.getItem(notConnectedKeys);
+				from = key !== null ? (notConnected[key] ?? from) : from;
+				to = getClosest(from, connected);
+			}
+			const d =
+				(from[0] - to[0]) * (from[0] - to[0]) +
+				(from[1] - to[1]) * (from[1] - to[1]);
+			if (d < 64) break;
+		}
+		return [from, to];
+	}
+
+	function tunnelToConnected(
 		to: Point,
 		from: Point,
 		connected: PointMap,
 		notConnected: PointMap,
 		value: number,
 		connectionCallback?: ConnectionCallback,
-	) {
-		let a, b;
-		if (from[0] < to[0]) {
-			a = from;
-			b = to;
-		} else {
-			a = to;
-			b = from;
-		}
+	): void {
+		let a = from[0] < to[0] ? from : to;
+		let b = from[0] < to[0] ? to : from;
 		for (let xx = a[0]; xx <= b[0]; xx++) {
-			this._map[xx][a[1]] = value;
-			const p = [xx, a[1]] as Point;
-			const pkey = this._pointKey(p);
-			connected[pkey] = p;
-			delete notConnected[pkey];
+			setCell(xx, a[1], value);
+			const p: Point = [xx, a[1]];
+			const key = pointKey(p);
+			connected[key] = p;
+			delete notConnected[key];
 		}
 		if (connectionCallback && a[0] < b[0]) {
 			connectionCallback(a, [b[0], a[1]]);
 		}
 
-		// x is now fixed
 		const x = b[0];
-
-		if (from[1] < to[1]) {
-			a = from;
-			b = to;
-		} else {
-			a = to;
-			b = from;
-		}
+		a = from[1] < to[1] ? from : to;
+		b = from[1] < to[1] ? to : from;
 		for (let yy = a[1]; yy < b[1]; yy++) {
-			this._map[x][yy] = value;
-			const p = [x, yy] as Point;
-			const pkey = this._pointKey(p);
-			connected[pkey] = p;
-			delete notConnected[pkey];
+			setCell(x, yy, value);
+			const p: Point = [x, yy];
+			const key = pointKey(p);
+			connected[key] = p;
+			delete notConnected[key];
 		}
 		if (connectionCallback && a[1] < b[1]) {
 			connectionCallback([b[0], a[1]], [b[0], b[1]]);
 		}
 	}
 
-	_tunnelToConnected6(
+	function tunnelToConnected6(
 		to: Point,
 		from: Point,
 		connected: PointMap,
 		notConnected: PointMap,
 		value: number,
 		connectionCallback?: ConnectionCallback,
-	) {
-		let a, b;
-		if (from[0] < to[0]) {
-			a = from;
-			b = to;
-		} else {
-			a = to;
-			b = from;
-		}
+	): void {
+		const a = from[0] < to[0] ? from : to;
+		const b = from[0] < to[0] ? to : from;
 
-		// tunnel diagonally until horizontally level
 		let xx = a[0];
 		let yy = a[1];
-		while (!(xx == b[0] && yy == b[1])) {
+		while (!(xx === b[0] && yy === b[1])) {
 			let stepWidth = 2;
 			if (yy < b[1]) {
 				yy++;
@@ -385,17 +267,15 @@ export default class Cellular extends Map {
 			} else if (xx > b[0]) {
 				xx -= stepWidth;
 			} else if (b[1] % 2) {
-				// Won't step outside map if destination on is map's right edge
 				xx -= stepWidth;
 			} else {
-				// ditto for left edge
 				xx += stepWidth;
 			}
-			this._map[xx][yy] = value;
-			const p = [xx, yy] as Point;
-			const pkey = this._pointKey(p);
-			connected[pkey] = p;
-			delete notConnected[pkey];
+			setCell(xx, yy, value);
+			const p: Point = [xx, yy];
+			const key = pointKey(p);
+			connected[key] = p;
+			delete notConnected[key];
 		}
 
 		if (connectionCallback) {
@@ -403,17 +283,110 @@ export default class Cellular extends Map {
 		}
 	}
 
-	_freeSpace(x: number, y: number, value: number) {
-		return (
-			x >= 0 &&
-			x < this._width &&
-			y >= 0 &&
-			y < this._height &&
-			this._map[x][y] == value
-		);
-	}
+	return {
+		randomize(rng: Rng, probability: number): void {
+			for (let i = 0; i < width; i++) {
+				for (let j = 0; j < height; j++) {
+					setCell(i, j, rng.getUniform() < probability ? 1 : 0);
+				}
+			}
+		},
 
-	_pointKey(p: Point) {
-		return p[0] + "." + p[1];
-	}
+		setOptions(newOptions: Partial<CellularOptions>): void {
+			Object.assign(resolvedOptions, newOptions);
+		},
+
+		set(x: number, y: number, value: number): void {
+			setCell(x, y, value);
+		},
+
+		create(callback?: CreateCallback): void {
+			const newMap = fillMap(width, height, 0);
+			const { born, survive } = resolvedOptions;
+
+			for (let j = 0; j < height; j++) {
+				let widthStep = 1;
+				let widthStart = 0;
+				if (resolvedOptions.topology === 6) {
+					widthStep = 2;
+					widthStart = j % 2;
+				}
+
+				for (let i = widthStart; i < width; i += widthStep) {
+					const cur = getCell(i, j);
+					const neighborCount = getNeighbors(i, j);
+					const row = newMap[i];
+					if (row === undefined)
+						throw new Error("unreachable: i is within width");
+
+					if (cur && survive.indexOf(neighborCount) !== -1) {
+						row[j] = 1;
+					} else if (!cur && born.indexOf(neighborCount) !== -1) {
+						row[j] = 1;
+					}
+				}
+			}
+
+			map = newMap;
+			if (callback) serviceCallback(callback);
+		},
+
+		connect(
+			rng: Rng,
+			callback: CreateCallback | undefined,
+			value = 0,
+			connectionCallback?: ConnectionCallback,
+		): void {
+			const allFreeSpace: Point[] = [];
+			const notConnected: PointMap = {};
+
+			let widthStep = 1;
+			let widthStarts: [number, number] = [0, 0];
+			if (resolvedOptions.topology === 6) {
+				widthStep = 2;
+				widthStarts = [0, 1];
+			}
+			for (let y = 0; y < height; y++) {
+				const start = widthStarts[y % 2] ?? 0;
+				for (let x = start; x < width; x += widthStep) {
+					if (freeSpace(x, y, value)) {
+						const p: Point = [x, y];
+						notConnected[pointKey(p)] = p;
+						allFreeSpace.push(p);
+					}
+				}
+			}
+			const start = rng.getItem(allFreeSpace);
+			if (start === null) return;
+
+			const startKey = pointKey(start);
+			const connected: PointMap = { [startKey]: start };
+			delete notConnected[startKey];
+
+			findConnected(connected, notConnected, [start], false, value);
+
+			while (Object.keys(notConnected).length > 0) {
+				const [from, to] = getFromTo(rng, connected, notConnected);
+
+				const local: PointMap = { [pointKey(from)]: from };
+				findConnected(local, notConnected, [from], true, value);
+
+				const tunnel =
+					resolvedOptions.topology === 6
+						? tunnelToConnected6
+						: tunnelToConnected;
+				tunnel(to, from, connected, notConnected, value, connectionCallback);
+
+				for (const key of Object.keys(local)) {
+					const p = local[key];
+					if (p === undefined) continue;
+					setCell(p[0], p[1], value);
+					connected[key] = p;
+					delete notConnected[key];
+				}
+			}
+
+			if (callback) serviceCallback(callback);
+		},
+	};
 }

@@ -1,162 +1,193 @@
 /**
- * This code is an implementation of Alea algorithm; (C) 2010 Johannes Baagøe.
+ * This code is an implementation of the Alea algorithm; (C) 2010 Johannes Baagøe.
  * Alea is licensed according to the http://en.wikipedia.org/wiki/MIT_License.
  */
 
 const FRAC = 2.3283064365386963e-10; /* 2^-32 */
 
-class RNG {
-	_seed = 0;
-	_s0 = 0;
-	_s1 = 0;
-	_s2 = 0;
-	_c = 0;
+/** The mutable part of an RNG's state that getState()/setState() round-trip. */
+export interface RngState {
+	readonly s0: number;
+	readonly s1: number;
+	readonly s2: number;
+	readonly c: number;
+}
 
-	getSeed() {
-		return this._seed;
+export interface UniformStep {
+	readonly value: number;
+	readonly state: RngState;
+}
+
+/**
+ * Derive the initial RNG state from a seed. Pure: same seed always produces
+ * the same state.
+ */
+export function seedToState(seed: number): RngState {
+	const normalizedSeed = seed < 1 ? 1 / seed : seed;
+	const s0 = (normalizedSeed >>> 0) * FRAC;
+	const step1 = (normalizedSeed * 69069 + 1) >>> 0;
+	const s1 = step1 * FRAC;
+	const step2 = (step1 * 69069 + 1) >>> 0;
+	const s2 = step2 * FRAC;
+	return { s0, s1, s2, c: 1 };
+}
+
+/**
+ * Advance the RNG by one step. Pure: returns the next pseudorandom value
+ * [0,1) together with the next state, rather than mutating anything.
+ */
+export function stepUniform(state: RngState): UniformStep {
+	const t = 2091639 * state.s0 + state.c * FRAC;
+	const c = t | 0;
+	const value = t - c;
+	return { value, state: { s0: state.s1, s1: state.s2, s2: value, c } };
+}
+
+export interface Rng {
+	getSeed(): number;
+	setSeed(seed: number): Rng;
+	/** Pseudorandom value [0,1), uniformly distributed. */
+	getUniform(): number;
+	/** Pseudorandom value [lowerBound, upperBound], inclusive. */
+	getUniformInt(lowerBound: number, upperBound: number): number;
+	/** A normally distributed pseudorandom value. ~95% of absolute values are below 2*stddev. */
+	getNormal(mean?: number, stddev?: number): number;
+	/** Pseudorandom value [1,100] inclusive, uniformly distributed. */
+	getPercentage(): number;
+	/** Randomly picked item, null when the array is empty. */
+	getItem<T>(array: readonly T[]): T | null;
+	/** A new array with the same items in randomized order. */
+	shuffle<T>(array: readonly T[]): T[];
+	/** Picks a key at random, weighted by its (relative) value. */
+	getWeightedValue<K extends string>(data: Record<K, number>): K;
+	getState(): RngState;
+	setState(state: RngState): Rng;
+	clone(): Rng;
+}
+
+/**
+ * Creates an independent RNG stream, seeded explicitly by the caller (or by
+ * the current time if omitted). Unlike rot.js's original `RNG` singleton,
+ * this is a value you create and thread through explicitly — nothing is
+ * shared unless you pass the same instance around.
+ */
+export function createRng(seed: number = Date.now()): Rng {
+	let seedValue = seed < 1 ? 1 / seed : seed;
+	let state = seedToState(seed);
+
+	function getUniform(): number {
+		const step = stepUniform(state);
+		state = step.state;
+		return step.value;
 	}
 
-	/**
-	 * Seed the number generator
-	 */
-	setSeed(seed: number) {
-		seed = seed < 1 ? 1 / seed : seed;
-
-		this._seed = seed;
-		this._s0 = (seed >>> 0) * FRAC;
-
-		seed = (seed * 69069 + 1) >>> 0;
-		this._s1 = seed * FRAC;
-
-		seed = (seed * 69069 + 1) >>> 0;
-		this._s2 = seed * FRAC;
-
-		this._c = 1;
-		return this;
-	}
-
-	/**
-	 * @returns Pseudorandom value [0,1), uniformly distributed
-	 */
-	getUniform() {
-		const t = 2091639 * this._s0 + this._c * FRAC;
-		this._s0 = this._s1;
-		this._s1 = this._s2;
-		this._c = t | 0;
-		this._s2 = t - this._c;
-		return this._s2;
-	}
-
-	/**
-	 * @param lowerBound The lower end of the range to return a value from, inclusive
-	 * @param upperBound The upper end of the range to return a value from, inclusive
-	 * @returns Pseudorandom value [lowerBound, upperBound], using ROT.RNG.getUniform() to distribute the value
-	 */
-	getUniformInt(lowerBound: number, upperBound: number) {
+	function getUniformInt(lowerBound: number, upperBound: number): number {
 		const max = Math.max(lowerBound, upperBound);
 		const min = Math.min(lowerBound, upperBound);
-		return Math.floor(this.getUniform() * (max - min + 1)) + min;
+		return Math.floor(getUniform() * (max - min + 1)) + min;
 	}
 
-	/**
-	 * @param mean Mean value
-	 * @param stddev Standard deviation. ~95% of the absolute values will be lower than 2*stddev.
-	 * @returns A normally distributed pseudorandom value
-	 */
-	getNormal(mean = 0, stddev = 1) {
-		let u, v, r;
+	function getNormal(mean = 0, stddev = 1): number {
+		let u: number;
+		let v: number;
+		let r: number;
 		do {
-			u = 2 * this.getUniform() - 1;
-			v = 2 * this.getUniform() - 1;
+			u = 2 * getUniform() - 1;
+			v = 2 * getUniform() - 1;
 			r = u * u + v * v;
-		} while (r > 1 || r == 0);
-
+		} while (r > 1 || r === 0);
 		const gauss = u * Math.sqrt((-2 * Math.log(r)) / r);
 		return mean + gauss * stddev;
 	}
 
-	/**
-	 * @returns Pseudorandom value [1,100] inclusive, uniformly distributed
-	 */
-	getPercentage() {
-		return 1 + Math.floor(this.getUniform() * 100);
+	function getPercentage(): number {
+		return 1 + Math.floor(getUniform() * 100);
 	}
 
-	/**
-	 * @returns Randomly picked item, null when length=0
-	 */
-	getItem<T>(array: Array<T>) {
+	function getItem<T>(array: readonly T[]): T | null {
 		if (!array.length) {
 			return null;
 		}
-		return array[Math.floor(this.getUniform() * array.length)];
+		const index = Math.floor(getUniform() * array.length);
+		const value = array[index];
+		if (value === undefined) {
+			throw new Error("getItem: computed index out of range");
+		}
+		return value;
 	}
 
-	/**
-	 * @returns New array with randomized items
-	 */
-	shuffle<T>(array: Array<T>) {
-		const result = [];
-		const clone = array.slice();
-		while (clone.length) {
-			const index = clone.indexOf(this.getItem(clone) as T);
-			result.push(clone.splice(index, 1)[0]);
+	function shuffle<T>(array: readonly T[]): T[] {
+		const result: T[] = [];
+		const remaining = array.slice();
+		while (remaining.length) {
+			const picked = getItem(remaining);
+			if (picked === null) {
+				throw new Error("unreachable: remaining is non-empty");
+			}
+			const index = remaining.indexOf(picked);
+			result.push(...remaining.splice(index, 1));
 		}
 		return result;
 	}
 
-	/**
-	 * @param data key=whatever, value=weight (relative probability)
-	 * @returns whatever
-	 */
-	getWeightedValue(data: { [key: string]: number; [key: number]: number }) {
-		let total = 0;
-
-		for (const id in data) {
-			total += data[id];
+	function getWeightedValue<K extends string>(data: Record<K, number>): K {
+		const keys = Object.keys(data) as K[];
+		if (keys.length === 0) {
+			throw new Error("getWeightedValue: data must have at least one entry");
 		}
-		const random = this.getUniform() * total;
 
-		let id,
-			part = 0;
-		for (id in data) {
-			part += data[id];
+		let total = 0;
+		for (const key of keys) {
+			total += data[key];
+		}
+		const random = getUniform() * total;
+
+		let part = 0;
+		for (const key of keys) {
+			part += data[key];
 			if (random < part) {
-				return id;
+				return key;
 			}
 		}
 
-		// If by some floating-point annoyance we have
-		// random >= total, just return the last id.
-		return id;
+		// If by some floating-point annoyance we have random >= total, just return the last key.
+		const lastKey = keys[keys.length - 1];
+		if (lastKey === undefined) {
+			throw new Error("unreachable: keys is non-empty");
+		}
+		return lastKey;
 	}
 
-	/**
-	 * Get RNG state. Useful for storing the state and re-setting it via setState.
-	 * @returns Internal state
-	 */
-	getState() {
-		return [this._s0, this._s1, this._s2, this._c];
-	}
-
-	/**
-	 * Set a previously retrieved state.
-	 */
-	setState(state: number[]) {
-		this._s0 = state[0];
-		this._s1 = state[1];
-		this._s2 = state[2];
-		this._c = state[3];
-		return this;
-	}
-
-	/**
-	 * Returns a cloned RNG
-	 */
-	clone() {
-		const clone = new RNG();
-		return clone.setState(this.getState());
-	}
+	const rng: Rng = {
+		getSeed: () => seedValue,
+		setSeed: (newSeed: number) => {
+			seedValue = newSeed < 1 ? 1 / newSeed : newSeed;
+			state = seedToState(newSeed);
+			return rng;
+		},
+		getUniform,
+		getUniformInt,
+		getNormal,
+		getPercentage,
+		getItem,
+		shuffle,
+		getWeightedValue,
+		getState: () => state,
+		setState: (newState: RngState) => {
+			state = newState;
+			return rng;
+		},
+		clone: () => createRng().setState(state),
+	};
+	return rng;
 }
 
-export default new RNG().setSeed(Date.now());
+/**
+ * Transitional compatibility shim: a pre-created default instance, so
+ * not-yet-migrated consumers (`map/`, `stringgenerator.ts`, `color.ts`) can
+ * keep doing `import RNG from "../rng.js"; RNG.getUniform()` unchanged until
+ * their own modernization stage threads an explicit `rng` argument through
+ * instead. Remove this default export once every consumer has migrated
+ * (tracked in docs/tasks.md).
+ */
+export default createRng(Date.now());

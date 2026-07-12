@@ -177,7 +177,13 @@ export function createRng(seed: number = Date.now()): Rng {
 			state = newState;
 			return rng;
 		},
-		clone: () => createRng().setState(state),
+		clone: () => {
+			// Carry the source's seed over so the clone's getSeed() reports where
+			// its stream originally came from (the original rot.js clone reported
+			// a meaningless 0 here); the stream itself is defined by setState.
+			const cloned = createRng(seedValue);
+			return cloned.setState(state);
+		},
 	};
 	return rng;
 }

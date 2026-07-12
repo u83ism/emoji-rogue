@@ -17,8 +17,8 @@
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1完了時点)→ 367件(Stage 3.2完了時点)→ 357件(Stage 3.3完了時点、`text.ts`/`stringgenerator.ts`/`color.ts`分が解消)。残りは`map/`(247件相当)、`fov/`、`path/`。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
-- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1完了時点)→ 233件(Stage 3.2完了時点)→ 212件(Stage 3.3完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。
+- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1)→ 367件(Stage 3.2)→ 357件(Stage 3.3)→ 290件(Stage 3.4完了時点、`fov/`・`path/`分が解消)。残りは全て`map/`(Stage 3.5)。**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
+- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1)→ 233件(Stage 3.2)→ 212件(Stage 3.3)→ 169件(Stage 3.4完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、`map/`に残る旧OOPコードの実質的な問題。
 - **`rng.ts`のトランジション用互換シムは、`map/`の移行が完了するまで残る。** `stringgenerator.ts`・`color.ts`はStage 3.3で明示的な`rng`引数受け取りに移行済み。残りは`map/`(Stage 3.5)のみ。移行が全て完了したら`src/rng.ts`のデフォルトexport(互換シム)を削除する。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)
@@ -34,9 +34,9 @@
 - [x] `color.test.ts`(旧spec移植。`randomize`のシグネチャ変更(`rng`引数追加)に追随)
 - [x] `stringgenerator.test.ts`(旧specなし、新規作成。決定論性・`clear()`の挙動・word modeを検証)
 - [ ] `engine.test.ts`(小さめ、任意のタイミングで)
-- [ ] `fov.test.ts`(Stage 3.4と同時)
-- [ ] `path.test.ts`(Stage 3.4と同時)
-- [ ] `scheduler.test.ts`(Stage 3.4と同時)
+- [x] `fov/fov.test.ts`(Stage 3.4と同時。discrete/precise/recursive(360/180/90度)全て検証)
+- [x] `path/path.test.ts`(Stage 3.4と同時。Dijkstra/A*の4/6/8-topology、A*の効率性テスト(400 visits)も含めて移植)
+- [x] `scheduler/scheduler.test.ts`(Stage 3.4と同時。Simple/Speed/Action全て、Zero-ID actorケースも移植)
 - [ ] `dungeon.test.ts` → `map/`配下に分割(Stage 3.5と同時、最後)
 
 ## Stage 3 — サブシステム別・関数型書き換え
@@ -62,10 +62,11 @@
 - [x] `stringgenerator.ts`: クラス→`createStringGenerator(rng, options)`ファクトリに変換。`RNG`互換シムから明示的な`rng`引数受け取りに移行。`getWeightedValue`のジェネリクス化により`as string`キャストが不要に。`clear()`が境界値のprior(`_boundary`)を再設定しない、という原型の挙動(一種のクセ)はそのまま保持(動作変更を避けるため)
 - [x] `color.ts`: `randomize(color, diff)` → `randomize(rng, color, diff)`に変更しRNG互換シムから移行(内部呼び出しなし、安全な変更と確認済み)
 
-### 3.4 `fov/`, `path/`, `scheduler/`
-- [ ] `fov/`: 関数型契約 + 各アルゴリズムの独立ファクトリに変換、`_getCircle`等を独立純粋関数へ
-- [ ] `path/`: 同上、`_getNeighbors`等を独立純粋関数へ
-- [ ] `scheduler/`: `Scheduler<T=any>`の`any`排除、`createScheduler`/`createSimpleScheduler`/`createSpeedScheduler`/`createActionScheduler`へ
+### 3.4 `fov/`, `path/`, `scheduler/`(完了)
+- [x] `fov/`: `Fov`関数型契約(`(x,y,radius,callback)=>void`) + `createDiscreteShadowcastingFov`/`createPreciseShadowcastingFov`/`createRecursiveShadowcastingFov`ファクトリに変換。`_getCircle`を独立純粋関数`getCircle(topology,cx,cy,r)`へ。`RecursiveShadowcasting`固有の`compute180`/`compute90`は`RecursiveShadowcastingFov`インターフェース(`{compute, compute180, compute90}`)として維持
+- [x] `path/`: `Path`関数型契約(`(fromX,fromY,callback)=>void`) + `createAStarPath`/`createDijkstraPath`ファクトリに変換。`_getNeighbors`を独立純粋関数`getNeighbors(dirs,passable,cx,cy)`へ、方向ベクトルの並び替えロジックを`getPathDirs(topology)`へ切り出し。**Dijkstraの探索フロンティアの永続キャッシュ(複数回の`compute()`呼び出しをまたいで再利用する挙動)はファクトリのクロージャで維持**(元のクラスがコンストラクタで`_computed`/`_todo`を保持していたのと同じ設計意図)。`ComputeCallback`の戻り値型を`any`→`void`に厳格化(戻り値を使っている形跡なし)
+- [x] `scheduler/`: `Scheduler<T=any>`の`any`を排除しジェネリクス化。`createScheduler`/`createSimpleScheduler`/`createSpeedScheduler`/`createActionScheduler`へ変換。継承の代わりに、共有ロジック(`addToRepeatList`/`clearSchedulerState`/`removeFromSchedulerState`/`advanceScheduler`)を`SchedulerState<T>`という素データに対する関数として`scheduler.ts`から公開し、各バリアントがそれを呼び出しつつ固有ロジック(`add`/`next`の上書きなど)を追加する形(継承ではなく合成)。`Speed`/`Action`は`add`に第3引数`time?`を取る拡張インターフェース(`SpeedScheduler`/`ActionScheduler`)として型付け
+- [x] 呼び出し側の最小限の追随: `src/lighting.ts`(`FOV`型→`Fov`型、`this._fov.compute(...)`→`this._fov(...)`に。まだクラスのまま、本格変換はどのステージにも明記されていないため据え置き)、`src/engine.ts`(`Scheduler`型→`Scheduler<Actor>`型、`Actor`インターフェースを新規定義。まだクラスのまま)
 
 ### 3.5 `map/`(最重量、最後)
 - [ ] `arena.ts`/`cellular.ts`/`uniform.ts`(簡単な生成器でパターン確立)
@@ -74,6 +75,7 @@
 - [ ] `features.ts`: `Feature`/`Room`/`Corridor`クラス → 判別可能union + 独立関数へ
 - [ ] `digger.ts` + `FEATURES`レジストリの型付け(最難、最後)
 - [ ] `rogue.ts`(digger/features整理後)
+- [ ] **どのステージにも明記されていない残り**: `src/lighting.ts`・`src/engine.ts`はまだクラスのまま(それぞれ3.4のfov/scheduler型変更への追随のみ実施)。Stage 3.5完了後、この2ファイルも関数型に変換するかは要検討(現状は動くのでブロッカーではない)
 
 ## Stage 4 — Result型エラーハンドリング(3.4/3.5と並行、別パスにしない)
 

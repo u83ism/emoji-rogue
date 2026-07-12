@@ -28,7 +28,7 @@ createDiggerMap(WIDTH, HEIGHT, rng).create((x, y, value) => {
 });
 
 const glyphs = {
-	0: { glyph: "・" },
+	0: { glyph: "🟫" },
 	1: { glyph: "🧱" },
 	2: { glyph: "🚪" },
 };

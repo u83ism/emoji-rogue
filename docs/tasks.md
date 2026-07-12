@@ -9,16 +9,15 @@
 - [x] `lib/`, `dist/` をgit管理から除外し`.gitignore`に追加(ビルド生成物をコミットしない方針へ)
 - [x] `package.json` 全面刷新: `emoji-rogue`に改名、`type: module`、`exports`マップ、ESM専業(CJSデュアル出力なし)、`engines.node >= 20`
 - [x] `tsconfig.json` を厳格設定に更新(`target: ES2022`, `module`/`moduleResolution: NodeNext`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `jsx: react-jsx`, `include`ベースに変更)
-- [x] `Makefile`/`rollup.config.js` 全廃、`tsup.config.ts` に一本化
+- [x] `Makefile`/`rollup.config.js` 全廃、`tsup.config.ts` に一本化 → 後述の理由で **`tsdown.config.ts` に乗り換え済み**
 - [x] `vitest.config.ts` 追加(`passWithNoTests: true`)
 - [x] `biome.json` 追加、既存クラスベースコードに一度整形パスを実行
 - [x] `src/display/` を先行削除(Stage 5でInkベースに完全置き換えのため、DOM lib依存の型エラーだけ今のうちに除去。5バックエンド全部・`tests/spec/display.js`も削除)
+- [x] ビルドツールを `tsup` → `tsdown`(Rolldownベース)に乗り換え。理由: tsup公式READMEが「もうメンテされていない、tsdownへ移行を」と明記済み(tsup#1405/#1388/#1389が未解決のまま放置)。tsdownはTS7サポートを2026-07-09にクローズ済みで活発にメンテされている。乗り換えた結果、**`dts: true`のまま既存の型エラーが残っていてもビルド・宣言ファイル生成に成功する**(tsdownは型チェッカーではなくバンドラーという立場のため、tsupほど型エラーに厳格ではない)。TypeScriptも`5.9.3`固定を解除し`^7.0.2`(最新)に戻した。
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **TypeScriptバージョンはひとまず `5.9.3` に固定**(devDependencies参照)。`typescript@latest`(7.0.2)および`6.0.3`は、tsupが内蔵する`rollup-plugin-dts`との内部API不整合でdts生成がクラッシュする(現時点のエコシステムがTS7系の内部変更に追いついていない)。将来tsup側が対応したら最新化を検討。
-- **`tsup.config.ts`の`dts: false`は暫定措置**。理由: dts生成は型チェックを伴うため、下記の既存型エラーが解消されるまで有効化できない。Stage 3で対象サブシステムの型エラーが消えるごとに、最終的に全て解消したら`dts: true`に戻す。
-- **`npm run typecheck`は現時点で396件のエラーが出る**(内訳の大半は`noUncheckedIndexedAccess`/`exactOptionalPropertyTypes`が拾う「配列アクセスがundefinedかもしれない」系。主に`map/`(254件相当)、`fov/`、`path/`、`noise/`、`rng.ts`、`stringgenerator.ts`)。これはStage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定。**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
+- **`npm run typecheck`は現時点で396件のエラーが出る**(内訳の大半は`noUncheckedIndexedAccess`/`exactOptionalPropertyTypes`が拾う「配列アクセスがundefinedかもしれない」系。主に`map/`(254件相当)、`fov/`、`path/`、`noise/`、`rng.ts`、`stringgenerator.ts`)。`npm run build`(tsdown)自体はdts込みで成功するが、`tsc --noEmit`による厳格な型チェックは引き続きこの396件を報告する。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
 - **`npm run lint`は現時点で250件のerror**(大半は`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。Biomeの自動整形は既に適用済みで、残っているのはロジックレベルの指摘のみ)。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)

@@ -7,8 +7,8 @@ export { default as Map } from "./map/index.js";
 export { default as Noise } from "./noise/index.js";
 export { default as Path } from "./path/index.js";
 export { default as RNG } from "./rng.js";
-export { default as Scheduler } from "./scheduler/index.js";
 export type { SpeedActor } from "./scheduler/index.js";
+export { default as Scheduler } from "./scheduler/index.js";
 export { default as StringGenerator } from "./stringgenerator.js";
 
 import * as util from "./util.js";

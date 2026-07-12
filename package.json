@@ -10,16 +10,16 @@
 	"license": "BSD-3-Clause",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs"
 		}
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
+		"build": "tsdown",
+		"dev": "tsdown --watch",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
@@ -35,8 +35,9 @@
 		"@types/node": "^26.1.1",
 		"@types/react": "^19.2.17",
 		"ink-testing-library": "^4.0.0",
-		"tsup": "^8.5.1",
-		"typescript": "^5.9.3",
+		"tsdown": "^0.22.5",
+		"typescript": "^7.0.2",
+		"unrun": "^0.3.1",
 		"vitest": "^4.1.10"
 	}
 }

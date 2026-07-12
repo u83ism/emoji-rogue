@@ -1,79 +1,54 @@
-import { MinHeap } from "./MinHeap.js";
+import { createMinHeap } from "./MinHeap.js";
 
-export default class EventQueue<T = any> {
-	_time: number;
-	_events: MinHeap<T>;
+export interface EventQueue<T> {
+	getTime(): number;
+	clear(): void;
+	add(event: T, time: number): void;
+	get(): T | null;
+	getEventTime(event: T): number | undefined;
+	remove(event: T): boolean;
+}
 
-	/**
-	 * @class Generic event queue: stores events and retrieves them based on their time
-	 */
-	constructor() {
-		this._time = 0;
-		this._events = new MinHeap();
-	}
+/**
+ * Generic event queue: stores events and retrieves them based on their time.
+ */
+export function createEventQueue<T>(): EventQueue<T> {
+	let time = 0;
+	let events = createMinHeap<T>();
 
-	/**
-	 * @returns {number} Elapsed time
-	 */
-	getTime() {
-		return this._time;
-	}
+	return {
+		getTime(): number {
+			return time;
+		},
 
-	/**
-	 * Clear all scheduled events
-	 */
-	clear() {
-		this._events = new MinHeap();
-		return this;
-	}
+		clear(): void {
+			events = createMinHeap<T>();
+		},
 
-	/**
-	 * @param {?} event
-	 * @param {number} time
-	 */
-	add(event: T, time: number) {
-		this._events.push(event, time);
-	}
+		add(event: T, atTime: number): void {
+			events.push(event, atTime);
+		},
 
-	/**
-	 * Locates the nearest event, advances time if necessary. Returns that event and removes it from the queue.
-	 * @returns {? || null} The event previously added by addEvent, null if no event available
-	 */
-	get() {
-		if (!this._events.len()) {
-			return null;
-		}
+		get(): T | null {
+			if (!events.len()) {
+				return null;
+			}
 
-		const { key: time, value: event } = this._events.pop();
-		if (time > 0) {
-			/* advance */
-			this._time += time;
-			this._events.shift(-time);
-		}
+			const { key: elapsed, value: event } = events.pop();
+			if (elapsed > 0) {
+				time += elapsed;
+				events.shift(-elapsed);
+			}
 
-		return event;
-	}
+			return event;
+		},
 
-	/**
-	 * Get the time associated with the given event
-	 * @param {?} event
-	 * @returns {number} time
-	 */
-	getEventTime(event: T) {
-		const r = this._events.find(event);
-		if (r) {
-			const { key } = r;
-			return key;
-		}
-		return undefined;
-	}
+		getEventTime(event: T): number | undefined {
+			return events.find(event)?.key;
+		},
 
-	/**
-	 * Remove an event from the queue
-	 * @param {?} event
-	 * @returns {bool} success?
-	 */
-	remove(event: T) {
-		return this._events.remove(event);
-	}
+		remove(event: T): boolean {
+			return events.remove(event);
+		},
+	};
 }

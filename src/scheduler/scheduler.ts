@@ -1,4 +1,5 @@
-import EventQueue from "../eventqueue.js";
+import type { EventQueue } from "../eventqueue.js";
+import { createEventQueue } from "../eventqueue.js";
 
 export default class Scheduler<T = any> {
 	_queue: EventQueue<T>;
@@ -9,7 +10,7 @@ export default class Scheduler<T = any> {
 	 * @class Abstract scheduler
 	 */
 	constructor() {
-		this._queue = new EventQueue<T>();
+		this._queue = createEventQueue<T>();
 		this._repeat = [];
 		this._current = null;
 	}

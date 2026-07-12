@@ -9,89 +9,82 @@ export type VisibilityCallback = (
 	visibility: number,
 ) => void;
 
-export interface Options {
+export interface FovOptions {
 	topology: 4 | 6 | 8;
 }
 
-export default abstract class FOV {
-	_lightPasses: LightPassesCallback;
-	_options: Options;
+/** Computes visibility for a 360-degree circle around (x, y) up to radius R. */
+export type Fov = (
+	x: number,
+	y: number,
+	radius: number,
+	callback: VisibilityCallback,
+) => void;
 
-	/**
-	 * @class Abstract FOV algorithm
-	 * @param {function} lightPassesCallback Does the light pass through x,y?
-	 * @param {object} [options]
-	 * @param {int} [options.topology=8] 4/6/8
-	 */
-	constructor(
-		lightPassesCallback: LightPassesCallback,
-		options: Partial<Options> = {},
-	) {
-		this._lightPasses = lightPassesCallback;
-		this._options = Object.assign({ topology: 8 }, options);
+function toXy(pair: readonly number[] | undefined): [number, number] {
+	if (pair === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	const [dx, dy] = pair;
+	if (dx === undefined || dy === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	return [dx, dy];
+}
+
+/** Return all neighbors in a concentric ring around (cx, cy) at range r. */
+export function getCircle(
+	topology: 4 | 6 | 8,
+	cx: number,
+	cy: number,
+	r: number,
+): [number, number][] {
+	let dirs: [number, number][];
+	let countFactor: number;
+	let startOffset: [number, number];
+
+	switch (topology) {
+		case 4:
+			countFactor = 1;
+			startOffset = [0, 1];
+			dirs = [
+				toXy(DIRS[8][7]),
+				toXy(DIRS[8][1]),
+				toXy(DIRS[8][3]),
+				toXy(DIRS[8][5]),
+			];
+			break;
+
+		case 6:
+			dirs = DIRS[6].map(toXy);
+			countFactor = 1;
+			startOffset = [-1, 1];
+			break;
+
+		case 8:
+			dirs = DIRS[4].map(toXy);
+			countFactor = 2;
+			startOffset = [-1, 1];
+			break;
+
+		default:
+			throw new Error("Incorrect topology for FOV computation");
 	}
 
-	/**
-	 * Compute visibility for a 360-degree circle
-	 * @param {int} x
-	 * @param {int} y
-	 * @param {int} R Maximum visibility radius
-	 * @param {function} callback
-	 */
-	abstract compute(
-		x: number,
-		y: number,
-		R: number,
-		callback: VisibilityCallback,
-	): void;
+	const result: [number, number][] = [];
 
-	/**
-	 * Return all neighbors in a concentric ring
-	 * @param {int} cx center-x
-	 * @param {int} cy center-y
-	 * @param {int} r range
-	 */
-	_getCircle(cx: number, cy: number, r: number) {
-		const result = [];
-		let dirs, countFactor, startOffset;
+	/* starting neighbor */
+	let x = cx + startOffset[0] * r;
+	let y = cy + startOffset[1] * r;
 
-		switch (this._options.topology) {
-			case 4:
-				countFactor = 1;
-				startOffset = [0, 1];
-				dirs = [DIRS[8][7], DIRS[8][1], DIRS[8][3], DIRS[8][5]];
-				break;
-
-			case 6:
-				dirs = DIRS[6];
-				countFactor = 1;
-				startOffset = [-1, 1];
-				break;
-
-			case 8:
-				dirs = DIRS[4];
-				countFactor = 2;
-				startOffset = [-1, 1];
-				break;
-
-			default:
-				throw new Error("Incorrect topology for FOV computation");
-				break;
+	/* circle */
+	for (const [dx, dy] of dirs) {
+		for (let j = 0; j < r * countFactor; j++) {
+			result.push([x, y]);
+			x += dx;
+			y += dy;
 		}
-
-		/* starting neighbor */
-		let x = cx + startOffset[0] * r;
-		let y = cy + startOffset[1] * r;
-
-		/* circle */
-		for (let i = 0; i < dirs.length; i++) {
-			for (let j = 0; j < r * countFactor; j++) {
-				result.push([x, y]);
-				x += dirs[i][0];
-				y += dirs[i][1];
-			}
-		}
-
-		return result;
 	}
+
+	return result;
 }

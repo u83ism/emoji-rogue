@@ -1,83 +1,51 @@
-import FOV, { type VisibilityCallback } from "./fov.js";
+import {
+	type Fov,
+	type FovOptions,
+	getCircle,
+	type LightPassesCallback,
+} from "./fov.js";
 
 type Arc = [number, number];
 
-/**
- * @class Precise shadowcasting algorithm
- * @augments ROT.FOV
- */
-export default class PreciseShadowcasting extends FOV {
-	compute(x: number, y: number, R: number, callback: VisibilityCallback) {
-		/* this place is always visible */
-		callback(x, y, 0, 1);
-
-		/* standing in a dark place. FIXME is this a good idea?  */
-		if (!this._lightPasses(x, y)) {
-			return;
-		}
-
-		/* list of all shadows */
-		const SHADOWS: Arc[] = [];
-
-		let cx, cy, blocks, A1, A2, visibility;
-
-		/* analyze surrounding cells in concentric rings, starting from the center */
-		for (let r = 1; r <= R; r++) {
-			const neighbors = this._getCircle(x, y, r);
-			const neighborCount = neighbors.length;
-
-			for (let i = 0; i < neighborCount; i++) {
-				cx = neighbors[i][0];
-				cy = neighbors[i][1];
-				/* shift half-an-angle backwards to maintain consistency of 0-th cells */
-				A1 = [i ? 2 * i - 1 : 2 * neighborCount - 1, 2 * neighborCount];
-				A2 = [2 * i + 1, 2 * neighborCount];
-
-				blocks = !this._lightPasses(cx, cy);
-				visibility = this._checkVisibility(
-					A1 as Arc,
-					A2 as Arc,
-					blocks,
-					SHADOWS,
-				);
-				if (visibility) {
-					callback(cx, cy, r, visibility);
-				}
-
-				if (
-					SHADOWS.length == 2 &&
-					SHADOWS[0][0] == 0 &&
-					SHADOWS[1][0] == SHADOWS[1][1]
-				) {
-					return;
-				} /* cutoff? */
-			} /* for all cells in this ring */
-		} /* for all rings */
+function at(shadows: readonly Arc[], index: number): Arc {
+	const arc = shadows[index];
+	if (arc === undefined) {
+		throw new Error("unreachable: index is within shadows.length");
 	}
+	return arc;
+}
 
-	/**
-	 * @param {int[2]} A1 arc start
-	 * @param {int[2]} A2 arc end
-	 * @param {bool} blocks Does current arc block visibility?
-	 * @param {int[][]} SHADOWS list of active shadows
-	 */
-	_checkVisibility(A1: Arc, A2: Arc, blocks: boolean, SHADOWS: Arc[]): number {
-		if (A1[0] > A2[0]) {
+/**
+ * Precise shadowcasting algorithm.
+ */
+export function createPreciseShadowcastingFov(
+	lightPasses: LightPassesCallback,
+	options: Partial<FovOptions> = {},
+): Fov {
+	const topology = options.topology ?? 8;
+
+	function checkVisibility(
+		a1: Arc,
+		a2: Arc,
+		blocks: boolean,
+		shadows: Arc[],
+	): number {
+		if (a1[0] > a2[0]) {
 			/* split into two sub-arcs */
-			const v1 = this._checkVisibility(A1, [A1[1], A1[1]], blocks, SHADOWS);
-			const v2 = this._checkVisibility([0, 1], A2, blocks, SHADOWS);
+			const v1 = checkVisibility(a1, [a1[1], a1[1]], blocks, shadows);
+			const v2 = checkVisibility([0, 1], a2, blocks, shadows);
 			return (v1 + v2) / 2;
 		}
 
-		/* index1: first shadow >= A1 */
-		let index1 = 0,
-			edge1 = false;
-		while (index1 < SHADOWS.length) {
-			const old = SHADOWS[index1];
-			const diff = old[0] * A1[1] - A1[0] * old[1];
+		/* index1: first shadow >= a1 */
+		let index1 = 0;
+		let edge1 = false;
+		while (index1 < shadows.length) {
+			const old = at(shadows, index1);
+			const diff = old[0] * a1[1] - a1[0] * old[1];
 			if (diff >= 0) {
-				/* old >= A1 */
-				if (diff == 0 && !(index1 % 2)) {
+				/* old >= a1 */
+				if (diff === 0 && !(index1 % 2)) {
 					edge1 = true;
 				}
 				break;
@@ -85,15 +53,15 @@ export default class PreciseShadowcasting extends FOV {
 			index1++;
 		}
 
-		/* index2: last shadow <= A2 */
-		let index2 = SHADOWS.length,
-			edge2 = false;
+		/* index2: last shadow <= a2 */
+		let index2 = shadows.length;
+		let edge2 = false;
 		while (index2--) {
-			const old = SHADOWS[index2];
-			const diff = A2[0] * old[1] - old[0] * A2[1];
+			const old = at(shadows, index2);
+			const diff = a2[0] * old[1] - old[0] * a2[1];
 			if (diff >= 0) {
-				/* old <= A2 */
-				if (diff == 0 && index2 % 2) {
+				/* old <= a2 */
+				if (diff === 0 && index2 % 2) {
 					edge2 = true;
 				}
 				break;
@@ -101,10 +69,10 @@ export default class PreciseShadowcasting extends FOV {
 		}
 
 		let visible = true;
-		if (index1 == index2 && (edge1 || edge2)) {
+		if (index1 === index2 && (edge1 || edge2)) {
 			/* subset of existing shadow, one of the edges match */
 			visible = false;
-		} else if (edge1 && edge2 && index1 + 1 == index2 && index2 % 2) {
+		} else if (edge1 && edge2 && index1 + 1 === index2 && index2 % 2) {
 			/* completely equivalent with existing shadow */
 			visible = false;
 		} else if (index1 > index2 && index1 % 2) {
@@ -116,46 +84,95 @@ export default class PreciseShadowcasting extends FOV {
 			return 0;
 		} /* fast case: not visible */
 
-		let visibleLength;
+		let visibleLength: number;
 
 		/* compute the length of visible arc, adjust list of shadows (if blocking) */
 		const remove = index2 - index1 + 1;
 		if (remove % 2) {
 			if (index1 % 2) {
 				/* first edge within existing shadow, second outside */
-				const P = SHADOWS[index1];
-				visibleLength = (A2[0] * P[1] - P[0] * A2[1]) / (P[1] * A2[1]);
+				const p = at(shadows, index1);
+				visibleLength = (a2[0] * p[1] - p[0] * a2[1]) / (p[1] * a2[1]);
 				if (blocks) {
-					SHADOWS.splice(index1, remove, A2);
+					shadows.splice(index1, remove, a2);
 				}
 			} else {
 				/* second edge within existing shadow, first outside */
-				const P = SHADOWS[index2];
-				visibleLength = (P[0] * A1[1] - A1[0] * P[1]) / (A1[1] * P[1]);
+				const p = at(shadows, index2);
+				visibleLength = (p[0] * a1[1] - a1[0] * p[1]) / (a1[1] * p[1]);
 				if (blocks) {
-					SHADOWS.splice(index1, remove, A1);
+					shadows.splice(index1, remove, a1);
 				}
+			}
+		} else if (index1 % 2) {
+			/* both edges within existing shadows */
+			const p1 = at(shadows, index1);
+			const p2 = at(shadows, index2);
+			visibleLength = (p2[0] * p1[1] - p1[0] * p2[1]) / (p1[1] * p2[1]);
+			if (blocks) {
+				shadows.splice(index1, remove);
 			}
 		} else {
-			if (index1 % 2) {
-				/* both edges within existing shadows */
-				const P1 = SHADOWS[index1];
-				const P2 = SHADOWS[index2];
-				visibleLength = (P2[0] * P1[1] - P1[0] * P2[1]) / (P1[1] * P2[1]);
-				if (blocks) {
-					SHADOWS.splice(index1, remove);
-				}
-			} else {
-				/* both edges outside existing shadows */
-				if (blocks) {
-					SHADOWS.splice(index1, remove, A1, A2);
-				}
-				return 1; /* whole arc visible! */
+			/* both edges outside existing shadows */
+			if (blocks) {
+				shadows.splice(index1, remove, a1, a2);
 			}
+			return 1; /* whole arc visible! */
 		}
 
-		const arcLength = (A2[0] * A1[1] - A1[0] * A2[1]) / (A1[1] * A2[1]);
+		const arcLength = (a2[0] * a1[1] - a1[0] * a2[1]) / (a1[1] * a2[1]);
 
 		return visibleLength / arcLength;
 	}
+
+	return (x: number, y: number, radius: number, callback) => {
+		/* this place is always visible */
+		callback(x, y, 0, 1);
+
+		/* standing in a dark place. FIXME is this a good idea?  */
+		if (!lightPasses(x, y)) {
+			return;
+		}
+
+		/* list of all shadows */
+		const shadows: Arc[] = [];
+
+		/* analyze surrounding cells in concentric rings, starting from the center */
+		for (let r = 1; r <= radius; r++) {
+			const neighbors = getCircle(topology, x, y, r);
+			const neighborCount = neighbors.length;
+
+			for (let i = 0; i < neighborCount; i++) {
+				const neighbor = neighbors[i];
+				if (neighbor === undefined) {
+					throw new Error("unreachable: i is within neighbors.length");
+				}
+				const [cx, cy] = neighbor;
+				/* shift half-an-angle backwards to maintain consistency of 0-th cells */
+				const a1: Arc = [
+					i ? 2 * i - 1 : 2 * neighborCount - 1,
+					2 * neighborCount,
+				];
+				const a2: Arc = [2 * i + 1, 2 * neighborCount];
+
+				const blocks = !lightPasses(cx, cy);
+				const visibility = checkVisibility(a1, a2, blocks, shadows);
+				if (visibility) {
+					callback(cx, cy, r, visibility);
+				}
+
+				const shadow0 = shadows[0];
+				const shadow1 = shadows[1];
+				if (
+					shadows.length === 2 &&
+					shadow0 !== undefined &&
+					shadow1 !== undefined &&
+					shadow0[0] === 0 &&
+					shadow1[0] === shadow1[1]
+				) {
+					return;
+				} /* cutoff? */
+			} /* for all cells in this ring */
+		} /* for all rings */
+	};
 }

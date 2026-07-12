@@ -1,5 +1,5 @@
 import * as Color from "./color.js";
-import type FOV from "./fov/fov.js";
+import type { Fov } from "./fov/fov.js";
 
 type LightColor = [number, number, number];
 
@@ -31,7 +31,7 @@ interface Options {
 export default class Lighting {
 	private _reflectivityCallback: ReflectivityCallback;
 	private _options!: Options;
-	private _fov!: FOV;
+	private _fov!: Fov;
 	private _lights: LightingMap;
 	private _reflectivityCache: NumberMap;
 	private _fovCache: { [key: string]: NumberMap };
@@ -72,7 +72,7 @@ export default class Lighting {
 	/**
 	 * Set the used Field-Of-View algo
 	 */
-	setFOV(fov: FOV) {
+	setFOV(fov: Fov) {
 		this._fov = fov;
 		this._fovCache = {};
 		return this;
@@ -269,7 +269,7 @@ export default class Lighting {
 			}
 			cache[key2] = formFactor;
 		}
-		this._fov.compute(x, y, range, cb.bind(this));
+		this._fov(x, y, range, cb.bind(this));
 
 		return cache;
 	}

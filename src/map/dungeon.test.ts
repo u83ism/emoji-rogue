@@ -12,7 +12,9 @@ const generators: [string, () => DiggerMap | UniformMap][] = [
 describe.each(generators)("%s", (_name, createMap) => {
 	const map = createMap();
 	const result = map.create();
-	if (result === null) throw new Error("map generation timed out unexpectedly");
+	if ("ok" in result && !result.ok) {
+		throw new Error("map generation timed out unexpectedly");
+	}
 	const rooms = map.getRooms();
 	const corridors = map.getCorridors();
 
@@ -61,6 +63,23 @@ describe.each(generators)("%s", (_name, createMap) => {
 				if (value === 0) emptyCount++;
 			});
 			expect(emptyCount).toBeGreaterThan(0);
+		}
+	});
+});
+
+describe("Uniform: generation-timed-out", () => {
+	it("returns an err Result when the time limit is hit before completion", () => {
+		// Rooms this large can never fit on a 10x10 map, so generation retries
+		// forever until the (short) time limit is hit.
+		const map = createUniformMap(10, 10, createRng(1234), {
+			roomWidth: [100, 100],
+			roomHeight: [100, 100],
+			timeLimit: 10,
+		});
+		const result = map.create();
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toBe("generation-timed-out");
 		}
 	});
 });

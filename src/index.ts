@@ -30,6 +30,7 @@ export type {
 	DungeonMap,
 	Feature,
 	FeatureOptions,
+	GenerationTimedOut,
 	RogueMap,
 	RogueOptions,
 	RogueRoom,
@@ -75,6 +76,7 @@ export type { NoiseSource, ShuffleSource } from "./noise/index.js";
 export { createSimplexNoise } from "./noise/index.js";
 export type {
 	ComputeCallback,
+	NoPathFound,
 	PassableCallback,
 	Path,
 	PathOptions,
@@ -85,6 +87,8 @@ export {
 	getNeighbors,
 	getPathDirs,
 } from "./path/index.js";
+export type { Result } from "./result.js";
+export { err, ok } from "./result.js";
 export type { Rng, RngState } from "./rng.js";
 export { createRng } from "./rng.js";
 export type {

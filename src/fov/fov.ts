@@ -68,6 +68,9 @@ export function getCircle(
 			break;
 
 		default:
+			// Invariant violation, not an expected failure: topology is typed as
+			// 4 | 6 | 8, so reaching here means the caller constructed an invalid
+			// FovOptions object despite the type system.
 			throw new Error("Incorrect topology for FOV computation");
 	}
 

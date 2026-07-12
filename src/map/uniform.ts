@@ -1,3 +1,5 @@
+import type { Result } from "../result.js";
+import { err, ok } from "../result.js";
 import type { Rng } from "../rng.js";
 import type { DungeonMap } from "./dungeon.js";
 import {
@@ -32,9 +34,11 @@ export interface UniformOptions {
 
 type Point = [number, number];
 
+/** The time limit was hit before a valid, fully-connected layout was found. */
+export type GenerationTimedOut = "generation-timed-out";
+
 export interface UniformMap extends DungeonMap {
-	/** Create a map. Returns null if the time limit was hit before a valid layout was found. */
-	create(callback?: CreateCallback): UniformMap | null;
+	create(callback?: CreateCallback): Result<UniformMap, GenerationTimedOut>;
 }
 
 const ROOM_ATTEMPTS = 20; /* a new room is tried this many times before being considered impossible */
@@ -364,11 +368,12 @@ export function createUniformMap(
 	const uniformMap: UniformMap = {
 		getRooms: () => rooms,
 		getCorridors: () => corridors,
-		create(callback?: CreateCallback): UniformMap | null {
+		create(callback?: CreateCallback): Result<UniformMap, GenerationTimedOut> {
 			const t1 = Date.now();
 			for (;;) {
-				if (Date.now() - t1 > resolvedOptions.timeLimit)
-					return null; /* time limit! */
+				if (Date.now() - t1 > resolvedOptions.timeLimit) {
+					return err("generation-timed-out");
+				}
 
 				map = fillMap(width, height, 1);
 				dug = 0;
@@ -387,7 +392,7 @@ export function createUniformMap(
 				}
 			}
 
-			return uniformMap;
+			return ok(uniformMap);
 		},
 	};
 	return uniformMap;

@@ -100,6 +100,10 @@ export function createRoomAt(
 		return createRoom(x2, y - height, x2 + width - 1, y - 1, x, y);
 	}
 
+	// Invariant violation, not an expected failure: every caller (digger.ts's
+	// getDiggingDirection, features.ts's own callers) only ever produces a
+	// unit direction vector. Reaching here means a caller bug, not a normal
+	// "can't build a room here" outcome.
 	throw new Error("dx or dy must be 1 or -1");
 }
 

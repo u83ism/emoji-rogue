@@ -49,5 +49,9 @@ export type { CreateCallback } from "./map.js";
 export { fillMap } from "./map.js";
 export type { RogueMap, RogueOptions, RogueRoom } from "./rogue.js";
 export { createRogueMap } from "./rogue.js";
-export type { UniformMap, UniformOptions } from "./uniform.js";
+export type {
+	GenerationTimedOut,
+	UniformMap,
+	UniformOptions,
+} from "./uniform.js";
 export { createUniformMap } from "./uniform.js";

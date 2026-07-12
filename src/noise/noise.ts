@@ -1,6 +1,5 @@
 /**
- * Base noise generator
+ * Shared contract for all noise generators: a pure function from a 2D
+ * coordinate to a noise value.
  */
-export default abstract class Noise {
-	abstract get(x: number, y: number): number;
-}
+export type NoiseSource = (x: number, y: number) => number;

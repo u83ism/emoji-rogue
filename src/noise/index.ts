@@ -1,3 +1,3 @@
-import Simplex from "./simplex.js";
-
-export default { Simplex };
+export type { NoiseSource } from "./noise.js";
+export type { ShuffleSource } from "./simplex.js";
+export { createSimplexNoise } from "./simplex.js";

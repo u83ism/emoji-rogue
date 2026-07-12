@@ -1,3 +1,11 @@
+# emoji-rogue
+
+絵文字を主軸に据えたCLIローグライク構想（絵文字ゲームシリーズ第1弾）。[rot.js](https://github.com/ondras/rot.js)をフォークして開発中。
+
+設計資料（コンセプト・技術的地雷への対処方針・第2弾候補等）は [docs/design.md](docs/design.md) を参照。実装はまだ手つかず（本リポジトリは現時点でrot.js本家からの変更なし）。
+
+---
+
 # rot.js
 
 ROguelike Toolkit in JavaScript. For more info, see http://ondras.github.com/rot.js.

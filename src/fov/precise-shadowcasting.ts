@@ -1,3 +1,4 @@
+import { at } from "../indexing.js";
 import {
 	type Fov,
 	type FovOptions,
@@ -6,14 +7,6 @@ import {
 } from "./fov.js";
 
 type Arc = [number, number];
-
-function at(shadows: readonly Arc[], index: number): Arc {
-	const arc = shadows[index];
-	if (arc === undefined) {
-		throw new Error("unreachable: index is within shadows.length");
-	}
-	return arc;
-}
 
 /**
  * Precise shadowcasting algorithm.

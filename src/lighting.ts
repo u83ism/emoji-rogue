@@ -1,5 +1,7 @@
 import * as Color from "./color.js";
 import type { Fov } from "./fov/fov.js";
+import { at as tupleAt } from "./indexing.js";
+import { decodePointKey, encodePointKey } from "./pointkey.js";
 
 type LightColor = [number, number, number];
 
@@ -36,25 +38,10 @@ export interface Lighting {
 	compute(lightingCallback: LightingCallback): Lighting;
 }
 
-function parseKey(key: string): [number, number] {
-	const parts = key.split(",");
-	const x = Number(parts[0]);
-	const y = Number(parts[1]);
-	return [x, y];
-}
-
 function at<T>(map: Record<string, T>, key: string): T {
 	const value = map[key];
 	if (value === undefined) {
 		throw new Error(`lighting: missing expected key "${key}"`);
-	}
-	return value;
-}
-
-function at3(color: LightColor, index: number): number {
-	const value = color[index];
-	if (value === undefined) {
-		throw new Error("unreachable: index must be 0, 1, or 2");
 	}
 	return value;
 }
@@ -84,7 +71,7 @@ export function createLighting(
 	}
 
 	function updateFOV(x: number, y: number): NumberMap {
-		const key1 = `${x},${y}`;
+		const key1 = encodePointKey(x, y);
 		const cache: NumberMap = {};
 		fovCache[key1] = cache;
 		const range = resolvedOptions.range;
@@ -92,7 +79,7 @@ export function createLighting(
 			throw new Error("Lighting: setFOV() must be called before compute()");
 		}
 		fov(x, y, range, (cx, cy, r, vis) => {
-			const key2 = `${cx},${cy}`;
+			const key2 = encodePointKey(cx, cy);
 			const formFactor = vis * (1 - r / range);
 			if (formFactor === 0) return;
 			cache[key2] = formFactor;
@@ -108,7 +95,7 @@ export function createLighting(
 		color: LightColor,
 		litCells: LightingMap,
 	): void {
-		const key = `${x},${y}`;
+		const key = encodePointKey(x, y);
 		const fovResult = key in fovCache ? at(fovCache, key) : updateFOV(x, y);
 
 		for (const fovKey of Object.keys(fovResult)) {
@@ -125,7 +112,8 @@ export function createLighting(
 			}
 
 			for (let i = 0; i < 3; i++) {
-				result[i] = at3(result, i) + Math.round(at3(color, i) * formFactor);
+				result[i] =
+					tupleAt(result, i) + Math.round(tupleAt(color, i) * formFactor);
 			} /* add light color */
 		}
 	}
@@ -137,7 +125,7 @@ export function createLighting(
 		doneCells: NumberMap,
 	): void {
 		for (const key of Object.keys(emittingCells)) {
-			const [x, y] = parseKey(key);
+			const [x, y] = decodePointKey(key);
 			emitLightFromCell(x, y, at(emittingCells, key), litCells);
 			doneCells[key] = 1;
 		}
@@ -159,7 +147,7 @@ export function createLighting(
 			if (key in reflectivityCache) {
 				reflectivity = at(reflectivityCache, key);
 			} else {
-				const [x, y] = parseKey(key);
+				const [x, y] = decodePointKey(key);
 				reflectivity = reflectivityCallback(x, y);
 				reflectivityCache[key] = reflectivity;
 			}
@@ -170,7 +158,7 @@ export function createLighting(
 			const emission: LightColor = [0, 0, 0];
 			let intensity = 0;
 			for (let i = 0; i < 3; i++) {
-				const part = Math.round(at3(color, i) * reflectivity);
+				const part = Math.round(tupleAt(color, i) * reflectivity);
 				emission[i] = part;
 				intensity += part;
 			}
@@ -200,7 +188,7 @@ export function createLighting(
 			y: number,
 			color: null | string | LightColor,
 		): Lighting {
-			const key = `${x},${y}`;
+			const key = encodePointKey(x, y);
 			if (color) {
 				lights[key] =
 					typeof color === "string"
@@ -244,7 +232,7 @@ export function createLighting(
 
 			for (const litKey of Object.keys(litCells)) {
 				/* let the user know what and how is lit */
-				const [x, y] = parseKey(litKey);
+				const [x, y] = decodePointKey(litKey);
 				lightingCallback(x, y, at(litCells, litKey));
 			}
 

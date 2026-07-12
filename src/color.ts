@@ -1,15 +1,8 @@
+import { at } from "./indexing.js";
 import type { Rng } from "./rng.js";
 import { clamp } from "./util.js";
 
 export type Color = [number, number, number];
-
-function at3(color: Color, index: number): number {
-	const value = color[index];
-	if (value === undefined) {
-		throw new Error("unreachable: index must be 0, 1, or 2");
-	}
-	return value;
-}
 
 export function fromString(str: string): Color {
 	const cached = CACHE[str];
@@ -64,7 +57,7 @@ export function add(color1: Color, ...colors: Color[]): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
-			result[i] = at3(result, i) + at3(color, i);
+			result[i] = at(result, i) + at(color, i);
 		}
 	}
 	return result;
@@ -76,7 +69,7 @@ export function add(color1: Color, ...colors: Color[]): Color {
 export function add_(color1: Color, ...colors: Color[]): Color {
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
-			color1[i] = at3(color1, i) + at3(color, i);
+			color1[i] = at(color1, i) + at(color, i);
 		}
 	}
 	return color1;
@@ -89,9 +82,9 @@ export function multiply(color1: Color, ...colors: Color[]): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
-			result[i] = (at3(result, i) * at3(color, i)) / 255;
+			result[i] = (at(result, i) * at(color, i)) / 255;
 		}
-		result[i] = Math.round(at3(result, i));
+		result[i] = Math.round(at(result, i));
 	}
 	return result;
 }
@@ -102,9 +95,9 @@ export function multiply(color1: Color, ...colors: Color[]): Color {
 export function multiply_(color1: Color, ...colors: Color[]): Color {
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
-			color1[i] = (at3(color1, i) * at3(color, i)) / 255;
+			color1[i] = (at(color1, i) * at(color, i)) / 255;
 		}
-		color1[i] = Math.round(at3(color1, i));
+		color1[i] = Math.round(at(color1, i));
 	}
 	return color1;
 }
@@ -116,7 +109,7 @@ export function interpolate(color1: Color, color2: Color, factor = 0.5): Color {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		result[i] = Math.round(
-			at3(result, i) + factor * (at3(color2, i) - at3(color1, i)),
+			at(result, i) + factor * (at(color2, i) - at(color1, i)),
 		);
 	}
 	return result;
@@ -133,7 +126,7 @@ export function interpolateHSL(
 	const hsl1 = rgb2hsl(color1);
 	const hsl2 = rgb2hsl(color2);
 	for (let i = 0; i < 3; i++) {
-		hsl1[i] = at3(hsl1, i) + factor * (at3(hsl2, i) - at3(hsl1, i));
+		hsl1[i] = at(hsl1, i) + factor * (at(hsl2, i) - at(hsl1, i));
 	}
 	return hsl2rgb(hsl1);
 }
@@ -148,12 +141,12 @@ export function randomize(rng: Rng, color: Color, diff: number | Color): Color {
 	const result = color.slice() as Color;
 	if (Array.isArray(diff)) {
 		for (let i = 0; i < 3; i++) {
-			result[i] = at3(result, i) + Math.round(rng.getNormal(0, at3(diff, i)));
+			result[i] = at(result, i) + Math.round(rng.getNormal(0, at(diff, i)));
 		}
 	} else {
 		const uniformDiff = Math.round(rng.getNormal(0, diff));
 		for (let i = 0; i < 3; i++) {
-			result[i] = at3(result, i) + uniformDiff;
+			result[i] = at(result, i) + uniformDiff;
 		}
 	}
 	return result;

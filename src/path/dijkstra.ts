@@ -1,3 +1,4 @@
+import { encodePointKey } from "../pointkey.js";
 import { err, ok } from "../result.js";
 import type {
 	ComputeCallback,
@@ -11,10 +12,6 @@ interface Item {
 	x: number;
 	y: number;
 	prev: Item | null;
-}
-
-function encodeKey(x: number, y: number): string {
-	return `${x},${y}`;
 }
 
 /**
@@ -36,7 +33,7 @@ export function createDijkstraPath(
 
 	function add(x: number, y: number, prev: Item | null): void {
 		const item: Item = { x, y, prev };
-		computed[encodeKey(x, y)] = item;
+		computed[encodePointKey(x, y)] = item;
 		todo.push(item);
 	}
 
@@ -52,7 +49,7 @@ export function createDijkstraPath(
 
 			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
 			for (const [x, y] of neighbors) {
-				const id = encodeKey(x, y);
+				const id = encodePointKey(x, y);
 				if (id in computed) {
 					continue;
 				} /* already done */
@@ -64,7 +61,7 @@ export function createDijkstraPath(
 	add(toX, toY, null);
 
 	return (fromX: number, fromY: number, callback: ComputeCallback) => {
-		const key = encodeKey(fromX, fromY);
+		const key = encodePointKey(fromX, fromY);
 		if (!(key in computed)) {
 			compute(fromX, fromY);
 		}

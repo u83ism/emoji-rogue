@@ -1,4 +1,5 @@
 import { DIRS } from "../constants.js";
+import { toXy } from "../indexing.js";
 import type { Result } from "../result.js";
 
 export type ComputeCallback = (x: number, y: number) => void;
@@ -22,17 +23,6 @@ export type Path = (
 	fromY: number,
 	callback: ComputeCallback,
 ) => Result<void, NoPathFound>;
-
-function toXy(pair: readonly number[] | undefined): [number, number] {
-	if (pair === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	const [dx, dy] = pair;
-	if (dx === undefined || dy === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	return [dx, dy];
-}
 
 /**
  * The direction vectors used for neighbor lookups, in the order pathfinders

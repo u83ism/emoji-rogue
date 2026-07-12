@@ -1,4 +1,5 @@
 import { DIRS } from "../constants.js";
+import { toXy } from "../indexing.js";
 import type { Rng } from "../rng.js";
 import type { CreateCallback } from "./map.js";
 
@@ -27,17 +28,6 @@ export interface RogueRoom {
 
 export interface RogueMap {
 	create(callback?: CreateCallback): void;
-}
-
-function toXy(pair: readonly number[] | undefined): [number, number] {
-	if (pair === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	const [dx, dy] = pair;
-	if (dx === undefined || dy === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	return [dx, dy];
 }
 
 function calculateRoomSize(size: number, cell: number): [number, number] {

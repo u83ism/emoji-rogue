@@ -1,3 +1,4 @@
+import { encodePointKey } from "../pointkey.js";
 import { err, ok } from "../result.js";
 import type {
 	ComputeCallback,
@@ -13,10 +14,6 @@ interface Item {
 	g: number;
 	h: number;
 	prev: Item | null;
-}
-
-function encodeKey(x: number, y: number): string {
-	return `${x},${y}`;
 }
 
 /**
@@ -90,7 +87,7 @@ export function createAStarPath(
 			if (item === undefined) {
 				throw new Error("unreachable: todo is non-empty");
 			}
-			const id = encodeKey(item.x, item.y);
+			const id = encodePointKey(item.x, item.y);
 			if (id in done) {
 				continue;
 			}
@@ -101,7 +98,7 @@ export function createAStarPath(
 
 			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
 			for (const [x, y] of neighbors) {
-				const neighborId = encodeKey(x, y);
+				const neighborId = encodePointKey(x, y);
 				if (neighborId in done) {
 					continue;
 				}
@@ -109,7 +106,7 @@ export function createAStarPath(
 			}
 		}
 
-		let current: Item | null = done[encodeKey(fromX, fromY)] ?? null;
+		let current: Item | null = done[encodePointKey(fromX, fromY)] ?? null;
 		if (!current) {
 			return err("no-path-found");
 		}

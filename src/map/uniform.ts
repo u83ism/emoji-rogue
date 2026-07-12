@@ -1,3 +1,4 @@
+import { at as pointAt } from "../indexing.js";
 import type { Result } from "../result.js";
 import { err, ok } from "../result.js";
 import type { Rng } from "../rng.js";
@@ -139,13 +140,6 @@ export function createUniformMap(
 		}
 
 		return result;
-	}
-
-	function pointAt(point: Point, index: number): number {
-		const value = point[index];
-		if (value === undefined)
-			throw new Error("unreachable: index must be 0 or 1");
-		return value;
 	}
 
 	function digLine(points: readonly Point[]): void {

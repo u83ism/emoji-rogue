@@ -1,3 +1,4 @@
+import { decodePointKey, encodePointKey } from "../pointkey.js";
 import type { Rng } from "../rng.js";
 
 export interface RoomOptions {
@@ -157,7 +158,7 @@ export function createRandomRoom(
 }
 
 export function addDoor(room: Room, x: number, y: number): void {
-	room.doors[`${x},${y}`] = 1;
+	room.doors[encodePointKey(x, y)] = 1;
 }
 
 export function getDoors(
@@ -165,9 +166,7 @@ export function getDoors(
 	callback: (x: number, y: number) => void,
 ): void {
 	for (const key of Object.keys(room.doors)) {
-		const parts = key.split(",");
-		const x = Number(parts[0]);
-		const y = Number(parts[1]);
+		const [x, y] = decodePointKey(key);
 		callback(x, y);
 	}
 }
@@ -233,7 +232,7 @@ export function digRoom(room: Room, digCallback: DigCallback): void {
 	for (let x = left; x <= right; x++) {
 		for (let y = top; y <= bottom; y++) {
 			let value: number;
-			if (`${x},${y}` in room.doors) {
+			if (encodePointKey(x, y) in room.doors) {
 				value = 2;
 			} else if (x === left || x === right || y === top || y === bottom) {
 				value = 1;

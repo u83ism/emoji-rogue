@@ -1,4 +1,6 @@
 import { DIRS } from "../constants.js";
+import { toXy } from "../indexing.js";
+import { encodePointKey } from "../pointkey.js";
 import type { Rng } from "../rng.js";
 import type { CreateCallback } from "./map.js";
 import { fillMap } from "./map.js";
@@ -15,17 +17,6 @@ export type ConnectionCallback = (from: Point, to: Point) => void;
 
 type Point = [number, number];
 type PointMap = Record<string, Point>;
-
-function toXy(pair: readonly number[] | undefined): [number, number] {
-	if (pair === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	const [dx, dy] = pair;
-	if (dx === undefined || dy === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	return [dx, dy];
-}
 
 export interface CellularMap {
 	/** Fill the map with random values; probability is the chance [0,1] for a cell to become alive. */
@@ -104,8 +95,9 @@ export function createCellularMap(
 		);
 	}
 
+	/* the original rot.js used "x.y" here; unified to the shared "x,y" key */
 	function pointKey(p: Point): string {
-		return `${p[0]}.${p[1]}`;
+		return encodePointKey(p[0], p[1]);
 	}
 
 	function getClosest(point: Point, space: PointMap): Point {

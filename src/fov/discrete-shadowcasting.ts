@@ -1,17 +1,10 @@
+import { at } from "../indexing.js";
 import {
 	type Fov,
 	type FovOptions,
 	getCircle,
 	type LightPassesCallback,
 } from "./fov.js";
-
-function at(data: readonly number[], index: number): number {
-	const value = data[index];
-	if (value === undefined) {
-		throw new Error("unreachable: index is within data.length");
-	}
-	return value;
-}
 
 /**
  * Discrete shadowcasting algorithm. Obsoleted by precise shadowcasting.

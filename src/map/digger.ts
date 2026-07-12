@@ -1,4 +1,6 @@
 import { DIRS } from "../constants.js";
+import { toXy } from "../indexing.js";
+import { decodePointKey, encodePointKey } from "../pointkey.js";
 import type { Rng } from "../rng.js";
 import type { DungeonMap } from "./dungeon.js";
 import {
@@ -40,17 +42,6 @@ export interface DiggerMap extends DungeonMap {
 }
 
 const FEATURE_ATTEMPTS = 20; /* how many times to try creating a feature on a suitable wall */
-
-function toXy(pair: readonly number[] | undefined): [number, number] {
-	if (pair === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	const [dx, dy] = pair;
-	if (dx === undefined || dy === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	return [dx, dy];
-}
 
 /**
  * Random dungeon generator using human-like digging patterns.
@@ -102,7 +93,7 @@ export function createDiggerMap(
 			dug++;
 		} else {
 			/* wall */
-			walls[`${x},${y}`] = 1;
+			walls[encodePointKey(x, y)] = 1;
 		}
 	}
 
@@ -117,7 +108,7 @@ export function createDiggerMap(
 	}
 
 	function priorityWallCallback(x: number, y: number): void {
-		walls[`${x},${y}`] = 2;
+		walls[encodePointKey(x, y)] = 2;
 	}
 
 	function featureIsValid(feature: Feature): boolean {
@@ -181,8 +172,8 @@ export function createDiggerMap(
 
 	function removeSurroundingWalls(cx: number, cy: number): void {
 		for (const [dx, dy] of dirs4) {
-			delete walls[`${cx + dx},${cy + dy}`];
-			delete walls[`${cx + 2 * dx},${cy + 2 * dy}`];
+			delete walls[encodePointKey(cx + dx, cy + dy)];
+			delete walls[encodePointKey(cx + 2 * dx, cy + 2 * dy)];
 		}
 	}
 
@@ -244,9 +235,7 @@ export function createDiggerMap(
 				const wall = findWall();
 				if (!wall) break; /* no more walls */
 
-				const parts = wall.split(",");
-				const x = Number(parts[0]);
-				const y = Number(parts[1]);
+				const [x, y] = decodePointKey(wall);
 				const dir = getDiggingDirection(x, y);
 				if (!dir) continue; /* this wall is not suitable */
 

@@ -1,3 +1,4 @@
+import { at } from "../indexing.js";
 import { mod } from "../util.js";
 import type { NoiseSource } from "./noise.js";
 
@@ -18,14 +19,6 @@ const GRADIENTS: ReadonlyArray<readonly [number, number]> = [
 	[-1, 0],
 	[-1, -1],
 ];
-
-function at<T>(array: readonly T[], index: number): T {
-	const value = array[index];
-	if (value === undefined) {
-		throw new Error(`simplex noise index ${index} out of range`);
-	}
-	return value;
-}
 
 /**
  * A simple 2d implementation of simplex noise by Ondrej Zara

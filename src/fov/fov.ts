@@ -1,4 +1,5 @@
 import { DIRS } from "../constants.js";
+import { toXy } from "../indexing.js";
 
 export type LightPassesCallback = (x: number, y: number) => boolean;
 
@@ -20,17 +21,6 @@ export type Fov = (
 	radius: number,
 	callback: VisibilityCallback,
 ) => void;
-
-function toXy(pair: readonly number[] | undefined): [number, number] {
-	if (pair === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	const [dx, dy] = pair;
-	if (dx === undefined || dy === undefined) {
-		throw new Error("expected a two-element direction vector");
-	}
-	return [dx, dy];
-}
 
 /** Return all neighbors in a concentric ring around (cx, cy) at range r. */
 export function getCircle(

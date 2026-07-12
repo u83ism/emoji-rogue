@@ -1,3 +1,4 @@
+import { at } from "../indexing.js";
 import type { LightPassesCallback, VisibilityCallback } from "./fov.js";
 
 /** Octants used for translating recursive shadowcasting offsets */
@@ -36,14 +37,6 @@ export interface RecursiveShadowcastingFov {
 		dir: number,
 		callback: VisibilityCallback,
 	): void;
-}
-
-function at(octant: number): readonly [number, number, number, number] {
-	const value = OCTANTS[octant];
-	if (value === undefined) {
-		throw new Error(`invalid octant index: ${octant}`);
-	}
-	return value;
 }
 
 /**
@@ -187,10 +180,10 @@ export function createRecursiveShadowcastingFov(
 			const nextOctant =
 				(dir + 1 + 8) %
 				8; /* need to grab the next octant to render a full 180 degrees */
-			renderOctant(x, y, at(nextPreviousOctant), radius, callback);
-			renderOctant(x, y, at(previousOctant), radius, callback);
-			renderOctant(x, y, at(dir), radius, callback);
-			renderOctant(x, y, at(nextOctant), radius, callback);
+			renderOctant(x, y, at(OCTANTS, nextPreviousOctant), radius, callback);
+			renderOctant(x, y, at(OCTANTS, previousOctant), radius, callback);
+			renderOctant(x, y, at(OCTANTS, dir), radius, callback);
+			renderOctant(x, y, at(OCTANTS, nextOctant), radius, callback);
 		},
 
 		compute90(x, y, radius, dir, callback) {
@@ -199,8 +192,8 @@ export function createRecursiveShadowcastingFov(
 			const previousOctant =
 				(dir - 1 + 8) %
 				8; /* need to retrieve the previous octant to render a full 90 degrees */
-			renderOctant(x, y, at(dir), radius, callback);
-			renderOctant(x, y, at(previousOctant), radius, callback);
+			renderOctant(x, y, at(OCTANTS, dir), radius, callback);
+			renderOctant(x, y, at(OCTANTS, previousOctant), radius, callback);
 		},
 	};
 }

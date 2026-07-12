@@ -1,8 +1,10 @@
-import Path, {
-	type ComputeCallback,
-	type Options,
-	type PassableCallback,
+import type {
+	ComputeCallback,
+	PassableCallback,
+	Path,
+	PathOptions,
 } from "./path.js";
+import { getNeighbors, getPathDirs } from "./path.js";
 
 interface Item {
 	x: number;
@@ -12,117 +14,105 @@ interface Item {
 	prev: Item | null;
 }
 
+function encodeKey(x: number, y: number): string {
+	return `${x},${y}`;
+}
+
 /**
- * @class Simplified A* algorithm: all edges have a value of 1
- * @augments ROT.Path
- * @see ROT.Path
+ * Simplified A* algorithm: all edges have a value of 1.
  */
-export default class AStar extends Path {
-	_todo: Item[];
-	_done: { [key: string]: Item };
-	_fromX!: number;
-	_fromY!: number;
+export function createAStarPath(
+	toX: number,
+	toY: number,
+	passable: PassableCallback,
+	options: Partial<PathOptions> = {},
+): Path {
+	const topology = options.topology ?? 8;
+	const dirs = getPathDirs(topology);
 
-	constructor(
-		toX: number,
-		toY: number,
-		passableCallback: PassableCallback,
-		options: Partial<Options> = {},
-	) {
-		super(toX, toY, passableCallback, options);
-
-		this._todo = [];
-		this._done = {};
-	}
-
-	/**
-	 * Compute a path from a given point
-	 * @see ROT.Path#compute
-	 */
-	compute(fromX: number, fromY: number, callback: ComputeCallback) {
-		this._todo = [];
-		this._done = {};
-		this._fromX = fromX;
-		this._fromY = fromY;
-		this._add(this._toX, this._toY, null);
-
-		while (this._todo.length) {
-			const item = this._todo.shift() as Item;
-			const id = item.x + "," + item.y;
-			if (id in this._done) {
-				continue;
-			}
-			this._done[id] = item;
-			if (item.x == fromX && item.y == fromY) {
-				break;
-			}
-
-			const neighbors = this._getNeighbors(item.x, item.y);
-
-			for (let i = 0; i < neighbors.length; i++) {
-				const neighbor = neighbors[i];
-				const x = neighbor[0];
-				const y = neighbor[1];
-				const id = x + "," + y;
-				if (id in this._done) {
-					continue;
-				}
-				this._add(x, y, item);
-			}
-		}
-
-		let item: Item | null = this._done[fromX + "," + fromY];
-		if (!item) {
-			return;
-		}
-
-		while (item) {
-			callback(item.x, item.y);
-			item = item.prev;
-		}
-	}
-
-	_add(x: number, y: number, prev: Item | null) {
-		const h = this._distance(x, y);
-		const obj = {
-			x: x,
-			y: y,
-			prev: prev,
-			g: prev ? prev.g + 1 : 0,
-			h: h,
-		};
-
-		/* insert into priority queue */
-
-		const f = obj.g + obj.h;
-		for (let i = 0; i < this._todo.length; i++) {
-			const item = this._todo[i];
-			const itemF = item.g + item.h;
-			if (f < itemF || (f == itemF && h < item.h)) {
-				this._todo.splice(i, 0, obj);
-				return;
-			}
-		}
-
-		this._todo.push(obj);
-	}
-
-	_distance(x: number, y: number) {
-		switch (this._options.topology) {
+	function distance(
+		x: number,
+		y: number,
+		fromX: number,
+		fromY: number,
+	): number {
+		switch (topology) {
 			case 4:
-				return Math.abs(x - this._fromX) + Math.abs(y - this._fromY);
-				break;
+				return Math.abs(x - fromX) + Math.abs(y - fromY);
 
 			case 6: {
-				const dx = Math.abs(x - this._fromX);
-				const dy = Math.abs(y - this._fromY);
+				const dx = Math.abs(x - fromX);
+				const dy = Math.abs(y - fromY);
 				return dy + Math.max(0, (dx - dy) / 2);
-				break;
 			}
 
 			case 8:
-				return Math.max(Math.abs(x - this._fromX), Math.abs(y - this._fromY));
-				break;
+				return Math.max(Math.abs(x - fromX), Math.abs(y - fromY));
+
+			default:
+				throw new Error("Incorrect topology for A* computation");
 		}
 	}
+
+	return (fromX: number, fromY: number, callback: ComputeCallback) => {
+		const todo: Item[] = [];
+		const done: Record<string, Item> = {};
+
+		function add(x: number, y: number, prev: Item | null): void {
+			const h = distance(x, y, fromX, fromY);
+			const item: Item = { x, y, prev, g: prev ? prev.g + 1 : 0, h };
+
+			/* insert into priority queue */
+			const f = item.g + item.h;
+			for (let i = 0; i < todo.length; i++) {
+				const existing = todo[i];
+				if (existing === undefined) {
+					throw new Error("unreachable: i is within todo.length");
+				}
+				const existingF = existing.g + existing.h;
+				if (f < existingF || (f === existingF && h < existing.h)) {
+					todo.splice(i, 0, item);
+					return;
+				}
+			}
+
+			todo.push(item);
+		}
+
+		add(toX, toY, null);
+
+		while (todo.length) {
+			const item = todo.shift();
+			if (item === undefined) {
+				throw new Error("unreachable: todo is non-empty");
+			}
+			const id = encodeKey(item.x, item.y);
+			if (id in done) {
+				continue;
+			}
+			done[id] = item;
+			if (item.x === fromX && item.y === fromY) {
+				break;
+			}
+
+			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
+			for (const [x, y] of neighbors) {
+				const neighborId = encodeKey(x, y);
+				if (neighborId in done) {
+					continue;
+				}
+				add(x, y, item);
+			}
+		}
+
+		let current: Item | null = done[encodeKey(fromX, fromY)] ?? null;
+		if (!current) {
+			return;
+		}
+
+		while (current) {
+			callback(current.x, current.y);
+			current = current.prev;
+		}
+	};
 }

@@ -1,8 +1,10 @@
-import Path, {
-	type ComputeCallback,
-	type Options,
-	type PassableCallback,
+import type {
+	ComputeCallback,
+	PassableCallback,
+	Path,
+	PathOptions,
 } from "./path.js";
+import { getNeighbors, getPathDirs } from "./path.js";
 
 interface Item {
 	x: number;
@@ -10,80 +12,69 @@ interface Item {
 	prev: Item | null;
 }
 
+function encodeKey(x: number, y: number): string {
+	return `${x},${y}`;
+}
+
 /**
- * @class Simplified Dijkstra's algorithm: all edges have a value of 1
- * @augments ROT.Path
- * @see ROT.Path
+ * Simplified Dijkstra's algorithm: all edges have a value of 1.
+ *
+ * The search frontier is cached across calls: the first `compute()` call for
+ * a given `(fromX, fromY)` (or a closer one already computed) reuses work
+ * from previous calls, expanding the frontier only as far as needed.
  */
-export default class Dijkstra extends Path {
-	_computed: { [key: string]: Item };
-	_todo: Item[];
+export function createDijkstraPath(
+	toX: number,
+	toY: number,
+	passable: PassableCallback,
+	options: Partial<PathOptions> = {},
+): Path {
+	const dirs = getPathDirs(options.topology ?? 8);
+	const computed: Record<string, Item> = {};
+	const todo: Item[] = [];
 
-	constructor(
-		toX: number,
-		toY: number,
-		passableCallback: PassableCallback,
-		options: Partial<Options>,
-	) {
-		super(toX, toY, passableCallback, options);
-
-		this._computed = {};
-		this._todo = [];
-		this._add(toX, toY, null);
+	function add(x: number, y: number, prev: Item | null): void {
+		const item: Item = { x, y, prev };
+		computed[encodeKey(x, y)] = item;
+		todo.push(item);
 	}
 
-	/**
-	 * Compute a path from a given point
-	 * @see ROT.Path#compute
-	 */
-	compute(fromX: number, fromY: number, callback: ComputeCallback) {
-		const key = fromX + "," + fromY;
-		if (!(key in this._computed)) {
-			this._compute(fromX, fromY);
-		}
-		if (!(key in this._computed)) {
-			return;
-		}
-
-		let item: Item | null = this._computed[key];
-		while (item) {
-			callback(item.x, item.y);
-			item = item.prev;
-		}
-	}
-
-	/**
-	 * Compute a non-cached value
-	 */
-	_compute(fromX: number, fromY: number) {
-		while (this._todo.length) {
-			const item = this._todo.shift() as Item;
-			if (item.x == fromX && item.y == fromY) {
+	function compute(fromX: number, fromY: number): void {
+		while (todo.length) {
+			const item = todo.shift();
+			if (item === undefined) {
+				throw new Error("unreachable: todo is non-empty");
+			}
+			if (item.x === fromX && item.y === fromY) {
 				return;
 			}
 
-			const neighbors = this._getNeighbors(item.x, item.y);
-
-			for (let i = 0; i < neighbors.length; i++) {
-				const neighbor = neighbors[i];
-				const x = neighbor[0];
-				const y = neighbor[1];
-				const id = x + "," + y;
-				if (id in this._computed) {
+			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
+			for (const [x, y] of neighbors) {
+				const id = encodeKey(x, y);
+				if (id in computed) {
 					continue;
 				} /* already done */
-				this._add(x, y, item);
+				add(x, y, item);
 			}
 		}
 	}
 
-	_add(x: number, y: number, prev: Item | null) {
-		const obj = {
-			x: x,
-			y: y,
-			prev: prev,
-		};
-		this._computed[x + "," + y] = obj;
-		this._todo.push(obj);
-	}
+	add(toX, toY, null);
+
+	return (fromX: number, fromY: number, callback: ComputeCallback) => {
+		const key = encodeKey(fromX, fromY);
+		if (!(key in computed)) {
+			compute(fromX, fromY);
+		}
+		if (!(key in computed)) {
+			return;
+		}
+
+		let current: Item | null = computed[key] ?? null;
+		while (current) {
+			callback(current.x, current.y);
+			current = current.prev;
+		}
+	};
 }

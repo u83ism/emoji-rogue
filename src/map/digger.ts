@@ -1,291 +1,287 @@
 import { DIRS } from "../constants.js";
-import RNG from "../rng.js";
-import Dungeon from "./dungeon.js";
-import { Corridor, type FeatureConstructor, Room } from "./features.js";
+import type { Rng } from "../rng.js";
+import type { DungeonMap } from "./dungeon.js";
+import {
+	addDoors,
+	type Corridor,
+	type CreateFeatureAt,
+	clearDoors,
+	corridorIsValid,
+	createCorridorAt,
+	createCorridorPriorityWalls,
+	createRoomAt,
+	createRoomAtCenter,
+	digCorridor,
+	digRoom,
+	type Feature,
+	type FeatureOptions,
+	type Room,
+	roomIsValid,
+} from "./features.js";
 import type { CreateCallback } from "./map.js";
+import { fillMap } from "./map.js";
 
 type FeatureType = "room" | "corridor";
-const FEATURES = {
-	room: Room,
-	corridor: Corridor,
+
+const FEATURES: Record<FeatureType, CreateFeatureAt> = {
+	room: createRoomAt,
+	corridor: createCorridorAt,
 };
 
-interface Options {
-	roomWidth: [number, number];
-	roomHeight: [number, number];
-	corridorLength: [number, number];
+export interface DiggerOptions extends FeatureOptions {
+	/** we stop after this percentage of level area has been dug out */
 	dugPercentage: number;
+	/** we stop after this much time has passed (msec) */
 	timeLimit: number;
+}
+
+export interface DiggerMap extends DungeonMap {
+	create(callback?: CreateCallback): DiggerMap;
+}
+
+const FEATURE_ATTEMPTS = 20; /* how many times to try creating a feature on a suitable wall */
+
+function toXy(pair: readonly number[] | undefined): [number, number] {
+	if (pair === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	const [dx, dy] = pair;
+	if (dx === undefined || dy === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	return [dx, dy];
 }
 
 /**
  * Random dungeon generator using human-like digging patterns.
- * Heavily based on Mike Anderson's ideas from the "Tyrant" algo, mentioned at
+ * Heavily based on Mike Anderson's ideas from the "Tyrant" algorithm, mentioned at
  * http://www.roguebasin.roguelikedevelopment.org/index.php?title=Dungeon-Building_Algorithm.
  */
-export default class Digger extends Dungeon {
-	_options: Options;
-	_featureAttempts: number;
-	_map: number[][];
-	_walls: { [key: string]: number };
-	_dug: number;
-	_features: { [key: string]: number };
+export function createDiggerMap(
+	width: number,
+	height: number,
+	rng: Rng,
+	options: Partial<DiggerOptions> = {},
+): DiggerMap {
+	const resolvedOptions: DiggerOptions = {
+		roomWidth: [3, 9],
+		roomHeight: [3, 5],
+		corridorLength: [3, 10],
+		dugPercentage: 0.2,
+		timeLimit: 1000,
+		...options,
+	};
 
-	constructor(width: number, height: number, options: Partial<Options> = {}) {
-		super(width, height);
+	const featureWeights: Record<FeatureType, number> = { room: 4, corridor: 4 };
+	const dirs4 = DIRS[4].map(toXy);
 
-		this._options = Object.assign(
-			{
-				roomWidth: [3, 9] /* room minimum and maximum width */,
-				roomHeight: [3, 5] /* room minimum and maximum height */,
-				corridorLength: [3, 10] /* corridor minimum and maximum length */,
-				dugPercentage: 0.2 /* we stop after this percentage of level area has been dug out */,
-				timeLimit: 1000 /* we stop after this much time has passed (msec) */,
-			},
-			options,
-		);
+	let map: number[][] = [];
+	let walls: Record<string, number> = {};
+	let dug = 0;
+	let rooms: Room[] = [];
+	let corridors: Corridor[] = [];
 
-		this._features = {
-			room: 4,
-			corridor: 4,
-		};
-		this._map = [];
-		this._featureAttempts = 20; /* how many times do we try to create a feature on a suitable wall */
-		this._walls = {}; /* these are available for digging */
-		this._dug = 0;
-
-		this._digCallback = this._digCallback.bind(this);
-		this._canBeDugCallback = this._canBeDugCallback.bind(this);
-		this._isWallCallback = this._isWallCallback.bind(this);
-		this._priorityWallCallback = this._priorityWallCallback.bind(this);
+	function at(x: number, y: number): number {
+		const column = map[x];
+		if (column === undefined) throw new Error("digger map: x out of range");
+		const value = column[y];
+		if (value === undefined) throw new Error("digger map: y out of range");
+		return value;
 	}
 
-	create(callback?: CreateCallback) {
-		this._rooms = [];
-		this._corridors = [];
-		this._map = this._fillMap(1);
-		this._walls = {};
-		this._dug = 0;
-		const area = (this._width - 2) * (this._height - 2);
-
-		this._firstRoom();
-
-		const t1 = Date.now();
-
-		let priorityWalls;
-		do {
-			priorityWalls = 0;
-			const t2 = Date.now();
-			if (t2 - t1 > this._options.timeLimit) {
-				break;
-			}
-
-			/* find a good wall */
-			const wall = this._findWall();
-			if (!wall) {
-				break;
-			} /* no more walls */
-
-			const parts = wall.split(",");
-			const x = parseInt(parts[0]);
-			const y = parseInt(parts[1]);
-			const dir = this._getDiggingDirection(x, y);
-			if (!dir) {
-				continue;
-			} /* this wall is not suitable */
-
-			//		console.log("wall", x, y);
-
-			/* try adding a feature */
-			let featureAttempts = 0;
-			do {
-				featureAttempts++;
-				if (this._tryFeature(x, y, dir[0], dir[1])) {
-					/* feature added */
-					//if (this._rooms.length + this._corridors.length == 2) { this._rooms[0].addDoor(x, y); } /* first room oficially has doors */
-					this._removeSurroundingWalls(x, y);
-					this._removeSurroundingWalls(x - dir[0], y - dir[1]);
-					break;
-				}
-			} while (featureAttempts < this._featureAttempts);
-
-			for (const id in this._walls) {
-				if (this._walls[id] > 1) {
-					priorityWalls++;
-				}
-			}
-		} while (
-			this._dug / area < this._options.dugPercentage ||
-			priorityWalls
-		); /* fixme number of priority walls */
-
-		this._addDoors();
-
-		if (callback) {
-			for (let i = 0; i < this._width; i++) {
-				for (let j = 0; j < this._height; j++) {
-					callback(i, j, this._map[i][j]);
-				}
-			}
-		}
-
-		this._walls = {};
-		this._map = [];
-
-		return this;
+	function setCell(x: number, y: number, value: number): void {
+		const column = map[x];
+		if (column === undefined) throw new Error("digger map: x out of range");
+		column[y] = value;
 	}
 
-	_digCallback(x: number, y: number, value: number) {
-		if (value == 0 || value == 2) {
+	function digCallback(x: number, y: number, value: number): void {
+		if (value === 0 || value === 2) {
 			/* empty */
-			this._map[x][y] = 0;
-			this._dug++;
+			setCell(x, y, 0);
+			dug++;
 		} else {
 			/* wall */
-			this._walls[x + "," + y] = 1;
+			walls[`${x},${y}`] = 1;
 		}
 	}
 
-	_isWallCallback(x: number, y: number) {
-		if (x < 0 || y < 0 || x >= this._width || y >= this._height) {
-			return false;
+	function isWallCallback(x: number, y: number): boolean {
+		if (x < 0 || y < 0 || x >= width || y >= height) return false;
+		return at(x, y) === 1;
+	}
+
+	function canBeDugCallback(x: number, y: number): boolean {
+		if (x < 1 || y < 1 || x + 1 >= width || y + 1 >= height) return false;
+		return at(x, y) === 1;
+	}
+
+	function priorityWallCallback(x: number, y: number): void {
+		walls[`${x},${y}`] = 2;
+	}
+
+	function featureIsValid(feature: Feature): boolean {
+		return feature.kind === "room"
+			? roomIsValid(feature, isWallCallback, canBeDugCallback)
+			: corridorIsValid(feature, isWallCallback, canBeDugCallback);
+	}
+
+	function digFeature(feature: Feature): void {
+		if (feature.kind === "room") {
+			digRoom(feature, digCallback);
+		} else {
+			digCorridor(feature, digCallback);
 		}
-		return this._map[x][y] == 1;
 	}
 
-	_canBeDugCallback(x: number, y: number) {
-		if (x < 1 || y < 1 || x + 1 >= this._width || y + 1 >= this._height) {
-			return false;
-		}
-		return this._map[x][y] == 1;
+	function firstRoom(): void {
+		const cx = Math.floor(width / 2);
+		const cy = Math.floor(height / 2);
+		const room = createRoomAtCenter(rng, cx, cy, resolvedOptions);
+		rooms.push(room);
+		digRoom(room, digCallback);
 	}
 
-	_priorityWallCallback(x: number, y: number) {
-		this._walls[x + "," + y] = 2;
-	}
-
-	_firstRoom() {
-		const cx = Math.floor(this._width / 2);
-		const cy = Math.floor(this._height / 2);
-		const room = Room.createRandomCenter(cx, cy, this._options);
-		this._rooms.push(room);
-		room.create(this._digCallback);
-	}
-
-	/**
-	 * Get a suitable wall
-	 */
-	_findWall() {
-		const prio1 = [];
-		const prio2 = [];
-		for (const id in this._walls) {
-			const prio = this._walls[id];
-			if (prio == 2) {
-				prio2.push(id);
-			} else {
-				prio1.push(id);
-			}
+	/** Get a suitable wall id ("x,y"), or null if none is available. */
+	function findWall(): string | null {
+		const prio1: string[] = [];
+		const prio2: string[] = [];
+		for (const id of Object.keys(walls)) {
+			if (walls[id] === 2) prio2.push(id);
+			else prio1.push(id);
 		}
 
 		const arr = prio2.length ? prio2 : prio1;
-		if (!arr.length) {
-			return null;
-		} /* no walls :/ */
+		if (!arr.length) return null; /* no walls :/ */
 
-		const id = RNG.getItem(arr.sort()) as string; // sort to make the order deterministic
-		delete this._walls[id];
-
+		const id = rng.getItem(arr.slice().sort()); // sort to make the order deterministic
+		if (id === null) return null;
+		delete walls[id];
 		return id;
 	}
 
-	/**
-	 * Tries adding a feature
-	 * @returns {bool} was this a successful try?
-	 */
-	_tryFeature(x: number, y: number, dx: number, dy: number) {
-		const featureName = RNG.getWeightedValue(this._features) as FeatureType;
-		const ctor = FEATURES[featureName] as FeatureConstructor;
-		const feature = ctor.createRandomAt(x, y, dx, dy, this._options);
+	/** @returns was this a successful try? */
+	function tryFeature(x: number, y: number, dx: number, dy: number): boolean {
+		const featureName = rng.getWeightedValue(featureWeights);
+		const feature = FEATURES[featureName](rng, x, y, dx, dy, resolvedOptions);
 
-		if (!feature.isValid(this._isWallCallback, this._canBeDugCallback)) {
-			//		console.log("not valid");
-			//		feature.debug();
-			return false;
-		}
+		if (!featureIsValid(feature)) return false;
 
-		feature.create(this._digCallback);
-		//	feature.debug();
+		digFeature(feature);
 
-		if (feature instanceof Room) {
-			this._rooms.push(feature);
-		}
-		if (feature instanceof Corridor) {
-			feature.createPriorityWalls(this._priorityWallCallback);
-			this._corridors.push(feature);
+		if (feature.kind === "room") {
+			rooms.push(feature);
+		} else {
+			createCorridorPriorityWalls(feature, priorityWallCallback);
+			corridors.push(feature);
 		}
 
 		return true;
 	}
 
-	_removeSurroundingWalls(cx: number, cy: number) {
-		const deltas = DIRS[4];
-
-		for (let i = 0; i < deltas.length; i++) {
-			const delta = deltas[i];
-			let x = cx + delta[0];
-			let y = cy + delta[1];
-			delete this._walls[x + "," + y];
-			x = cx + 2 * delta[0];
-			y = cy + 2 * delta[1];
-			delete this._walls[x + "," + y];
+	function removeSurroundingWalls(cx: number, cy: number): void {
+		for (const [dx, dy] of dirs4) {
+			delete walls[`${cx + dx},${cy + dy}`];
+			delete walls[`${cx + 2 * dx},${cy + 2 * dy}`];
 		}
 	}
 
-	/**
-	 * Returns vector in "digging" direction, or false, if this does not exist (or is not unique)
-	 */
-	_getDiggingDirection(cx: number, cy: number) {
-		if (cx <= 0 || cy <= 0 || cx >= this._width - 1 || cy >= this._height - 1) {
-			return null;
-		}
+	/** Vector in the "digging" direction, or null if it doesn't exist (or isn't unique). */
+	function getDiggingDirection(
+		cx: number,
+		cy: number,
+	): [number, number] | null {
+		if (cx <= 0 || cy <= 0 || cx >= width - 1 || cy >= height - 1) return null;
 
-		let result = null;
-		const deltas = DIRS[4];
+		let result: [number, number] | null = null;
 
-		for (let i = 0; i < deltas.length; i++) {
-			const delta = deltas[i];
-			const x = cx + delta[0];
-			const y = cy + delta[1];
+		for (const [dx, dy] of dirs4) {
+			const x = cx + dx;
+			const y = cy + dy;
 
-			if (!this._map[x][y]) {
+			if (!at(x, y)) {
 				/* there already is another empty neighbor! */
-				if (result) {
-					return null;
-				}
-				result = delta;
+				if (result) return null;
+				result = [dx, dy];
 			}
 		}
 
 		/* no empty neighbor */
-		if (!result) {
-			return null;
-		}
+		if (!result) return null;
 
 		return [-result[0], -result[1]];
 	}
 
-	/**
-	 * Find empty spaces surrounding rooms, and apply doors.
-	 */
-	_addDoors() {
-		const data = this._map;
-		function isWallCallback(x: number, y: number) {
-			return data[x][y] == 1;
-		}
-		for (let i = 0; i < this._rooms.length; i++) {
-			const room = this._rooms[i];
-			room.clearDoors();
-			room.addDoors(isWallCallback);
+	/** Find empty spaces surrounding rooms, and apply doors. */
+	function addDoorsToRooms(): void {
+		for (const room of rooms) {
+			clearDoors(room);
+			addDoors(room, (x, y) => at(x, y) === 1);
 		}
 	}
+
+	const diggerMap: DiggerMap = {
+		getRooms: () => rooms,
+		getCorridors: () => corridors,
+		create(callback?: CreateCallback): DiggerMap {
+			rooms = [];
+			corridors = [];
+			map = fillMap(width, height, 1);
+			walls = {};
+			dug = 0;
+			const area = (width - 2) * (height - 2);
+
+			firstRoom();
+
+			const t1 = Date.now();
+
+			let priorityWalls: number;
+			do {
+				priorityWalls = 0;
+				if (Date.now() - t1 > resolvedOptions.timeLimit) break;
+
+				/* find a good wall */
+				const wall = findWall();
+				if (!wall) break; /* no more walls */
+
+				const parts = wall.split(",");
+				const x = Number(parts[0]);
+				const y = Number(parts[1]);
+				const dir = getDiggingDirection(x, y);
+				if (!dir) continue; /* this wall is not suitable */
+
+				/* try adding a feature */
+				let featureAttempts = 0;
+				do {
+					featureAttempts++;
+					if (tryFeature(x, y, dir[0], dir[1])) {
+						/* feature added */
+						removeSurroundingWalls(x, y);
+						removeSurroundingWalls(x - dir[0], y - dir[1]);
+						break;
+					}
+				} while (featureAttempts < FEATURE_ATTEMPTS);
+
+				for (const id of Object.keys(walls)) {
+					if ((walls[id] ?? 0) > 1) priorityWalls++;
+				}
+			} while (dug / area < resolvedOptions.dugPercentage || priorityWalls);
+
+			addDoorsToRooms();
+
+			if (callback) {
+				for (let i = 0; i < width; i++) {
+					for (let j = 0; j < height; j++) {
+						callback(i, j, at(i, j));
+					}
+				}
+			}
+
+			walls = {};
+			map = [];
+
+			return diggerMap;
+		},
+	};
+	return diggerMap;
 }

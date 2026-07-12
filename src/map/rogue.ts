@@ -1,115 +1,113 @@
 import { DIRS } from "../constants.js";
-import RNG from "../rng.js";
-import Map, { type CreateCallback } from "./map.js";
+import type { Rng } from "../rng.js";
+import type { CreateCallback } from "./map.js";
 
 type Point = [number, number];
 
-export interface Options {
+export interface RogueOptions {
 	/** Number of cells to create on the horizontal (number of rooms horizontally) */
 	cellWidth: number;
-
 	/** Number of cells to create on the vertical (number of rooms vertically) */
 	cellHeight: number;
-
-	/** Room min and max width - normally set auto-magically via the constructor. */
+	/** Room min and max width - normally set auto-magically via the factory. */
 	roomWidth: [number, number];
-
-	/** Room min and max height - normally set auto-magically via the constructor. */
+	/** Room min and max height - normally set auto-magically via the factory. */
 	roomHeight: [number, number];
 }
 
-export interface Room {
+export interface RogueRoom {
 	x: number;
 	y: number;
 	width: number;
 	height: number;
-	connections: any[];
+	connections: Point[];
 	cellx: number;
 	celly: number;
 }
 
+export interface RogueMap {
+	create(callback?: CreateCallback): void;
+}
+
+function toXy(pair: readonly number[] | undefined): [number, number] {
+	if (pair === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	const [dx, dy] = pair;
+	if (dx === undefined || dy === undefined) {
+		throw new Error("expected a two-element direction vector");
+	}
+	return [dx, dy];
+}
+
+function calculateRoomSize(size: number, cell: number): [number, number] {
+	let max = Math.floor((size / cell) * 0.8);
+	let min = Math.floor((size / cell) * 0.25);
+	if (min < 2) min = 2;
+	if (max < 2) max = 2;
+	return [min, max];
+}
+
 /**
- * Dungeon generator which uses the "orginal" Rogue dungeon generation algorithm. See http://kuoi.com/~kamikaze/GameDesign/art07_rogue_dungeon.php
+ * Dungeon generator which uses the "original" Rogue dungeon generation algorithm.
+ * See http://kuoi.com/~kamikaze/GameDesign/art07_rogue_dungeon.php
  * @author hyakugei
  */
-export default class Rogue extends Map {
-	private _options: Options;
-	private map: number[][] = [];
-	private rooms: Room[][] = [];
-	private connectedCells: Point[] = [];
+export function createRogueMap(
+	width: number,
+	height: number,
+	rng: Rng,
+	optionsInput: Partial<RogueOptions> = {},
+): RogueMap {
+	const dirs8 = DIRS[8].map(toXy);
 
-	constructor(width: number, height: number, options: Partial<Options>) {
-		super(width, height);
+	const partialOptions: Partial<RogueOptions> = {
+		cellWidth: 3,
+		cellHeight: 3,
+		...optionsInput,
+	};
+	const cellWidth = partialOptions.cellWidth ?? 3;
+	const cellHeight = partialOptions.cellHeight ?? 3;
+	const resolvedOptions: RogueOptions = {
+		cellWidth,
+		cellHeight,
+		roomWidth: partialOptions.roomWidth ?? calculateRoomSize(width, cellWidth),
+		roomHeight:
+			partialOptions.roomHeight ?? calculateRoomSize(height, cellHeight),
+	};
 
-		options = Object.assign(
-			{
-				cellWidth: 3, // NOTE to self, these could probably work the same as the roomWidth/room Height values
-				cellHeight: 3, //     ie. as an array with min-max values for each direction....
-			},
-			options,
-		);
+	let map: number[][] = [];
+	let rooms: RogueRoom[][] = [];
+	let connectedCells: Point[] = [];
 
-		/*
-		Set the room sizes according to the over-all width of the map,
-		and the cell sizes.
-		*/
-		if (!Object.hasOwn(options, "roomWidth")) {
-			options["roomWidth"] = this._calculateRoomSize(
-				this._width,
-				options["cellWidth"] as number,
-			);
-		}
-		if (!Object.hasOwn(options, "roomHeight")) {
-			options["roomHeight"] = this._calculateRoomSize(
-				this._height,
-				options["cellHeight"] as number,
-			);
-		}
-
-		this._options = options as Options;
+	function at(x: number, y: number): number {
+		const column = map[x];
+		if (column === undefined) throw new Error("rogue map: x out of range");
+		const value = column[y];
+		if (value === undefined) throw new Error("rogue map: y out of range");
+		return value;
 	}
 
-	create(callback?: CreateCallback) {
-		this.map = this._fillMap(1);
-		this.rooms = [];
-		this.connectedCells = [];
-
-		this._initRooms();
-		this._connectRooms();
-		this._connectUnconnectedRooms();
-		this._createRandomRoomConnections();
-		this._createRooms();
-		this._createCorridors();
-
-		if (callback) {
-			for (let i = 0; i < this._width; i++) {
-				for (let j = 0; j < this._height; j++) {
-					callback(i, j, this.map[i][j]);
-				}
-			}
-		}
-
-		return this;
+	function set(x: number, y: number, value: number): void {
+		const column = map[x];
+		if (column === undefined) throw new Error("rogue map: x out of range");
+		column[y] = value;
 	}
 
-	_calculateRoomSize(size: number, cell: number): [number, number] {
-		let max = Math.floor((size / cell) * 0.8);
-		let min = Math.floor((size / cell) * 0.25);
-		if (min < 2) {
-			min = 2;
-		}
-		if (max < 2) {
-			max = 2;
-		}
-		return [min, max];
+	function room(cellX: number, cellY: number): RogueRoom {
+		const column = rooms[cellX];
+		if (column === undefined) throw new Error("rogue map: cellX out of range");
+		const value = column[cellY];
+		if (value === undefined) throw new Error("rogue map: cellY out of range");
+		return value;
 	}
 
-	_initRooms() {
-		// create rooms array. This is the "grid" list from the algo.
-		for (let i = 0; i < this._options.cellWidth; i++) {
-			this.rooms.push([]);
-			for (let j = 0; j < this._options.cellHeight; j++) {
-				this.rooms[i].push({
+	function initRooms(): void {
+		rooms = [];
+		for (let i = 0; i < resolvedOptions.cellWidth; i++) {
+			const column: RogueRoom[] = [];
+			for (let j = 0; j < resolvedOptions.cellHeight; j++) {
+				column.push({
 					x: 0,
 					y: 0,
 					width: 0,
@@ -119,334 +117,277 @@ export default class Rogue extends Map {
 					celly: j,
 				});
 			}
+			rooms.push(column);
 		}
 	}
 
-	_connectRooms() {
-		//pick random starting grid
-		let cgx = RNG.getUniformInt(0, this._options.cellWidth - 1);
-		let cgy = RNG.getUniformInt(0, this._options.cellHeight - 1);
+	function connectRooms(): void {
+		/* pick random starting grid */
+		let cgx = rng.getUniformInt(0, resolvedOptions.cellWidth - 1);
+		let cgy = rng.getUniformInt(0, resolvedOptions.cellHeight - 1);
 
-		let idx;
-		let ncgx;
-		let ncgy;
-
-		let found = false;
-		let room;
-		let otherRoom;
-		let dirToCheck;
-
-		// find  unconnected neighbour cells
+		/* find unconnected neighbor cells */
+		let dirToCheck: number[] = [];
 		do {
-			//dirToCheck = [0, 1, 2, 3, 4, 5, 6, 7];
-			dirToCheck = [0, 2, 4, 6];
-			dirToCheck = RNG.shuffle(dirToCheck);
+			dirToCheck = rng.shuffle([0, 2, 4, 6]);
 
+			let found = false;
 			do {
 				found = false;
-				idx = dirToCheck.pop() as number;
+				const idx = dirToCheck.pop();
+				if (idx === undefined) break;
+				const [dx, dy] = dirs8[idx] ?? [0, 0];
 
-				ncgx = cgx + DIRS[8][idx][0];
-				ncgy = cgy + DIRS[8][idx][1];
+				const ncgx = cgx + dx;
+				const ncgy = cgy + dy;
 
-				if (ncgx < 0 || ncgx >= this._options.cellWidth) {
-					continue;
-				}
-				if (ncgy < 0 || ncgy >= this._options.cellHeight) {
-					continue;
-				}
+				if (ncgx < 0 || ncgx >= resolvedOptions.cellWidth) continue;
+				if (ncgy < 0 || ncgy >= resolvedOptions.cellHeight) continue;
 
-				room = this.rooms[cgx][cgy];
-
-				if (room["connections"].length > 0) {
-					// as long as this room doesn't already coonect to me, we are ok with it.
+				const current = room(cgx, cgy);
+				if (current.connections.length > 0) {
+					/* as long as this room doesn't already connect to me, we are ok with it */
+					const firstConnection = current.connections[0];
 					if (
-						room["connections"][0][0] == ncgx &&
-						room["connections"][0][1] == ncgy
+						firstConnection !== undefined &&
+						firstConnection[0] === ncgx &&
+						firstConnection[1] === ncgy
 					) {
 						break;
 					}
 				}
 
-				otherRoom = this.rooms[ncgx][ncgy];
-
-				if (otherRoom["connections"].length == 0) {
-					otherRoom["connections"].push([cgx, cgy]);
-
-					this.connectedCells.push([ncgx, ncgy]);
+				const otherRoom = room(ncgx, ncgy);
+				if (otherRoom.connections.length === 0) {
+					otherRoom.connections.push([cgx, cgy]);
+					connectedCells.push([ncgx, ncgy]);
 					cgx = ncgx;
 					cgy = ncgy;
 					found = true;
 				}
-			} while (dirToCheck.length > 0 && found == false);
+			} while (dirToCheck.length > 0 && found === false);
 		} while (dirToCheck.length > 0);
 	}
 
-	_connectUnconnectedRooms() {
-		//While there are unconnected rooms, try to connect them to a random connected neighbor
-		//(if a room has no connected neighbors yet, just keep cycling, you'll fill out to it eventually).
-		const cw = this._options.cellWidth;
-		const ch = this._options.cellHeight;
+	function connectUnconnectedRooms(): void {
+		/*
+		 * While there are unconnected rooms, try to connect them to a random
+		 * connected neighbor (if a room has no connected neighbors yet, just
+		 * keep cycling, you'll fill out to it eventually).
+		 */
+		connectedCells = rng.shuffle(connectedCells);
 
-		this.connectedCells = RNG.shuffle(this.connectedCells);
-		let room;
-		let otherRoom!: Room;
-		let validRoom;
+		for (let i = 0; i < resolvedOptions.cellWidth; i++) {
+			for (let j = 0; j < resolvedOptions.cellHeight; j++) {
+				const current = room(i, j);
+				if (current.connections.length !== 0) continue;
 
-		for (let i = 0; i < this._options.cellWidth; i++) {
-			for (let j = 0; j < this._options.cellHeight; j++) {
-				room = this.rooms[i][j];
+				const directions = rng.shuffle([0, 2, 4, 6]);
+				let validRoom = false;
+				let otherRoom: RogueRoom | undefined;
 
-				if (room["connections"].length == 0) {
-					let directions = [0, 2, 4, 6];
-					directions = RNG.shuffle(directions);
-					validRoom = false;
+				do {
+					const dirIdx = directions.pop();
+					if (dirIdx === undefined) break;
+					const [dx, dy] = dirs8[dirIdx] ?? [0, 0];
+					const newI = i + dx;
+					const newJ = j + dy;
 
-					do {
-						const dirIdx = directions.pop() as number;
-						const newI = i + DIRS[8][dirIdx][0];
-						const newJ = j + DIRS[8][dirIdx][1];
-
-						if (newI < 0 || newI >= cw || newJ < 0 || newJ >= ch) {
-							continue;
-						}
-
-						otherRoom = this.rooms[newI][newJ];
-						validRoom = true;
-
-						if (otherRoom["connections"].length == 0) {
-							break;
-						}
-
-						for (let k = 0; k < otherRoom["connections"].length; k++) {
-							if (
-								otherRoom["connections"][k][0] == i &&
-								otherRoom["connections"][k][1] == j
-							) {
-								validRoom = false;
-								break;
-							}
-						}
-
-						if (validRoom) {
-							break;
-						}
-					} while (directions.length);
-
-					if (validRoom) {
-						room["connections"].push([otherRoom["cellx"], otherRoom["celly"]]);
-					} else {
-						console.log("-- Unable to connect room.");
+					if (
+						newI < 0 ||
+						newI >= resolvedOptions.cellWidth ||
+						newJ < 0 ||
+						newJ >= resolvedOptions.cellHeight
+					) {
+						continue;
 					}
+
+					otherRoom = room(newI, newJ);
+					validRoom = true;
+
+					if (otherRoom.connections.length === 0) break;
+
+					for (const connection of otherRoom.connections) {
+						if (connection[0] === i && connection[1] === j) {
+							validRoom = false;
+							break;
+						}
+					}
+
+					if (validRoom) break;
+				} while (directions.length);
+
+				if (validRoom && otherRoom) {
+					current.connections.push([otherRoom.cellx, otherRoom.celly]);
+				} else {
+					console.log("-- Unable to connect room.");
 				}
 			}
 		}
 	}
 
-	_createRandomRoomConnections() {
-		// Empty for now.
-	}
+	function createRooms(): void {
+		const cw = resolvedOptions.cellWidth;
+		const ch = resolvedOptions.cellHeight;
 
-	_createRooms() {
-		const w = this._width;
-		const h = this._height;
+		const cwp = Math.floor(width / cw);
+		const chp = Math.floor(height / ch);
 
-		const cw = this._options.cellWidth;
-		const ch = this._options.cellHeight;
-
-		const cwp = Math.floor(this._width / cw);
-		const chp = Math.floor(this._height / ch);
-
-		let roomw;
-		let roomh;
-		const roomWidth = this._options["roomWidth"];
-		const roomHeight = this._options["roomHeight"];
-		let sx;
-		let sy;
-		let otherRoom;
+		const [roomWidthMin, roomWidthMax] = resolvedOptions.roomWidth;
+		const [roomHeightMin, roomHeightMax] = resolvedOptions.roomHeight;
 
 		for (let i = 0; i < cw; i++) {
 			for (let j = 0; j < ch; j++) {
-				sx = cwp * i;
-				sy = chp * j;
+				let sx = cwp * i;
+				let sy = chp * j;
 
-				if (sx == 0) {
-					sx = 1;
-				}
-				if (sy == 0) {
-					sy = 1;
-				}
+				if (sx === 0) sx = 1;
+				if (sy === 0) sy = 1;
 
-				roomw = RNG.getUniformInt(roomWidth[0], roomWidth[1]);
-				roomh = RNG.getUniformInt(roomHeight[0], roomHeight[1]);
+				let roomw = rng.getUniformInt(roomWidthMin, roomWidthMax);
+				let roomh = rng.getUniformInt(roomHeightMin, roomHeightMax);
 
 				if (j > 0) {
-					otherRoom = this.rooms[i][j - 1];
-					while (sy - (otherRoom["y"] + otherRoom["height"]) < 3) {
-						sy++;
-					}
+					const above = room(i, j - 1);
+					while (sy - (above.y + above.height) < 3) sy++;
 				}
 
 				if (i > 0) {
-					otherRoom = this.rooms[i - 1][j];
-					while (sx - (otherRoom["x"] + otherRoom["width"]) < 3) {
-						sx++;
-					}
+					const before = room(i - 1, j);
+					while (sx - (before.x + before.width) < 3) sx++;
 				}
 
-				let sxOffset = Math.round(RNG.getUniformInt(0, cwp - roomw) / 2);
-				let syOffset = Math.round(RNG.getUniformInt(0, chp - roomh) / 2);
+				let sxOffset = Math.round(rng.getUniformInt(0, cwp - roomw) / 2);
+				let syOffset = Math.round(rng.getUniformInt(0, chp - roomh) / 2);
 
-				while (sx + sxOffset + roomw >= w) {
-					if (sxOffset) {
-						sxOffset--;
-					} else {
-						roomw--;
-					}
+				while (sx + sxOffset + roomw >= width) {
+					if (sxOffset) sxOffset--;
+					else roomw--;
 				}
 
-				while (sy + syOffset + roomh >= h) {
-					if (syOffset) {
-						syOffset--;
-					} else {
-						roomh--;
-					}
+				while (sy + syOffset + roomh >= height) {
+					if (syOffset) syOffset--;
+					else roomh--;
 				}
 
-				sx = sx + sxOffset;
-				sy = sy + syOffset;
+				sx += sxOffset;
+				sy += syOffset;
 
-				this.rooms[i][j]["x"] = sx;
-				this.rooms[i][j]["y"] = sy;
-				this.rooms[i][j]["width"] = roomw;
-				this.rooms[i][j]["height"] = roomh;
+				const current = room(i, j);
+				current.x = sx;
+				current.y = sy;
+				current.width = roomw;
+				current.height = roomh;
 
 				for (let ii = sx; ii < sx + roomw; ii++) {
 					for (let jj = sy; jj < sy + roomh; jj++) {
-						this.map[ii][jj] = 0;
+						set(ii, jj, 0);
 					}
 				}
 			}
 		}
 	}
 
-	_getWallPosition(aRoom: Room, aDirection: number): Point {
-		let rx;
-		let ry;
-		let door;
+	function getWallPosition(aRoom: RogueRoom, aDirection: number): Point {
+		let rx: number;
+		let ry: number;
+		let door: number;
 
-		if (aDirection == 1 || aDirection == 3) {
-			rx = RNG.getUniformInt(aRoom["x"] + 1, aRoom["x"] + aRoom["width"] - 2);
-			if (aDirection == 1) {
-				ry = aRoom["y"] - 2;
+		if (aDirection === 1 || aDirection === 3) {
+			rx = rng.getUniformInt(aRoom.x + 1, aRoom.x + aRoom.width - 2);
+			if (aDirection === 1) {
+				ry = aRoom.y - 2;
 				door = ry + 1;
 			} else {
-				ry = aRoom["y"] + aRoom["height"] + 1;
+				ry = aRoom.y + aRoom.height + 1;
 				door = ry - 1;
 			}
-
-			this.map[rx][door] = 0; // i'm not setting a specific 'door' tile value right now, just empty space.
+			set(
+				rx,
+				door,
+				0,
+			); /* not setting a specific 'door' tile value right now, just empty space */
 		} else {
-			ry = RNG.getUniformInt(aRoom["y"] + 1, aRoom["y"] + aRoom["height"] - 2);
-			if (aDirection == 2) {
-				rx = aRoom["x"] + aRoom["width"] + 1;
+			ry = rng.getUniformInt(aRoom.y + 1, aRoom.y + aRoom.height - 2);
+			if (aDirection === 2) {
+				rx = aRoom.x + aRoom.width + 1;
 				door = rx - 1;
 			} else {
-				rx = aRoom["x"] - 2;
+				rx = aRoom.x - 2;
 				door = rx + 1;
 			}
-
-			this.map[door][ry] = 0; // i'm not setting a specific 'door' tile value right now, just empty space.
+			set(door, ry, 0);
 		}
 		return [rx, ry];
 	}
 
-	_drawCorridor(startPosition: Point, endPosition: Point) {
+	function drawCorridor(startPosition: Point, endPosition: Point): void {
 		const xOffset = endPosition[0] - startPosition[0];
 		const yOffset = endPosition[1] - startPosition[1];
 
 		let xpos = startPosition[0];
 		let ypos = startPosition[1];
 
-		let tempDist;
-		let xDir;
-		let yDir;
-
-		let move; // 2 element array, element 0 is the direction, element 1 is the total value to move.
-		const moves = []; // a list of 2 element arrays
+		const moves: Point[] = []; /* a list of [direction, distance] pairs */
 
 		const xAbs = Math.abs(xOffset);
 		const yAbs = Math.abs(yOffset);
 
-		const percent = RNG.getUniform(); // used to split the move at different places along the long axis
+		const percent =
+			rng.getUniform(); /* used to split the move at different places along the long axis */
 		const firstHalf = percent;
 		const secondHalf = 1 - percent;
 
-		xDir = xOffset > 0 ? 2 : 6;
-		yDir = yOffset > 0 ? 4 : 0;
+		const xDir = xOffset > 0 ? 2 : 6;
+		const yDir = yOffset > 0 ? 4 : 0;
 
 		if (xAbs < yAbs) {
-			// move firstHalf of the y offset
-			tempDist = Math.ceil(yAbs * firstHalf);
-			moves.push([yDir, tempDist]);
-			// move all the x offset
+			moves.push([yDir, Math.ceil(yAbs * firstHalf)]);
 			moves.push([xDir, xAbs]);
-			// move sendHalf of the  y offset
-			tempDist = Math.floor(yAbs * secondHalf);
-			moves.push([yDir, tempDist]);
+			moves.push([yDir, Math.floor(yAbs * secondHalf)]);
 		} else {
-			//  move firstHalf of the x offset
-			tempDist = Math.ceil(xAbs * firstHalf);
-			moves.push([xDir, tempDist]);
-			// move all the y offset
+			moves.push([xDir, Math.ceil(xAbs * firstHalf)]);
 			moves.push([yDir, yAbs]);
-			// move secondHalf of the x offset.
-			tempDist = Math.floor(xAbs * secondHalf);
-			moves.push([xDir, tempDist]);
+			moves.push([xDir, Math.floor(xAbs * secondHalf)]);
 		}
 
-		this.map[xpos][ypos] = 0;
+		set(xpos, ypos, 0);
 
 		while (moves.length > 0) {
-			move = moves.pop() as Point;
-			while (move[1] > 0) {
-				xpos += DIRS[8][move[0]][0];
-				ypos += DIRS[8][move[0]][1];
-				this.map[xpos][ypos] = 0;
-				move[1] = move[1] - 1;
+			const move = moves.pop();
+			if (move === undefined)
+				throw new Error("unreachable: moves is non-empty");
+			let remaining = move[1];
+			const [dx, dy] = dirs8[move[0]] ?? [0, 0];
+			while (remaining > 0) {
+				xpos += dx;
+				ypos += dy;
+				set(xpos, ypos, 0);
+				remaining--;
 			}
 		}
 	}
 
-	_createCorridors() {
-		// Draw Corridors between connected rooms
-
-		const cw = this._options.cellWidth;
-		const ch = this._options.cellHeight;
-		let room;
-		let connection;
-		let otherRoom;
-		let wall;
-		let otherWall;
+	function createCorridors(): void {
+		const cw = resolvedOptions.cellWidth;
+		const ch = resolvedOptions.cellHeight;
 
 		for (let i = 0; i < cw; i++) {
 			for (let j = 0; j < ch; j++) {
-				room = this.rooms[i][j];
+				const current = room(i, j);
 
-				for (let k = 0; k < room["connections"].length; k++) {
-					connection = room["connections"][k];
+				for (const connection of current.connections) {
+					const otherRoom = room(connection[0], connection[1]);
 
-					otherRoom = this.rooms[connection[0]][connection[1]];
-
-					// figure out what wall our corridor will start one.
-					// figure out what wall our corridor will end on.
-					if (otherRoom["cellx"] > room["cellx"]) {
+					let wall: number;
+					let otherWall: number;
+					if (otherRoom.cellx > current.cellx) {
 						wall = 2;
 						otherWall = 4;
-					} else if (otherRoom["cellx"] < room["cellx"]) {
+					} else if (otherRoom.cellx < current.cellx) {
 						wall = 4;
 						otherWall = 2;
-					} else if (otherRoom["celly"] > room["celly"]) {
+					} else if (otherRoom.celly > current.celly) {
 						wall = 3;
 						otherWall = 1;
 					} else {
@@ -454,12 +395,38 @@ export default class Rogue extends Map {
 						otherWall = 3;
 					}
 
-					this._drawCorridor(
-						this._getWallPosition(room, wall),
-						this._getWallPosition(otherRoom, otherWall),
+					drawCorridor(
+						getWallPosition(current, wall),
+						getWallPosition(otherRoom, otherWall),
 					);
 				}
 			}
 		}
 	}
+
+	return {
+		create(callback?: CreateCallback): void {
+			map = [];
+			for (let i = 0; i < width; i++) {
+				const column: number[] = [];
+				for (let j = 0; j < height; j++) column.push(1);
+				map.push(column);
+			}
+			connectedCells = [];
+
+			initRooms();
+			connectRooms();
+			connectUnconnectedRooms();
+			createRooms();
+			createCorridors();
+
+			if (callback) {
+				for (let i = 0; i < width; i++) {
+					for (let j = 0; j < height; j++) {
+						callback(i, j, at(i, j));
+					}
+				}
+			}
+		},
+	};
 }

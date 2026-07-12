@@ -181,13 +181,3 @@ export function createRng(seed: number = Date.now()): Rng {
 	};
 	return rng;
 }
-
-/**
- * Transitional compatibility shim: a pre-created default instance, so
- * not-yet-migrated consumers (`map/`, `stringgenerator.ts`, `color.ts`) can
- * keep doing `import RNG from "../rng.js"; RNG.getUniform()` unchanged until
- * their own modernization stage threads an explicit `rng` argument through
- * instead. Remove this default export once every consumer has migrated
- * (tracked in docs/tasks.md).
- */
-export default createRng(Date.now());

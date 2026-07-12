@@ -1,3 +1,4 @@
+import { err, ok } from "../result.js";
 import type {
 	ComputeCallback,
 	PassableCallback,
@@ -50,6 +51,9 @@ export function createAStarPath(
 				return Math.max(Math.abs(x - fromX), Math.abs(y - fromY));
 
 			default:
+				// Invariant violation, not an expected failure: PathOptions.topology
+				// is typed as 4 | 6 | 8, so reaching here means the caller
+				// constructed an invalid options object despite the type system.
 				throw new Error("Incorrect topology for A* computation");
 		}
 	}
@@ -107,12 +111,13 @@ export function createAStarPath(
 
 		let current: Item | null = done[encodeKey(fromX, fromY)] ?? null;
 		if (!current) {
-			return;
+			return err("no-path-found");
 		}
 
 		while (current) {
 			callback(current.x, current.y);
 			current = current.prev;
 		}
+		return ok(undefined);
 	};
 }

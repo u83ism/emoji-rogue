@@ -117,8 +117,9 @@ describe("Dijkstra", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			dijkstra(X[0], X[1], PATH_CALLBACK);
+			const result = dijkstra(X[0], X[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 	});
 
@@ -140,8 +141,9 @@ describe("Dijkstra", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			dijkstra(X[0], X[1], PATH_CALLBACK);
+			const result = dijkstra(X[0], X[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 	});
 
@@ -163,8 +165,9 @@ describe("Dijkstra", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			dijkstra(X6[0], X6[1], PATH_CALLBACK);
+			const result = dijkstra(X6[0], X6[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 	});
 });
@@ -188,8 +191,9 @@ describe("A*", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			astar(X[0], X[1], PATH_CALLBACK);
+			const result = astar(X[0], X[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 
 		it("computes a path efficiently", () => {
@@ -217,8 +221,9 @@ describe("A*", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			astar(X[0], X[1], PATH_CALLBACK);
+			const result = astar(X[0], X[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 	});
 
@@ -240,8 +245,9 @@ describe("A*", () => {
 		});
 
 		it("survives a non-existent path", () => {
-			astar(X6[0], X6[1], PATH_CALLBACK);
+			const result = astar(X6[0], X6[1], PATH_CALLBACK);
 			expect(path.length).toBe(0);
+			expect(result.ok).toBe(false);
 		});
 	});
 });

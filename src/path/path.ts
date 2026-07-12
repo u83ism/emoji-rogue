@@ -1,4 +1,5 @@
 import { DIRS } from "../constants.js";
+import type { Result } from "../result.js";
 
 export type ComputeCallback = (x: number, y: number) => void;
 export type PassableCallback = (x: number, y: number) => boolean;
@@ -7,12 +8,20 @@ export interface PathOptions {
 	topology: 4 | 6 | 8;
 }
 
-/** Computes a path from (fromX, fromY) towards a target fixed at creation time. */
+/** No path exists between the two points, given the current passability. */
+export type NoPathFound = "no-path-found";
+
+/**
+ * Computes a path from (fromX, fromY) towards a target fixed at creation
+ * time, invoking `callback` for each point along the way. Returns a Result
+ * so callers can distinguish "no path exists" (an expected, normal-path
+ * outcome) from a path that was found.
+ */
 export type Path = (
 	fromX: number,
 	fromY: number,
 	callback: ComputeCallback,
-) => void;
+) => Result<void, NoPathFound>;
 
 function toXy(pair: readonly number[] | undefined): [number, number] {
 	if (pair === undefined) {

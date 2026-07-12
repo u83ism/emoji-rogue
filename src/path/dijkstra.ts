@@ -1,3 +1,4 @@
+import { err, ok } from "../result.js";
 import type {
 	ComputeCallback,
 	PassableCallback,
@@ -68,7 +69,7 @@ export function createDijkstraPath(
 			compute(fromX, fromY);
 		}
 		if (!(key in computed)) {
-			return;
+			return err("no-path-found");
 		}
 
 		let current: Item | null = computed[key] ?? null;
@@ -76,5 +77,6 @@ export function createDijkstraPath(
 			callback(current.x, current.y);
 			current = current.prev;
 		}
+		return ok(undefined);
 	};
 }

@@ -76,22 +76,22 @@
 - [x] 迷路系(`dividedmaze.ts`/`ellermaze.ts`/`iceymaze.ts`): いずれも単発`create`のみのため単純な関数に
 - [x] `features.ts`: `Feature`抽象クラス+`Room`/`Corridor`クラス → 判別可能union型`Feature = Room | Corridor`(`{kind:"room"|"corridor", ...}`) + 独立関数群(`createRoomAt`/`createRoomAtCenter`/`createRandomRoom`/`createCorridorAt`/`roomIsValid`/`corridorIsValid`/`digRoom`/`digCorridor`等)へ。`corridorIsValid`が検証中にcorridorのendX/endYを短縮する、という原型の副作用ありバリデーションの挙動はそのまま保持
 - [x] `dungeon.ts`: `Dungeon`抽象クラス廃止、`getRooms()`/`getCorridors()`を持つ`DungeonMap`共有インターフェースのみに縮小
-- [x] `uniform.ts`: クラス→`createUniformMap(width,height,rng,options)`ファクトリ。タイムリミット到達時に`null`を返す、という原型の挙動を保持
+- [x] `uniform.ts`: クラス→`createUniformMap(width,height,rng,options)`ファクトリ。タイムリミット到達時に`null`を返していた原型の挙動は、Stage 4で`Result<UniformMap, GenerationTimedOut>`に置き換え済み(下記参照)
 - [x] `digger.ts`(最難): クラス→`createDiggerMap(width,height,rng,options)`ファクトリ。`FEATURES`レジストリを`Record<FeatureType, CreateFeatureAt>`として型付けし、`createRoomAt`/`createCorridorAt`をそのまま登録することで`as FeatureType`/`as FeatureConstructor`という不安全なキャストを完全に排除
 - [x] `rogue.ts`: クラス→`createRogueMap(width,height,rng,options)`ファクトリ。**変換中に発見・修正したバグ**: `_connectRooms`の外側`do-while`ループ(ランダムウォークで接続先セルを広げていくロジック)を最初`while(false)`と誤って書いてしまい1パスしか回らなくなっていたが、原型を再確認して`while(dirToCheck.length > 0)`という正しい継続条件に修正済み(テストは通っていたが、たまたま影響が出にくいケースだった可能性があるため要注意の修正点として記録)
 - [x] **`encodePointKey`共有ヘルパーは導入しなかった**: 元々`digger.ts`/`uniform.ts`は`"x,y"`区切り、`cellular.ts`は`"x.y"`区切りと、ファイルごとに異なるキー形式を使っていたため、1つの共有関数に統一すると動作変更になってしまう。代わりに各ファイル内でテンプレートリテラル(`` `${x},${y}` ``等)を一貫して使うことで、直書き文字列結合によるタイポリスクという当初の懸念は解消した
 - [x] RNG互換シムからの移行完了(`map/`の全ファイルが`rng`を明示引数で受け取る)。`src/rng.ts`のデフォルトexportを削除(Stage 3.2参照)
 - [ ] **どのステージにも明記されていない残り**: `src/lighting.ts`・`src/engine.ts`はまだクラスのまま(それぞれ3.4のfov/scheduler型変更への追随のみ実施)。関数型に変換するかは要検討(現状は動くのでブロッカーではない)。typecheck/lintの残存エラー(43件/14件、全てこの2ファイル)もこれに付随する
 
-## Stage 4 — Result型エラーハンドリング(未着手。当初3.4/3.5と並行の想定だったが持ち越し)
+## Stage 4 — Result型エラーハンドリング(完了)
 
-Stage 3.4/3.5では既存の`null`返却などの挙動をそのまま保持することを優先し、Result型の導入は行わなかった(動作を変えないことを優先したため)。あらためて着手する。
-
-- [ ] 非chainingの`Result<T, E>`/`ok`/`err`を実装(場所は要検討、`src/result.ts`など)
-- [ ] `path/`: 経路なしを`Result`化(現状は単にcallbackが一度も呼ばれないだけで、「失敗した」という明示的なシグナルがない)
-- [ ] `map/`: `UniformMap.create()`が現状`null`を返しているタイムリミット到達時の失敗を`Result<UniformMap, "generation-timed-out">`化。`DiggerMap.create()`はタイムリミットに達しても部分的な結果を静かに受け入れて返すだけなので、Result化の対象外(失敗ではないため)
-- [x] `text.ts`へのResult型導入は見送り済み(Stage 3.3で判断、上記参照)
-- [ ] throwのまま残す箇所(fov.tsの不正topology等)を確認し、意図的にthrowのままであることをコメントで明記
+- [x] 非chainingの`Result<T, E>`/`ok`/`err`を`src/result.ts`に実装。`.andThen()`等のチェーンAPIは持たず、早期return(`if (!result.ok) return err(...)`)イディオムのみ
+- [x] `path/`: `Path`型の戻り値を`void`→`Result<void, NoPathFound>`に変更(`NoPathFound = "no-path-found"`)。`createAStarPath`/`createDijkstraPath`の両方で、経路が見つからない場合に`err("no-path-found")`を返すよう変更。callbackが呼ばれる(または呼ばれない)という既存の挙動はそのまま維持しつつ、明示的な成否シグナルを追加
+- [x] `map/`: `UniformMap.create()`の戻り値を`UniformMap | null`→`Result<UniformMap, GenerationTimedOut>`に変更(`GenerationTimedOut = "generation-timed-out"`)。`DiggerMap.create()`はタイムリミットに達しても部分的な結果を静かに受け入れて返すだけなので、Result化の対象外(失敗ではないため)のまま
+- [x] `text.ts`へのResult型導入は見送り(Stage 3.3で判断済み)
+- [x] throwのまま残す箇所にコメントを追加: `fov.ts`の`getCircle`の不正topology、`path/astar.ts`の`distance`の不正topology、`map/features.ts`の`createRoomAt`のdx/dy不正値。いずれも「型システムが正しく機能していれば到達しないはずの呼び出し側バグ」であることを明記
+- [x] `src/index.ts`から`Result`/`ok`/`err`/`NoPathFound`/`GenerationTimedOut`を公開APIとしてexport
+- [x] `path/path.test.ts`・`map/dungeon.test.ts`にResult型の成功/失敗ケースのテストを追加(Uniformの`generation-timed-out`は、10x10マップに100x100のroomWidth/roomHeightを指定して確実にタイムアウトさせるテストで検証)
 
 ## Stage 5 — 新レンダラー(`src/renderer/`、Ink採用)
 

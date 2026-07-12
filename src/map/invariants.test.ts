@@ -196,48 +196,47 @@ describe("createRogueMap invariants", () => {
 });
 
 describe("maze generator invariants", () => {
-	it.each(SEEDS)(
-		"seed %i: eller maze is connected inside a walled border",
-		(seed) => {
-			const grid = buildGrid((callback) =>
-				createEllerMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
-			);
-			expectEveryCellWritten(grid);
-			expectValuesWithin(grid, [0, 1]);
-			expectBorderIsAllWalls(grid);
-			expectOpenCellsConnected(grid, [0]);
-		},
-	);
+	it.each(
+		SEEDS,
+	)("seed %i: eller maze is connected inside a walled border", (seed) => {
+		const grid = buildGrid((callback) =>
+			createEllerMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
+		);
+		expectEveryCellWritten(grid);
+		expectValuesWithin(grid, [0, 1]);
+		expectBorderIsAllWalls(grid);
+		expectOpenCellsConnected(grid, [0]);
+	});
 
-	it.each(SEEDS)(
-		"seed %i: divided maze is connected inside a walled border",
-		(seed) => {
-			const grid = buildGrid((callback) =>
-				createDividedMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
-			);
-			expectEveryCellWritten(grid);
-			expectValuesWithin(grid, [0, 1]);
-			expectBorderIsAllWalls(grid);
-			expectOpenCellsConnected(grid, [0]);
-		},
-	);
+	it.each(
+		SEEDS,
+	)("seed %i: divided maze is connected inside a walled border", (seed) => {
+		const grid = buildGrid((callback) =>
+			createDividedMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
+		);
+		expectEveryCellWritten(grid);
+		expectValuesWithin(grid, [0, 1]);
+		expectBorderIsAllWalls(grid);
+		expectOpenCellsConnected(grid, [0]);
+	});
 
-	it.each(SEEDS)(
-		"seed %i: icey maze is connected inside a walled border",
-		(seed) => {
-			const grid = buildGrid((callback) =>
-				createIceyMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
-			);
-			expectEveryCellWritten(grid);
-			expectValuesWithin(grid, [0, 1]);
-			expectBorderIsAllWalls(grid);
-			expectOpenCellsConnected(grid, [0]);
-		},
-	);
+	it.each(
+		SEEDS,
+	)("seed %i: icey maze is connected inside a walled border", (seed) => {
+		const grid = buildGrid((callback) =>
+			createIceyMazeMap(WIDTH, HEIGHT, createRng(seed), callback),
+		);
+		expectEveryCellWritten(grid);
+		expectValuesWithin(grid, [0, 1]);
+		expectBorderIsAllWalls(grid);
+		expectOpenCellsConnected(grid, [0]);
+	});
 });
 
 describe("createCellularMap invariants", () => {
-	it.each(SEEDS)("seed %i: connect() makes all free space reachable", (seed) => {
+	it.each(
+		SEEDS,
+	)("seed %i: connect() makes all free space reachable", (seed) => {
 		const map = createCellularMap(WIDTH, HEIGHT);
 		map.randomize(createRng(seed), 0.5);
 		map.create();

@@ -126,3 +126,18 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 - [x] `.claude/skills/develop/SKILL.md`
 - [x] `.claude/skills/develop-loop/SKILL.md`
 - [x] `.claude/skills/grill-me/SKILL.md`
+
+## 全ステージ完了後のエンジニアリング改善(2026-07-13)
+
+原本rot.jsとの全サブシステム突き合わせ検証(挙動・乱数消費順まで一致を確認)の後に実施。
+
+- [x] GitHub Actions CI(push/PR毎にtypecheck・lint・knip・test・build)
+- [x] map生成器のseed総当たり不変条件テスト(`src/map/invariants.test.ts`。25シード×各生成器で床の全連結・外周壁・値域・決定性を検証。rogueは原本アルゴリズムが全連結を保証しないため連結性は対象外)
+- [x] knip導入(未使用ファイル・export検出。導入時にrendererバレル未経由・`lerp`/`lerpHSL`死にエイリアスを検出し解消)
+- [x] 重複ヘルパーの集約: `src/indexing.ts`(`at`/`toXy`)・`src/pointkey.ts`(`encodePointKey`/`decodePointKey`。原本由来の「x,y」「x.y」キー混在を解消)
+- [x] 検証レビューの指摘対応: `rng.clone()`のseed引き継ぎ、デバッグ用console出力の削除、discrete-shadowcastingの`as number`キャスト除去
+
+### 次の設計課題(未着手、着手前に要相談)
+
+- ゲーム層の設計: 純粋リデューサ`advanceTurn(state, action): GameState` + `RngState`をGameStateに含める方式(セーブ・リプレイ・シード共有がほぼ無料になる)
+- `createDijkstraPath`は呼び出し間キャッシュを持つため、地形が変化するゲームでは「マップ変更ごとに作り直す」規約が必要(またはキャッシュ廃止の判断)

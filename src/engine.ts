@@ -4,55 +4,52 @@ export interface Actor {
 	act(): void | PromiseLike<void>;
 }
 
+export interface Engine {
+	/** Start the main loop. When this call returns, the loop is locked. */
+	start(): Engine;
+	/** Interrupt the engine by an asynchronous action. */
+	lock(): Engine;
+	/** Resume execution (paused by a previous lock). */
+	unlock(): Engine;
+}
+
 /**
  * Asynchronous main loop.
  */
-export default class Engine {
-	_scheduler: Scheduler<Actor>;
-	_lock: number;
+export function createEngine(scheduler: Scheduler<Actor>): Engine {
+	let lockCount = 1;
 
-	constructor(scheduler: Scheduler<Actor>) {
-		this._scheduler = scheduler;
-		this._lock = 1;
-	}
+	const engine: Engine = {
+		start(): Engine {
+			return engine.unlock();
+		},
 
-	/**
-	 * Start the main loop. When this call returns, the loop is locked.
-	 */
-	start() {
-		return this.unlock();
-	}
+		lock(): Engine {
+			lockCount++;
+			return engine;
+		},
 
-	/**
-	 * Interrupt the engine by an asynchronous action
-	 */
-	lock() {
-		this._lock++;
-		return this;
-	}
-
-	/**
-	 * Resume execution (paused by a previous lock)
-	 */
-	unlock() {
-		if (!this._lock) {
-			throw new Error("Cannot unlock unlocked engine");
-		}
-		this._lock--;
-
-		while (!this._lock) {
-			const actor = this._scheduler.next();
-			if (!actor) {
-				return this.lock();
-			} /* no actors */
-			const result = actor.act();
-			if (result) {
-				/* actor returned a "thenable", looks like a Promise */
-				this.lock();
-				result.then(this.unlock.bind(this));
+		unlock(): Engine {
+			if (!lockCount) {
+				throw new Error("Cannot unlock unlocked engine");
 			}
-		}
+			lockCount--;
 
-		return this;
-	}
+			while (!lockCount) {
+				const actor = scheduler.next();
+				if (!actor) {
+					return engine.lock(); /* no actors */
+				}
+				const result = actor.act();
+				if (result) {
+					/* actor returned a "thenable", looks like a Promise */
+					engine.lock();
+					result.then(() => engine.unlock());
+				}
+			}
+
+			return engine;
+		},
+	};
+	return engine;
 }

@@ -5,6 +5,14 @@ import {
 	type LightPassesCallback,
 } from "./fov.js";
 
+function at(data: readonly number[], index: number): number {
+	const value = data[index];
+	if (value === undefined) {
+		throw new Error("unreachable: index is within data.length");
+	}
+	return value;
+}
+
 /**
  * Discrete shadowcasting algorithm. Obsoleted by precise shadowcasting.
  */
@@ -27,7 +35,7 @@ export function createDiscreteShadowcastingFov(
 		}
 
 		let index = 0;
-		while (index < data.length && (data[index] as number) < startAngle) {
+		while (index < data.length && at(data, index) < startAngle) {
 			index++;
 		}
 
@@ -43,7 +51,7 @@ export function createDiscreteShadowcastingFov(
 
 		if (index % 2) {
 			/* this shadow starts in an existing shadow, or within its ending boundary */
-			while (index < data.length && (data[index] as number) < endAngle) {
+			while (index < data.length && at(data, index) < endAngle) {
 				index++;
 				count++;
 			}
@@ -64,13 +72,13 @@ export function createDiscreteShadowcastingFov(
 		}
 
 		/* this shadow starts outside an existing shadow, or within a starting boundary */
-		while (index < data.length && (data[index] as number) < endAngle) {
+		while (index < data.length && at(data, index) < endAngle) {
 			index++;
 			count++;
 		}
 
 		/* visible when outside an existing shadow, or when overlapping */
-		if (startAngle === data[index - count] && count === 1) {
+		if (count === 1 && startAngle === at(data, index - 1)) {
 			return false;
 		}
 

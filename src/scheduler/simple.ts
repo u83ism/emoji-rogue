@@ -1,18 +1,41 @@
-import Scheduler from "./scheduler.js";
+import type { Scheduler } from "./scheduler.js";
+import {
+	addToRepeatList,
+	advanceScheduler,
+	clearSchedulerState,
+	createSchedulerState,
+	removeFromSchedulerState,
+} from "./scheduler.js";
 
 /**
- * @class Simple fair scheduler (round-robin style)
+ * Simple fair scheduler (round-robin style): every item comes up again after
+ * every other item has had a turn.
  */
-export default class Simple<T = any> extends Scheduler<T> {
-	add(item: any, repeat: boolean) {
-		this._queue.add(item, 0);
-		return super.add(item, repeat);
-	}
+export function createSimpleScheduler<T>(): Scheduler<T> {
+	const state = createSchedulerState<T>();
 
-	next() {
-		if (this._current !== null && this._repeat.indexOf(this._current) != -1) {
-			this._queue.add(this._current, 0);
-		}
-		return super.next();
-	}
+	const scheduler: Scheduler<T> = {
+		getTime: () => state.queue.getTime(),
+		add(item, repeat) {
+			state.queue.add(item, 0);
+			addToRepeatList(state, item, repeat);
+			return scheduler;
+		},
+		getTimeOf: (item) => state.queue.getEventTime(item),
+		clear() {
+			clearSchedulerState(state);
+			return scheduler;
+		},
+		remove: (item) => removeFromSchedulerState(state, item),
+		next() {
+			if (
+				state.current !== null &&
+				state.repeatList.indexOf(state.current) !== -1
+			) {
+				state.queue.add(state.current, 0);
+			}
+			return advanceScheduler(state);
+		},
+	};
+	return scheduler;
 }

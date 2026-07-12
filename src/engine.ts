@@ -1,15 +1,17 @@
-import type Scheduler from "./scheduler/scheduler.js";
+import type { Scheduler } from "./scheduler/scheduler.js";
+
+export interface Actor {
+	act(): void | PromiseLike<void>;
+}
 
 /**
- * @class Asynchronous main loop
- * @param {ROT.Scheduler} scheduler
+ * Asynchronous main loop.
  */
-
 export default class Engine {
-	_scheduler: Scheduler;
+	_scheduler: Scheduler<Actor>;
 	_lock: number;
 
-	constructor(scheduler: Scheduler) {
+	constructor(scheduler: Scheduler<Actor>) {
 		this._scheduler = scheduler;
 		this._lock = 1;
 	}
@@ -44,7 +46,7 @@ export default class Engine {
 				return this.lock();
 			} /* no actors */
 			const result = actor.act();
-			if (result && result.then) {
+			if (result) {
 				/* actor returned a "thenable", looks like a Promise */
 				this.lock();
 				result.then(this.unlock.bind(this));

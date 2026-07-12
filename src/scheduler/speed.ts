@@ -1,33 +1,48 @@
-import Scheduler from "./scheduler.js";
+import type { Scheduler } from "./scheduler.js";
+import {
+	addToRepeatList,
+	advanceScheduler,
+	clearSchedulerState,
+	createSchedulerState,
+	removeFromSchedulerState,
+} from "./scheduler.js";
 
 export interface SpeedActor {
 	getSpeed: () => number;
 }
 
-/**
- * @class Speed-based scheduler
- */
-export default class Speed<
-	T extends SpeedActor = SpeedActor,
-> extends Scheduler<T> {
-	/**
-	 * @param {object} item anything with "getSpeed" method
-	 * @param {bool} repeat
-	 * @param {number} [time=1/item.getSpeed()]
-	 * @see ROT.Scheduler#add
-	 */
-	add(item: T, repeat: boolean, time?: number) {
-		this._queue.add(item, time !== undefined ? time : 1 / item.getSpeed());
-		return super.add(item, repeat);
-	}
+export interface SpeedScheduler<T extends SpeedActor> extends Scheduler<T> {
+	/** @param time defaults to 1 / item.getSpeed() */
+	add(item: T, repeat: boolean, time?: number): SpeedScheduler<T>;
+}
 
-	/**
-	 * @see ROT.Scheduler#next
-	 */
-	next() {
-		if (this._current && this._repeat.indexOf(this._current) != -1) {
-			this._queue.add(this._current, 1 / this._current.getSpeed());
-		}
-		return super.next();
-	}
+/**
+ * Speed-based scheduler: faster items (higher `getSpeed()`) come up more often.
+ */
+export function createSpeedScheduler<
+	T extends SpeedActor,
+>(): SpeedScheduler<T> {
+	const state = createSchedulerState<T>();
+
+	const scheduler: SpeedScheduler<T> = {
+		getTime: () => state.queue.getTime(),
+		add(item, repeat, time) {
+			state.queue.add(item, time !== undefined ? time : 1 / item.getSpeed());
+			addToRepeatList(state, item, repeat);
+			return scheduler;
+		},
+		getTimeOf: (item) => state.queue.getEventTime(item),
+		clear() {
+			clearSchedulerState(state);
+			return scheduler;
+		},
+		remove: (item) => removeFromSchedulerState(state, item),
+		next() {
+			if (state.current && state.repeatList.indexOf(state.current) !== -1) {
+				state.queue.add(state.current, 1 / state.current.getSpeed());
+			}
+			return advanceScheduler(state);
+		},
+	};
+	return scheduler;
 }

@@ -1,60 +1,64 @@
-import Scheduler from "./scheduler.js";
+import type { Scheduler } from "./scheduler.js";
+import {
+	addToRepeatList,
+	advanceScheduler,
+	clearSchedulerState,
+	createSchedulerState,
+	removeFromSchedulerState,
+} from "./scheduler.js";
+
+export interface ActionScheduler<T> extends Scheduler<T> {
+	/** @param time defaults to 1 */
+	add(item: T, repeat: boolean, time?: number): ActionScheduler<T>;
+	/** Set the duration for the currently active item. */
+	setDuration(time: number): ActionScheduler<T>;
+}
+
+const DEFAULT_DURATION = 1;
 
 /**
- * @class Action-based scheduler
- * @augments ROT.Scheduler
+ * Action-based scheduler: each item is scheduled with an explicit duration
+ * (defaulting to 1), adjustable for the active item via `setDuration`.
  */
-export default class Action<T = any> extends Scheduler<T> {
-	_defaultDuration: number;
-	_duration: number;
+export function createActionScheduler<T>(): ActionScheduler<T> {
+	const state = createSchedulerState<T>();
+	let duration = DEFAULT_DURATION; /* for the currently active item */
 
-	constructor() {
-		super();
-		this._defaultDuration = 1; /* for newly added */
-		this._duration = this._defaultDuration; /* for this._current */
-	}
-
-	/**
-	 * @param {object} item
-	 * @param {bool} repeat
-	 * @param {number} [time=1]
-	 * @see ROT.Scheduler#add
-	 */
-	add(item: T, repeat: boolean, time?: number) {
-		this._queue.add(item, time || this._defaultDuration);
-		return super.add(item, repeat);
-	}
-
-	clear() {
-		this._duration = this._defaultDuration;
-		return super.clear();
-	}
-
-	remove(item: T) {
-		if (item == this._current) {
-			this._duration = this._defaultDuration;
-		}
-		return super.remove(item);
-	}
-
-	/**
-	 * @see ROT.Scheduler#next
-	 */
-	next() {
-		if (this._current !== null && this._repeat.indexOf(this._current) != -1) {
-			this._queue.add(this._current, this._duration || this._defaultDuration);
-			this._duration = this._defaultDuration;
-		}
-		return super.next();
-	}
-
-	/**
-	 * Set duration for the active item
-	 */
-	setDuration(time: number) {
-		if (this._current) {
-			this._duration = time;
-		}
-		return this;
-	}
+	const scheduler: ActionScheduler<T> = {
+		getTime: () => state.queue.getTime(),
+		add(item, repeat, time) {
+			state.queue.add(item, time || DEFAULT_DURATION);
+			addToRepeatList(state, item, repeat);
+			return scheduler;
+		},
+		getTimeOf: (item) => state.queue.getEventTime(item),
+		clear() {
+			duration = DEFAULT_DURATION;
+			clearSchedulerState(state);
+			return scheduler;
+		},
+		remove(item) {
+			if (item === state.current) {
+				duration = DEFAULT_DURATION;
+			}
+			return removeFromSchedulerState(state, item);
+		},
+		next() {
+			if (
+				state.current !== null &&
+				state.repeatList.indexOf(state.current) !== -1
+			) {
+				state.queue.add(state.current, duration || DEFAULT_DURATION);
+				duration = DEFAULT_DURATION;
+			}
+			return advanceScheduler(state);
+		},
+		setDuration(time) {
+			if (state.current) {
+				duration = time;
+			}
+			return scheduler;
+		},
+	};
+	return scheduler;
 }

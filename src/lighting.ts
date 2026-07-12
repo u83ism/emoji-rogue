@@ -9,14 +9,10 @@ type ReflectivityCallback = (x: number, y: number) => number;
 /** Will be called for every lit cell */
 type LightingCallback = (x: number, y: number, color: LightColor) => void;
 
-interface LightingMap {
-	[key: string]: LightColor;
-}
-interface NumberMap {
-	[key: string]: number;
-}
+type LightingMap = Record<string, LightColor>;
+type NumberMap = Record<string, number>;
 
-interface Options {
+export interface LightingOptions {
 	/** Number of passes. 1 equals to simple FOV of all light sources, >1 means a *highly simplified* radiosity-like algorithm. Default = 1 */
 	passes: number;
 	/** Cells with emissivity > threshold will be treated as light source in the next pass. Default = 100 */
@@ -25,220 +21,103 @@ interface Options {
 	range: number;
 }
 
+export interface Lighting {
+	/** Adjust options at runtime. */
+	setOptions(options: Partial<LightingOptions>): Lighting;
+	/** Set the used Field-Of-View algorithm. */
+	setFOV(fov: Fov): Lighting;
+	/** Set (or remove) a light source. */
+	setLight(x: number, y: number, color: null | string | LightColor): Lighting;
+	/** Remove all light sources. */
+	clearLights(): void;
+	/** Reset the pre-computed topology values. Call whenever the underlying map changes its light-passability. */
+	reset(): Lighting;
+	/** Compute the lighting. */
+	compute(lightingCallback: LightingCallback): Lighting;
+}
+
+function parseKey(key: string): [number, number] {
+	const parts = key.split(",");
+	const x = Number(parts[0]);
+	const y = Number(parts[1]);
+	return [x, y];
+}
+
+function at<T>(map: Record<string, T>, key: string): T {
+	const value = map[key];
+	if (value === undefined) {
+		throw new Error(`lighting: missing expected key "${key}"`);
+	}
+	return value;
+}
+
+function at3(color: LightColor, index: number): number {
+	const value = color[index];
+	if (value === undefined) {
+		throw new Error("unreachable: index must be 0, 1, or 2");
+	}
+	return value;
+}
+
 /**
  * Lighting computation, based on a traditional FOV for multiple light sources and multiple passes.
  */
-export default class Lighting {
-	private _reflectivityCallback: ReflectivityCallback;
-	private _options!: Options;
-	private _fov!: Fov;
-	private _lights: LightingMap;
-	private _reflectivityCache: NumberMap;
-	private _fovCache: { [key: string]: NumberMap };
+export function createLighting(
+	reflectivityCallback: ReflectivityCallback,
+	options: Partial<LightingOptions> = {},
+): Lighting {
+	const resolvedOptions: LightingOptions = {
+		passes: 1,
+		emissionThreshold: 100,
+		range: 10,
+		...options,
+	};
 
-	constructor(
-		reflectivityCallback: ReflectivityCallback,
-		options: Partial<Options> = {},
-	) {
-		this._reflectivityCallback = reflectivityCallback;
-		this._options = {} as Options;
-		options = Object.assign(
-			{
-				passes: 1,
-				emissionThreshold: 100,
-				range: 10,
-			},
-			options,
-		);
+	let fov: Fov | undefined;
+	let lights: LightingMap = {};
+	let reflectivityCache: NumberMap = {};
+	let fovCache: Record<string, NumberMap> = {};
 
-		this._lights = {};
-		this._reflectivityCache = {};
-		this._fovCache = {};
-
-		this.setOptions(options);
+	function resetCaches(): void {
+		reflectivityCache = {};
+		fovCache = {};
 	}
 
-	/**
-	 * Adjust options at runtime
-	 */
-	setOptions(options: Partial<Options>) {
-		Object.assign(this._options, options);
-		if (options && options.range) {
-			this.reset();
+	function updateFOV(x: number, y: number): NumberMap {
+		const key1 = `${x},${y}`;
+		const cache: NumberMap = {};
+		fovCache[key1] = cache;
+		const range = resolvedOptions.range;
+		if (!fov) {
+			throw new Error("Lighting: setFOV() must be called before compute()");
 		}
-		return this;
+		fov(x, y, range, (cx, cy, r, vis) => {
+			const key2 = `${cx},${cy}`;
+			const formFactor = vis * (1 - r / range);
+			if (formFactor === 0) return;
+			cache[key2] = formFactor;
+		});
+
+		return cache;
 	}
 
-	/**
-	 * Set the used Field-Of-View algo
-	 */
-	setFOV(fov: Fov) {
-		this._fov = fov;
-		this._fovCache = {};
-		return this;
-	}
-
-	/**
-	 * Set (or remove) a light source
-	 */
-	setLight(x: number, y: number, color: null | string | LightColor) {
-		const key = x + "," + y;
-
-		if (color) {
-			this._lights[key] =
-				typeof color == "string"
-					? (Color.fromString(color) as LightColor)
-					: color;
-		} else {
-			delete this._lights[key];
-		}
-		return this;
-	}
-
-	/**
-	 * Remove all light sources
-	 */
-	clearLights() {
-		this._lights = {};
-	}
-
-	/**
-	 * Reset the pre-computed topology values. Call whenever the underlying map changes its light-passability.
-	 */
-	reset() {
-		this._reflectivityCache = {};
-		this._fovCache = {};
-
-		return this;
-	}
-
-	/**
-	 * Compute the lighting
-	 */
-	compute(lightingCallback: LightingCallback) {
-		const doneCells: { [key: string]: number } = {};
-		let emittingCells: LightingMap = {};
-		const litCells: LightingMap = {};
-
-		for (const key in this._lights) {
-			/* prepare emitters for first pass */
-			const light = this._lights[key];
-			emittingCells[key] = [0, 0, 0];
-			Color.add_(emittingCells[key], light);
-		}
-
-		for (let i = 0; i < this._options.passes; i++) {
-			/* main loop */
-			this._emitLight(emittingCells, litCells, doneCells);
-			if (i + 1 == this._options.passes) {
-				continue;
-			} /* not for the last pass */
-			emittingCells = this._computeEmitters(litCells, doneCells);
-		}
-
-		for (const litKey in litCells) {
-			/* let the user know what and how is lit */
-			const parts = litKey.split(",");
-			const x = parseInt(parts[0]);
-			const y = parseInt(parts[1]);
-			lightingCallback(x, y, litCells[litKey]);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Compute one iteration from all emitting cells
-	 * @param emittingCells These emit light
-	 * @param litCells Add projected light to these
-	 * @param doneCells These already emitted, forbid them from further calculations
-	 */
-	private _emitLight(
-		emittingCells: LightingMap,
-		litCells: LightingMap,
-		doneCells: { [key: string]: number },
-	) {
-		for (const key in emittingCells) {
-			const parts = key.split(",");
-			const x = parseInt(parts[0]);
-			const y = parseInt(parts[1]);
-			this._emitLightFromCell(x, y, emittingCells[key], litCells);
-			doneCells[key] = 1;
-		}
-		return this;
-	}
-
-	/**
-	 * Prepare a list of emitters for next pass
-	 */
-	private _computeEmitters(
-		litCells: LightingMap,
-		doneCells: { [key: string]: number },
-	) {
-		const result: LightingMap = {};
-
-		for (const key in litCells) {
-			if (key in doneCells) {
-				continue;
-			} /* already emitted */
-
-			const color = litCells[key];
-
-			let reflectivity;
-			if (key in this._reflectivityCache) {
-				reflectivity = this._reflectivityCache[key];
-			} else {
-				const parts = key.split(",");
-				const x = parseInt(parts[0]);
-				const y = parseInt(parts[1]);
-				reflectivity = this._reflectivityCallback(x, y);
-				this._reflectivityCache[key] = reflectivity;
-			}
-
-			if (reflectivity == 0) {
-				continue;
-			} /* will not reflect at all */
-
-			/* compute emission color */
-			const emission: LightColor = [0, 0, 0];
-			let intensity = 0;
-			for (let i = 0; i < 3; i++) {
-				const part = Math.round(color[i] * reflectivity);
-				emission[i] = part;
-				intensity += part;
-			}
-			if (intensity > this._options.emissionThreshold) {
-				result[key] = emission;
-			}
-		}
-
-		return result;
-	}
-
-	/**
-	 * Compute one iteration from one cell
-	 */
-	private _emitLightFromCell(
+	/** Compute one iteration from one cell. */
+	function emitLightFromCell(
 		x: number,
 		y: number,
 		color: LightColor,
 		litCells: LightingMap,
-	) {
-		const key = x + "," + y;
-		let fov: NumberMap;
-		if (key in this._fovCache) {
-			fov = this._fovCache[key];
-		} else {
-			fov = this._updateFOV(x, y);
-		}
+	): void {
+		const key = `${x},${y}`;
+		const fovResult = key in fovCache ? at(fovCache, key) : updateFOV(x, y);
 
-		for (const fovKey in fov) {
-			const formFactor = fov[fovKey];
+		for (const fovKey of Object.keys(fovResult)) {
+			const formFactor = at(fovResult, fovKey);
 
 			let result: LightColor;
 			if (fovKey in litCells) {
 				/* already lit */
-				result = litCells[fovKey];
+				result = at(litCells, fovKey);
 			} else {
 				/* newly lit */
 				result = [0, 0, 0];
@@ -246,31 +125,131 @@ export default class Lighting {
 			}
 
 			for (let i = 0; i < 3; i++) {
-				result[i] += Math.round(color[i] * formFactor);
+				result[i] = at3(result, i) + Math.round(at3(color, i) * formFactor);
 			} /* add light color */
 		}
-
-		return this;
 	}
 
-	/**
-	 * Compute FOV ("form factor") for a potential light source at [x,y]
-	 */
-	private _updateFOV(x: number, y: number) {
-		const key1 = x + "," + y;
-		const cache: NumberMap = {};
-		this._fovCache[key1] = cache;
-		const range = this._options.range;
-		function cb(x: number, y: number, r: number, vis: number) {
-			const key2 = x + "," + y;
-			const formFactor = vis * (1 - r / range);
-			if (formFactor == 0) {
-				return;
-			}
-			cache[key2] = formFactor;
+	/** Compute one iteration from all emitting cells. */
+	function emitLight(
+		emittingCells: LightingMap,
+		litCells: LightingMap,
+		doneCells: NumberMap,
+	): void {
+		for (const key of Object.keys(emittingCells)) {
+			const [x, y] = parseKey(key);
+			emitLightFromCell(x, y, at(emittingCells, key), litCells);
+			doneCells[key] = 1;
 		}
-		this._fov(x, y, range, cb.bind(this));
-
-		return cache;
 	}
+
+	/** Prepare a list of emitters for the next pass. */
+	function computeEmitters(
+		litCells: LightingMap,
+		doneCells: NumberMap,
+	): LightingMap {
+		const result: LightingMap = {};
+
+		for (const key of Object.keys(litCells)) {
+			if (key in doneCells) continue; /* already emitted */
+
+			const color = at(litCells, key);
+
+			let reflectivity: number;
+			if (key in reflectivityCache) {
+				reflectivity = at(reflectivityCache, key);
+			} else {
+				const [x, y] = parseKey(key);
+				reflectivity = reflectivityCallback(x, y);
+				reflectivityCache[key] = reflectivity;
+			}
+
+			if (reflectivity === 0) continue; /* will not reflect at all */
+
+			/* compute emission color */
+			const emission: LightColor = [0, 0, 0];
+			let intensity = 0;
+			for (let i = 0; i < 3; i++) {
+				const part = Math.round(at3(color, i) * reflectivity);
+				emission[i] = part;
+				intensity += part;
+			}
+			if (intensity > resolvedOptions.emissionThreshold) {
+				result[key] = emission;
+			}
+		}
+
+		return result;
+	}
+
+	const lighting: Lighting = {
+		setOptions(newOptions: Partial<LightingOptions>): Lighting {
+			Object.assign(resolvedOptions, newOptions);
+			if (newOptions.range) resetCaches();
+			return lighting;
+		},
+
+		setFOV(newFov: Fov): Lighting {
+			fov = newFov;
+			fovCache = {};
+			return lighting;
+		},
+
+		setLight(
+			x: number,
+			y: number,
+			color: null | string | LightColor,
+		): Lighting {
+			const key = `${x},${y}`;
+			if (color) {
+				lights[key] =
+					typeof color === "string"
+						? (Color.fromString(color) as LightColor)
+						: color;
+			} else {
+				delete lights[key];
+			}
+			return lighting;
+		},
+
+		clearLights(): void {
+			lights = {};
+		},
+
+		reset(): Lighting {
+			resetCaches();
+			return lighting;
+		},
+
+		compute(lightingCallback: LightingCallback): Lighting {
+			const doneCells: NumberMap = {};
+			let emittingCells: LightingMap = {};
+			const litCells: LightingMap = {};
+
+			for (const key of Object.keys(lights)) {
+				/* prepare emitters for the first pass */
+				const light = at(lights, key);
+				const emitted: LightColor = [0, 0, 0];
+				Color.add_(emitted, light);
+				emittingCells[key] = emitted;
+			}
+
+			for (let i = 0; i < resolvedOptions.passes; i++) {
+				/* main loop */
+				emitLight(emittingCells, litCells, doneCells);
+				if (i + 1 === resolvedOptions.passes)
+					continue; /* not for the last pass */
+				emittingCells = computeEmitters(litCells, doneCells);
+			}
+
+			for (const litKey of Object.keys(litCells)) {
+				/* let the user know what and how is lit */
+				const [x, y] = parseKey(litKey);
+				lightingCallback(x, y, at(litCells, litKey));
+			}
+
+			return lighting;
+		},
+	};
+	return lighting;
 }

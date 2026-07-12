@@ -1,134 +1,157 @@
 export interface HeapWrapper<T> {
-	key: number;
-	timestamp: number;
-	value: T;
+	readonly key: number;
+	readonly timestamp: number;
+	readonly value: T;
 }
 
-export class MinHeap<T> {
-	private heap: HeapWrapper<T>[];
-	private timestamp: number;
-	constructor() {
-		this.heap = [];
-		this.timestamp = 0;
-	}
-	lessThan(a: HeapWrapper<T>, b: HeapWrapper<T>) {
-		return a.key == b.key ? a.timestamp < b.timestamp : a.key < b.key;
-	}
-	shift(v: number) {
-		this.heap = this.heap.map(({ key, value, timestamp }) => ({
-			key: key + v,
-			value,
-			timestamp,
-		}));
-	}
-	len() {
-		return this.heap.length;
-	}
-	push(value: T, key: number) {
-		this.timestamp += 1;
-		const loc = this.len();
-		this.heap.push({ value, timestamp: this.timestamp, key });
-		this.updateUp(loc);
-	}
-	pop(): HeapWrapper<T> {
-		if (this.len() == 0) {
-			throw new Error("no element to pop");
-		}
-		const top = this.heap[0];
-		if (this.len() > 1) {
-			this.heap[0] = this.heap.pop() as HeapWrapper<T>;
-			this.updateDown(0);
-		} else {
-			this.heap.pop();
-		}
-		return top;
-	}
-	find(v: T): HeapWrapper<T> | null {
-		for (let i = 0; i < this.len(); i++) {
-			if (v == this.heap[i].value) {
-				return this.heap[i];
-			}
-		}
-		return null;
-	}
-	remove(v: T) {
-		let index = null;
-		for (let i = 0; i < this.len(); i++) {
-			if (v == this.heap[i].value) {
-				index = i;
-			}
-		}
-		if (index === null) {
-			return false;
-		}
+export interface MinHeap<T> {
+	push(value: T, key: number): void;
+	pop(): HeapWrapper<T>;
+	len(): number;
+	find(value: T): HeapWrapper<T> | null;
+	remove(value: T): boolean;
+	shift(delta: number): void;
+}
 
-		if (this.len() > 1) {
-			const last = this.heap.pop() as HeapWrapper<T>;
-			if (last.value != v) {
-				// if the last one is being removed, do nothing
-				this.heap[index] = last;
-				this.updateDown(index);
-			}
-			return true;
-		} else {
-			this.heap.pop();
-		}
+/**
+ * A binary min-heap keyed by `key`, with `timestamp` (insertion order) as the
+ * tie-breaker so equal keys come out FIFO.
+ */
+export function createMinHeap<T>(): MinHeap<T> {
+	let heap: HeapWrapper<T>[] = [];
+	let timestamp = 0;
 
-		return true;
+	function lessThan(a: HeapWrapper<T>, b: HeapWrapper<T>): boolean {
+		return a.key === b.key ? a.timestamp < b.timestamp : a.key < b.key;
 	}
-	private parentNode(x: number): number {
-		return Math.floor((x - 1) / 2);
+
+	function existNode(index: number): boolean {
+		return index >= 0 && index < heap.length;
 	}
-	private leftChildNode(x: number): number {
-		return 2 * x + 1;
+
+	function swap(x: number, y: number): void {
+		const nodeAtX = heap[x];
+		const nodeAtY = heap[y];
+		if (nodeAtX === undefined || nodeAtY === undefined) {
+			throw new Error("cannot swap non-existent heap nodes");
+		}
+		heap[x] = nodeAtY;
+		heap[y] = nodeAtX;
 	}
-	private rightChildNode(x: number): number {
-		return 2 * x + 2;
-	}
-	private existNode(x: number): boolean {
-		return x >= 0 && x < this.heap.length;
-	}
-	private swap(x: number, y: number) {
-		const t = this.heap[x];
-		this.heap[x] = this.heap[y];
-		this.heap[y] = t;
-	}
-	private minNode(numbers: number[]) {
-		const validnumbers = numbers.filter(this.existNode.bind(this));
-		let minimal = validnumbers[0];
-		for (const i of validnumbers) {
-			if (this.lessThan(this.heap[i], this.heap[minimal])) {
-				minimal = i;
+
+	function minNode(candidates: number[]): number {
+		const valid = candidates.filter(existNode);
+		let minimal = valid[0];
+		if (minimal === undefined) {
+			throw new Error("minNode called with no existing candidates");
+		}
+		for (const index of valid) {
+			const candidateNode = heap[index];
+			const minimalNode = heap[minimal];
+			if (candidateNode === undefined || minimalNode === undefined) {
+				throw new Error("heap index out of range");
+			}
+			if (lessThan(candidateNode, minimalNode)) {
+				minimal = index;
 			}
 		}
 		return minimal;
 	}
-	private updateUp(x: number) {
-		if (x == 0) {
-			return;
-		}
-		const parent = this.parentNode(x);
+
+	function updateUp(index: number): void {
+		if (index === 0) return;
+		const parent = Math.floor((index - 1) / 2);
+		const nodeAtIndex = heap[index];
+		const parentNode = heap[parent];
 		if (
-			this.existNode(parent) &&
-			this.lessThan(this.heap[x], this.heap[parent])
+			existNode(parent) &&
+			nodeAtIndex !== undefined &&
+			parentNode !== undefined &&
+			lessThan(nodeAtIndex, parentNode)
 		) {
-			this.swap(x, parent);
-			this.updateUp(parent);
+			swap(index, parent);
+			updateUp(parent);
 		}
 	}
-	private updateDown(x: number) {
-		const leftChild = this.leftChildNode(x);
-		const rightChild = this.rightChildNode(x);
-		if (!this.existNode(leftChild)) {
-			return;
-		}
-		const m = this.minNode([x, leftChild, rightChild]);
-		if (m != x) {
-			this.swap(x, m);
-			this.updateDown(m);
+
+	function updateDown(index: number): void {
+		const leftChild = 2 * index + 1;
+		const rightChild = 2 * index + 2;
+		if (!existNode(leftChild)) return;
+		const minimal = minNode([index, leftChild, rightChild]);
+		if (minimal !== index) {
+			swap(index, minimal);
+			updateDown(minimal);
 		}
 	}
-	debugPrint() {
-		console.log(this.heap);
-	}
+
+	return {
+		push(value: T, key: number): void {
+			timestamp += 1;
+			const location = heap.length;
+			heap.push({ value, timestamp, key });
+			updateUp(location);
+		},
+
+		pop(): HeapWrapper<T> {
+			const top = heap[0];
+			if (top === undefined) {
+				throw new Error("no element to pop");
+			}
+			if (heap.length > 1) {
+				const last = heap.pop();
+				if (last === undefined) {
+					throw new Error("heap underflow");
+				}
+				heap[0] = last;
+				updateDown(0);
+			} else {
+				heap.pop();
+			}
+			return top;
+		},
+
+		len(): number {
+			return heap.length;
+		},
+
+		find(value: T): HeapWrapper<T> | null {
+			for (const node of heap) {
+				if (value === node.value) return node;
+			}
+			return null;
+		},
+
+		remove(value: T): boolean {
+			let index = -1;
+			for (let i = 0; i < heap.length; i++) {
+				const node = heap[i];
+				if (node !== undefined && value === node.value) index = i;
+			}
+			if (index === -1) return false;
+
+			if (heap.length > 1) {
+				const last = heap.pop();
+				if (last === undefined) {
+					throw new Error("heap underflow");
+				}
+				if (last.value !== value) {
+					// if the last element is the one being removed, there's nothing left to relocate
+					heap[index] = last;
+					updateDown(index);
+				}
+				return true;
+			}
+			heap.pop();
+			return true;
+		},
+
+		shift(delta: number): void {
+			heap = heap.map(({ key, value, timestamp: nodeTimestamp }) => ({
+				key: key + delta,
+				value,
+				timestamp: nodeTimestamp,
+			}));
+		},
+	};
 }

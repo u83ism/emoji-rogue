@@ -12,7 +12,11 @@ export type { Rng, RngState } from "./rng.js";
 export { createRng, default as RNG } from "./rng.js";
 export type { SpeedActor } from "./scheduler/index.js";
 export { default as Scheduler } from "./scheduler/index.js";
-export { default as StringGenerator } from "./stringgenerator.js";
+export type {
+	Options as StringGeneratorOptions,
+	StringGenerator,
+} from "./stringgenerator.js";
+export { createStringGenerator } from "./stringgenerator.js";
 
 import * as util from "./util.js";
 export const Util = util;

@@ -1,5 +1,5 @@
-import Map, { CreateCallback } from "./map.js";
 import RNG from "../rng.js";
+import Map, { type CreateCallback } from "./map.js";
 
 type List = number[];
 
@@ -7,10 +7,10 @@ type List = number[];
  * Join lists with "i" and "i+1"
  */
 function addToList(i: number, L: List, R: List) {
-	R[L[i+1]] = R[i];
-	L[R[i]] = L[i+1];
-	R[i] = i+1;
-	L[i+1] = i;
+	R[L[i + 1]] = R[i];
+	L[R[i]] = L[i + 1];
+	R[i] = i + 1;
+	L[i + 1] = i;
 }
 
 /**
@@ -29,69 +29,69 @@ function removeFromList(i: number, L: List, R: List) {
  */
 export default class EllerMaze extends Map {
 	create(callback: CreateCallback) {
-		let map = this._fillMap(1);
-		let w = Math.ceil((this._width-2)/2);
-		
-		let rand = 9/24;
-		
-		let L: List = [];
-		let R: List = [];
-		
-		for (let i=0;i<w;i++) {
+		const map = this._fillMap(1);
+		const w = Math.ceil((this._width - 2) / 2);
+
+		const rand = 9 / 24;
+
+		const L: List = [];
+		const R: List = [];
+
+		for (let i = 0; i < w; i++) {
 			L.push(i);
 			R.push(i);
 		}
-		L.push(w-1); /* fake stop-block at the right side */
+		L.push(w - 1); /* fake stop-block at the right side */
 
 		let j;
-		for (j=1;j+3<this._height;j+=2) {
+		for (j = 1; j + 3 < this._height; j += 2) {
 			/* one row */
-			for (let i=0;i<w;i++) {
+			for (let i = 0; i < w; i++) {
 				/* cell coords (will be always empty) */
-				let x = 2*i+1;
-				let y = j;
+				const x = 2 * i + 1;
+				const y = j;
 				map[x][y] = 0;
-				
+
 				/* right connection */
-				if (i != L[i+1] && RNG.getUniform() > rand) {
+				if (i != L[i + 1] && RNG.getUniform() > rand) {
 					addToList(i, L, R);
-					map[x+1][y] = 0;
+					map[x + 1][y] = 0;
 				}
-				
+
 				/* bottom connection */
 				if (i != L[i] && RNG.getUniform() > rand) {
 					/* remove connection */
 					removeFromList(i, L, R);
 				} else {
 					/* create connection */
-					map[x][y+1] = 0;
+					map[x][y + 1] = 0;
 				}
 			}
 		}
 
 		/* last row */
-		for (let i=0;i<w;i++) {
+		for (let i = 0; i < w; i++) {
 			/* cell coords (will be always empty) */
-			let x = 2*i+1;
-			let y = j;
+			const x = 2 * i + 1;
+			const y = j;
 			map[x][y] = 0;
-			
+
 			/* right connection */
-			if (i != L[i+1] && (i == L[i] || RNG.getUniform() > rand)) {
+			if (i != L[i + 1] && (i == L[i] || RNG.getUniform() > rand)) {
 				/* dig right also if the cell is separated, so it gets connected to the rest of maze */
 				addToList(i, L, R);
-				map[x+1][y] = 0;
+				map[x + 1][y] = 0;
 			}
-			
+
 			removeFromList(i, L, R);
 		}
-		
-		for (let i=0;i<this._width;i++) {
-			for (let j=0;j<this._height;j++) {
+
+		for (let i = 0; i < this._width; i++) {
+			for (let j = 0; j < this._height; j++) {
 				callback(i, j, map[i][j]);
 			}
 		}
-		
+
 		return this;
 	}
 }

@@ -1,15 +1,35 @@
 /** Default with for display and map generators */
-export let DEFAULT_WIDTH = 80;
+export const DEFAULT_WIDTH = 80;
 
 /** Default height for display and map generators */
-export let DEFAULT_HEIGHT = 25;
+export const DEFAULT_HEIGHT = 25;
 
 export const DIRS = {
-	4: [[0, -1], [1, 0], [0, 1], [-1, 0]],
-	8: [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]],
-	6: [[-1, -1], [1, -1], [2, 0], [1, 1], [-1, 1], [-2, 0]]
+	4: [
+		[0, -1],
+		[1, 0],
+		[0, 1],
+		[-1, 0],
+	],
+	8: [
+		[0, -1],
+		[1, -1],
+		[1, 0],
+		[1, 1],
+		[0, 1],
+		[-1, 1],
+		[-1, 0],
+		[-1, -1],
+	],
+	6: [
+		[-1, -1],
+		[1, -1],
+		[2, 0],
+		[1, 1],
+		[-1, 1],
+		[-2, 0],
+	],
 };
-
 
 export const KEYS = {
 	/** Cancel key. */
@@ -319,5 +339,5 @@ export const KEYS = {
 	/** Linux support for this keycode was added in Gecko 4.0. */
 	VK_EXECUTE: 43,
 	/** Linux support for this keycode was added in Gecko 4.0.	 */
-	VK_SLEEP: 95
+	VK_SLEEP: 95,
 };

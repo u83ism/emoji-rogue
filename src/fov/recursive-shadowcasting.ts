@@ -1,15 +1,15 @@
-import FOV, { VisibilityCallback } from "./fov.js";
+import FOV, { type VisibilityCallback } from "./fov.js";
 
 /** Octants used for translating recursive shadowcasting offsets */
 const OCTANTS = [
-	[-1,  0,  0,  1],
-	[ 0, -1,  1,  0],
-	[ 0, -1, -1,  0],
-	[-1,  0,  0, -1],
-	[ 1,  0,  0, -1],
-	[ 0,  1, -1,  0],
-	[ 0,  1,  1,  0],
-	[ 1,  0,  0,  1]
+	[-1, 0, 0, 1],
+	[0, -1, 1, 0],
+	[0, -1, -1, 0],
+	[-1, 0, 0, -1],
+	[1, 0, 0, -1],
+	[0, 1, -1, 0],
+	[0, 1, 1, 0],
+	[1, 0, 0, 1],
 ];
 
 /**
@@ -29,7 +29,7 @@ export default class RecursiveShadowcasting extends FOV {
 	compute(x: number, y: number, R: number, callback: VisibilityCallback) {
 		//You can always see your own tile
 		callback(x, y, 0, 1);
-		for(let i = 0; i < OCTANTS.length; i++) {
+		for (let i = 0; i < OCTANTS.length; i++) {
 			this._renderOctant(x, y, OCTANTS[i], R, callback);
 		}
 	}
@@ -42,17 +42,23 @@ export default class RecursiveShadowcasting extends FOV {
 	 * @param {int} dir Direction to look in (expressed in a ROT.DIRS value);
 	 * @param {function} callback
 	 */
-	compute180(x: number, y: number, R: number, dir: number, callback: VisibilityCallback) {
+	compute180(
+		x: number,
+		y: number,
+		R: number,
+		dir: number,
+		callback: VisibilityCallback,
+	) {
 		//You can always see your own tile
 		callback(x, y, 0, 1);
-		let previousOctant = (dir - 1 + 8) % 8; //Need to retrieve the previous octant to render a full 180 degrees
-		let nextPreviousOctant = (dir - 2 + 8) % 8; //Need to retrieve the previous two octants to render a full 180 degrees
-		let nextOctant = (dir+ 1 + 8) % 8; //Need to grab to next octant to render a full 180 degrees
+		const previousOctant = (dir - 1 + 8) % 8; //Need to retrieve the previous octant to render a full 180 degrees
+		const nextPreviousOctant = (dir - 2 + 8) % 8; //Need to retrieve the previous two octants to render a full 180 degrees
+		const nextOctant = (dir + 1 + 8) % 8; //Need to grab to next octant to render a full 180 degrees
 		this._renderOctant(x, y, OCTANTS[nextPreviousOctant], R, callback);
 		this._renderOctant(x, y, OCTANTS[previousOctant], R, callback);
 		this._renderOctant(x, y, OCTANTS[dir], R, callback);
 		this._renderOctant(x, y, OCTANTS[nextOctant], R, callback);
-	};
+	}
 
 	/**
 	 * Compute visibility for a 90-degree arc
@@ -62,10 +68,16 @@ export default class RecursiveShadowcasting extends FOV {
 	 * @param {int} dir Direction to look in (expressed in a ROT.DIRS value);
 	 * @param {function} callback
 	 */
-	compute90(x: number, y: number, R: number, dir: number, callback: VisibilityCallback) {
+	compute90(
+		x: number,
+		y: number,
+		R: number,
+		dir: number,
+		callback: VisibilityCallback,
+	) {
 		//You can always see your own tile
 		callback(x, y, 0, 1);
-		let previousOctant = (dir - 1 + 8) % 8; //Need to retrieve the previous octant to render a full 90 degrees
+		const previousOctant = (dir - 1 + 8) % 8; //Need to retrieve the previous octant to render a full 90 degrees
 		this._renderOctant(x, y, OCTANTS[dir], R, callback);
 		this._renderOctant(x, y, OCTANTS[previousOctant], R, callback);
 	}
@@ -78,9 +90,27 @@ export default class RecursiveShadowcasting extends FOV {
 	 * @param {int} R Maximum visibility radius
 	 * @param {function} callback
 	 */
-	_renderOctant(x: number, y: number, octant: number[], R: number, callback: VisibilityCallback) {
+	_renderOctant(
+		x: number,
+		y: number,
+		octant: number[],
+		R: number,
+		callback: VisibilityCallback,
+	) {
 		//Radius incremented by 1 to provide same coverage area as other shadowcasting radiuses
-		this._castVisibility(x, y, 1, 1.0, 0.0, R + 1, octant[0], octant[1], octant[2], octant[3], callback);
+		this._castVisibility(
+			x,
+			y,
+			1,
+			1.0,
+			0.0,
+			R + 1,
+			octant[0],
+			octant[1],
+			octant[2],
+			octant[3],
+			callback,
+		);
 	}
 
 	/**
@@ -91,17 +121,31 @@ export default class RecursiveShadowcasting extends FOV {
 	 * @param {float} visSlopeStart The slope to start at
 	 * @param {float} visSlopeEnd The slope to end at
 	 * @param {int} radius The radius to reach out to
-	 * @param {int} xx 
-	 * @param {int} xy 
-	 * @param {int} yx 
-	 * @param {int} yy 
+	 * @param {int} xx
+	 * @param {int} xy
+	 * @param {int} yx
+	 * @param {int} yy
 	 * @param {function} callback The callback to use when we hit a block that is visible
 	 */
-	_castVisibility(startX: number, startY: number, row: number, visSlopeStart: number, visSlopeEnd: number, radius: number, xx: number, xy: number, yx: number, yy: number, callback: VisibilityCallback) {
-		if (visSlopeStart < visSlopeEnd) { return; }
+	_castVisibility(
+		startX: number,
+		startY: number,
+		row: number,
+		visSlopeStart: number,
+		visSlopeEnd: number,
+		radius: number,
+		xx: number,
+		xy: number,
+		yx: number,
+		yy: number,
+		callback: VisibilityCallback,
+	) {
+		if (visSlopeStart < visSlopeEnd) {
+			return;
+		}
 		for (let i = row; i <= radius; i++) {
 			let dx = -i - 1;
-			let dy = -i;
+			const dy = -i;
 			let blocked = false;
 			let newStart = 0;
 
@@ -110,29 +154,45 @@ export default class RecursiveShadowcasting extends FOV {
 				dx += 1;
 
 				//Translate from relative coordinates to map coordinates
-				let mapX = startX + dx * xx + dy * xy;
-				let mapY = startY + dx * yx + dy * yy;
+				const mapX = startX + dx * xx + dy * xy;
+				const mapY = startY + dx * yx + dy * yy;
 
 				//Range of the row
-				let slopeStart = (dx - 0.5) / (dy + 0.5);
-				let slopeEnd = (dx + 0.5) / (dy - 0.5);
-			
+				const slopeStart = (dx - 0.5) / (dy + 0.5);
+				const slopeEnd = (dx + 0.5) / (dy - 0.5);
+
 				//Ignore if not yet at left edge of Octant
-				if (slopeEnd > visSlopeStart) { continue; }
-				
+				if (slopeEnd > visSlopeStart) {
+					continue;
+				}
+
 				//Done if past right edge
-				if (slopeStart < visSlopeEnd) { break; }
-					
+				if (slopeStart < visSlopeEnd) {
+					break;
+				}
+
 				//If it's in range, it's visible
-				if ((dx * dx + dy * dy) < (radius * radius)) {
+				if (dx * dx + dy * dy < radius * radius) {
 					callback(mapX, mapY, i, 1);
 				}
-		
+
 				if (!blocked) {
 					//If tile is a blocking tile, cast around it
 					if (!this._lightPasses(mapX, mapY) && i < radius) {
 						blocked = true;
-						this._castVisibility(startX, startY, i + 1, visSlopeStart, slopeStart, radius, xx, xy, yx, yy, callback);
+						this._castVisibility(
+							startX,
+							startY,
+							i + 1,
+							visSlopeStart,
+							slopeStart,
+							radius,
+							xx,
+							xy,
+							yx,
+							yy,
+							callback,
+						);
 						newStart = slopeEnd;
 					}
 				} else {
@@ -141,13 +201,15 @@ export default class RecursiveShadowcasting extends FOV {
 						newStart = slopeEnd;
 						continue;
 					}
-				
+
 					//Block has ended
 					blocked = false;
 					visSlopeStart = newStart;
 				}
 			}
-			if (blocked) { break; }
+			if (blocked) {
+				break;
+			}
 		}
 	}
 }

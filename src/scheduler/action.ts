@@ -20,7 +20,7 @@ export default class Action<T = any> extends Scheduler<T> {
 	 * @param {number} [time=1]
 	 * @see ROT.Scheduler#add
 	 */
-	add(item:T, repeat:boolean, time?: number) {
+	add(item: T, repeat: boolean, time?: number) {
 		this._queue.add(item, time || this._defaultDuration);
 		return super.add(item, repeat);
 	}
@@ -30,8 +30,10 @@ export default class Action<T = any> extends Scheduler<T> {
 		return super.clear();
 	}
 
-	remove(item:T) {
-		if (item == this._current) { this._duration = this._defaultDuration; }
+	remove(item: T) {
+		if (item == this._current) {
+			this._duration = this._defaultDuration;
+		}
 		return super.remove(item);
 	}
 
@@ -50,7 +52,9 @@ export default class Action<T = any> extends Scheduler<T> {
 	 * Set duration for the active item
 	 */
 	setDuration(time: number) {
-		if (this._current) { this._duration = time; }
+		if (this._current) {
+			this._duration = time;
+		}
 		return this;
 	}
 }

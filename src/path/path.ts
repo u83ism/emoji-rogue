@@ -22,16 +22,25 @@ export default abstract class Path {
 	_options: Options;
 	_dirs: number[][];
 
-	constructor(toX: number, toY: number, passableCallback: PassableCallback, options: Partial<Options> = {}) {
+	constructor(
+		toX: number,
+		toY: number,
+		passableCallback: PassableCallback,
+		options: Partial<Options> = {},
+	) {
 		this._toX = toX;
 		this._toY = toY;
 		this._passableCallback = passableCallback;
-		this._options = Object.assign({
-			topology: 8
-		}, options);
+		this._options = Object.assign(
+			{
+				topology: 8,
+			},
+			options,
+		);
 
 		this._dirs = DIRS[this._options.topology];
-		if (this._options.topology == 8) { /* reorder dirs for more aesthetic result (vertical/horizontal first) */
+		if (this._options.topology == 8) {
+			/* reorder dirs for more aesthetic result (vertical/horizontal first) */
 			this._dirs = [
 				this._dirs[0],
 				this._dirs[2],
@@ -40,8 +49,8 @@ export default abstract class Path {
 				this._dirs[1],
 				this._dirs[3],
 				this._dirs[5],
-				this._dirs[7]
-			]
+				this._dirs[7],
+			];
 		}
 	}
 
@@ -51,19 +60,25 @@ export default abstract class Path {
 	 * @param {int} fromY
 	 * @param {function} callback Will be called for every path item with arguments "x" and "y"
 	 */
-	abstract compute(fromX: number, fromY: number, callback: ComputeCallback): void;
+	abstract compute(
+		fromX: number,
+		fromY: number,
+		callback: ComputeCallback,
+	): void;
 
 	_getNeighbors(cx: number, cy: number) {
-		let result = [];
-		for (let i=0;i<this._dirs.length;i++) {
-			let dir = this._dirs[i];
-			let x = cx + dir[0];
-			let y = cy + dir[1];
-			
-			if (!this._passableCallback(x, y)) { continue; }
+		const result = [];
+		for (let i = 0; i < this._dirs.length; i++) {
+			const dir = this._dirs[i];
+			const x = cx + dir[0];
+			const y = cy + dir[1];
+
+			if (!this._passableCallback(x, y)) {
+				continue;
+			}
 			result.push([x, y]);
 		}
-		
+
 		return result;
 	}
 }

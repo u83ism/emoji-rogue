@@ -12,21 +12,23 @@ class RNG {
 	_s2 = 0;
 	_c = 0;
 
-	getSeed() { return this._seed; }
+	getSeed() {
+		return this._seed;
+	}
 
 	/**
 	 * Seed the number generator
 	 */
 	setSeed(seed: number) {
-		seed = (seed < 1 ? 1/seed : seed);
+		seed = seed < 1 ? 1 / seed : seed;
 
 		this._seed = seed;
 		this._s0 = (seed >>> 0) * FRAC;
 
-		seed = (seed*69069 + 1) >>> 0;
+		seed = (seed * 69069 + 1) >>> 0;
 		this._s1 = seed * FRAC;
 
-		seed = (seed*69069 + 1) >>> 0;
+		seed = (seed * 69069 + 1) >>> 0;
 		this._s2 = seed * FRAC;
 
 		this._c = 1;
@@ -37,7 +39,7 @@ class RNG {
 	 * @returns Pseudorandom value [0,1), uniformly distributed
 	 */
 	getUniform() {
-		let t = 2091639 * this._s0 + this._c * FRAC;
+		const t = 2091639 * this._s0 + this._c * FRAC;
 		this._s0 = this._s1;
 		this._s1 = this._s2;
 		this._c = t | 0;
@@ -51,8 +53,8 @@ class RNG {
 	 * @returns Pseudorandom value [lowerBound, upperBound], using ROT.RNG.getUniform() to distribute the value
 	 */
 	getUniformInt(lowerBound: number, upperBound: number) {
-		let max = Math.max(lowerBound, upperBound);
-		let min = Math.min(lowerBound, upperBound);
+		const max = Math.max(lowerBound, upperBound);
+		const min = Math.min(lowerBound, upperBound);
 		return Math.floor(this.getUniform() * (max - min + 1)) + min;
 	}
 
@@ -64,27 +66,29 @@ class RNG {
 	getNormal(mean = 0, stddev = 1) {
 		let u, v, r;
 		do {
-			u = 2*this.getUniform()-1;
-			v = 2*this.getUniform()-1;
-			r = u*u + v*v;
+			u = 2 * this.getUniform() - 1;
+			v = 2 * this.getUniform() - 1;
+			r = u * u + v * v;
 		} while (r > 1 || r == 0);
 
-		let gauss = u * Math.sqrt(-2*Math.log(r)/r);
-		return mean + gauss*stddev;
+		const gauss = u * Math.sqrt((-2 * Math.log(r)) / r);
+		return mean + gauss * stddev;
 	}
 
 	/**
 	 * @returns Pseudorandom value [1,100] inclusive, uniformly distributed
 	 */
 	getPercentage() {
-		return 1 + Math.floor(this.getUniform()*100);
+		return 1 + Math.floor(this.getUniform() * 100);
 	}
 
 	/**
 	 * @returns Randomly picked item, null when length=0
 	 */
 	getItem<T>(array: Array<T>) {
-		if (!array.length) { return null; }
+		if (!array.length) {
+			return null;
+		}
 		return array[Math.floor(this.getUniform() * array.length)];
 	}
 
@@ -92,10 +96,10 @@ class RNG {
 	 * @returns New array with randomized items
 	 */
 	shuffle<T>(array: Array<T>) {
-		let result = [];
-		let clone = array.slice();
+		const result = [];
+		const clone = array.slice();
 		while (clone.length) {
-			let index = clone.indexOf(this.getItem(clone) as T);
+			const index = clone.indexOf(this.getItem(clone) as T);
 			result.push(clone.splice(index, 1)[0]);
 		}
 		return result;
@@ -105,18 +109,21 @@ class RNG {
 	 * @param data key=whatever, value=weight (relative probability)
 	 * @returns whatever
 	 */
-	getWeightedValue(data: { [key: string]: number, [key: number]: number }) {
+	getWeightedValue(data: { [key: string]: number; [key: number]: number }) {
 		let total = 0;
-		
-		for (let id in data) {
+
+		for (const id in data) {
 			total += data[id];
 		}
-		let random = this.getUniform()*total;
-		
-		let id, part = 0;
+		const random = this.getUniform() * total;
+
+		let id,
+			part = 0;
 		for (id in data) {
 			part += data[id];
-			if (random < part) { return id; }
+			if (random < part) {
+				return id;
+			}
 		}
 
 		// If by some floating-point annoyance we have
@@ -128,7 +135,9 @@ class RNG {
 	 * Get RNG state. Useful for storing the state and re-setting it via setState.
 	 * @returns Internal state
 	 */
-	getState() { return [this._s0, this._s1, this._s2, this._c]; }
+	getState() {
+		return [this._s0, this._s1, this._s2, this._c];
+	}
 
 	/**
 	 * Set a previously retrieved state.
@@ -137,7 +146,7 @@ class RNG {
 		this._s0 = state[0];
 		this._s1 = state[1];
 		this._s2 = state[2];
-		this._c  = state[3];
+		this._c = state[3];
 		return this;
 	}
 
@@ -145,7 +154,7 @@ class RNG {
 	 * Returns a cloned RNG
 	 */
 	clone() {
-		let clone = new RNG();
+		const clone = new RNG();
 		return clone.setState(this.getState());
 	}
 }

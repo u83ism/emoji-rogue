@@ -5,13 +5,13 @@
  * @returns x modulo n
  */
 export function mod(x: number, n: number): number {
-  return (x % n + n) % n;
+	return ((x % n) + n) % n;
 }
 
 export function clamp(val: number, min = 0, max = 1): number {
-  if (val < min) return min;
-  if (val > max) return max;
-  return val;
+	if (val < min) return min;
+	if (val > max) return max;
+	return val;
 }
 
 export function capitalize(string: string) {
@@ -19,8 +19,8 @@ export function capitalize(string: string) {
 }
 
 interface HasMap {
-	() : string;
-	map: {[key:string]: string};
+	(): string;
+	map: { [key: string]: string };
 }
 
 /**
@@ -29,24 +29,37 @@ interface HasMap {
  * @param {any} [argv]
  */
 export function format(template: string, ...args: any[]): string {
-	let map = (format as HasMap).map;
+	const map = (format as HasMap).map;
 
-	let replacer = function(match: string, group1: string, group2: string, index: number) {
-		if (template.charAt(index-1) == "%") { return match.substring(1); }
-		if (!args.length) { return match; }
+	const replacer = (
+		match: string,
+		group1: string,
+		group2: string,
+		index: number,
+	) => {
+		if (template.charAt(index - 1) == "%") {
+			return match.substring(1);
+		}
+		if (!args.length) {
+			return match;
+		}
 		let obj = args[0];
 
-		let group = group1 || group2;
-		let parts = group.split(",");
-		let name = parts.shift() || "";
-		let method = map[name.toLowerCase()];
-		if (!method) { return match; }
+		const group = group1 || group2;
+		const parts = group.split(",");
+		const name = parts.shift() || "";
+		const method = map[name.toLowerCase()];
+		if (!method) {
+			return match;
+		}
 
 		obj = args.shift();
 		let replaced = obj[method].apply(obj, parts);
 
-		let first = name.charAt(0);
-		if (first != first.toLowerCase()) { replaced = capitalize(replaced); }
+		const first = name.charAt(0);
+		if (first != first.toLowerCase()) {
+			replaced = capitalize(replaced);
+		}
 
 		return replaced;
 	};
@@ -54,5 +67,5 @@ export function format(template: string, ...args: any[]): string {
 }
 
 (format as HasMap).map = {
-	"s": "toString"
-}
+	s: "toString",
+};

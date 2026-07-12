@@ -17,14 +17,18 @@ export default class Scheduler<T = any> {
 	/**
 	 * @see ROT.EventQueue#getTime
 	 */
-	getTime() { return this._queue.getTime(); }
+	getTime() {
+		return this._queue.getTime();
+	}
 
 	/**
 	 * @param {?} item
 	 * @param {bool} repeat
 	 */
-	add(item:T, repeat:boolean) {
-		if (repeat) { this._repeat.push(item); }
+	add(item: T, repeat: boolean) {
+		if (repeat) {
+			this._repeat.push(item);
+		}
 		return this;
 	}
 
@@ -53,12 +57,16 @@ export default class Scheduler<T = any> {
 	 * @returns {bool} successful?
 	 */
 	remove(item: any) {
-		let result = this._queue.remove(item);
+		const result = this._queue.remove(item);
 
-		let index = this._repeat.indexOf(item);
-		if (index != -1) { this._repeat.splice(index, 1); }
+		const index = this._repeat.indexOf(item);
+		if (index != -1) {
+			this._repeat.splice(index, 1);
+		}
 
-		if (this._current == item) { this._current = null; }
+		if (this._current == item) {
+			this._current = null;
+		}
 
 		return result;
 	}

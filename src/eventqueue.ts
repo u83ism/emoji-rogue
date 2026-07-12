@@ -1,4 +1,4 @@
-import {MinHeap} from "./MinHeap.js";
+import { MinHeap } from "./MinHeap.js";
 
 export default class EventQueue<T = any> {
 	_time: number;
@@ -15,7 +15,9 @@ export default class EventQueue<T = any> {
 	/**
 	 * @returns {number} Elapsed time
 	 */
-	getTime() { return this._time; }
+	getTime() {
+		return this._time;
+	}
 
 	/**
 	 * Clear all scheduled events
@@ -30,7 +32,7 @@ export default class EventQueue<T = any> {
 	 * @param {number} time
 	 */
 	add(event: T, time: number) {
-		this._events.push(event,time);
+		this._events.push(event, time);
 	}
 
 	/**
@@ -38,10 +40,13 @@ export default class EventQueue<T = any> {
 	 * @returns {? || null} The event previously added by addEvent, null if no event available
 	 */
 	get() {
-		if (!this._events.len()) { return null; }
+		if (!this._events.len()) {
+			return null;
+		}
 
-		let { key: time, value: event } = this._events.pop();
-		if (time > 0) { /* advance */
+		const { key: time, value: event } = this._events.pop();
+		if (time > 0) {
+			/* advance */
 			this._time += time;
 			this._events.shift(-time);
 		}
@@ -70,6 +75,5 @@ export default class EventQueue<T = any> {
 	 */
 	remove(event: T) {
 		return this._events.remove(event);
-	};
+	}
 }
-

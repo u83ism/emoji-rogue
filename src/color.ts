@@ -1,4 +1,4 @@
-import RNG from "./rng.js";
+import type { Rng } from "./rng.js";
 import { clamp } from "./util.js";
 
 export type Color = [number, number, number];
@@ -119,17 +119,16 @@ export const lerpHSL = interpolateHSL;
 
 /**
  * Create a new random color based on this one
+ * @param rng RNG stream to draw from
  * @param color
  * @param diff Set of standard deviations
  */
-export function randomize(color: Color, diff: number | Color): Color {
-	if (!(diff instanceof Array)) {
-		diff = Math.round(RNG.getNormal(0, diff));
-	}
+export function randomize(rng: Rng, color: Color, diff: number | Color): Color {
+	const uniformDiff =
+		diff instanceof Array ? null : Math.round(rng.getNormal(0, diff));
 	const result = color.slice() as Color;
 	for (let i = 0; i < 3; i++) {
-		result[i] +=
-			diff instanceof Array ? Math.round(RNG.getNormal(0, diff[i])) : diff;
+		result[i] += uniformDiff ?? Math.round(rng.getNormal(0, diff[i]));
 	}
 	return result;
 }

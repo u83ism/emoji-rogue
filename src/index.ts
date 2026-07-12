@@ -61,8 +61,6 @@ export {
 	createRoomAt,
 	createRoomAtCenter,
 	createUniformMap,
-	debugCorridor,
-	debugRoom,
 	digCorridor,
 	digRoom,
 	fillMap,

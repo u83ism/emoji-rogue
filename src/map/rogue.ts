@@ -217,10 +217,10 @@ export function createRogueMap(
 					if (validRoom) break;
 				} while (directions.length);
 
+				/* when no valid neighbor is found the room simply stays unconnected
+				 * (the original logged "-- Unable to connect room." here) */
 				if (validRoom && otherRoom) {
 					current.connections.push([otherRoom.cellx, otherRoom.celly]);
-				} else {
-					console.log("-- Unable to connect room.");
 				}
 			}
 		}

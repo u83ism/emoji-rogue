@@ -198,10 +198,6 @@ export function addDoors(
 	}
 }
 
-export function debugRoom(room: Room): void {
-	console.log("room", room.x1, room.y1, room.x2, room.y2);
-}
-
 export function roomIsValid(
 	room: Room,
 	isWallCallback: TestPositionCallback,
@@ -294,16 +290,6 @@ export function createCorridorAt(
 		options.corridorLength[1],
 	);
 	return createCorridor(x, y, x + dx * length, y + dy * length);
-}
-
-export function debugCorridor(corridor: Corridor): void {
-	console.log(
-		"corridor",
-		corridor.startX,
-		corridor.startY,
-		corridor.endX,
-		corridor.endY,
-	);
 }
 
 /**

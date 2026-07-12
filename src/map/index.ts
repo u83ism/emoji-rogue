@@ -32,8 +32,6 @@ export {
 	createRandomRoom,
 	createRoomAt,
 	createRoomAtCenter,
-	debugCorridor,
-	debugRoom,
 	digCorridor,
 	digRoom,
 	getDoors,

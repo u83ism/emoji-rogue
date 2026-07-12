@@ -17,9 +17,9 @@
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1)→ 367件(Stage 3.2)→ 357件(Stage 3.3)→ 290件(Stage 3.4完了時点、`fov/`・`path/`分が解消)。残りは全て`map/`(Stage 3.5)。**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
-- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1)→ 233件(Stage 3.2)→ 212件(Stage 3.3)→ 169件(Stage 3.4完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、`map/`に残る旧OOPコードの実質的な問題。
-- **`rng.ts`のトランジション用互換シムは、`map/`の移行が完了するまで残る。** `stringgenerator.ts`・`color.ts`はStage 3.3で明示的な`rng`引数受け取りに移行済み。残りは`map/`(Stage 3.5)のみ。移行が全て完了したら`src/rng.ts`のデフォルトexport(互換シム)を削除する。
+- **`npm run typecheck`のエラー数の推移**: 396件(Stage 1)→ 377件(3.1)→ 367件(3.2)→ 357件(3.3)→ 290件(3.4)→ **43件(Stage 3.5完了時点、`map/`分が解消)**。残る43件は全て`src/color.ts`・`src/lighting.ts`(どのステージにも明記されていない、Stage 3.4でfov型変更に最小限追随しただけの未変換ファイル)。`map/`自体は型エラーゼロを達成。
+- **`npm run lint`のerror数の推移**: 250件(Stage 1)→ 236件(3.1)→ 233件(3.2)→ 212件(3.3)→ 169件(3.4)→ **14件(Stage 3.5完了時点)**。残る14件も同様に`src/color.ts`・`src/lighting.ts`(11件)と`tests/run.js`(3件、旧Jasmineランナー。`tests/spec/engine.js`が残っている間は削除できない)のみ。
+- **`rng.ts`のトランジション用互換シムは削除済み。** `map/`が全てStage 3.5で明示引数`rng`受け取りに移行完了したため、`src/rng.ts`のデフォルトexport(事前生成済み`Rng`インスタンス)と`src/index.ts`からの再exportを削除した。これでコードベース全体からグローバル可変RNG参照が完全になくなった。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)
 
@@ -37,7 +37,8 @@
 - [x] `fov/fov.test.ts`(Stage 3.4と同時。discrete/precise/recursive(360/180/90度)全て検証)
 - [x] `path/path.test.ts`(Stage 3.4と同時。Dijkstra/A*の4/6/8-topology、A*の効率性テスト(400 visits)も含めて移植)
 - [x] `scheduler/scheduler.test.ts`(Stage 3.4と同時。Simple/Speed/Action全て、Zero-ID actorケースも移植)
-- [ ] `dungeon.test.ts` → `map/`配下に分割(Stage 3.5と同時、最後)
+- [x] `map/dungeon.test.ts`(Stage 3.5と同時。旧`tests/spec/dungeon.js`をDigger/Uniform共通のパラメータ化テストとして移植)
+- [x] `map/generators.test.ts`(旧specなし、新規作成。Arena/Cellular/DividedMaze/EllerMaze/IceyMaze/Rogueの構造的なスモークテスト — 全セルが埋まる、値が0/1のみ、等)
 
 ## Stage 3 — サブシステム別・関数型書き換え
 
@@ -68,21 +69,28 @@
 - [x] `scheduler/`: `Scheduler<T=any>`の`any`を排除しジェネリクス化。`createScheduler`/`createSimpleScheduler`/`createSpeedScheduler`/`createActionScheduler`へ変換。継承の代わりに、共有ロジック(`addToRepeatList`/`clearSchedulerState`/`removeFromSchedulerState`/`advanceScheduler`)を`SchedulerState<T>`という素データに対する関数として`scheduler.ts`から公開し、各バリアントがそれを呼び出しつつ固有ロジック(`add`/`next`の上書きなど)を追加する形(継承ではなく合成)。`Speed`/`Action`は`add`に第3引数`time?`を取る拡張インターフェース(`SpeedScheduler`/`ActionScheduler`)として型付け
 - [x] 呼び出し側の最小限の追随: `src/lighting.ts`(`FOV`型→`Fov`型、`this._fov.compute(...)`→`this._fov(...)`に。まだクラスのまま、本格変換はどのステージにも明記されていないため据え置き)、`src/engine.ts`(`Scheduler`型→`Scheduler<Actor>`型、`Actor`インターフェースを新規定義。まだクラスのまま)
 
-### 3.5 `map/`(最重量、最後)
-- [ ] `arena.ts`/`cellular.ts`/`uniform.ts`(簡単な生成器でパターン確立)
-- [ ] 迷路系(`dividedmaze.ts`/`ellermaze.ts`/`iceymaze.ts`)
-- [ ] `encodePointKey(x, y)`ヘルパー導入、`"x,y"`文字列結合の直書きを置き換え
-- [ ] `features.ts`: `Feature`/`Room`/`Corridor`クラス → 判別可能union + 独立関数へ
-- [ ] `digger.ts` + `FEATURES`レジストリの型付け(最難、最後)
-- [ ] `rogue.ts`(digger/features整理後)
-- [ ] **どのステージにも明記されていない残り**: `src/lighting.ts`・`src/engine.ts`はまだクラスのまま(それぞれ3.4のfov/scheduler型変更への追随のみ実施)。Stage 3.5完了後、この2ファイルも関数型に変換するかは要検討(現状は動くのでブロッカーではない)
+### 3.5 `map/`(最重量、完了)
+- [x] `map.ts`: `Map`抽象クラス廃止、`fillMap(width,height,value)`純粋関数 + `CreateCallback`型のみに縮小
+- [x] `arena.ts`: `createArenaMap(width,height,callback)`という単純な関数に(状態を持たないため、ファクトリオブジェクトにせず直接関数呼び出しに)
+- [x] `cellular.ts`: クラス→`createCellularMap(width,height,options)`ファクトリ(`randomize`/`setOptions`/`set`/`create`/`connect`の複数メソッドを持つため、状態をクロージャで保持するファクトリオブジェクトに)。`_dirs`が構築時に一度だけ計算され`setOptions()`後も再計算されない、という原型の挙動(クセ)はそのまま保持
+- [x] 迷路系(`dividedmaze.ts`/`ellermaze.ts`/`iceymaze.ts`): いずれも単発`create`のみのため単純な関数に
+- [x] `features.ts`: `Feature`抽象クラス+`Room`/`Corridor`クラス → 判別可能union型`Feature = Room | Corridor`(`{kind:"room"|"corridor", ...}`) + 独立関数群(`createRoomAt`/`createRoomAtCenter`/`createRandomRoom`/`createCorridorAt`/`roomIsValid`/`corridorIsValid`/`digRoom`/`digCorridor`等)へ。`corridorIsValid`が検証中にcorridorのendX/endYを短縮する、という原型の副作用ありバリデーションの挙動はそのまま保持
+- [x] `dungeon.ts`: `Dungeon`抽象クラス廃止、`getRooms()`/`getCorridors()`を持つ`DungeonMap`共有インターフェースのみに縮小
+- [x] `uniform.ts`: クラス→`createUniformMap(width,height,rng,options)`ファクトリ。タイムリミット到達時に`null`を返す、という原型の挙動を保持
+- [x] `digger.ts`(最難): クラス→`createDiggerMap(width,height,rng,options)`ファクトリ。`FEATURES`レジストリを`Record<FeatureType, CreateFeatureAt>`として型付けし、`createRoomAt`/`createCorridorAt`をそのまま登録することで`as FeatureType`/`as FeatureConstructor`という不安全なキャストを完全に排除
+- [x] `rogue.ts`: クラス→`createRogueMap(width,height,rng,options)`ファクトリ。**変換中に発見・修正したバグ**: `_connectRooms`の外側`do-while`ループ(ランダムウォークで接続先セルを広げていくロジック)を最初`while(false)`と誤って書いてしまい1パスしか回らなくなっていたが、原型を再確認して`while(dirToCheck.length > 0)`という正しい継続条件に修正済み(テストは通っていたが、たまたま影響が出にくいケースだった可能性があるため要注意の修正点として記録)
+- [x] **`encodePointKey`共有ヘルパーは導入しなかった**: 元々`digger.ts`/`uniform.ts`は`"x,y"`区切り、`cellular.ts`は`"x.y"`区切りと、ファイルごとに異なるキー形式を使っていたため、1つの共有関数に統一すると動作変更になってしまう。代わりに各ファイル内でテンプレートリテラル(`` `${x},${y}` ``等)を一貫して使うことで、直書き文字列結合によるタイポリスクという当初の懸念は解消した
+- [x] RNG互換シムからの移行完了(`map/`の全ファイルが`rng`を明示引数で受け取る)。`src/rng.ts`のデフォルトexportを削除(Stage 3.2参照)
+- [ ] **どのステージにも明記されていない残り**: `src/lighting.ts`・`src/engine.ts`はまだクラスのまま(それぞれ3.4のfov/scheduler型変更への追随のみ実施)。関数型に変換するかは要検討(現状は動くのでブロッカーではない)。typecheck/lintの残存エラー(43件/14件、全てこの2ファイル)もこれに付随する
 
-## Stage 4 — Result型エラーハンドリング(3.4/3.5と並行、別パスにしない)
+## Stage 4 — Result型エラーハンドリング(未着手。当初3.4/3.5と並行の想定だったが持ち越し)
+
+Stage 3.4/3.5では既存の`null`返却などの挙動をそのまま保持することを優先し、Result型の導入は行わなかった(動作を変えないことを優先したため)。あらためて着手する。
 
 - [ ] 非chainingの`Result<T, E>`/`ok`/`err`を実装(場所は要検討、`src/result.ts`など)
-- [ ] `path/`: 経路なしを`Result`化
-- [ ] `map/`: 不正な生成オプションを`Result`化
-- [ ] `text.ts`: 不正な書式文字列を`Result`化
+- [ ] `path/`: 経路なしを`Result`化(現状は単にcallbackが一度も呼ばれないだけで、「失敗した」という明示的なシグナルがない)
+- [ ] `map/`: `UniformMap.create()`が現状`null`を返しているタイムリミット到達時の失敗を`Result<UniformMap, "generation-timed-out">`化。`DiggerMap.create()`はタイムリミットに達しても部分的な結果を静かに受け入れて返すだけなので、Result化の対象外(失敗ではないため)
+- [x] `text.ts`へのResult型導入は見送り済み(Stage 3.3で判断、上記参照)
 - [ ] throwのまま残す箇所(fov.tsの不正topology等)を確認し、意図的にthrowのままであることをコメントで明記
 
 ## Stage 5 — 新レンダラー(`src/renderer/`、Ink採用)

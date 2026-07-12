@@ -17,9 +17,9 @@
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1完了時点)→ 367件(Stage 3.2完了時点、`rng.ts`分が解消)。残りは`map/`(247件相当)、`fov/`、`path/`。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
-- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1完了時点)→ 233件(Stage 3.2完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。
-- **`rng.ts`はトランジション用の互換シム(デフォルトexportとして事前生成済みの`Rng`インスタンス)を暫定的に残している。** `map/`・`stringgenerator.ts`・`color.ts`がまだ`import RNG from "../rng.js"`でグローバル経由の呼び出しをしているため、これらをStage 3.3/3.5で明示的な`rng`引数受け取りに移行し終えたら、この互換exportは削除する(`src/rng.ts`のコメントに明記済み)。
+- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1完了時点)→ 367件(Stage 3.2完了時点)→ 357件(Stage 3.3完了時点、`text.ts`/`stringgenerator.ts`/`color.ts`分が解消)。残りは`map/`(247件相当)、`fov/`、`path/`。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
+- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1完了時点)→ 233件(Stage 3.2完了時点)→ 212件(Stage 3.3完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。
+- **`rng.ts`のトランジション用互換シムは、`map/`の移行が完了するまで残る。** `stringgenerator.ts`・`color.ts`はStage 3.3で明示的な`rng`引数受け取りに移行済み。残りは`map/`(Stage 3.5)のみ。移行が全て完了したら`src/rng.ts`のデフォルトexport(互換シム)を削除する。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)
 
@@ -30,8 +30,10 @@
 - [x] `eventqueue.test.ts`(Stage 3.1と同時)
 - [x] `noise/simplex.test.ts`(旧specなし、新規作成。決定論性・rng依存の検証を追加)
 - [x] `rng.test.ts`(Stage 3.2と同時。同一seedの`createRng`2つが独立して同一列を生成することを検証するテストを追加。旧specの精度検証済み定数値テスト(seed 12345 → 0.01198604702949524)も移植し一致確認済み)
-- [ ] `text.test.ts`(Stage 3.3と同時)
-- [ ] `color.test.ts`, `engine.test.ts`(小さめ、任意のタイミングで)
+- [x] `text.test.ts`(Stage 3.3と同時)
+- [x] `color.test.ts`(旧spec移植。`randomize`のシグネチャ変更(`rng`引数追加)に追随)
+- [x] `stringgenerator.test.ts`(旧specなし、新規作成。決定論性・`clear()`の挙動・word modeを検証)
+- [ ] `engine.test.ts`(小さめ、任意のタイミングで)
 - [ ] `fov.test.ts`(Stage 3.4と同時)
 - [ ] `path.test.ts`(Stage 3.4と同時)
 - [ ] `scheduler.test.ts`(Stage 3.4と同時)
@@ -52,11 +54,13 @@
 - [x] `createRng(seed)`ファクトリを実装(内部でstateをクロージャに閉じ込める。`getSeed`用のseed値も同様にクロージャで保持)
 - [x] `getWeightedValue`をジェネリクス化し`Record<K, number> => K`に(空データはthrow、フォールバックの最終キーもthrowで守る)
 - [x] `src/index.ts`から`createRng`/`Rng`/`RngState`を公開APIとしてexport
-- [ ] **未完了**: 全呼び出し元(`map/`, `stringgenerator.ts`, `color.ts`)を、importされる`RNG`互換シムではなく明示引数`rng`受け取りに変更 → Stage 3.3(`stringgenerator.ts`)・Stage 3.5(`map/`)・`color.ts`(どのステージにも明記されていないため、3.3のタイミングで一緒に片付ける)で実施し、完了したら`src/rng.ts`のデフォルトexport(互換シム)を削除する
+- [x] `stringgenerator.ts`・`color.ts`をStage 3.3で明示引数`rng`受け取りに移行済み
+- [ ] **未完了**: `map/`(Stage 3.5)が移行し終えたら`src/rng.ts`のデフォルトexport(互換シム)を削除する
 
-### 3.3 テキスト/文字列生成
-- [ ] `text.ts`(`%c{}`/`%b{}`トークナイザ、Stage 4のResult型実例)
-- [ ] `stringgenerator.ts`
+### 3.3 テキスト/文字列生成(完了)
+- [x] `text.ts`: `TYPE_TEXT`等の数値マジック定数(0/1/2/3) → 判別可能union型`Token`(`{type:"text"|"newline"|"fg"|"bg", ...}`)に変換。`any[]`を`Token[]`に。ロジック自体は既に純粋関数ベースだったため大きな構造変更はなし。**Result型の導入は見送り**: 現状のトークナイザは寛容なスキャナで(未終端の`%c{`等も単なるテキストとして扱われる)、人為的に「不正な書式文字列」というエラーケースを作り出すことになり、既存動作を変えずに済ませられないため。Stage 4のResult型実例は`path/`・`map/`の2つで足りると判断(要`docs/tasks.md`のStage 4更新時に再確認)
+- [x] `stringgenerator.ts`: クラス→`createStringGenerator(rng, options)`ファクトリに変換。`RNG`互換シムから明示的な`rng`引数受け取りに移行。`getWeightedValue`のジェネリクス化により`as string`キャストが不要に。`clear()`が境界値のprior(`_boundary`)を再設定しない、という原型の挙動(一種のクセ)はそのまま保持(動作変更を避けるため)
+- [x] `color.ts`: `randomize(color, diff)` → `randomize(rng, color, diff)`に変更しRNG互換シムから移行(内部呼び出しなし、安全な変更と確認済み)
 
 ### 3.4 `fov/`, `path/`, `scheduler/`
 - [ ] `fov/`: 関数型契約 + 各アルゴリズムの独立ファクトリに変換、`_getCircle`等を独立純粋関数へ

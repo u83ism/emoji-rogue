@@ -340,4 +340,4 @@ export const KEYS = {
 	VK_EXECUTE: 43,
 	/** Linux support for this keycode was added in Gecko 4.0.	 */
 	VK_SLEEP: 95,
-};
+} as const;

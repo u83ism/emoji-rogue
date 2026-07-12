@@ -16,7 +16,61 @@ export {
 	getCircle,
 } from "./fov/index.js";
 export { default as Lighting } from "./lighting.js";
-export { default as Map } from "./map/index.js";
+export type {
+	CellularMap,
+	CellularOptions,
+	ConnectionCallback,
+	Corridor,
+	CorridorOptions,
+	CreateCallback,
+	CreateFeatureAt,
+	DigCallback,
+	DiggerMap,
+	DiggerOptions,
+	DungeonMap,
+	Feature,
+	FeatureOptions,
+	RogueMap,
+	RogueOptions,
+	RogueRoom,
+	Room,
+	RoomOptions,
+	TestPositionCallback,
+	UniformMap,
+	UniformOptions,
+} from "./map/index.js";
+export {
+	addDoor,
+	addDoors,
+	clearDoors,
+	corridorIsValid,
+	createArenaMap,
+	createCellularMap,
+	createCorridor,
+	createCorridorAt,
+	createCorridorPriorityWalls,
+	createDiggerMap,
+	createDividedMazeMap,
+	createEllerMazeMap,
+	createIceyMazeMap,
+	createRandomRoom,
+	createRogueMap,
+	createRoomAt,
+	createRoomAtCenter,
+	createUniformMap,
+	debugCorridor,
+	debugRoom,
+	digCorridor,
+	digRoom,
+	fillMap,
+	getDoors,
+	getRoomBottom,
+	getRoomCenter,
+	getRoomLeft,
+	getRoomRight,
+	getRoomTop,
+	roomIsValid,
+} from "./map/index.js";
 export type { NoiseSource, ShuffleSource } from "./noise/index.js";
 export { createSimplexNoise } from "./noise/index.js";
 export type {
@@ -32,7 +86,7 @@ export {
 	getPathDirs,
 } from "./path/index.js";
 export type { Rng, RngState } from "./rng.js";
-export { createRng, default as RNG } from "./rng.js";
+export { createRng } from "./rng.js";
 export type {
 	ActionScheduler,
 	Scheduler,

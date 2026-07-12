@@ -118,13 +118,17 @@ export const Color = color;
 import * as text from "./text.js";
 export const Text = text;
 
-export type { Cell } from "./renderer/cell.js";
-export { TILE_W } from "./renderer/cell.js";
-export type { GameScreenProps } from "./renderer/GameScreen.js";
-export { GameScreen } from "./renderer/GameScreen.js";
-export type { TileGlyphs } from "./renderer/grid.js";
-export { gridFrom } from "./renderer/grid.js";
-export type { MapRowProps } from "./renderer/MapRow.js";
-export { MapRow } from "./renderer/MapRow.js";
-export type { CellRun } from "./renderer/runs.js";
-export { groupIntoRuns } from "./renderer/runs.js";
+export type {
+	Cell,
+	CellRun,
+	GameScreenProps,
+	MapRowProps,
+	TileGlyphs,
+} from "./renderer/index.js";
+export {
+	GameScreen,
+	gridFrom,
+	groupIntoRuns,
+	MapRow,
+	TILE_W,
+} from "./renderer/index.js";

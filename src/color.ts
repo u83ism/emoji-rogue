@@ -121,7 +121,6 @@ export function interpolate(color1: Color, color2: Color, factor = 0.5): Color {
 	}
 	return result;
 }
-export const lerp = interpolate;
 
 /**
  * Interpolate (blend) two colors with a given factor in HSL mode
@@ -138,7 +137,6 @@ export function interpolateHSL(
 	}
 	return hsl2rgb(hsl1);
 }
-export const lerpHSL = interpolateHSL;
 
 /**
  * Create a new random color based on this one

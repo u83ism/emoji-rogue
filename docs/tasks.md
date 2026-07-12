@@ -104,13 +104,13 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 - [x] `engine.test.ts`(Stage 2参照)を追加し、旧`tests/spec/engine.js`を移植。これで全Jasmine specの移植が完了したため、`tests/`(旧Jasmineランナー一式: `run.js`, `index.html`, `spec/`)を完全に削除
 - [x] `src/index.ts`の公開APIを`createLighting`/`createEngine`のフラットな名前付きexportに更新
 
-## Stage 5 — 新レンダラー(`src/renderer/`、Ink採用)
+## Stage 5 — 新レンダラー(`src/renderer/`、Ink採用)(実機確認待ち以外は完了)
 
-- [ ] `gridFrom(gameState): Cell[][]` 純粋関数
-- [ ] `groupIntoRuns(cells): CellRun[]` 純粋関数
-- [ ] `<MapRow>`/`<GameScreen>` Inkコンポーネント(セル単位`<Box>`は使わない)
-- [ ] `ink-testing-library`でdesign.mdの絵文字セットに対する`lastFrame()`スナップショットテスト
-- [ ] Windows Terminal上での実機スモークテスト
+- [x] `gridFrom(map, glyphs, fallback): Cell[][]` 純粋関数。当初計画の`gridFrom(gameState)`ではなく、現状コードベースに実在する`map/`生成器の列優先(`map[x][y]`)出力を受け取る形に調整(player/entity/turnを持つ「GameState」型はまだ存在しないため)
+- [x] `groupIntoRuns(cells): CellRun[]` 純粋関数(同じfg/bgが連続するセルを1ランに集約)
+- [x] `<MapRow>`/`<GameScreen>` Inkコンポーネント(セル単位`<Box>`は使わない。ランごとに`<Text color backgroundColor>`を並べるのみ)
+- [x] `ink-testing-library`でdesign.mdの絵文字セットに対する`lastFrame()`スナップショットテスト(バリエーションセレクタ付き絵文字 ⚠️・🌡️ を含めて、幅崩れがないことを確認する回帰テストとして`GameScreen.test.tsx`に実装)
+- [ ] Windows Terminal上での実機スモークテスト — `scripts/demo-renderer.mjs`を用意した(`npm run build && node scripts/demo-renderer.mjs`で40x20のダンジョンを1回描画する)。実際の見た目確認は利用者本人が実機のWindows Terminalで行う必要がある(Claude Code側では目視できないため)
 
 ## Stage 6 — `.claude/` rules/skills/docs整備
 

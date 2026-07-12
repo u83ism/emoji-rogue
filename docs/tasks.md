@@ -17,15 +17,17 @@
 
 ### Stage 1で判明した既知の負債(Stage 3で解消予定、今は放置してよい)
 
-- **`npm run typecheck`は現時点で396件のエラーが出る**(内訳の大半は`noUncheckedIndexedAccess`/`exactOptionalPropertyTypes`が拾う「配列アクセスがundefinedかもしれない」系。主に`map/`(254件相当)、`fov/`、`path/`、`noise/`、`rng.ts`、`stringgenerator.ts`)。`npm run build`(tsdown)自体はdts込みで成功するが、`tsc --noEmit`による厳格な型チェックは引き続きこの396件を報告する。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
-- **`npm run lint`は現時点で250件のerror**(大半は`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。Biomeの自動整形は既に適用済みで、残っているのはロジックレベルの指摘のみ)。
+- **`npm run typecheck`のエラー数はStage 3の進捗に応じて減少中**: 396件(Stage 1完了時点)→ 377件(Stage 3.1完了時点、`util.ts`/`MinHeap.ts`/`eventqueue.ts`/`noise/`分が解消)。残りは主に`map/`、`fov/`、`path/`、`rng.ts`、`stringgenerator.ts`。Stage 3で該当ファイルを関数型に書き換えるたびに自然に減っていく想定で、**Stage 3完了の定量的な目安はこのエラー数がゼロになること。**
+- **`npm run lint`のerror数も同様に減少中**: 250件(Stage 1完了時点)→ 236件(Stage 3.1完了時点)。残りは大半が`any`実使用・`==`・グローバル`Map`のシャドーイングなど、Stage 3で解消される旧OOPコードの実質的な問題。
 
 ## Stage 2 — テスト移植(Stage 3と一体で進行、一括変換しない)
 
 `tests/spec/*.js`(Jasmine)を、対応するサブシステムをStage 3で書き換える直前/同時に1本ずつVitestへ移植。配置は`foo.ts`の隣に`foo.test.ts`。
 
-- [ ] `util.test.ts`(Stage 3.1と同時)
-- [ ] `eventqueue.test.ts`(Stage 3.1と同時)
+- [x] `util.test.ts`(Stage 3.1と同時)
+- [x] `MinHeap.test.ts`(旧specなし、新規作成)
+- [x] `eventqueue.test.ts`(Stage 3.1と同時)
+- [x] `noise/simplex.test.ts`(旧specなし、新規作成。決定論性・rng依存の検証を追加)
 - [ ] `rng.test.ts`(Stage 3.2と同時。同一seedの`createRng`2つが独立して同一列を生成することを検証するテストを新規追加)
 - [ ] `text.test.ts`(Stage 3.3と同時)
 - [ ] `color.test.ts`, `engine.test.ts`(小さめ、任意のタイミングで)
@@ -36,12 +38,13 @@
 
 ## Stage 3 — サブシステム別・関数型書き換え
 
-### 3.1 真の末端
-- [ ] `util.ts`
-- [ ] `MinHeap.ts`
-- [ ] `constants.ts`(データのみか確認、クラスラッパーがあれば除去)
-- [ ] `eventqueue.ts`
-- [ ] `noise/`(base + simplex)
+### 3.1 真の末端(完了)
+- [x] `util.ts`(`format.map`のfunction-static-propertyハックを`formatMap`という通常のexportに整理、`any[]`を`unknown[]`に)
+- [x] `MinHeap.ts`(クラス→`createMinHeap<T>()`ファクトリ。`debugPrint`は未使用のため削除)
+- [x] `constants.ts`(元々データのみでクラスラッパーなし。`DIRS`への`as const`化は見送り — `path.ts`/`fov.ts`/`map/*.ts`がまだ可変`number[][]`型を期待しており、Stage 3.4/3.5でそちら側を変換する際に合わせて検討)
+- [x] `eventqueue.ts`(クラス→`createEventQueue<T>()`ファクトリ、`MinHeap`を利用)
+- [x] `noise/`(`Noise`抽象クラス+`Simplex`クラス→`NoiseSource`型 + `createSimplexNoise(rng, gradients)`ファクトリ。RNG依存は`ShuffleSource`型で明示引数化 — 3.2で`createRng()`ができたらそちらを渡せる形に既になっている)
+- [x] 呼び出し側の最小限の追随: `scheduler/scheduler.ts`(まだクラスのまま、`EventQueue`のimportのみ`createEventQueue`に追随。本格的な関数化はStage 3.4で)、`src/index.ts`(公開APIの形が`ROT.EventQueue`/`ROT.Noise.Simplex`のような名前空間スタイルから`createEventQueue`/`createSimplexNoise`のフラットな名前付きexportに変化)
 
 ### 3.2 `rng.ts`(グローバルシングルトン廃止、最重要)
 - [ ] `RngState`型 + `stepUniform`純粋関数を定義

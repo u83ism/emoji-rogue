@@ -2,16 +2,49 @@ export { DEFAULT_HEIGHT, DEFAULT_WIDTH, DIRS, KEYS } from "./constants.js";
 export { default as Engine } from "./engine.js";
 export type { EventQueue } from "./eventqueue.js";
 export { createEventQueue } from "./eventqueue.js";
-export { default as FOV } from "./fov/index.js";
+export type {
+	Fov,
+	FovOptions,
+	LightPassesCallback,
+	RecursiveShadowcastingFov,
+	VisibilityCallback,
+} from "./fov/index.js";
+export {
+	createDiscreteShadowcastingFov,
+	createPreciseShadowcastingFov,
+	createRecursiveShadowcastingFov,
+	getCircle,
+} from "./fov/index.js";
 export { default as Lighting } from "./lighting.js";
 export { default as Map } from "./map/index.js";
 export type { NoiseSource, ShuffleSource } from "./noise/index.js";
 export { createSimplexNoise } from "./noise/index.js";
-export { default as Path } from "./path/index.js";
+export type {
+	ComputeCallback,
+	PassableCallback,
+	Path,
+	PathOptions,
+} from "./path/index.js";
+export {
+	createAStarPath,
+	createDijkstraPath,
+	getNeighbors,
+	getPathDirs,
+} from "./path/index.js";
 export type { Rng, RngState } from "./rng.js";
 export { createRng, default as RNG } from "./rng.js";
-export type { SpeedActor } from "./scheduler/index.js";
-export { default as Scheduler } from "./scheduler/index.js";
+export type {
+	ActionScheduler,
+	Scheduler,
+	SpeedActor,
+	SpeedScheduler,
+} from "./scheduler/index.js";
+export {
+	createActionScheduler,
+	createScheduler,
+	createSimpleScheduler,
+	createSpeedScheduler,
+} from "./scheduler/index.js";
 export type {
 	Options as StringGeneratorOptions,
 	StringGenerator,

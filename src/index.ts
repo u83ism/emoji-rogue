@@ -1,5 +1,6 @@
 export { DEFAULT_HEIGHT, DEFAULT_WIDTH, DIRS, KEYS } from "./constants.js";
-export { default as Engine } from "./engine.js";
+export type { Actor, Engine } from "./engine.js";
+export { createEngine } from "./engine.js";
 export type { EventQueue } from "./eventqueue.js";
 export { createEventQueue } from "./eventqueue.js";
 export type {
@@ -15,7 +16,8 @@ export {
 	createRecursiveShadowcastingFov,
 	getCircle,
 } from "./fov/index.js";
-export { default as Lighting } from "./lighting.js";
+export type { Lighting, LightingOptions } from "./lighting.js";
+export { createLighting } from "./lighting.js";
 export type {
 	CellularMap,
 	CellularOptions,

@@ -8,6 +8,10 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 export const FULL_WIDTH_INPUT_WARNING =
 	"全角入力モードになっています。半角入力に切り替えてください";
 
+/** Shown once the shell has written the suspend save and is about to exit. */
+export const GAME_SAVED_MESSAGE =
+	"セーブしました。次回起動時に続きから再開します";
+
 /**
  * The single place where game events become human-readable text (Japanese
  * for now). The core (src/game/) never produces strings, so swapping locale

@@ -5,8 +5,13 @@ import { PLAYER_MAX_HP } from "./game/balance.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
-import { FULL_WIDTH_INPUT_WARNING, formatEvent } from "./messages.js";
+import {
+	FULL_WIDTH_INPUT_WARNING,
+	formatEvent,
+	GAME_SAVED_MESSAGE,
+} from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
+import { loadSavedGameState, saveGameState } from "./saveFile.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
 // hands the resulting frame to Ink. All game logic lives in src/game/; all
@@ -19,8 +24,10 @@ const LOW_HP_THRESHOLD = 3;
 
 const App = () => {
 	const { exit } = useApp();
-	const [state, setState] = useState(() =>
-		buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, Date.now()),
+	const [state, setState] = useState(
+		() =>
+			loadSavedGameState() ??
+			buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, Date.now()),
 	);
 	const [showFullWidthWarning, setShowFullWidthWarning] = useState(false);
 
@@ -37,10 +44,14 @@ const App = () => {
 	});
 
 	useEffect(() => {
+		if (state.status === "suspended") {
+			/* the file must record an in-progress run, ready to resume */
+			saveGameState({ ...state, status: "playing" });
+		}
 		if (state.status !== "playing") {
 			exit();
 		}
-	}, [state.status, exit]);
+	}, [state, exit]);
 
 	/* keyed by position in the full log so React keys stay stable per event */
 	const logLines = state.events
@@ -55,6 +66,9 @@ const App = () => {
 			</Text>
 			{showFullWidthWarning && (
 				<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
+			)}
+			{state.status === "suspended" && (
+				<Text color="cyan">{GAME_SAVED_MESSAGE}</Text>
 			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text

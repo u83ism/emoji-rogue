@@ -71,6 +71,10 @@ describe("toAction", () => {
 		expect(toAction(" ", buildKey())).toEqual({ type: "wait" });
 	});
 
+	it("maps s to save", () => {
+		expect(toAction("s", buildKey())).toEqual({ type: "save" });
+	});
+
 	it("maps q to quit and leaves unbound keys undefined", () => {
 		expect(toAction("q", buildKey())).toEqual({ type: "quit" });
 		expect(toAction("x", buildKey())).toBeUndefined();

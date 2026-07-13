@@ -13,9 +13,14 @@ export type Action =
 			readonly payload: { readonly direction: Direction };
 	  }
 	| { readonly type: "wait" }
+	| { readonly type: "save" }
 	| { readonly type: "quit" };
 
-export type GameStatus = "playing" | "dead" | "exited";
+/**
+ * "suspended" is the request to suspend-save: the reducer only marks it, and
+ * the shell reacts by writing the save file and exiting (no I/O in the core).
+ */
+export type GameStatus = "playing" | "dead" | "exited" | "suspended";
 
 export interface Position {
 	readonly x: number;

@@ -149,4 +149,18 @@ describe("advanceTurn", () => {
 		expect(exited.player).toEqual(state.player);
 		expect(exited.terrain).toBe(state.terrain);
 	});
+
+	it("save marks the game as suspended; enemies get no turn", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(5, 1)] /* adjacent — would hit if enemies acted */,
+		};
+		const suspended = advanceTurn(state, { type: "save" });
+		expect(suspended.status).toBe("suspended");
+		expect(suspended.playerHp).toBe(state.playerHp);
+		expect(suspended.enemies).toEqual(state.enemies);
+
+		const dead = { ...state, status: "dead" as const };
+		expect(advanceTurn(dead, { type: "save" })).toBe(dead);
+	});
 });

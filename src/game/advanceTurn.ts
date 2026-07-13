@@ -69,6 +69,14 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			}
 			return advanceEnemies(state);
 		}
+		case "save": {
+			/* Only mark the intent — the shell performs the actual file write
+			 * when it observes the "suspended" status. */
+			if (state.status !== "playing") {
+				return state;
+			}
+			return { ...state, status: "suspended" };
+		}
 		case "quit":
 			return { ...state, status: "exited" };
 	}

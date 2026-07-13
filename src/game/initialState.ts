@@ -1,17 +1,11 @@
 import { at } from "../indexing.js";
 import { createArenaMap } from "../map/arena.js";
 import { createDiggerMap } from "../map/digger.js";
-import {
-	getRoomBottom,
-	getRoomCenter,
-	getRoomLeft,
-	getRoomRight,
-	getRoomTop,
-	type Room,
-} from "../map/features.js";
+import { getRoomCenter } from "../map/features.js";
+import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng, seedToState } from "../rng.js";
 import type { GameState, Position } from "./state.js";
-import { deriveExploredState } from "./vision.js";
+import { computeVisiblePoints, deriveExploredState } from "./vision.js";
 
 const ENEMY_COUNT = 3;
 
@@ -65,29 +59,47 @@ export function buildArenaGameState(
 }
 
 /**
- * Up to ENEMY_COUNT spawn positions, each a random floor tile in a random
- * room other than the player's starting room. Colliding picks are skipped
- * rather than retried, so sparse dungeons may spawn fewer enemies.
+ * Up to ENEMY_COUNT spawn positions, drawn from floor tiles outside the
+ * player's starting field of view (so no enemy is on screen at turn one).
+ * Room-independent on purpose: digger occasionally produces a single-room,
+ * corridor-heavy dungeon, and a room-based spawn would then find nowhere to
+ * put enemies. Falls back to any floor tile except the player's own when
+ * the whole map is visible from the start.
  */
 const createRandomEnemySpawns = (
 	rng: Rng,
-	spawnRooms: readonly Room[],
+	terrain: GameState["terrain"],
 	player: Position,
 ): Position[] => {
-	const enemies: Position[] = [];
-	if (spawnRooms.length === 0) {
-		return enemies;
-	}
-	for (let i = 0; i < ENEMY_COUNT; i++) {
-		const room = at(spawnRooms, rng.getUniformInt(0, spawnRooms.length - 1));
-		const x = rng.getUniformInt(getRoomLeft(room), getRoomRight(room));
-		const y = rng.getUniformInt(getRoomTop(room), getRoomBottom(room));
-		const taken =
-			(x === player.x && y === player.y) ||
-			enemies.some((enemy) => enemy.x === x && enemy.y === y);
-		if (!taken) {
-			enemies.push({ x, y });
+	const visiblePoints = computeVisiblePoints(terrain, player);
+	const collectFloorTiles = (outOfSightOnly: boolean): Position[] => {
+		const tiles: Position[] = [];
+		for (let x = 0; x < terrain.length; x++) {
+			const column = terrain[x] ?? [];
+			for (let y = 0; y < column.length; y++) {
+				if (column[y] !== 0) {
+					continue;
+				}
+				if (x === player.x && y === player.y) {
+					continue;
+				}
+				if (outOfSightOnly && visiblePoints.has(encodePointKey(x, y))) {
+					continue;
+				}
+				tiles.push({ x, y });
+			}
 		}
+		return tiles;
+	};
+
+	const candidates = collectFloorTiles(true);
+	const pool = candidates.length > 0 ? candidates : collectFloorTiles(false);
+
+	const enemies: Position[] = [];
+	for (let i = 0; i < ENEMY_COUNT && pool.length > 0; i++) {
+		const index = rng.getUniformInt(0, pool.length - 1);
+		enemies.push(at(pool, index));
+		pool.splice(index, 1);
 	}
 	return enemies;
 };
@@ -128,7 +140,7 @@ export function buildDungeonGameState(
 		terrain: columns,
 		explored: buildUnexploredColumns(width, height),
 		player,
-		enemies: createRandomEnemySpawns(rng, rooms.slice(1), player),
+		enemies: createRandomEnemySpawns(rng, columns, player),
 		rng: rng.getState(),
 		status: "playing",
 	});

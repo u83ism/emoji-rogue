@@ -1,16 +1,21 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { advanceTurn } from "./game/advanceTurn.js";
+import { PLAYER_MAX_HP } from "./game/balance.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { toAction } from "./game/keymap.js";
+import { formatEvent } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
-// hands the resulting frame to Ink. All game logic lives in src/game/.
+// hands the resulting frame to Ink. All game logic lives in src/game/; all
+// human-readable wording comes from src/messages.ts.
 
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
+const LOG_LINE_COUNT = 3;
+const LOW_HP_THRESHOLD = 3;
 
 const App = () => {
 	const { exit } = useApp();
@@ -32,14 +37,27 @@ const App = () => {
 		}
 	}, [state.status, exit]);
 
+	/* keyed by position in the full log so React keys stay stable per event */
+	const logLines = state.events
+		.map((event, eventIndex) => ({ eventIndex, event }))
+		.slice(-LOG_LINE_COUNT);
+
 	return (
 		<Box flexDirection="column">
 			<GameScreen grid={buildFrameGrid(state)} />
-			{state.status === "dead" && (
-				<Text color="red" bold>
-					🧟 につかまった……
+			<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
+				HP {state.playerHp}/{PLAYER_MAX_HP}
+			</Text>
+			{logLines.map(({ eventIndex, event }) => (
+				<Text
+					key={eventIndex}
+					{...(event.type === "player-died"
+						? { color: "red", bold: true }
+						: {})}
+				>
+					{formatEvent(event)}
 				</Text>
-			)}
+			))}
 		</Box>
 	);
 };

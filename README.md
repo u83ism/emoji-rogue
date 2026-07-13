@@ -1,59 +1,43 @@
-# emoji-rogue / modernized rot.js core
+# emoji-rogue
 
-[rot.js](https://github.com/ondras/rot.js)(2012年発のJavaScript向けローグライクツールキット)をフォークし、アルゴリズム部分を**クラスなしの関数型スタイル+最新TypeScript**に全面書き換えたもの。
+絵文字で描画するCLIローグライク。ASCIIの制約下で表現を磨いたRogueの精神を、「等幅ではないが意味を持つ記号」である絵文字で現代的にやり直す試み(絵文字ゲームシリーズ第1弾)。
 
-> **このブランチ(`modernization`)について**: 絵文字ローグ本体(`develop`ブランチ)の土台として行った近代化改修の完了地点(タグ `modernization-complete`)を、ゲーム固有のコードを含まない「近代化されただけのrot.js」として独立に保存している系譜です。原本rot.jsのアルゴリズムを現代的なTypeScriptで使いたいだけの場合はこちらを参照してください。
+土台は[rot.js](https://github.com/ondras/rot.js)のフォークで、マップ生成・FOV・経路探索・ターン制スケジューリングを関数型スタイル+最新TypeScriptに全面書き換えたもの。その上に純粋リデューサ方式のゲーム層とInk製絵文字レンダラーを載せている。
 
-## 含まれるもの
+## 現在の状態(開発中)
 
-| サブシステム | 内容 |
-|---|---|
-| `src/map/` | ダンジョン・迷路生成器8種(Arena / Digger / Uniform / Rogue / Cellular / EllerMaze / DividedMaze / IceyMaze) |
-| `src/fov/` | 視界計算3アルゴリズム(discrete / precise / recursive shadowcasting) |
-| `src/path/` | 経路探索(A* / Dijkstra) |
-| `src/scheduler/` | ターン制スケジューラ3種(Simple / Speed / Action) |
-| `src/rng.ts` | Alea疑似乱数(シリアライズ可能な`RngState`+`createRng(seed)`) |
-| `src/engine.ts` `src/lighting.ts` | ゲームループ骨格 / 複数光源ライティング |
-| `src/noise/` `src/text.ts` `src/stringgenerator.ts` `src/color.ts` | simplexノイズ / 書式トークナイザ / マルコフ連鎖名前生成 / 色演算 |
-| `src/renderer/` | Ink(React for CLI)ベースの絵文字グリッドレンダラー |
+diggerが生成したダンジョンを🧑が歩き回れるところまで(壁判定つき)。敵・アイテム・FOVはこれから。進捗は [docs/tasks/game.md](docs/tasks/game.md) を参照。
 
-原本の`Display`(Canvas/DOM描画)はCLI専用化に伴い削除。
-
-## 原本rot.jsからの主な変更
-
-- **ESM専業・strict TypeScript** — `noUncheckedIndexedAccess`等の厳格フラグ全部入りでtypecheckエラー0
-- **クラス全廃** — 継承階層を「ファクトリ関数+クロージャ」と判別可能union+独立関数に変換
-- **グローバル可変RNGシングルトンの撤廃** — 乱数が必要な関数は全て`rng: Rng`を明示引数で受け取る。`RngState`はプレーンobjectなのでセーブ・リプレイ・シード共有が素直に作れる
-- **Result型エラーハンドリング** — 「経路なし」「生成タイムアウト」のような正常系の失敗は`Result<T, E>`、到達不能なバグはthrowに分離
-- **挙動互換** — 全サブシステムで原本と突き合わせ検証済み(**乱数消費順まで一致**。同じseedなら原本と同じダンジョンが出る)。ただしDijkstraの呼び出し間キャッシュは地形変化時に古い経路を返すため以後のブランチで廃止しており、意図的な非互換として記録している
-- **テスト・CI** — Vitestテスト(旧Jasmine specの全移植+シード総当たりの生成器不変条件テスト)、GitHub Actionsでtypecheck・lint(Biome)・knip・test・buildを毎push検証
-
-## 使い方
-
-npmには公開していません。クローンしてビルドしてください。
+## 遊び方
 
 ```
 npm ci
-npm run build   # tsdown → dist/index.mjs + 型定義
+npm run build
+npm start
 ```
 
-```ts
-import { createRng, createDiggerMap } from "emoji-rogue";
+- 移動: 矢印キー または hjkl
+- 終了: q(またはCtrl+C)
 
-const rng = createRng(12345);
-createDiggerMap(80, 24, rng).create((x, y, value) => {
-	// value: 0 = 床, 1 = 壁(列優先 map[x][y])
-});
-```
+## 動作環境(重要)
 
-コードの読み方の案内は [docs/architecture.md](docs/architecture.md)、変換の全記録は [docs/tasks.md](docs/tasks.md) を参照。
+- **Node.js >= 20**
+- **Windows Terminal必須**(Windows 11の既定ターミナルであればそのままでOK)。カラー絵文字はターミナルのフォントフォールバック(Segoe UI Emoji)で描画されるため、設定フォント自体は等幅フォントなら何でもよい
+- 旧コンソールホスト(conhost)はカラー絵文字を描画できないため**非対応**
+- macOS/Linuxの各種ターミナルは未検証(カラー絵文字+全角幅のフォールバックが効く環境なら動く見込み)
 
-## 動作環境
+**表示崩れは既知の制約であり、バグとは限りません。** 絵文字の描画幅・対応範囲はターミナル・OS・フォントの世代に依存します。本プロジェクトは実行時の幅計測を意図的に行わず(絵文字では信用できないため)、1タイル=2カラム決め打ち+技術的に安定した絵文字の厳選で対処しています。これは「フォント設定はユーザーが合わせる」という旧来ローグ文化の現代的踏襲です。詳細は [docs/design.md](docs/design.md)。
 
-- Node.js >= 20
-- `src/renderer/`(絵文字グリッド描画)を使う場合のみ: カラー絵文字をフォント
-  フォールバックで描画できるターミナルが必要(Windows Terminal等)。詳細は
-  [docs/design.md](docs/design.md) の絵文字方針を参照
+## ドキュメント
+
+- [docs/architecture.md](docs/architecture.md) — コードベースの読み方
+- [docs/design.md](docs/design.md) — 製品コンセプトと絵文字方針
+- [docs/tasks/game.md](docs/tasks/game.md) — ゲーム開発タスクトラッカー
+- [docs/tasks/modernization.md](docs/tasks/modernization.md) — rot.js近代化改修の全記録(完了済み)
+
+## 近代化rot.jsコアだけ欲しい場合
+
+ゲーム固有のコードを含まない「近代化されただけのrot.js」は **`modernization`ブランチ**(タグ `modernization-complete` 相当)として独立に保存しています。マップ生成器8種・FOV・A*/Dijkstra・スケジューラ等を、原本と挙動互換(乱数消費順まで一致検証済み)のままESM+strict TypeScript+クラスなしで使えます。詳細はそちらのREADMEを参照。
 
 ## ライセンス
 

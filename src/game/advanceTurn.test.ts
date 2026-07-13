@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { at } from "../indexing.js";
+import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import { PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
-import { buildArenaGameState } from "./initialState.js";
+import { buildFrameGrid } from "./frame.js";
+import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 
 const move = (direction: Direction): Action => ({
@@ -102,6 +105,41 @@ describe("advanceTurn", () => {
 		advanceTurn(state, move("east"));
 		advanceTurn(state, { type: "quit" });
 		expect(state).toEqual(snapshot);
+	});
+
+	it("keeps its invariants through fuzzed runs on real dungeons", () => {
+		const actions: readonly Action[] = [
+			move("north"),
+			move("south"),
+			move("west"),
+			move("east"),
+			{ type: "wait" },
+		];
+		for (let seed = 1; seed <= 5; seed++) {
+			let state = buildDungeonGameState(40, 20, seed);
+			const actionPicker = createRng(seed + 100);
+			for (let turn = 0; turn < 300 && state.status === "playing"; turn++) {
+				const picked = at(
+					actions,
+					actionPicker.getUniformInt(0, actions.length - 1),
+				);
+				state = advanceTurn(state, picked);
+
+				expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
+				expect(state.playerHp).toBeGreaterThanOrEqual(0);
+				expect(state.playerHp).toBeLessThanOrEqual(PLAYER_MAX_HP);
+				for (const enemy of state.enemies) {
+					/* an enemy must never share the player's tile */
+					expect(enemy.x === state.player.x && enemy.y === state.player.y).toBe(
+						false,
+					);
+					expect(enemy.hp).toBeGreaterThan(0);
+				}
+				/* rendering the frame must never throw or change shape */
+				const grid = buildFrameGrid(state);
+				expect(grid.length).toBe(state.height);
+			}
+		}
 	});
 
 	it("quit marks the game as exited without touching the rest", () => {

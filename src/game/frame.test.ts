@@ -47,6 +47,19 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
 	});
 
+	it("draws the player as a skull once the run has ended in death", () => {
+		const dead = { ...state, status: "dead" as const };
+		expect(buildFrameGrid(dead)[state.player.y]?.[state.player.x]?.glyph).toBe(
+			"💀",
+		);
+
+		/* quitting is not dying — the player glyph stays */
+		const exited = { ...state, status: "exited" as const };
+		expect(
+			buildFrameGrid(exited)[state.player.y]?.[state.player.x]?.glyph,
+		).toBe("🧑");
+	});
+
 	it("renders the three vision layers", () => {
 		/* 30x5 arena: player starts at (15,2); view radius is 8 */
 		const wide = buildArenaGameState(30, 5, 1);

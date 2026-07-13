@@ -11,6 +11,9 @@ const TERRAIN_GLYPHS: TileGlyphs = {
 };
 const FALLBACK_CELL: Cell = { glyph: "⚠️" };
 const PLAYER_CELL: Cell = { glyph: "🧑" };
+/* Single-codepoint, Unicode 6.0 — inside the "technically stable" emoji
+ * category docs/design.md restricts tiles to. */
+const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
 const ENEMY_CELL: Cell = { glyph: "🧟" };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
@@ -72,6 +75,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	if (playerRow === undefined) {
 		throw new Error("unreachable: player is always inside the terrain grid");
 	}
-	playerRow[state.player.x] = PLAYER_CELL;
+	playerRow[state.player.x] =
+		state.status === "dead" ? DEAD_PLAYER_CELL : PLAYER_CELL;
 	return grid;
 };

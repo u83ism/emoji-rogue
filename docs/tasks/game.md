@@ -30,7 +30,8 @@
 
 - [x] `src/game/initialState.ts`: `buildDungeonGameState(width, height, seed)` を追加(既存のアリーナ版は `buildArenaGameState` に改名しテストフィクスチャとして残す)。diggerで地形を生成し、最初の部屋の中心(`getRoomCenter`)にプレイヤーを配置。**生成後の`rng.getState()`を`GameState.rng`に格納する**(シード再現性の要)
 - [x] `src/game/advanceTurn.ts`: 通行判定に扉(値2)を追加(0=床・2=扉が通行可)+ テスト
-- [x] `src/game/frame.ts`: 扉グリフ🚪(Stage 5実機検証済み)を追加 + テスト
+- [x] `src/game/frame.ts`: 扉グリフ🚪を追加 + テスト
+- [x] 扉が一切出ないバグの修正: diggerは扉をマップ値(2)として出力せず`Room`オブジェクトにのみ記録する(原本rot.js由来の仕様。Stage 5の「🚪描画確認済み」記録は誤りだった)。`buildDungeonGameState`で`getDoors`の座標を地形に焼き込むよう修正+回帰テスト
 - [x] `src/main.tsx`: `buildDungeonGameState`に差し替え、マップを40x20に拡大
 - [ ] 実機スモークテスト: ダンジョン内を歩き、壁で止まり扉を通れること・グリッドが崩れないことを確認
 

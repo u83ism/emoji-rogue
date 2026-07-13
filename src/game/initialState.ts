@@ -1,7 +1,7 @@
 import { at } from "../indexing.js";
 import { createArenaMap } from "../map/arena.js";
 import { createDiggerMap } from "../map/digger.js";
-import { getRoomCenter } from "../map/features.js";
+import { getDoors, getRoomCenter } from "../map/features.js";
 import { createRng, seedToState } from "../rng.js";
 import type { GameState } from "./state.js";
 
@@ -61,6 +61,15 @@ export function buildDungeonGameState(
 	const dungeon = createDiggerMap(width, height, rng).create((x, y, value) => {
 		at(columns, x)[y] = value;
 	});
+
+	// The generator reports doors only on its Room records, never as map
+	// values (original rot.js behavior) — stamp them into the terrain so the
+	// game sees one self-contained grid.
+	for (const room of dungeon.getRooms()) {
+		getDoors(room, (x, y) => {
+			at(columns, x)[y] = 2;
+		});
+	}
 
 	const firstRoom = dungeon.getRooms()[0];
 	if (firstRoom === undefined) {

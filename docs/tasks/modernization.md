@@ -112,7 +112,7 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 - [x] `groupIntoRuns(cells): CellRun[]` 純粋関数(同じfg/bgが連続するセルを1ランに集約)
 - [x] `<MapRow>`/`<GameScreen>` Inkコンポーネント(セル単位`<Box>`は使わない。ランごとに`<Text color backgroundColor>`を並べるのみ)
 - [x] `ink-testing-library`でdesign.mdの絵文字セットに対する`lastFrame()`スナップショットテスト(バリエーションセレクタ付き絵文字 ⚠️・🌡️ を含めて、幅崩れがないことを確認する回帰テストとして`GameScreen.test.tsx`に実装)
-- [x] Windows Terminal上での実機スモークテスト —  `scripts/demo-renderer.mjs`で40x20のダンジョンを実機確認。初回は床タイルに半角中黒「・」(Unicode East Asian Widthが「Ambiguous」区分)を使っており1-2px左寄りに見えるズレが発生したが、design.mdの「幅が不安定な文字を避ける」方針通り安定した2カラム幅の絵文字🟫に差し替えて解消。壁🧱・扉🚪含め絵文字グリッドが崩れずに描画されることを確認済み
+- [x] Windows Terminal上での実機スモークテスト —  `scripts/demo-renderer.mjs`で40x20のダンジョンを実機確認。初回は床タイルに半角中黒「・」(Unicode East Asian Widthが「Ambiguous」区分)を使っており1-2px左寄りに見えるズレが発生したが、design.mdの「幅が不安定な文字を避ける」方針通り安定した2カラム幅の絵文字🟫に差し替えて解消。壁🧱含め絵文字グリッドが崩れずに描画されることを確認済み。**訂正(2026-07-13)**: 「扉🚪も描画確認済み」と当初記録したが誤り。diggerは扉をマップ値(2)として出力せず`Room`オブジェクト(`getDoors`)にのみ記録する(原本rot.js由来の仕様)ため、デモの🚪グリフは一度も使われていなかった。ゲーム層側で地形に焼き込む形で対応(`docs/tasks/game.md` マイルストーン2)
 
 ## Stage 6 — `.claude/` rules/skills/docs整備
 

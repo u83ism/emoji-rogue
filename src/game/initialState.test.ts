@@ -52,6 +52,15 @@ describe("buildDungeonGameState", () => {
 		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 	});
 
+	// Regression: the generator reports doors only on Room records, never as
+	// map values, so the first cut of this builder produced door-less terrain.
+	it("stamps room doors into the terrain", () => {
+		const doorCount = state.terrain
+			.flat()
+			.filter((value) => value === 2).length;
+		expect(doorCount).toBeGreaterThan(0);
+	});
+
 	it("stores the post-generation rng state, not the seed's initial state", () => {
 		expect(state.rng).not.toEqual(seedToState(12345));
 	});

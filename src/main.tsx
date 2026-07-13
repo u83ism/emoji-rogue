@@ -61,9 +61,12 @@ const App = () => {
 	return (
 		<Box flexDirection="column">
 			<GameScreen grid={buildFrameGrid(state)} />
-			<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
-				HP {state.playerHp}/{PLAYER_MAX_HP}
-			</Text>
+			<Box>
+				<Text>{state.floor}F </Text>
+				<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
+					HP {state.playerHp}/{PLAYER_MAX_HP}
+				</Text>
+			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text
 					key={eventIndex}

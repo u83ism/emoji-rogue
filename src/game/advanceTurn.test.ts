@@ -142,6 +142,37 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("moving onto the staircase descends to the next floor", () => {
+		/* teleport the stairs right next to the player (room centers always
+		 * have floor neighbors), then step east onto them */
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			playerHp: 4,
+			stairs: { x: start.player.x + 1, y: start.player.y },
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(2);
+		expect(next.playerHp).toBe(4); /* the new floor's enemies wait a turn */
+		expect(next.events).toEqual([
+			{ type: "floor-descended", payload: { floor: 2 } },
+		]);
+		expect(next.terrain).not.toEqual(state.terrain);
+	});
+
+	it("an enemy standing on the staircase gets bump-attacked, not skipped past", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const stairs = { x: start.player.x + 1, y: start.player.y };
+		const state = {
+			...start,
+			stairs,
+			enemies: [{ ...stairs, kind: "zombie" as const, hp: ZOMBIE_MAX_HP }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(1);
+		expect(next.enemies[0]?.hp).toBe(ZOMBIE_MAX_HP - 1);
+	});
+
 	it("quit marks the game as exited without touching the rest", () => {
 		const state = buildArenaGameState(5, 5, 1);
 		const exited = advanceTurn(state, { type: "quit" });

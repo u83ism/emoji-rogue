@@ -59,6 +59,14 @@ export interface GameState {
 	readonly player: Position;
 	readonly playerHp: number;
 	readonly enemies: readonly Enemy[];
+	/** 1-based; grows as the player descends. */
+	readonly floor: number;
+	/**
+	 * The down staircase. An entity on top of the (still binary floor/wall)
+	 * terrain, like enemies — not a third terrain value, which would ripple
+	 * through every passability/visibility/rendering `=== 0` check.
+	 */
+	readonly stairs: Position;
 	/**
 	 * Recent combat events, newest last, capped at EVENT_LOG_LIMIT. Pure data
 	 * (no strings) — the shell turns these into log lines. Part of the state

@@ -76,4 +76,38 @@ describe("buildFrameGrid", () => {
 		/* unexplored layer: darkness */
 		expect(layered[2]?.[29]).toEqual({ glyph: "　" });
 	});
+
+	it("draws the staircase while visible, enemies take precedence on it", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const seen = { ...wide, stairs: { x: 18, y: 2 } }; /* distance 3 */
+		expect(buildFrameGrid(seen)[2]?.[18]?.glyph).toBe("🔽");
+
+		const covered = {
+			...seen,
+			enemies: [{ x: 18, y: 2, kind: "zombie" as const, hp: 2 }],
+		};
+		expect(buildFrameGrid(covered)[2]?.[18]?.glyph).toBe("🧟");
+	});
+
+	it("remembers a seen staircase with its own silhouette color", () => {
+		/* stairs at (23,2): inside view from the start (15,2), out of view
+		 * after moving west twice — like the layered test above */
+		const wide = buildArenaGameState(30, 5, 1);
+		const withStairs = { ...wide, stairs: { x: 23, y: 2 } };
+		const west = { type: "move", payload: { direction: "west" } } as const;
+		const moved = advanceTurn(advanceTurn(withStairs, west), west);
+		const layered = buildFrameGrid(moved);
+		expect(layered[2]?.[23]).toEqual({ glyph: "　", bg: "#26454a" });
+		/* an unexplored staircase gives nothing away */
+		const unseen = {
+			...moved,
+			stairs: { x: 28, y: 3 },
+			explored: wide.explored,
+		};
+		expect(
+			buildFrameGrid({ ...unseen, player: { x: 13, y: 2 } })[3]?.[28],
+		).toEqual({
+			glyph: "　",
+		});
+	});
 });

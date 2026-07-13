@@ -30,5 +30,7 @@ export const formatEvent = (event: GameEvent): string => {
 			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
 		case "player-died":
 			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
+		case "floor-descended":
+			return `${event.payload.floor}階に降りた`;
 	}
 };

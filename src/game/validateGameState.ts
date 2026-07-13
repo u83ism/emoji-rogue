@@ -75,6 +75,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return payload.target === "zombie";
 		case "player-died":
 			return payload.by === "zombie";
+		case "floor-descended":
+			return isPositiveInteger(payload.floor);
 		default:
 			return false;
 	}
@@ -132,6 +134,19 @@ export const validateGameState = (
 	if (!isPositiveInteger(playerHp) || playerHp > PLAYER_MAX_HP) {
 		return err("playerHp");
 	}
+	const floor = value.floor;
+	if (!isPositiveInteger(floor)) {
+		return err("floor");
+	}
+	const stairs = value.stairs;
+	if (
+		!isRecord(stairs) ||
+		!standsOnFloor(stairs, terrain) ||
+		!isFiniteNumber(stairs.x) ||
+		!isFiniteNumber(stairs.y)
+	) {
+		return err("stairs");
+	}
 	const enemies = value.enemies;
 	if (!isEnemyArray(enemies, terrain)) {
 		return err("enemies");
@@ -155,6 +170,8 @@ export const validateGameState = (
 		explored,
 		player: { x: player.x, y: player.y },
 		playerHp,
+		floor,
+		stairs: { x: stairs.x, y: stairs.y },
 		enemies: enemies.map((enemy) => ({
 			x: enemy.x,
 			y: enemy.y,

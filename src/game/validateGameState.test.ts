@@ -104,6 +104,16 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects a broken floor counter or misplaced stairs", () => {
+		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
+		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");
+		expectRejected(
+			{ ...buildValidState(), stairs: { x: 0, y: 0 } } /* perimeter wall */,
+			"stairs",
+		);
+		expectRejected({ ...buildValidState(), stairs: undefined }, "stairs");
+	});
+
 	it("rejects broken rng and non-playing status", () => {
 		expectRejected({ ...buildValidState(), rng: { s0: 1, s1: 2 } }, "rng");
 		expectRejected(

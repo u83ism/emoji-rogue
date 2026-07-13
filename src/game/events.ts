@@ -25,6 +25,10 @@ export type GameEvent =
 	| {
 			readonly type: "player-died";
 			readonly payload: { readonly by: EnemyKind };
+	  }
+	| {
+			readonly type: "floor-descended";
+			readonly payload: { readonly floor: number };
 	  };
 
 /**

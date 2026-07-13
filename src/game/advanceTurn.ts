@@ -1,5 +1,6 @@
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
+import { descendStairs } from "./floor.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
@@ -24,9 +25,10 @@ const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
 
 /**
- * A movement turn: bump attack when an enemy occupies the target tile, walk
- * when it is open floor. Bumping a wall consumes no turn (returns the input
- * state, same reference); attacking and walking both do.
+ * A movement turn: bump attack when an enemy occupies the target tile
+ * (even one standing on the staircase), descend when it is the staircase,
+ * walk when it is open floor. Bumping a wall consumes no turn (returns the
+ * input state, same reference); the other three all do.
  */
 const applyMove = (state: GameState, direction: Direction): GameState => {
 	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
@@ -39,6 +41,10 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 	}
 	if (!isFloor(state, x, y)) {
 		return state;
+	}
+	if (x === state.stairs.x && y === state.stairs.y) {
+		/* the whole floor is replaced, so this floor's enemies never act */
+		return descendStairs(state);
 	}
 	return deriveExploredState({ ...state, player: { x, y } });
 };
@@ -57,6 +63,9 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
 				return state; /* bumping a wall consumes no turn */
+			}
+			if (afterPlayer.floor !== state.floor) {
+				return afterPlayer; /* descended — the new floor's enemies wait */
 			}
 			return advanceEnemies(afterPlayer);
 		}

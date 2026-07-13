@@ -15,6 +15,8 @@ const PLAYER_CELL: Cell = { glyph: "🧑" };
  * category docs/design.md restricts tiles to. */
 const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
 const ENEMY_CELL: Cell = { glyph: "🧟" };
+/* Down staircase (also single-codepoint, Unicode 6.0). */
+const STAIRS_CELL: Cell = { glyph: "🔽" };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
@@ -23,6 +25,9 @@ const ENEMY_CELL: Cell = { glyph: "🧟" };
 const UNEXPLORED_CELL: Cell = { glyph: "　" };
 const REMEMBERED_WALL_CELL: Cell = { glyph: "　", bg: "#666666" };
 const REMEMBERED_FLOOR_CELL: Cell = { glyph: "　", bg: "#262626" };
+/* A landmark worth remembering: once seen, the staircase keeps its own
+ * silhouette color so the player can navigate back to it. */
+const REMEMBERED_STAIRS_CELL: Cell = { glyph: "　", bg: "#26454a" };
 
 const toCell = (
 	state: GameState,
@@ -37,6 +42,9 @@ const toCell = (
 		);
 	}
 	if (state.explored[x]?.[y]) {
+		if (x === state.stairs.x && y === state.stairs.y) {
+			return REMEMBERED_STAIRS_CELL;
+		}
 		return value === 1 ? REMEMBERED_WALL_CELL : REMEMBERED_FLOOR_CELL;
 	}
 	return UNEXPLORED_CELL;
@@ -58,6 +66,14 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 			row.push(toCell(state, visiblePoints, x, y));
 		}
 		grid.push(row);
+	}
+
+	/* the staircase shows while visible; enemies and the player draw over it */
+	if (visiblePoints.has(encodePointKey(state.stairs.x, state.stairs.y))) {
+		const stairsRow = grid[state.stairs.y];
+		if (stairsRow !== undefined) {
+			stairsRow[state.stairs.x] = STAIRS_CELL;
+		}
 	}
 
 	/* enemies are only drawn while the player can actually see them */

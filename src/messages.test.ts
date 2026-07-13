@@ -21,6 +21,7 @@ describe("formatEvent", () => {
 				{ type: "player-died", payload: { by: "zombie" } },
 				"ゾンビにやられた……",
 			],
+			[{ type: "floor-descended", payload: { floor: 2 } }, "2階に降りた"],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);

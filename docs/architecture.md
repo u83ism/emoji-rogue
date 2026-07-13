@@ -1,6 +1,6 @@
 # emoji-rogue アーキテクチャガイド
 
-コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**これまでの作業履歴**は `docs/tasks.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
+コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
 
 ## 一言でいうと
 
@@ -73,7 +73,7 @@ seed
 - 絵文字を含まない周辺UI(ステータスバー等)は普通にInkのBox/Borderを使ってよい
 - 差分描画はInkのreconcilerに全部任せる(自前ANSIバッファは書かない)
 
-バリエーションセレクタ付き絵文字(⚠️等)での幅崩れ回帰テストは `GameScreen.test.tsx`。**タイル用絵文字を選ぶときは East Asian Width が Ambiguous な文字(半角中黒「・」等)を避ける** — 実機で1-2pxズレた実績あり(tasks.md Stage 5参照)。
+バリエーションセレクタ付き絵文字(⚠️等)での幅崩れ回帰テストは `GameScreen.test.tsx`。**タイル用絵文字を選ぶときは East Asian Width が Ambiguous な文字(半角中黒「・」等)を避ける** — 実機で1-2pxズレた実績あり(`docs/tasks/modernization.md` Stage 5参照)。
 
 ## コーディング規約の要点(詳細は `.claude/rules/`)
 
@@ -95,9 +95,9 @@ npm run build       # tsdown → dist/
 
 CI(`.github/workflows/ci.yml`)がpush/PR毎に全部走らせる。
 
-## 次に作るもの(未着手の設計課題)
+## 次に作るもの(ゲーム層)
 
-`docs/tasks.md` 末尾の「次の設計課題」参照。要点:
+`docs/tasks/game.md` 参照(設計方針とマイルストーン)。要点:
 
-- **ゲーム層**: `advanceTurn(state, action): GameState` の純粋リデューサ方式を採用(2026-07-13決定)。`RngState` がプレーンobjectなのでGameStateに含めれば、セーブ・リプレイ・シード共有(デイリーチャレンジ)が構造的にほぼ無料になる
+- **ゲーム層**: `advanceTurn(state, action): GameState` の純粋リデューサ方式を採用(2026-07-13決定)。`RngState` がプレーンobjectなのでGameStateに含めれば、セーブ・リプレイ・シード共有(デイリーチャレンジ)が構造的にほぼ無料になる。マイルストーン1は「何もないマップでプレイヤー移動」のWalking Skeleton
 - **Dijkstraのキャッシュ**: 廃止済み(2026-07-13)。原本rot.js由来の呼び出し間キャッシュは地形変化時に古い経路を黙って返すため除去し、`createDijkstraPath` は呼び出しごとに探索し直す。性能が問題になったら距離場(Dijkstraマップ)のターンごと純粋導出で対応する方針

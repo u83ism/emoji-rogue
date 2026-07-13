@@ -13,7 +13,7 @@ import { createUniformMap } from "./uniform.js";
  * generators.test.ts only verify that a full grid is produced; these tests
  * verify that the *content* of the grid is structurally sound, which is the
  * kind of regression a subtly broken loop condition would cause (see the
- * rogue.ts do-while note in docs/tasks.md).
+ * rogue.ts do-while note in docs/tasks/modernization.md).
  */
 
 const WIDTH = 30;

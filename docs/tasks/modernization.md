@@ -1,6 +1,8 @@
-# emoji-rogue タスクトラッカー
+# emoji-rogue 近代化改修タスクトラッカー(完了・アーカイブ)
 
-計画全文: `C:\Users\u83\.claude\plans\rot-js-rot-js-ts-1-fizzy-nygaard.md`(承認済み)。`develop`/`develop-loop` スキルはここを読んでタスクを選ぶ。
+> **このファイルは完了済みの作業履歴。** rot.jsフォークの近代化改修(関数型変換・テスト移植・Result型・レンダラー・エンジニアリング改善)は2026-07-13に完了し、タグ `modernization-complete` が完了地点。進行中のゲーム実装タスクは `docs/tasks/game.md` を参照(元は単一の `docs/tasks.md` だったのを2026-07-13に分割)。
+
+計画全文: `C:\Users\u83\.claude\plans\rot-js-rot-js-ts-1-fizzy-nygaard.md`(承認済み)。
 
 ## Stage 1 — ツールチェーン近代化
 
@@ -114,7 +116,7 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 
 ## Stage 6 — `.claude/` rules/skills/docs整備
 
-- [x] `docs/tasks.md`(本ファイル)
+- [x] `docs/tasks.md`(本ファイルの前身。2026-07-13に`docs/tasks/`配下へ分割)
 - [x] `CLAUDE.md`
 - [x] `.claude/rules/typescript.md`
 - [x] `.claude/rules/functional-style.md`
@@ -137,9 +139,7 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 - [x] 重複ヘルパーの集約: `src/indexing.ts`(`at`/`toXy`)・`src/pointkey.ts`(`encodePointKey`/`decodePointKey`。原本由来の「x,y」「x.y」キー混在を解消)
 - [x] 検証レビューの指摘対応: `rng.clone()`のseed引き継ぎ、デバッグ用console出力の削除、discrete-shadowcastingの`as number`キャスト除去
 
-### 次の設計課題
+### 設計課題の決着(2026-07-13、近代化の締め)
 
-2026-07-13に相談し方針決定。
-
-- [ ] ゲーム層の設計: 純粋リデューサ`advanceTurn(state, action): GameState` + `RngState`をGameStateに含める方式を**採用**(セーブ・リプレイ・シード共有がほぼ無料になる)。関数値(`passable`等)はGameStateに入れず、地形はデータとして持ち`isPassable(state.map, x, y)`のような純粋関数で導出する
-- [x] `createDijkstraPath`の呼び出し間キャッシュは**廃止**(2026-07-13)。呼び出しごとに探索し直す方式に変更し、地形変化が常に反映されることをテストで保証。ターン制・この規模のマップでは性能影響は無視できる。将来プロファイルで経路計算がボトルネックになった場合は、キャッシュ復活ではなくプレイヤー起点の距離場(Dijkstraマップ)をターンごとに純粋導出する方式を採る
+- [x] ゲーム層の設計方針を決定: 純粋リデューサ`advanceTurn(state, action): GameState` + `RngState`をGameStateに含める方式を**採用**。詳細な方針と実装タスクは `docs/tasks/game.md` で管理
+- [x] `createDijkstraPath`の呼び出し間キャッシュは**廃止**。呼び出しごとに探索し直す方式に変更し、地形変化が常に反映されることをテストで保証。ターン制・この規模のマップでは性能影響は無視できる。将来プロファイルで経路計算がボトルネックになった場合は、キャッシュ復活ではなくプレイヤー起点の距離場(Dijkstraマップ)をターンごとに純粋導出する方式を採る

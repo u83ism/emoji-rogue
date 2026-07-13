@@ -5,11 +5,7 @@ import { PLAYER_MAX_HP } from "./game/balance.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
-import {
-	FULL_WIDTH_INPUT_WARNING,
-	formatEvent,
-	GAME_SAVED_MESSAGE,
-} from "./messages.js";
+import { FULL_WIDTH_INPUT_WARNING, formatEvent } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
 import { loadSavedGameState, saveGameState } from "./saveFile.js";
 
@@ -74,13 +70,12 @@ const App = () => {
 					{formatEvent(event)}
 				</Text>
 			))}
-			{/* System notices react to the latest keypress, so they read in
-			 * order only below the event log. */}
+			{/* Not a game event (never saved) — an input-environment notice,
+			 * kept visually apart from the log by a blank line. */}
 			{showFullWidthWarning && (
-				<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
-			)}
-			{state.status === "suspended" && (
-				<Text color="cyan">{GAME_SAVED_MESSAGE}</Text>
+				<Box marginTop={1}>
+					<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
+				</Box>
 			)}
 		</Box>
 	);

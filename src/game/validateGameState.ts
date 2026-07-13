@@ -62,7 +62,13 @@ const isEnemyArray = (
 	);
 
 const isGameEvent = (value: unknown): boolean => {
-	if (!isRecord(value) || !isRecord(value.payload)) {
+	if (!isRecord(value)) {
+		return false;
+	}
+	if (value.type === "game-saved") {
+		return true; /* the only payload-less event */
+	}
+	if (!isRecord(value.payload)) {
 		return false;
 	}
 	const payload = value.payload;

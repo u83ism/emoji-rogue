@@ -23,7 +23,8 @@ export type GameEvent =
 	| {
 			readonly type: "player-died";
 			readonly payload: { readonly by: EnemyKind };
-	  };
+	  }
+	| { readonly type: "game-saved" };
 
 /**
  * Cap on GameState.events: plenty for the shell's log lines while keeping

@@ -88,7 +88,9 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/save.ts`: `buildSaveFileContent(state)` / `parseSaveFileContent(content): Result<GameState, SaveFileError>`(`malformed-json` / `unsupported-version` / `invalid-state`の判別可能union)。`formatVersion: 1` + ラウンドトリップ含むテスト
 - [x] `src/saveFile.ts`(シェル層、fs効果): `saveGameState(state)` / `loadSavedGameState(): GameState | undefined`(読んだ瞬間に削除=消費。検証失敗でも消費する)
 - [x] `main.tsx`: 起動時`loadSavedGameState() ?? buildDungeonGameState(...)`。`suspended`観測で`status: "playing"`に戻した状態を書き出して終了、「セーブしました」行を表示(文言は`messages.ts`)
-- [ ] 実機スモークテスト: セーブ→再起動で同一状態から再開(敵配置・HP・探索済み領域・ログ)、再開後のセーブファイル消滅、死亡後に再起動しても新規ゲームになることを確認
+- [x] 実機スモークテスト: セーブ→再起動で同一状態から再開(敵配置・HP・探索済み領域・ログ)、再開後のセーブファイル消滅、死亡後に再起動しても新規ゲームになることを確認(2026-07-14)。指摘1件: 「セーブしました」行がHP直下(=ログの上)に出て時系列が混乱する → chrome行の表示順を「HP→イベントログ→最新のシステム通知(全角警告・セーブ完了)」に統一して修正
+
+**マイルストーン6完了(2026-07-14)。**
 
 ## バックログ(マイルストーン未整理)
 - スケジューラ接続(敵に速度差をつける。`src/scheduler/`のspeed schedulerを温存中)

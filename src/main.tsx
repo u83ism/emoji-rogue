@@ -64,12 +64,6 @@ const App = () => {
 			<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
 				HP {state.playerHp}/{PLAYER_MAX_HP}
 			</Text>
-			{showFullWidthWarning && (
-				<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
-			)}
-			{state.status === "suspended" && (
-				<Text color="cyan">{GAME_SAVED_MESSAGE}</Text>
-			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text
 					key={eventIndex}
@@ -80,6 +74,14 @@ const App = () => {
 					{formatEvent(event)}
 				</Text>
 			))}
+			{/* System notices react to the latest keypress, so they read in
+			 * order only below the event log. */}
+			{showFullWidthWarning && (
+				<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
+			)}
+			{state.status === "suspended" && (
+				<Text color="cyan">{GAME_SAVED_MESSAGE}</Text>
+			)}
 		</Box>
 	);
 };

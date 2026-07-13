@@ -24,6 +24,16 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("expands the explored grid as the player moves", () => {
+		/* 30x5 arena: player starts at (15,2); view radius is 8 */
+		const state = buildArenaGameState(30, 5, 1);
+		expect(state.explored[24]?.[2]).toBe(false); /* distance 9: unseen */
+
+		const moved = advanceTurn(state, move("east")); /* player (16,2) */
+		expect(moved.explored[24]?.[2]).toBe(true); /* now in view */
+		expect(moved.explored[15]?.[2]).toBe(true); /* old cells stay explored */
+	});
+
 	it("does not mutate the input state", () => {
 		const state = buildArenaGameState(5, 5, 1);
 		const snapshot = structuredClone(state);

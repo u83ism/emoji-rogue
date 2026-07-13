@@ -29,6 +29,12 @@ export interface GameState {
 	 * `map/` generator fills in: 0 = floor, 1 = wall.
 	 */
 	readonly terrain: readonly (readonly number[])[];
+	/**
+	 * Column-major grid of cells the player has ever seen. This is real state
+	 * (it accumulates over the run); the currently-visible set is not stored —
+	 * it is derived from terrain + player on demand (src/game/vision.ts).
+	 */
+	readonly explored: readonly (readonly boolean[])[];
 	readonly player: { readonly x: number; readonly y: number };
 	readonly rng: RngState;
 	readonly status: GameStatus;

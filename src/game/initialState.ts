@@ -4,11 +4,20 @@ import { createDiggerMap } from "../map/digger.js";
 import { getRoomCenter } from "../map/features.js";
 import { createRng, seedToState } from "../rng.js";
 import type { GameState } from "./state.js";
+import { deriveExploredState } from "./vision.js";
 
 const buildEmptyColumns = (width: number): number[][] => {
 	const columns: number[][] = [];
 	for (let x = 0; x < width; x++) {
 		columns.push([]);
+	}
+	return columns;
+};
+
+const buildUnexploredColumns = (width: number, height: number): boolean[][] => {
+	const columns: boolean[][] = [];
+	for (let x = 0; x < width; x++) {
+		columns.push(new Array<boolean>(height).fill(false));
 	}
 	return columns;
 };
@@ -34,14 +43,15 @@ export function buildArenaGameState(
 		at(columns, x)[y] = value;
 	});
 
-	return {
+	return deriveExploredState({
 		width,
 		height,
 		terrain: columns,
+		explored: buildUnexploredColumns(width, height),
 		player: { x: Math.floor(width / 2), y: Math.floor(height / 2) },
 		rng: seedToState(seed),
 		status: "playing",
-	};
+	});
 }
 
 /**
@@ -72,12 +82,13 @@ export function buildDungeonGameState(
 	}
 	const [playerX, playerY] = getRoomCenter(firstRoom);
 
-	return {
+	return deriveExploredState({
 		width,
 		height,
 		terrain: columns,
+		explored: buildUnexploredColumns(width, height),
 		player: { x: playerX, y: playerY },
 		rng: rng.getState(),
 		status: "playing",
-	};
+	});
 }

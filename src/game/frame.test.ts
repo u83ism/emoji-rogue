@@ -29,4 +29,21 @@ describe("buildFrameGrid", () => {
 		expect(nextGrid[moved.player.y]?.[moved.player.x]?.glyph).toBe("🧑");
 		expect(nextGrid[state.player.y]?.[state.player.x]?.glyph).toBe("🟫");
 	});
+
+	it("renders the three vision layers", () => {
+		/* 30x5 arena: player starts at (15,2); view radius is 8 */
+		const wide = buildArenaGameState(30, 5, 1);
+		const west = { type: "move", payload: { direction: "west" } } as const;
+		const moved = advanceTurn(advanceTurn(wide, west), west); /* (13,2) */
+		const layered = buildFrameGrid(moved);
+
+		/* visible layer: emoji */
+		expect(layered[2]?.[12]?.glyph).toBe("🟫");
+		expect(layered[2]?.[13]?.glyph).toBe("🧑");
+		/* remembered layer: silhouettes (seen from (15,2), now out of range) */
+		expect(layered[2]?.[23]).toEqual({ glyph: "　", bg: "#262626" });
+		expect(layered[0]?.[23]).toEqual({ glyph: "　", bg: "#666666" });
+		/* unexplored layer: darkness */
+		expect(layered[2]?.[29]).toEqual({ glyph: "　" });
+	});
 });

@@ -1,4 +1,5 @@
 import type { Action, Direction, GameState } from "./state.js";
+import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>
@@ -20,7 +21,7 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 	if (!isPassable(state, x, y)) {
 		return state;
 	}
-	return { ...state, player: { x, y } };
+	return deriveExploredState({ ...state, player: { x, y } });
 };
 
 /**

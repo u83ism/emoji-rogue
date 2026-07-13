@@ -55,4 +55,10 @@ describe("buildDungeonGameState", () => {
 	it("stores the post-generation rng state, not the seed's initial state", () => {
 		expect(state.rng).not.toEqual(seedToState(12345));
 	});
+
+	it("seeds the explored grid from the starting field of view", () => {
+		expect(state.explored[state.player.x]?.[state.player.y]).toBe(true);
+		/* a 40x20 dungeon cannot be fully seen from one spot (radius 8) */
+		expect(state.explored.flat()).toContain(false);
+	});
 });

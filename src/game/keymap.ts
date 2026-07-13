@@ -8,8 +8,9 @@ const moveAction = (direction: Direction): Action => ({
 
 /**
  * Maps one keypress (as Ink's `useInput` reports it) to an `Action`.
- * Arrow keys and vi keys (hjkl) both move; `q` quits. Unbound keys map to
- * `undefined` so the shell can ignore them without consuming a turn.
+ * Arrow keys and vi keys (hjkl) both move; `.` or space waits one turn;
+ * `q` quits. Unbound keys map to `undefined` so the shell can ignore them
+ * without consuming a turn.
  */
 export const toAction = (input: string, key: Key): Action | undefined => {
 	if (key.upArrow || input === "k") {
@@ -23,6 +24,9 @@ export const toAction = (input: string, key: Key): Action | undefined => {
 	}
 	if (key.rightArrow || input === "l") {
 		return moveAction("east");
+	}
+	if (input === "." || input === " ") {
+		return { type: "wait" };
 	}
 	if (input === "q") {
 		return { type: "quit" };

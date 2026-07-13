@@ -66,6 +66,11 @@ describe("toAction", () => {
 		});
 	});
 
+	it("maps period and space to wait", () => {
+		expect(toAction(".", buildKey())).toEqual({ type: "wait" });
+		expect(toAction(" ", buildKey())).toEqual({ type: "wait" });
+	});
+
 	it("maps q to quit and leaves unbound keys undefined", () => {
 		expect(toAction("q", buildKey())).toEqual({ type: "quit" });
 		expect(toAction("x", buildKey())).toBeUndefined();

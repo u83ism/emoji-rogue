@@ -34,6 +34,19 @@ describe("advanceTurn", () => {
 		const state = buildArenaGameState(5, 5, 1);
 		const dead = { ...state, status: "dead" as const };
 		expect(advanceTurn(dead, move("east"))).toBe(dead);
+		expect(advanceTurn(dead, { type: "wait" })).toBe(dead);
+	});
+
+	it("waiting passes the turn to the enemies (no cornered soft-lock)", () => {
+		/* 9x3 arena: player (4,1) with an adjacent enemy — waiting must let
+		 * the enemy act (and end the run) instead of freezing time forever */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [{ x: 5, y: 1 }],
+		};
+		const next = advanceTurn(state, { type: "wait" });
+		expect(next.player).toEqual(state.player);
+		expect(next.status).toBe("dead");
 	});
 
 	it("expands the explored grid as the player moves", () => {

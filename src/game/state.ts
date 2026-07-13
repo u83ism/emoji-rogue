@@ -11,6 +11,7 @@ export type Action =
 			readonly type: "move";
 			readonly payload: { readonly direction: Direction };
 	  }
+	| { readonly type: "wait" }
 	| { readonly type: "quit" };
 
 export type GameStatus = "playing" | "dead" | "exited";

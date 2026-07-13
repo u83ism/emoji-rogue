@@ -43,6 +43,15 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			}
 			return advanceEnemies(afterPlayer);
 		}
+		case "wait": {
+			/* Stand still for one turn; enemies still act. Without this a
+			 * cornered player would soft-lock: bumps consume no turn, so the
+			 * enemy turn that would end the run could never arrive. */
+			if (state.status !== "playing") {
+				return state;
+			}
+			return advanceEnemies(state);
+		}
 		case "quit":
 			return { ...state, status: "exited" };
 	}

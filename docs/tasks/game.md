@@ -79,6 +79,17 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン5完了(2026-07-13)。** 実機フィードバック由来の追加対応2件: 死亡時💀描画、全角入力モード検知の警告(スペース無反応の原因はIME全角モードだった)。
 
+## マイルストーン6 — セーブ/ロード(中断セーブ)
+
+「`GameState`のシリアライズ=セーブ」という設計投資の回収。方式は不思議のダンジョン系準拠の**中断セーブ**: 1スロット、ロード時にファイルを即消費(再開は1回きり)、死んだらセーブは残らない。保存先は`~/.emoji-rogue/save.json`(依存追加なし、`node:os`の`homedir`)。`formatVersion`フィールドで将来の形式変更に備える。壊れた/改竄されたセーブは「期待される失敗」なのでResultで検証し、失敗時は黙って新規ゲーム開始(ファイルは消費済みなので再試行ループにならない)。
+
+- [ ] `Action`に`{type:"save"}`、`GameStatus`に`"suspended"`を追加。リデューサは`status: "suspended"`への遷移だけを行う(**核にファイルI/Oを入れない** — シェルが`suspended`を観測して書き出す)。キーは`s` + テスト
+- [ ] `src/game/validateGameState.ts`: `validateGameState(value: unknown): Result<GameState, string>`(エラーは不正フィールド名)。寸法整合・地形値・座標の範囲と床上・HP範囲・敵/イベント/RNGの形を検証し、既知フィールドだけで再構築して返す + テスト
+- [ ] `src/game/save.ts`: `buildSaveFileContent(state)` / `parseSaveFileContent(content): Result<GameState, SaveFileError>`(`malformed-json` / `unsupported-version` / `invalid-state`の判別可能union)。`formatVersion: 1` + ラウンドトリップ含むテスト
+- [ ] `src/saveFile.ts`(シェル層、fs効果): `saveGameState(state)` / `loadSavedGameState(): GameState | undefined`(読んだ瞬間に削除=消費。検証失敗でも消費する)
+- [ ] `main.tsx`: 起動時`loadSavedGameState() ?? buildDungeonGameState(...)`。`suspended`観測で`status: "playing"`に戻した状態を書き出して終了、「セーブしました」行を表示(文言は`messages.ts`)
+- [ ] 実機スモークテスト: セーブ→再起動で同一状態から再開(敵配置・HP・探索済み領域・ログ)、再開後のセーブファイル消滅、死亡後に再起動しても新規ゲームになることを確認
+
 ## バックログ(マイルストーン未整理)
 - スケジューラ接続(敵に速度差をつける。`src/scheduler/`のspeed schedulerを温存中)
 - ダメージの乱数幅(戦闘は当面決定的。プレイフィールを見て`state.rng`消費で幅を持たせるか判断)

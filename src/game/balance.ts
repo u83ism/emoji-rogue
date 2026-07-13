@@ -4,5 +4,7 @@
 // an rng-driven damage range is a backlog item.
 
 export const PLAYER_MAX_HP = 10;
+export const PLAYER_ATTACK_DAMAGE = 1;
 
 export const ZOMBIE_MAX_HP = 2;
+export const ZOMBIE_ATTACK_DAMAGE = 1;

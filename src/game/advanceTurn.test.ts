@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
-import { ZOMBIE_MAX_HP } from "./balance.js";
+import { PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { Action, Direction, Enemy } from "./state.js";
+import type { Action, Direction, Enemy, GameState } from "./state.js";
 
 const move = (direction: Direction): Action => ({
 	type: "move",
@@ -32,10 +32,31 @@ describe("advanceTurn", () => {
 		}
 	});
 
-	it("cannot walk onto an enemy's tile (bump, same reference)", () => {
-		const state = buildArenaGameState(5, 5, 1);
-		const blocked = { ...state, enemies: [zombie(3, 2)] };
-		expect(advanceTurn(blocked, move("east"))).toBe(blocked);
+	it("moving into an enemy is a bump attack: damage, no movement, turn spent", () => {
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [zombie(3, 2)] };
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual(state.player);
+		expect(next.enemies).toEqual([{ ...zombie(3, 2), hp: ZOMBIE_MAX_HP - 1 }]);
+		/* the turn was spent, so the surviving adjacent enemy hits back */
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+	});
+
+	it("a killing blow removes the enemy", () => {
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			enemies: [{ ...zombie(3, 2), hp: 1 }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.enemies).toEqual([]);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
 	});
 
 	it("ignores moves once the run is over", () => {
@@ -47,14 +68,22 @@ describe("advanceTurn", () => {
 
 	it("waiting passes the turn to the enemies (no cornered soft-lock)", () => {
 		/* 9x3 arena: player (4,1) with an adjacent enemy — waiting must let
-		 * the enemy act (and end the run) instead of freezing time forever */
+		 * the enemy act instead of freezing time forever */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [zombie(5, 1)],
 		};
 		const next = advanceTurn(state, { type: "wait" });
 		expect(next.player).toEqual(state.player);
-		expect(next.status).toBe("dead");
+		expect(next.playerHp).toBe(state.playerHp - 1);
+
+		/* waiting next to an enemy for the whole hp pool ends the run */
+		let current: GameState = state;
+		for (let i = 0; i < PLAYER_MAX_HP; i++) {
+			current = advanceTurn(current, { type: "wait" });
+		}
+		expect(current.status).toBe("dead");
+		expect(current.playerHp).toBe(0);
 	});
 
 	it("expands the explored grid as the player moves", () => {

@@ -69,8 +69,8 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 「接触=即ゲームオーバー」をバンプ戦闘(移動先に相手がいたら攻撃)に置き換える。**i18n規律(上記2026-07-13決定)の初運用**: リデューサはデータのイベント(判別可能union)を出し、日本語文言化はシェル側の1箇所に集約する。絵文字を含まない周辺UI(ステータスバー・ログ行)もここで初導入 — chrome行なのでInkの`Box`/`Border`が使える(`docs/architecture.md`「レンダラーの設計判断」参照)。
 
 - [x] `src/game/state.ts`: `Enemy`型(`Position & { readonly kind, hp }` — 既存の`enemy.x`/`enemy.y`参照コードを壊さない)、`playerHp`、`GameEvent`判別可能union(`player-hit` / `enemy-hit` / `enemy-defeated` / `player-died`。敵種は`kind: "zombie"`タグ。**人間向け文字列を入れない**)、`events: readonly GameEvent[]`(セーブ/リプレイに載る真の状態。肥大防止に直近20件のみ保持=`src/game/events.ts`の`buildEventLog`)。バランス定数は`src/game/balance.ts`の1箇所に集約(実機で調整する前提の仮値。ダメージは当面固定値=戦闘は決定的。乱数幅はプレイフィールを見てから)
-- [ ] プレイヤーのバンプ攻撃: `advanceTurn`の`move`で移動先に敵がいる場合、現行「移動不可・ターン消費なし」を「攻撃・ターン消費あり」に変更(壁バンプは引き続きターン消費なし)。敵HPを減らし、0で除去+`enemy-defeated` + テスト
-- [ ] 敵の攻撃: `advanceEnemies`の「プレイヤーのマスに踏み込んだら`status: "dead"`」を「プレイヤーに隣接(topology 4)する敵は移動せず攻撃」に置き換え。`playerHp`が0以下になったら`player-died`+`status: "dead"`。待機(`wait`)中も隣接敵は攻撃してくる + テスト
+- [x] プレイヤーのバンプ攻撃: `advanceTurn`の`move`で移動先に敵がいる場合、現行「移動不可・ターン消費なし」を「攻撃・ターン消費あり」に変更(壁バンプは引き続きターン消費なし)。敵HPを減らし、0で除去+`enemy-defeated`。攻撃解決は`src/game/combat.ts`(`applyPlayerAttack`/`isAdjacent`)に分離 + テスト
+- [x] 敵の攻撃: `advanceEnemies`の「プレイヤーのマスに踏み込んだら`status: "dead"`」を「プレイヤーに隣接(topology 4)する敵は移動せず攻撃」に置き換え。`playerHp`が0以下になったら`player-died`+`status: "dead"`(同ターンの残りの敵は行動しない=多重死亡イベント防止)。待機(`wait`)中も隣接敵は攻撃してくる + テスト。※2タスクは表裏一体(片方だけだと攻撃直後に旧・接触即死が必ず発動する)のため1コミットで実施
 - [ ] 文言化(シェル1箇所): `src/messages.ts`(`src/game/`の外=シェル層)に`formatEvent(event: GameEvent): string`。日本語文言はこのファイルにのみ存在する(将来のロケール差し替え点) + テスト
 - [ ] `main.tsx`: マップ下にステータスバー(`HP 8/10`形式のテキスト。**絵文字は使わない** — 絵文字入りchromeはInk幅計測の地雷を踏むため)と直近3件のメッセージ行。dead時の赤字終了メッセージも`formatEvent`経由に統一。行数が膨らむならコンポーネント分割
 - [ ] 実機スモークテスト: バンプ攻撃・敵撃破・被弾とHP減少・死亡・ログ表示・バランス感を確認

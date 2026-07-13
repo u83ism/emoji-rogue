@@ -2,6 +2,9 @@ import { createAStarPath } from "../path/index.js";
 import { encodePointKey } from "../pointkey.js";
 import type { RngState } from "../rng.js";
 import { stepUniform } from "../rng.js";
+import { ZOMBIE_ATTACK_DAMAGE } from "./balance.js";
+import { isAdjacent } from "./combat.js";
+import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
@@ -102,9 +105,10 @@ const stepWandering = (
 };
 
 /**
- * One turn for every enemy, in array order: enemies inside the player's
- * field of view chase via A*, the rest wander using (and advancing) the
- * state's RNG. An enemy stepping onto the player's tile ends the run.
+ * One turn for every enemy, in array order: an enemy adjacent to the player
+ * attacks in place (fixed damage, see balance.ts); otherwise enemies inside
+ * the player's field of view chase via A* and the rest wander using (and
+ * advancing) the state's RNG. The player's HP reaching zero ends the run.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -117,13 +121,27 @@ export const advanceEnemies = (state: GameState): GameState => {
 	);
 
 	let rng = state.rng;
-	let caught = false;
+	let playerHp = state.playerHp;
+	let died = false;
+	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
 	for (const enemy of state.enemies) {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let next = enemy;
-		if (visiblePoints.has(encodePointKey(enemy.x, enemy.y))) {
+		if (died) {
+			/* the run already ended this turn; the rest hold position */
+		} else if (isAdjacent(enemy, state.player)) {
+			playerHp -= ZOMBIE_ATTACK_DAMAGE;
+			events.push({
+				type: "player-hit",
+				payload: { by: enemy.kind, damage: ZOMBIE_ATTACK_DAMAGE },
+			});
+			if (playerHp <= 0) {
+				died = true;
+				events.push({ type: "player-died", payload: { by: enemy.kind } });
+			}
+		} else if (visiblePoints.has(encodePointKey(enemy.x, enemy.y))) {
 			const step = stepTowardPlayer(state, enemy, occupied);
 			next = step === undefined ? enemy : { ...enemy, ...step };
 		} else {
@@ -132,17 +150,16 @@ export const advanceEnemies = (state: GameState): GameState => {
 			rng = wandered.rng;
 		}
 
-		if (next.x === state.player.x && next.y === state.player.y) {
-			caught = true;
-		}
 		occupied.add(encodePointKey(next.x, next.y));
 		nextEnemies.push(next);
 	}
 
 	return {
 		...state,
+		playerHp: Math.max(0, playerHp),
 		enemies: nextEnemies,
+		events: buildEventLog(state.events, events),
 		rng,
-		status: caught ? "dead" : state.status,
+		status: died ? "dead" : state.status,
 	};
 };

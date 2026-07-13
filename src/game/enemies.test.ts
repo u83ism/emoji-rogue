@@ -35,11 +35,39 @@ describe("advanceEnemies", () => {
 		expect(next.rng).toEqual(state.rng);
 	});
 
-	it("an enemy stepping onto the player ends the run", () => {
+	it("an adjacent enemy attacks in place instead of moving", () => {
 		const state = buildCorridorState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([zombie(4, 1)]);
+		expect(next.enemies).toEqual([zombie(5, 1)]);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+		expect(next.status).toBe("playing");
+	});
+
+	it("the player's hp reaching zero ends the run", () => {
+		const state = { ...buildCorridorState([zombie(5, 1)]), playerHp: 1 };
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+			{ type: "player-died", payload: { by: "zombie" } },
+		]);
+	});
+
+	it("enemies stop acting once the run has ended this turn", () => {
+		/* two adjacent zombies, 1 hp left: only the first one gets to attack */
+		const state = {
+			...buildCorridorState([zombie(3, 1), zombie(5, 1)]),
+			playerHp: 1,
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(3, 1), zombie(5, 1)]);
+		expect(
+			next.events.filter((event) => event.type === "player-hit").length,
+		).toBe(1);
 	});
 
 	it("enemies never stack on the same tile", () => {

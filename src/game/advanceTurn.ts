@@ -1,5 +1,6 @@
+import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
-import type { Action, Direction, GameState } from "./state.js";
+import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
@@ -11,16 +12,32 @@ const DIRECTION_VECTORS: Readonly<
 	east: [1, 0],
 };
 
-/** Passability is derived from terrain data, never stored as a function. */
-const isPassable = (state: GameState, x: number, y: number): boolean =>
-	state.terrain[x]?.[y] === 0 &&
-	!state.enemies.some((enemy) => enemy.x === x && enemy.y === y);
+const findEnemyAt = (
+	state: GameState,
+	x: number,
+	y: number,
+): Enemy | undefined =>
+	state.enemies.find((enemy) => enemy.x === x && enemy.y === y);
 
+/** Passability is derived from terrain data, never stored as a function. */
+const isFloor = (state: GameState, x: number, y: number): boolean =>
+	state.terrain[x]?.[y] === 0;
+
+/**
+ * A movement turn: bump attack when an enemy occupies the target tile, walk
+ * when it is open floor. Bumping a wall consumes no turn (returns the input
+ * state, same reference); attacking and walking both do.
+ */
 const applyMove = (state: GameState, direction: Direction): GameState => {
 	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
 	const x = state.player.x + deltaX;
 	const y = state.player.y + deltaY;
-	if (!isPassable(state, x, y)) {
+
+	const target = findEnemyAt(state, x, y);
+	if (target !== undefined) {
+		return applyPlayerAttack(state, target);
+	}
+	if (!isFloor(state, x, y)) {
 		return state;
 	}
 	return deriveExploredState({ ...state, player: { x, y } });
@@ -39,7 +56,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			}
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
-				return state; /* bumping a wall or an enemy consumes no turn */
+				return state; /* bumping a wall consumes no turn */
 			}
 			return advanceEnemies(afterPlayer);
 		}

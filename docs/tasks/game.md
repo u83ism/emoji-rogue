@@ -71,3 +71,4 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - リプレイ(初期状態+アクションログの再生)
 - 絵文字セット(100種程度)の選定(`docs/design.md` の未解決項目)
 - 視界方式の再検討: 現行はshadowcasting(放射状・半径8)。オリジナルRogue/不思議のダンジョン式「部屋に入ったら部屋全体が見える+通路は周囲1マス」に変える場合は、部屋矩形をGameStateに保存する必要がある(diggerの`getRooms()`は生成時に捨てているため)。プレイフィールを見て判断
+- ブラウザデモ(GitHub Pages): コア(リデューサ・`buildFrameGrid`)は無改造で動くので、`Cell[][]`をCSS GridのDOMに描く30〜50行のシェルを`demo/`に新書きするだけ。依存追加なしで`dist/index.mjs`を`<script type="module">`から直import。注意点: ①tsconfigにDOM libがない(demo/は素のJSか別tsconfig)②game層を公開APIに出すかtsdownエントリ追加が必要③Inkコンポーネントの再利用は狙わない(xterm.jsハック不要、DOMシェル新書きが正道)。`?seed=123`のURLパラメータでシード共有デモも最小コストで可能。端末最大の地雷だった絵文字幅問題はCSSでセル幅を決められるブラウザでは存在しない

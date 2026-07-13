@@ -137,7 +137,9 @@ Stage 3.1〜3.5のどこにも明記されていなかった残りの後始末�
 - [x] 重複ヘルパーの集約: `src/indexing.ts`(`at`/`toXy`)・`src/pointkey.ts`(`encodePointKey`/`decodePointKey`。原本由来の「x,y」「x.y」キー混在を解消)
 - [x] 検証レビューの指摘対応: `rng.clone()`のseed引き継ぎ、デバッグ用console出力の削除、discrete-shadowcastingの`as number`キャスト除去
 
-### 次の設計課題(未着手、着手前に要相談)
+### 次の設計課題
 
-- ゲーム層の設計: 純粋リデューサ`advanceTurn(state, action): GameState` + `RngState`をGameStateに含める方式(セーブ・リプレイ・シード共有がほぼ無料になる)
-- `createDijkstraPath`は呼び出し間キャッシュを持つため、地形が変化するゲームでは「マップ変更ごとに作り直す」規約が必要(またはキャッシュ廃止の判断)
+2026-07-13に相談し方針決定。
+
+- [ ] ゲーム層の設計: 純粋リデューサ`advanceTurn(state, action): GameState` + `RngState`をGameStateに含める方式を**採用**(セーブ・リプレイ・シード共有がほぼ無料になる)。関数値(`passable`等)はGameStateに入れず、地形はデータとして持ち`isPassable(state.map, x, y)`のような純粋関数で導出する
+- [x] `createDijkstraPath`の呼び出し間キャッシュは**廃止**(2026-07-13)。呼び出しごとに探索し直す方式に変更し、地形変化が常に反映されることをテストで保証。ターン制・この規模のマップでは性能影響は無視できる。将来プロファイルで経路計算がボトルネックになった場合は、キャッシュ復活ではなくプレイヤー起点の距離場(Dijkstraマップ)をターンごとに純粋導出する方式を採る

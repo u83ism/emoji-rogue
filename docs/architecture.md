@@ -99,5 +99,5 @@ CI(`.github/workflows/ci.yml`)がpush/PR毎に全部走らせる。
 
 `docs/tasks.md` 末尾の「次の設計課題」参照。要点:
 
-- **ゲーム層**: `advanceTurn(state, action): GameState` の純粋リデューサ方式を想定。`RngState` がプレーンobjectなのでGameStateに含めれば、セーブ・リプレイ・シード共有(デイリーチャレンジ)が構造的にほぼ無料になる
-- **Dijkstraのキャッシュ**: `createDijkstraPath` は呼び出し間で探索結果をキャッシュする(原本由来)。地形が変化するゲームでは「マップ変更ごとに作り直す」規約が必要
+- **ゲーム層**: `advanceTurn(state, action): GameState` の純粋リデューサ方式を採用(2026-07-13決定)。`RngState` がプレーンobjectなのでGameStateに含めれば、セーブ・リプレイ・シード共有(デイリーチャレンジ)が構造的にほぼ無料になる
+- **Dijkstraのキャッシュ**: 廃止済み(2026-07-13)。原本rot.js由来の呼び出し間キャッシュは地形変化時に古い経路を黙って返すため除去し、`createDijkstraPath` は呼び出しごとに探索し直す。性能が問題になったら距離場(Dijkstraマップ)のターンごと純粋導出で対応する方針

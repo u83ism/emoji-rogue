@@ -24,6 +24,18 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("cannot walk onto an enemy's tile (bump, same reference)", () => {
+		const state = buildArenaGameState(5, 5, 1);
+		const blocked = { ...state, enemies: [{ x: 3, y: 2 }] };
+		expect(advanceTurn(blocked, move("east"))).toBe(blocked);
+	});
+
+	it("ignores moves once the run is over", () => {
+		const state = buildArenaGameState(5, 5, 1);
+		const dead = { ...state, status: "dead" as const };
+		expect(advanceTurn(dead, move("east"))).toBe(dead);
+	});
+
 	it("expands the explored grid as the player moves", () => {
 		/* 30x5 arena: player starts at (15,2); view radius is 8 */
 		const state = buildArenaGameState(30, 5, 1);

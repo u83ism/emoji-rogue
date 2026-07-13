@@ -1,4 +1,4 @@
-import { render, useApp, useInput } from "ink";
+import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { advanceTurn } from "./game/advanceTurn.js";
 import { buildFrameGrid } from "./game/frame.js";
@@ -27,12 +27,21 @@ const App = () => {
 	});
 
 	useEffect(() => {
-		if (state.status === "exited") {
+		if (state.status !== "playing") {
 			exit();
 		}
 	}, [state.status, exit]);
 
-	return <GameScreen grid={buildFrameGrid(state)} />;
+	return (
+		<Box flexDirection="column">
+			<GameScreen grid={buildFrameGrid(state)} />
+			{state.status === "dead" && (
+				<Text color="red" bold>
+					🧟 につかまった……
+				</Text>
+			)}
+		</Box>
+	);
 };
 
 render(<App />);

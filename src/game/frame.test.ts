@@ -30,6 +30,16 @@ describe("buildFrameGrid", () => {
 		expect(nextGrid[state.player.y]?.[state.player.x]?.glyph).toBe("🟫");
 	});
 
+	it("draws enemies only while they are visible", () => {
+		/* 30x5 arena: player (15,2), radius 8 */
+		const wide = buildArenaGameState(30, 5, 1);
+		const seen = { ...wide, enemies: [{ x: 20, y: 2 }] }; /* distance 5 */
+		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🧟");
+
+		const hidden = { ...wide, enemies: [{ x: 27, y: 2 }] }; /* distance 12 */
+		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
+	});
+
 	it("renders the three vision layers", () => {
 		/* 30x5 arena: player starts at (15,2); view radius is 8 */
 		const wide = buildArenaGameState(30, 5, 1);

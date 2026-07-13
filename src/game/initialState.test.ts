@@ -61,4 +61,13 @@ describe("buildDungeonGameState", () => {
 		/* a 40x20 dungeon cannot be fully seen from one spot (radius 8) */
 		expect(state.explored.flat()).toContain(false);
 	});
+
+	it("spawns up to three enemies on floor tiles away from the player", () => {
+		expect(state.enemies.length).toBeGreaterThan(0);
+		expect(state.enemies.length).toBeLessThanOrEqual(3);
+		for (const enemy of state.enemies) {
+			expect(state.terrain[enemy.x]?.[enemy.y]).toBe(0);
+			expect(enemy).not.toEqual(state.player);
+		}
+	});
 });

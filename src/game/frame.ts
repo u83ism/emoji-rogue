@@ -11,6 +11,7 @@ const TERRAIN_GLYPHS: TileGlyphs = {
 };
 const FALLBACK_CELL: Cell = { glyph: "⚠️" };
 const PLAYER_CELL: Cell = { glyph: "🧑" };
+const ENEMY_CELL: Cell = { glyph: "🧟" };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
@@ -54,6 +55,17 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 			row.push(toCell(state, visiblePoints, x, y));
 		}
 		grid.push(row);
+	}
+
+	/* enemies are only drawn while the player can actually see them */
+	for (const enemy of state.enemies) {
+		if (!visiblePoints.has(encodePointKey(enemy.x, enemy.y))) {
+			continue;
+		}
+		const enemyRow = grid[enemy.y];
+		if (enemyRow !== undefined) {
+			enemyRow[enemy.x] = ENEMY_CELL;
+		}
 	}
 
 	const playerRow = grid[state.player.y];

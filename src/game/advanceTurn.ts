@@ -1,3 +1,4 @@
+import { advanceEnemies } from "./enemies.js";
 import type { Action, Direction, GameState } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
@@ -12,7 +13,8 @@ const DIRECTION_VECTORS: Readonly<
 
 /** Passability is derived from terrain data, never stored as a function. */
 const isPassable = (state: GameState, x: number, y: number): boolean =>
-	state.terrain[x]?.[y] === 0;
+	state.terrain[x]?.[y] === 0 &&
+	!state.enemies.some((enemy) => enemy.x === x && enemy.y === y);
 
 const applyMove = (state: GameState, direction: Direction): GameState => {
 	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
@@ -31,8 +33,16 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
  */
 export const advanceTurn = (state: GameState, action: Action): GameState => {
 	switch (action.type) {
-		case "move":
-			return applyMove(state, action.payload.direction);
+		case "move": {
+			if (state.status !== "playing") {
+				return state;
+			}
+			const afterPlayer = applyMove(state, action.payload.direction);
+			if (afterPlayer === state) {
+				return state; /* bumping a wall or an enemy consumes no turn */
+			}
+			return advanceEnemies(afterPlayer);
+		}
 		case "quit":
 			return { ...state, status: "exited" };
 	}

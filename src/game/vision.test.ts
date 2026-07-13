@@ -64,6 +64,7 @@ describe("deriveExploredState", () => {
 			terrain: CORRIDOR_TERRAIN,
 			explored,
 			player: { x: 1, y: 1 },
+			enemies: [],
 			rng: seedToState(1),
 			status: "playing",
 		};

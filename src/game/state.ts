@@ -13,7 +13,12 @@ export type Action =
 	  }
 	| { readonly type: "quit" };
 
-export type GameStatus = "playing" | "exited";
+export type GameStatus = "playing" | "dead" | "exited";
+
+export interface Position {
+	readonly x: number;
+	readonly y: number;
+}
 
 /**
  * The complete, serializable game state. Contains only data — no functions —
@@ -35,7 +40,8 @@ export interface GameState {
 	 * it is derived from terrain + player on demand (src/game/vision.ts).
 	 */
 	readonly explored: readonly (readonly boolean[])[];
-	readonly player: { readonly x: number; readonly y: number };
+	readonly player: Position;
+	readonly enemies: readonly Position[];
 	readonly rng: RngState;
 	readonly status: GameStatus;
 }

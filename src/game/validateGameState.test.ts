@@ -29,14 +29,6 @@ describe("validateGameState", () => {
 		}
 	});
 
-	it("accepts the payload-less game-saved event", () => {
-		const result = validateGameState({
-			...buildValidState(),
-			events: [{ type: "game-saved" }],
-		});
-		expect(result.ok).toBe(true);
-	});
-
 	it("drops unknown extra fields on rebuild", () => {
 		const result = validateGameState({
 			...buildValidState(),

@@ -2,9 +2,11 @@
 export type EnemyKind = "zombie";
 
 /**
- * What happened during a turn, as plain data. No human-readable strings live
- * here — turning events into prose is the shell's job, concentrated in one
- * module (src/messages.ts) so a future locale swap touches a single file.
+ * What happened inside the game world during a turn (diegetic events only —
+ * app/session concerns like "saved" or input warnings are shell notices,
+ * never events), as plain data. No human-readable strings live here —
+ * turning events into prose is the shell's job, concentrated in one module
+ * (src/messages.ts) so a future locale swap touches a single file.
  * See the i18n discipline in docs/tasks/game.md.
  */
 export type GameEvent =
@@ -23,8 +25,7 @@ export type GameEvent =
 	| {
 			readonly type: "player-died";
 			readonly payload: { readonly by: EnemyKind };
-	  }
-	| { readonly type: "game-saved" };
+	  };
 
 /**
  * Cap on GameState.events: plenty for the shell's log lines while keeping

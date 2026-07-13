@@ -159,8 +159,8 @@ describe("advanceTurn", () => {
 		expect(suspended.status).toBe("suspended");
 		expect(suspended.playerHp).toBe(state.playerHp);
 		expect(suspended.enemies).toEqual(state.enemies);
-		/* saving is an ordinary log event, so a resumed run shows it */
-		expect(suspended.events).toEqual([{ type: "game-saved" }]);
+		/* saving is not a game-world event — the log stays untouched */
+		expect(suspended.events).toEqual(state.events);
 
 		const dead = { ...state, status: "dead" as const };
 		expect(advanceTurn(dead, { type: "save" })).toBe(dead);

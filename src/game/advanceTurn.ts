@@ -1,6 +1,5 @@
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
-import { buildEventLog } from "./events.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
@@ -72,17 +71,12 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write
-			 * when it observes the "suspended" status. The event goes into the
-			 * ordinary log (and thus into the save), so a resumed run shows
-			 * "saved here" as its most recent history. */
+			 * when it observes the "suspended" status. Saving is not a game-world
+			 * event, so nothing is logged here; the shell shows its own notice. */
 			if (state.status !== "playing") {
 				return state;
 			}
-			return {
-				...state,
-				events: buildEventLog(state.events, [{ type: "game-saved" }]),
-				status: "suspended",
-			};
+			return { ...state, status: "suspended" };
 		}
 		case "quit":
 			return { ...state, status: "exited" };

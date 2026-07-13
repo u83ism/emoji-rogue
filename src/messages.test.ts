@@ -21,7 +21,6 @@ describe("formatEvent", () => {
 				{ type: "player-died", payload: { by: "zombie" } },
 				"ゾンビにやられた……",
 			],
-			[{ type: "game-saved" }, "セーブした。次回起動時に続きから再開する"],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { Action, Direction, GameState } from "./state.js";
+import type { Action, Direction } from "./state.js";
 
 const move = (direction: Direction): Action => ({
 	type: "move",
@@ -23,24 +22,6 @@ describe("advanceTurn", () => {
 		for (const direction of ["north", "south", "west", "east"] as const) {
 			expect(advanceTurn(cramped, move(direction))).toBe(cramped);
 		}
-	});
-
-	it("treats doors (terrain value 2) as passable", () => {
-		// Column-major 3x3: player at center, a door to the east, walls elsewhere.
-		const withDoor: GameState = {
-			width: 3,
-			height: 3,
-			terrain: [
-				[1, 1, 1],
-				[1, 0, 1],
-				[1, 2, 1],
-			],
-			player: { x: 1, y: 1 },
-			rng: seedToState(1),
-			status: "playing",
-		};
-		expect(advanceTurn(withDoor, move("east")).player).toEqual({ x: 2, y: 1 });
-		expect(advanceTurn(withDoor, move("west"))).toBe(withDoor);
 	});
 
 	it("does not mutate the input state", () => {

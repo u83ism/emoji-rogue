@@ -7,7 +7,6 @@ import type { GameState } from "./state.js";
 const TERRAIN_GLYPHS: TileGlyphs = {
 	0: { glyph: "🟫" },
 	1: { glyph: "🧱" },
-	2: { glyph: "🚪" },
 };
 const FALLBACK_CELL: Cell = { glyph: "⚠️" };
 const PLAYER_CELL: Cell = { glyph: "🧑" };

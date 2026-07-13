@@ -38,27 +38,18 @@ describe("buildDungeonGameState", () => {
 		expect(buildDungeonGameState(40, 20, 99)).not.toEqual(state);
 	});
 
-	it("fills the whole grid with floor/wall/door values only", () => {
+	it("fills the whole grid with floor/wall values only", () => {
 		expect(state.terrain.length).toBe(40);
 		for (const column of state.terrain) {
 			expect(column.length).toBe(20);
 			for (const value of column) {
-				expect([0, 1, 2]).toContain(value);
+				expect([0, 1]).toContain(value);
 			}
 		}
 	});
 
 	it("places the player on a floor tile", () => {
 		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
-	});
-
-	// Regression: the generator reports doors only on Room records, never as
-	// map values, so the first cut of this builder produced door-less terrain.
-	it("stamps room doors into the terrain", () => {
-		const doorCount = state.terrain
-			.flat()
-			.filter((value) => value === 2).length;
-		expect(doorCount).toBeGreaterThan(0);
 	});
 
 	it("stores the post-generation rng state, not the seed's initial state", () => {

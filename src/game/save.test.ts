@@ -2,6 +2,51 @@ import { describe, expect, it } from "vitest";
 import { buildDungeonGameState } from "./initialState.js";
 import { buildSaveFileContent, parseSaveFileContent } from "./save.js";
 
+/**
+ * The structural shape of a value: objects keep their keys, arrays collapse
+ * to the shape of their first element, leaves become their typeof.
+ */
+const describeShape = (value: unknown): unknown => {
+	if (Array.isArray(value)) {
+		return value.length === 0 ? [] : [describeShape(value[0])];
+	}
+	if (typeof value === "object" && value !== null) {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, field]) => [key, describeShape(field)]),
+		);
+	}
+	return typeof value;
+};
+
+describe("save file shape guard", () => {
+	it("pins the serialized shape — a change here means SAVE_FORMAT_VERSION must be bumped", () => {
+		/* If this fails, the GameState/save-file shape changed. Do BOTH:
+		 *   1. bump SAVE_FORMAT_VERSION in save.ts (old files must not be
+		 *      half-read by a build expecting a different shape), and
+		 *   2. update the expected shape below.
+		 * (GameEvent payloads are pinned by validateGameState tests instead —
+		 * a fresh state's event log is empty.) */
+		const written = buildSaveFileContent(buildDungeonGameState(20, 12, 42));
+		expect(describeShape(JSON.parse(written))).toEqual({
+			formatVersion: "number",
+			state: {
+				width: "number",
+				height: "number",
+				terrain: [["number"]],
+				explored: [["boolean"]],
+				player: { x: "number", y: "number" },
+				playerHp: "number",
+				enemies: [{ x: "number", y: "number", kind: "string", hp: "number" }],
+				floor: "number",
+				stairs: { x: "number", y: "number" },
+				events: [],
+				rng: { s0: "number", s1: "number", s2: "number", c: "number" },
+				status: "string",
+			},
+		});
+	});
+});
+
 describe("save file round trip", () => {
 	it("parses back exactly what was written", () => {
 		const state = buildDungeonGameState(40, 20, 12345);

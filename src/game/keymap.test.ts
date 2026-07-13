@@ -1,6 +1,6 @@
 import type { Key } from "ink";
 import { describe, expect, it } from "vitest";
-import { toAction } from "./keymap.js";
+import { isFullWidthInput, toAction } from "./keymap.js";
 
 const buildKey = (overrides: Partial<Key> = {}): Key => ({
 	upArrow: false,
@@ -75,5 +75,27 @@ describe("toAction", () => {
 		expect(toAction("q", buildKey())).toEqual({ type: "quit" });
 		expect(toAction("x", buildKey())).toBeUndefined();
 		expect(toAction("", buildKey({ escape: true }))).toBeUndefined();
+	});
+
+	it("does not treat full-width input as an action", () => {
+		expect(toAction("　", buildKey())).toBeUndefined(); /* full-width space */
+		expect(toAction("ｑ", buildKey())).toBeUndefined();
+	});
+});
+
+describe("isFullWidthInput", () => {
+	it("detects what a full-width-mode IME emits", () => {
+		expect(isFullWidthInput("　")).toBe(true); /* U+3000 from the space key */
+		expect(isFullWidthInput("。")).toBe(true);
+		expect(isFullWidthInput("ｑ")).toBe(true);
+		expect(isFullWidthInput("てすと")).toBe(true); /* committed composition */
+		expect(isFullWidthInput("漢字")).toBe(true);
+	});
+
+	it("stays quiet on half-width keys and empty input", () => {
+		expect(isFullWidthInput(" ")).toBe(false);
+		expect(isFullWidthInput("q")).toBe(false);
+		expect(isFullWidthInput(".")).toBe(false);
+		expect(isFullWidthInput("")).toBe(false);
 	});
 });

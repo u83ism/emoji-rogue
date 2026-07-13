@@ -4,8 +4,8 @@ import { advanceTurn } from "./game/advanceTurn.js";
 import { PLAYER_MAX_HP } from "./game/balance.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
-import { toAction } from "./game/keymap.js";
-import { formatEvent } from "./messages.js";
+import { isFullWidthInput, toAction } from "./game/keymap.js";
+import { FULL_WIDTH_INPUT_WARNING, formatEvent } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
@@ -22,12 +22,17 @@ const App = () => {
 	const [state, setState] = useState(() =>
 		buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, Date.now()),
 	);
+	const [showFullWidthWarning, setShowFullWidthWarning] = useState(false);
 
 	useInput((input, key) => {
 		const action = toAction(input, key);
 		if (action === undefined) {
+			if (isFullWidthInput(input)) {
+				setShowFullWidthWarning(true);
+			}
 			return;
 		}
+		setShowFullWidthWarning(false);
 		setState((current) => advanceTurn(current, action));
 	});
 
@@ -48,6 +53,9 @@ const App = () => {
 			<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
 				HP {state.playerHp}/{PLAYER_MAX_HP}
 			</Text>
+			{showFullWidthWarning && (
+				<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
+			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text
 					key={eventIndex}

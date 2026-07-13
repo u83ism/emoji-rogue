@@ -4,6 +4,10 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
 };
 
+/** Shown when keypresses arrive as full-width characters (IME in full-width mode). */
+export const FULL_WIDTH_INPUT_WARNING =
+	"全角入力モードになっています。半角入力に切り替えてください";
+
 /**
  * The single place where game events become human-readable text (Japanese
  * for now). The core (src/game/) never produces strings, so swapping locale

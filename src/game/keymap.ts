@@ -33,3 +33,17 @@ export const toAction = (input: string, key: Key): Action | undefined => {
 	}
 	return undefined;
 };
+
+/* Kana, kanji, CJK punctuation (incl. the U+3000 full-width space the space
+ * key produces), and full-width forms — what a Japanese IME left in
+ * full-width mode emits instead of the keys this game binds. */
+const FULL_WIDTH_PATTERN = /[\u3000-\u30ff\u4e00-\u9fff\uff00-\uffef]/;
+
+/**
+ * Whether a keypress looks like it came from an IME in full-width mode.
+ * In that mode most bound keys never reach the game (the IME swallows them
+ * into its composition buffer), so the shell warns instead of guessing what
+ * the player meant.
+ */
+export const isFullWidthInput = (input: string): boolean =>
+	FULL_WIDTH_PATTERN.test(input);

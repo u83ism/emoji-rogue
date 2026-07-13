@@ -1,4 +1,5 @@
 import type { RngState } from "../rng.js";
+import type { EnemyKind, GameEvent } from "./events.js";
 
 export type Direction = "north" | "south" | "west" | "east";
 
@@ -22,6 +23,15 @@ export interface Position {
 }
 
 /**
+ * A live enemy. Intersects Position so existing position-shaped code
+ * (pathfinding, drawing) keeps reading `enemy.x` / `enemy.y` directly.
+ */
+export type Enemy = Position & {
+	readonly kind: EnemyKind;
+	readonly hp: number;
+};
+
+/**
  * The complete, serializable game state. Contains only data — no functions —
  * so a save file is just `JSON.stringify(state)` and a replay is the initial
  * state plus an action log. The RNG lives here as a value (`rng`), so every
@@ -42,7 +52,14 @@ export interface GameState {
 	 */
 	readonly explored: readonly (readonly boolean[])[];
 	readonly player: Position;
-	readonly enemies: readonly Position[];
+	readonly playerHp: number;
+	readonly enemies: readonly Enemy[];
+	/**
+	 * Recent combat events, newest last, capped at EVENT_LOG_LIMIT. Pure data
+	 * (no strings) — the shell turns these into log lines. Part of the state
+	 * so saves and replays reproduce the log.
+	 */
+	readonly events: readonly GameEvent[];
 	readonly rng: RngState;
 	readonly status: GameStatus;
 }

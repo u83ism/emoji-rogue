@@ -4,7 +4,8 @@ import { createDiggerMap } from "../map/digger.js";
 import { getRoomCenter } from "../map/features.js";
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng, seedToState } from "../rng.js";
-import type { GameState, Position } from "./state.js";
+import { PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
+import type { Enemy, GameState, Position } from "./state.js";
 import { computeVisiblePoints, deriveExploredState } from "./vision.js";
 
 const ENEMY_COUNT = 3;
@@ -52,7 +53,9 @@ export function buildArenaGameState(
 		terrain: columns,
 		explored: buildUnexploredColumns(width, height),
 		player: { x: Math.floor(width / 2), y: Math.floor(height / 2) },
+		playerHp: PLAYER_MAX_HP,
 		enemies: [],
+		events: [],
 		rng: seedToState(seed),
 		status: "playing",
 	});
@@ -70,7 +73,7 @@ const createRandomEnemySpawns = (
 	rng: Rng,
 	terrain: GameState["terrain"],
 	player: Position,
-): Position[] => {
+): Enemy[] => {
 	const visiblePoints = computeVisiblePoints(terrain, player);
 	const collectFloorTiles = (outOfSightOnly: boolean): Position[] => {
 		const tiles: Position[] = [];
@@ -95,10 +98,10 @@ const createRandomEnemySpawns = (
 	const candidates = collectFloorTiles(true);
 	const pool = candidates.length > 0 ? candidates : collectFloorTiles(false);
 
-	const enemies: Position[] = [];
+	const enemies: Enemy[] = [];
 	for (let i = 0; i < ENEMY_COUNT && pool.length > 0; i++) {
 		const index = rng.getUniformInt(0, pool.length - 1);
-		enemies.push(at(pool, index));
+		enemies.push({ ...at(pool, index), kind: "zombie", hp: ZOMBIE_MAX_HP });
 		pool.splice(index, 1);
 	}
 	return enemies;
@@ -140,7 +143,9 @@ export function buildDungeonGameState(
 		terrain: columns,
 		explored: buildUnexploredColumns(width, height),
 		player,
+		playerHp: PLAYER_MAX_HP,
 		enemies: createRandomEnemySpawns(rng, columns, player),
+		events: [],
 		rng: rng.getState(),
 		status: "playing",
 	});

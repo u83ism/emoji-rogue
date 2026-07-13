@@ -33,10 +33,17 @@ describe("buildFrameGrid", () => {
 	it("draws enemies only while they are visible", () => {
 		/* 30x5 arena: player (15,2), radius 8 */
 		const wide = buildArenaGameState(30, 5, 1);
-		const seen = { ...wide, enemies: [{ x: 20, y: 2 }] }; /* distance 5 */
+		const zombie = { kind: "zombie", hp: 2 } as const;
+		const seen = {
+			...wide,
+			enemies: [{ ...zombie, x: 20, y: 2 }] /* distance 5 */,
+		};
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🧟");
 
-		const hidden = { ...wide, enemies: [{ x: 27, y: 2 }] }; /* distance 12 */
+		const hidden = {
+			...wide,
+			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12 */,
+		};
 		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
 	});
 

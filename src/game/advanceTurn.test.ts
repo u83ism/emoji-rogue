@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
+import { ZOMBIE_MAX_HP } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { Action, Direction } from "./state.js";
+import type { Action, Direction, Enemy } from "./state.js";
 
 const move = (direction: Direction): Action => ({
 	type: "move",
 	payload: { direction },
+});
+
+const zombie = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "zombie",
+	hp: ZOMBIE_MAX_HP,
 });
 
 describe("advanceTurn", () => {
@@ -26,7 +34,7 @@ describe("advanceTurn", () => {
 
 	it("cannot walk onto an enemy's tile (bump, same reference)", () => {
 		const state = buildArenaGameState(5, 5, 1);
-		const blocked = { ...state, enemies: [{ x: 3, y: 2 }] };
+		const blocked = { ...state, enemies: [zombie(3, 2)] };
 		expect(advanceTurn(blocked, move("east"))).toBe(blocked);
 	});
 
@@ -42,7 +50,7 @@ describe("advanceTurn", () => {
 		 * the enemy act (and end the run) instead of freezing time forever */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			enemies: [{ x: 5, y: 1 }],
+			enemies: [zombie(5, 1)],
 		};
 		const next = advanceTurn(state, { type: "wait" });
 		expect(next.player).toEqual(state.player);

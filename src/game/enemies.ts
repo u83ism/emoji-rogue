@@ -2,7 +2,7 @@ import { createAStarPath } from "../path/index.js";
 import { encodePointKey } from "../pointkey.js";
 import type { RngState } from "../rng.js";
 import { stepUniform } from "../rng.js";
-import type { GameState, Position } from "./state.js";
+import type { Enemy, GameState, Position } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
 /** Enemies move like the player: 4 directions, floor only. */
@@ -118,16 +118,17 @@ export const advanceEnemies = (state: GameState): GameState => {
 
 	let rng = state.rng;
 	let caught = false;
-	const nextEnemies: Position[] = [];
+	const nextEnemies: Enemy[] = [];
 	for (const enemy of state.enemies) {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let next = enemy;
 		if (visiblePoints.has(encodePointKey(enemy.x, enemy.y))) {
-			next = stepTowardPlayer(state, enemy, occupied) ?? enemy;
+			const step = stepTowardPlayer(state, enemy, occupied);
+			next = step === undefined ? enemy : { ...enemy, ...step };
 		} else {
 			const wandered = stepWandering(state, enemy, occupied, rng);
-			next = wandered.position;
+			next = { ...enemy, ...wandered.position };
 			rng = wandered.rng;
 		}
 

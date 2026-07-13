@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
+import { ZOMBIE_MAX_HP } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { GameState } from "./state.js";
+import type { Enemy, GameState } from "./state.js";
+
+const zombie = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "zombie",
+	hp: ZOMBIE_MAX_HP,
+});
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
 const buildCorridorState = (enemies: GameState["enemies"]): GameState => ({
@@ -20,31 +28,25 @@ const buildUnexplored7x3 = (): boolean[][] => {
 
 describe("advanceEnemies", () => {
 	it("a visible enemy chases the player via A*, consuming no rng", () => {
-		const state = buildCorridorState([{ x: 7, y: 1 }]);
+		const state = buildCorridorState([zombie(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([{ x: 6, y: 1 }]);
+		expect(next.enemies).toEqual([zombie(6, 1)]);
 		expect(next.status).toBe("playing");
 		expect(next.rng).toEqual(state.rng);
 	});
 
 	it("an enemy stepping onto the player ends the run", () => {
-		const state = buildCorridorState([{ x: 5, y: 1 }]);
+		const state = buildCorridorState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([{ x: 4, y: 1 }]);
+		expect(next.enemies).toEqual([zombie(4, 1)]);
 		expect(next.status).toBe("dead");
 	});
 
 	it("enemies never stack on the same tile", () => {
 		/* both chase the player westwards along the single row */
-		const state = buildCorridorState([
-			{ x: 6, y: 1 },
-			{ x: 7, y: 1 },
-		]);
+		const state = buildCorridorState([zombie(6, 1), zombie(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([
-			{ x: 5, y: 1 },
-			{ x: 6, y: 1 },
-		]);
+		expect(next.enemies).toEqual([zombie(5, 1), zombie(6, 1)]);
 	});
 
 	it("an unseen enemy wanders, consuming the state's rng", () => {
@@ -63,18 +65,20 @@ describe("advanceEnemies", () => {
 			],
 			explored: buildUnexplored7x3(),
 			player: { x: 1, y: 1 },
-			enemies: [{ x: 5, y: 1 }],
+			playerHp: 10,
+			enemies: [zombie(5, 1)],
+			events: [],
 			rng: seedToState(1),
 			status: "playing",
 		};
 		const next = advanceEnemies(state);
 		/* (4,1) is the only open neighbor */
-		expect(next.enemies).toEqual([{ x: 4, y: 1 }]);
+		expect(next.enemies).toEqual([zombie(4, 1)]);
 		expect(next.rng).not.toEqual(state.rng);
 	});
 
 	it("is deterministic: same state in, same state out", () => {
-		const state = buildCorridorState([{ x: 7, y: 1 }]);
+		const state = buildCorridorState([zombie(7, 1)]);
 		expect(advanceEnemies(state)).toEqual(advanceEnemies(state));
 	});
 });

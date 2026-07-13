@@ -147,6 +147,43 @@ describe("Dijkstra", () => {
 		});
 	});
 
+	describe("changing terrain", () => {
+		it("reflects passability changes between calls", () => {
+			const walls = new Set<string>();
+			const passableUnlessWall: PassableCallback = (x, y) =>
+				x >= 0 && y >= 0 && x < 3 && y < 3 && !walls.has(`${x},${y}`);
+			const dijkstra = createDijkstraPath(0, 0, passableUnlessWall, {
+				topology: 4,
+			});
+
+			dijkstra(2, 0, PATH_CALLBACK);
+			expect(path).toEqual([2, 0, 1, 0, 0, 0]);
+
+			path = [];
+			walls.add("1,0");
+			const result = dijkstra(2, 0, PATH_CALLBACK);
+			expect(result.ok).toBe(true);
+			expect(path).toEqual([2, 0, 2, 1, 1, 1, 0, 1, 0, 0]);
+		});
+
+		it("finds a path that opens up after creation", () => {
+			const walls = new Set<string>(["1,0", "1,1", "1,2"]);
+			const passableUnlessWall: PassableCallback = (x, y) =>
+				x >= 0 && y >= 0 && x < 3 && y < 3 && !walls.has(`${x},${y}`);
+			const dijkstra = createDijkstraPath(0, 0, passableUnlessWall, {
+				topology: 4,
+			});
+
+			const blocked = dijkstra(2, 0, PATH_CALLBACK);
+			expect(blocked.ok).toBe(false);
+
+			walls.delete("1,0");
+			const opened = dijkstra(2, 0, PATH_CALLBACK);
+			expect(opened.ok).toBe(true);
+			expect(path).toEqual([2, 0, 1, 0, 0, 0]);
+		});
+	});
+
 	describe("6-topology", () => {
 		const PATH_A = [4, 0, 2, 0, 1, 1, 2, 2, 3, 3, 5, 3, 6, 2, 8, 2, 9, 3, 8, 4];
 		const PATH_B = [10, 0, 9, 1, 8, 2, 9, 3, 8, 4];

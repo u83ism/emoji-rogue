@@ -17,9 +17,10 @@ interface Item {
 /**
  * Simplified Dijkstra's algorithm: all edges have a value of 1.
  *
- * The search frontier is cached across calls: the first `compute()` call for
- * a given `(fromX, fromY)` (or a closer one already computed) reuses work
- * from previous calls, expanding the frontier only as far as needed.
+ * Each call runs a fresh search, so `passable` is re-consulted every time and
+ * terrain changes between calls are always reflected. (The upstream rot.js
+ * version cached the search frontier across calls; that cache silently
+ * returned stale paths once passability changed, so it was removed.)
  */
 export function createDijkstraPath(
 	toX: number,
@@ -28,23 +29,26 @@ export function createDijkstraPath(
 	options: Partial<PathOptions> = {},
 ): Path {
 	const dirs = getPathDirs(options.topology ?? 8);
-	const computed: Record<string, Item> = {};
-	const todo: Item[] = [];
 
-	function add(x: number, y: number, prev: Item | null): void {
-		const item: Item = { x, y, prev };
-		computed[encodePointKey(x, y)] = item;
-		todo.push(item);
-	}
+	return (fromX: number, fromY: number, callback: ComputeCallback) => {
+		const computed: Record<string, Item> = {};
+		const todo: Item[] = [];
 
-	function compute(fromX: number, fromY: number): void {
+		const add = (x: number, y: number, prev: Item | null): void => {
+			const item: Item = { x, y, prev };
+			computed[encodePointKey(x, y)] = item;
+			todo.push(item);
+		};
+
+		add(toX, toY, null);
+
 		while (todo.length) {
 			const item = todo.shift();
 			if (item === undefined) {
 				throw new Error("unreachable: todo is non-empty");
 			}
 			if (item.x === fromX && item.y === fromY) {
-				return;
+				break;
 			}
 
 			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
@@ -56,15 +60,8 @@ export function createDijkstraPath(
 				add(x, y, item);
 			}
 		}
-	}
 
-	add(toX, toY, null);
-
-	return (fromX: number, fromY: number, callback: ComputeCallback) => {
 		const key = encodePointKey(fromX, fromY);
-		if (!(key in computed)) {
-			compute(fromX, fromY);
-		}
 		if (!(key in computed)) {
 			return err("no-path-found");
 		}

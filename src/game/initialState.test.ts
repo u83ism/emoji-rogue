@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildInitialGameState } from "./initialState.js";
+import { seedToState } from "../rng.js";
+import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 
-describe("buildInitialGameState", () => {
-	const state = buildInitialGameState(5, 4, 12345);
+describe("buildArenaGameState", () => {
+	const state = buildArenaGameState(5, 4, 12345);
 
 	it("builds a perimeter-walled arena", () => {
 		for (let x = 0; x < 5; x++) {
@@ -20,11 +21,38 @@ describe("buildInitialGameState", () => {
 
 	it("starts in playing status with the seeded rng state", () => {
 		expect(state.status).toBe("playing");
-		expect(buildInitialGameState(5, 4, 12345)).toEqual(state);
-		expect(buildInitialGameState(5, 4, 99).rng).not.toEqual(state.rng);
+		expect(buildArenaGameState(5, 4, 12345)).toEqual(state);
+		expect(buildArenaGameState(5, 4, 99).rng).not.toEqual(state.rng);
 	});
 
 	it("round-trips through JSON (serializable by construction)", () => {
 		expect(JSON.parse(JSON.stringify(state))).toEqual(state);
+	});
+});
+
+describe("buildDungeonGameState", () => {
+	const state = buildDungeonGameState(40, 20, 12345);
+
+	it("is deterministic for the same dimensions and seed", () => {
+		expect(buildDungeonGameState(40, 20, 12345)).toEqual(state);
+		expect(buildDungeonGameState(40, 20, 99)).not.toEqual(state);
+	});
+
+	it("fills the whole grid with floor/wall/door values only", () => {
+		expect(state.terrain.length).toBe(40);
+		for (const column of state.terrain) {
+			expect(column.length).toBe(20);
+			for (const value of column) {
+				expect([0, 1, 2]).toContain(value);
+			}
+		}
+	});
+
+	it("places the player on a floor tile", () => {
+		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
+	});
+
+	it("stores the post-generation rng state, not the seed's initial state", () => {
+		expect(state.rng).not.toEqual(seedToState(12345));
 	});
 });

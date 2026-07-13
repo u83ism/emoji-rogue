@@ -24,9 +24,17 @@
 
 **やらないこと(後続マイルストーン)**: FOV、マップ生成器との接続、敵、ステータスバーUI、セーブ
 
-## バックログ(マイルストーン未整理)
+## マイルストーン2 — マップ生成器との接続(diggerダンジョンを歩く)
 
-- マップ生成器との接続(`createDiggerMap`等で生成した地形を歩く)
+アリーナを`createDiggerMap`のダンジョンに差し替える。乱数を初めて使うマイルストーンなので、「生成で消費したRNGの状態を`GameState.rng`に引き継ぐ」パターンをここで確立する。
+
+- [x] `src/game/initialState.ts`: `buildDungeonGameState(width, height, seed)` を追加(既存のアリーナ版は `buildArenaGameState` に改名しテストフィクスチャとして残す)。diggerで地形を生成し、最初の部屋の中心(`getRoomCenter`)にプレイヤーを配置。**生成後の`rng.getState()`を`GameState.rng`に格納する**(シード再現性の要)
+- [x] `src/game/advanceTurn.ts`: 通行判定に扉(値2)を追加(0=床・2=扉が通行可)+ テスト
+- [x] `src/game/frame.ts`: 扉グリフ🚪(Stage 5実機検証済み)を追加 + テスト
+- [x] `src/main.tsx`: `buildDungeonGameState`に差し替え、マップを40x20に拡大
+- [ ] 実機スモークテスト: ダンジョン内を歩き、壁で止まり扉を通れること・グリッドが崩れないことを確認
+
+## バックログ(マイルストーン未整理)
 - FOV接続(視界外の暗転・既踏破領域の記憶)
 - 敵の追加 + スケジューラ接続 + Dijkstra/A*での追跡AI
 - ステータスバー等の周辺UI(絵文字を含まないのでInkのBox/Border使用可)

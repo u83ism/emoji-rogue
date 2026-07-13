@@ -10,8 +10,10 @@ const DIRECTION_VECTORS: Readonly<
 };
 
 /** Passability is derived from terrain data, never stored as a function. */
-const isPassable = (state: GameState, x: number, y: number): boolean =>
-	state.terrain[x]?.[y] === 0;
+const isPassable = (state: GameState, x: number, y: number): boolean => {
+	const value = state.terrain[x]?.[y];
+	return value === 0 /* floor */ || value === 2 /* door */;
+};
 
 const applyMove = (state: GameState, direction: Direction): GameState => {
 	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];

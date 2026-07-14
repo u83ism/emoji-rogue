@@ -142,6 +142,35 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("stepping onto a potion drinks it: capped heal, item consumed", () => {
+		const potion = { x: 5, y: 1, kind: "potion" as const };
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
+			items: [potion],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.playerHp).toBe(PLAYER_MAX_HP);
+		expect(next.items).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "player-healed", payload: { by: "potion", amount: 3 } },
+		]);
+	});
+
+	it("a potion picked up at full health is wasted (amount 0)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [{ x: 5, y: 1, kind: "potion" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.items).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "player-healed", payload: { by: "potion", amount: 0 } },
+		]);
+	});
+
 	it("moving onto the staircase descends to the next floor", () => {
 		/* teleport the stairs right next to the player (room centers always
 		 * have floor neighbors), then step east onto them */

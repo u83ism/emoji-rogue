@@ -77,6 +77,25 @@ describe("buildFrameGrid", () => {
 		expect(layered[2]?.[29]).toEqual({ glyph: "　" });
 	});
 
+	it("draws visible potions, with enemies taking precedence", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const potion = { x: 12, y: 2, kind: "potion" as const }; /* distance 3 */
+		expect(buildFrameGrid({ ...wide, items: [potion] })[2]?.[12]?.glyph).toBe(
+			"💊",
+		);
+
+		const covered = {
+			...wide,
+			items: [potion],
+			enemies: [{ x: 12, y: 2, kind: "zombie" as const, hp: 2 }],
+		};
+		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("🧟");
+
+		/* out of sight (distance 12): not drawn */
+		const far = { ...wide, items: [{ ...potion, x: 27 }] };
+		expect(buildFrameGrid(far)[2]?.[27]?.glyph).not.toBe("💊");
+	});
+
 	it("draws the staircase while visible, enemies take precedence on it", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const seen = { ...wide, stairs: { x: 18, y: 2 } }; /* distance 3 */

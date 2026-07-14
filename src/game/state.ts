@@ -1,5 +1,5 @@
 import type { RngState } from "../rng.js";
-import type { EnemyKind, GameEvent } from "./events.js";
+import type { EnemyKind, GameEvent, ItemKind } from "./events.js";
 
 export type Direction = "north" | "south" | "west" | "east";
 
@@ -36,6 +36,11 @@ export type Enemy = Position & {
 	readonly hp: number;
 };
 
+/** An item lying on the floor, waiting to be stepped on. */
+export type Item = Position & {
+	readonly kind: ItemKind;
+};
+
 /**
  * The complete, serializable game state. Contains only data — no functions —
  * so a save file is just `JSON.stringify(state)` and a replay is the initial
@@ -59,6 +64,7 @@ export interface GameState {
 	readonly player: Position;
 	readonly playerHp: number;
 	readonly enemies: readonly Enemy[];
+	readonly items: readonly Item[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
 	/**

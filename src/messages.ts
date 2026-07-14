@@ -1,7 +1,11 @@
-import type { EnemyKind, GameEvent } from "./game/events.js";
+import type { EnemyKind, GameEvent, ItemKind } from "./game/events.js";
 
 const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
+};
+
+const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
+	potion: "回復薬",
 };
 
 // System notices (app/session concerns, never part of GameState). They speak
@@ -32,5 +36,9 @@ export const formatEvent = (event: GameEvent): string => {
 			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
 		case "floor-descended":
 			return `${event.payload.floor}階に降りた`;
+		case "player-healed":
+			return event.payload.amount > 0
+				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
+				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 	}
 };

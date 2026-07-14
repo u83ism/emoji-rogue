@@ -2,13 +2,16 @@ import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_HP } from "./balance.js";
 import type { GameEvent } from "./events.js";
-import type { Enemy, GameState } from "./state.js";
+import type { Enemy, GameState, Item } from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
 const isPositiveInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value > 0;
+
+const isNonNegativeInteger = (value: unknown): value is number =>
+	typeof value === "number" && Number.isInteger(value) && value >= 0;
 
 const isFiniteNumber = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value);
@@ -61,6 +64,16 @@ const isEnemyArray = (
 			isPositiveInteger(enemy.hp),
 	);
 
+const isItemArray = (
+	value: unknown,
+	terrain: readonly (readonly number[])[],
+): value is readonly Item[] =>
+	Array.isArray(value) &&
+	value.every(
+		(item) =>
+			isRecord(item) && standsOnFloor(item, terrain) && item.kind === "potion",
+	);
+
 const isGameEvent = (value: unknown): boolean => {
 	if (!isRecord(value) || !isRecord(value.payload)) {
 		return false;
@@ -77,6 +90,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return payload.by === "zombie";
 		case "floor-descended":
 			return isPositiveInteger(payload.floor);
+		case "player-healed":
+			return payload.by === "potion" && isNonNegativeInteger(payload.amount);
 		default:
 			return false;
 	}
@@ -151,6 +166,10 @@ export const validateGameState = (
 	if (!isEnemyArray(enemies, terrain)) {
 		return err("enemies");
 	}
+	const items = value.items;
+	if (!isItemArray(items, terrain)) {
+		return err("items");
+	}
 	const events = value.events;
 	if (!isGameEventArray(events)) {
 		return err("events");
@@ -178,6 +197,7 @@ export const validateGameState = (
 			kind: enemy.kind,
 			hp: enemy.hp,
 		})),
+		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },
 		status: "playing",

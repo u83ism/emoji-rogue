@@ -1,5 +1,7 @@
+import { PLAYER_MAX_HP, POTION_HEAL_AMOUNT } from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
+import { buildEventLog } from "./events.js";
 import { descendStairs } from "./floor.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { deriveExploredState } from "./vision.js";
@@ -25,10 +27,35 @@ const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
 
 /**
+ * Drinks the potion under the player's feet, if any: hp is restored up to
+ * the cap, the item is consumed either way (stepping on it at full health
+ * wastes it), and the event carries the hp actually gained.
+ */
+const applyItemPickup = (state: GameState): GameState => {
+	const item = state.items.find(
+		(candidate) =>
+			candidate.x === state.player.x && candidate.y === state.player.y,
+	);
+	if (item === undefined) {
+		return state;
+	}
+	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
+	return {
+		...state,
+		playerHp: state.playerHp + amount,
+		items: state.items.filter((candidate) => candidate !== item),
+		events: buildEventLog(state.events, [
+			{ type: "player-healed", payload: { by: item.kind, amount } },
+		]),
+	};
+};
+
+/**
  * A movement turn: bump attack when an enemy occupies the target tile
  * (even one standing on the staircase), descend when it is the staircase,
- * walk when it is open floor. Bumping a wall consumes no turn (returns the
- * input state, same reference); the other three all do.
+ * walk when it is open floor (drinking any potion lying there). Bumping a
+ * wall consumes no turn (returns the input state, same reference); the
+ * other three all do.
  */
 const applyMove = (state: GameState, direction: Direction): GameState => {
 	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
@@ -46,7 +73,7 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 		/* the whole floor is replaced, so this floor's enemies never act */
 		return descendStairs(state);
 	}
-	return deriveExploredState({ ...state, player: { x, y } });
+	return applyItemPickup(deriveExploredState({ ...state, player: { x, y } }));
 };
 
 /**

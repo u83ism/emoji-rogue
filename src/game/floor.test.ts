@@ -27,18 +27,18 @@ describe("descendStairs", () => {
 		expect(below.status).toBe("playing");
 	});
 
-	it("places everything on floor tiles, stairs apart from actors", () => {
+	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
-			expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
-			expect(state.terrain[state.stairs.x]?.[state.stairs.y]).toBe(0);
-			expect(encodePointKey(state.stairs.x, state.stairs.y)).not.toBe(
+			expect(state.items.length).toBe(2);
+			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
-			);
-			for (const enemy of state.enemies) {
-				expect(state.terrain[enemy.x]?.[enemy.y]).toBe(0);
-				expect(encodePointKey(enemy.x, enemy.y)).not.toBe(
-					encodePointKey(state.stairs.x, state.stairs.y),
-				);
+			]);
+			const spawned = [state.stairs, ...state.enemies, ...state.items];
+			for (const position of spawned) {
+				expect(state.terrain[position.x]?.[position.y]).toBe(0);
+				const key = encodePointKey(position.x, position.y);
+				expect(occupied.has(key)).toBe(false);
+				occupied.add(key);
 			}
 		}
 	});

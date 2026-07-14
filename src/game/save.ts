@@ -2,8 +2,8 @@ import { err, ok, type Result } from "../result.js";
 import type { GameState } from "./state.js";
 import { isRecord, validateGameState } from "./validateGameState.js";
 
-/** Bump on any breaking change to the GameState shape. 2: floor + stairs. */
-export const SAVE_FORMAT_VERSION = 2;
+/** Bump on any breaking change to the GameState shape. 2: floor + stairs. 3: items. */
+export const SAVE_FORMAT_VERSION = 3;
 
 export type SaveFileError =
 	| { readonly kind: "malformed-json" }

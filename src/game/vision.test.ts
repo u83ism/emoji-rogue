@@ -66,6 +66,7 @@ describe("deriveExploredState", () => {
 			player: { x: 1, y: 1 },
 			playerHp: 10,
 			enemies: [],
+			items: [],
 			floor: 1,
 			stairs: { x: 2, y: 1 },
 			events: [],

@@ -8,3 +8,6 @@ export const PLAYER_ATTACK_DAMAGE = 1;
 
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;
+
+export const POTION_COUNT_PER_FLOOR = 2;
+export const POTION_HEAL_AMOUNT = 5;

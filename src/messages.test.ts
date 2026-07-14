@@ -22,6 +22,14 @@ describe("formatEvent", () => {
 				"ゾンビにやられた……",
 			],
 			[{ type: "floor-descended", payload: { floor: 2 } }, "2階に降りた"],
+			[
+				{ type: "player-healed", payload: { by: "potion", amount: 5 } },
+				"回復薬を飲んだ。HPが5回復した",
+			],
+			[
+				{ type: "player-healed", payload: { by: "potion", amount: 0 } },
+				"回復薬を飲んだが、HPは満タンだった",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);

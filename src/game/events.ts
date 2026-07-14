@@ -1,6 +1,9 @@
 /** The only enemy kind so far. Events carry it so the shell can name the attacker. */
 export type EnemyKind = "zombie";
 
+/** The only item kind so far. */
+export type ItemKind = "potion";
+
 /**
  * What happened inside the game world during a turn (diegetic events only —
  * app/session concerns like "saved" or input warnings are shell notices,
@@ -29,6 +32,11 @@ export type GameEvent =
 	| {
 			readonly type: "floor-descended";
 			readonly payload: { readonly floor: number };
+	  }
+	| {
+			/** amount is the actual hp gained — 0 when picked up at full health. */
+			readonly type: "player-healed";
+			readonly payload: { readonly by: ItemKind; readonly amount: number };
 	  };
 
 /**

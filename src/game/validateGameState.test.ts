@@ -104,6 +104,29 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects broken items", () => {
+		expectRejected(
+			{
+				...buildValidState(),
+				items: [{ x: 0, y: 0, kind: "potion" }] /* perimeter wall */,
+			},
+			"items",
+		);
+		expectRejected(
+			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "sword" }] },
+			"items",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "player-healed", payload: { by: "potion", amount: -1 } },
+				],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

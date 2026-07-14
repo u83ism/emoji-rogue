@@ -17,6 +17,8 @@ const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
 const ENEMY_CELL: Cell = { glyph: "🧟" };
 /* Down staircase (also single-codepoint, Unicode 6.0). */
 const STAIRS_CELL: Cell = { glyph: "🔽" };
+/* Healing potion (also single-codepoint, Unicode 6.0). */
+const POTION_CELL: Cell = { glyph: "💊" };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
@@ -66,6 +68,17 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 			row.push(toCell(state, visiblePoints, x, y));
 		}
 		grid.push(row);
+	}
+
+	/* overlay order = precedence, lowest first: items < stairs < enemies < player */
+	for (const item of state.items) {
+		if (!visiblePoints.has(encodePointKey(item.x, item.y))) {
+			continue;
+		}
+		const itemRow = grid[item.y];
+		if (itemRow !== undefined) {
+			itemRow[item.x] = POTION_CELL;
+		}
 	}
 
 	/* the staircase shows while visible; enemies and the player draw over it */

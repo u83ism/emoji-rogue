@@ -806,6 +806,17 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 `experience.ts`に`applyLevelUp(state)`を追加し、`applyExperienceGain`の閾値・レベル10キャップとは独立した「無条件+1レベル」経路を実現した。`GameState`への新規フィールドが不要だったため、このマイルストーンは初めて構造変更なし・`SAVE_FORMAT_VERSION`据え置きで完結した未鑑定ポーション追加になった。パイプライン確認では、上級の薬を飲むと敵を倒さずに`playerLevel`が1上がり`playerMaxHp`/`playerHp`が実際に増え、`playerExperience`は変化しないことを`dist/game/index.mjs`越しに確認した。テストは756件(前回750件から+6)すべて通過、型検査・lint・knip・buildも全てクリーン。
 **マイルストーン48完了(2026-07-15)。**
 
+## マイルストーン49 — 最終スコア表示(原作Rogueの締めくくりのスコア画面)
+
+原作Rogueはプレイヤーが死亡または(アミュレットを持ち帰って)クリアすると、所持金・到達階層・レベル・死因をもとにしたスコアを表示して終了する。現状の`main.tsx`は`state.status`が`"playing"`でなくなると`formatEvent`によるログの最終行(「たおされた」「アミュレットを手に入れて帰還した」等)だけを画面に残したまま`exit()`しており、スコアという総括的な締めの表示がない。この機能はプレイヤーがすでに持っている`GameState`のフィールド(`goldCollected`・`floor`・`playerLevel`・`hasAmulet`)だけから導出できるので、`GameState`に新規フィールドは不要——`src/game/score.ts`に`calculateScore(state): number`という純粋関数(`derive*`命名規則どおり、乱数・I/O不使用)を追加し、`main.tsx`が run 終了時にそれを呼んで1行のスコアサマリーを表示するだけで完結する。
+
+- [ ] `src/game/score.ts`(新規): `calculateScore(state: GameState): number` — `goldCollected + floor * SCORE_PER_FLOOR + playerLevel * SCORE_PER_LEVEL + (hasAmulet ? SCORE_AMULET_BONUS : 0)`という単純な決定的合算。`src/game/balance.ts`に`SCORE_PER_FLOOR = 100`・`SCORE_PER_LEVEL = 50`・`SCORE_AMULET_BONUS = 500`を追加 + テスト
+- [ ] `src/game/index.ts`: `calculateScore`を再エクスポート(shellが使うための公開API、他のderive系関数と同じ扱い)
+- [ ] `src/main.tsx`: `state.status`が`"dead"`または`"won"`になった最終フレームで、ログの下に「スコア: ◯(Lv.◯, B◯F, 所持金◯, 護符あり/なし)」という1行のサマリーをステータスバーと同じ`<Box>`パターンで表示する。`exit()`を呼ぶ`useEffect`の直前にこの表示があるため、Inkのレンダーサイクル上この最終フレームは画面に残ったままプロセスが終了する(既存の死亡/勝利ログ行と同じ仕組み)
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、所持金・到達階層・レベル・アミュレット所持を組み合わせた複数パターンの`GameState`に対し`calculateScore`が期待通りの値を返すことを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -7,6 +7,8 @@ import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { toInventoryLetter, toUseItemAction } from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
+import type { Replay } from "./game/replay.js";
+import type { Action, GameState } from "./game/state.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
 	formatEvent,
@@ -16,6 +18,7 @@ import {
 	INVENTORY_TITLE,
 } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
+import { saveReplay } from "./replayFile.js";
 import { loadSavedGameState, saveGameState } from "./saveFile.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
@@ -40,13 +43,40 @@ const resolveLogLineStyle = (
 	return {};
 };
 
+interface Session {
+	readonly state: GameState;
+	/**
+	 * Undefined when this session resumed from a save: a resumed run has no
+	 * true initial state to replay from, so it is deliberately left
+	 * unrecorded (docs/tasks/game.md milestone 18).
+	 */
+	readonly replay: Replay | undefined;
+}
+
+const createSession = (): Session => {
+	const loaded = loadSavedGameState();
+	if (loaded !== undefined) {
+		return { state: loaded, replay: undefined };
+	}
+	const seed = Date.now();
+	return {
+		state: buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, seed),
+		replay: { width: MAP_WIDTH, height: MAP_HEIGHT, seed, actions: [] },
+	};
+};
+
+const recordAction = (session: Session, action: Action): Session => ({
+	state: advanceTurn(session.state, action),
+	replay:
+		session.replay === undefined
+			? undefined
+			: { ...session.replay, actions: [...session.replay.actions, action] },
+});
+
 const App = () => {
 	const { exit } = useApp();
-	const [state, setState] = useState(
-		() =>
-			loadSavedGameState() ??
-			buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, Date.now()),
-	);
+	const [session, setSession] = useState(createSession);
+	const { state, replay } = session;
 	const [showFullWidthWarning, setShowFullWidthWarning] = useState(false);
 	/* Whether the inventory overlay is open. Purely a display concern (which
 	 * panel is showing), not part of the simulated world, so it lives here
@@ -62,7 +92,7 @@ const App = () => {
 			const action = toUseItemAction(input, state.inventory);
 			setIsInventoryOpen(false);
 			if (action !== undefined) {
-				setState((current) => advanceTurn(current, action));
+				setSession((current) => recordAction(current, action));
 			}
 			return;
 		}
@@ -80,7 +110,7 @@ const App = () => {
 			return;
 		}
 		setShowFullWidthWarning(false);
-		setState((current) => advanceTurn(current, action));
+		setSession((current) => recordAction(current, action));
 	});
 
 	useEffect(() => {
@@ -89,9 +119,12 @@ const App = () => {
 			saveGameState({ ...state, status: "playing" });
 		}
 		if (state.status !== "playing") {
+			if (replay !== undefined) {
+				saveReplay(replay);
+			}
 			exit();
 		}
-	}, [state, exit]);
+	}, [state, replay, exit]);
 
 	/* keyed by position in the full log so React keys stay stable per event */
 	const logLines = state.events

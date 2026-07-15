@@ -1,6 +1,6 @@
 {
 	"$schema": "https://unpkg.com/knip@6/schema.json",
-	"entry": ["scripts/demo-renderer.mjs"],
+	"entry": ["scripts/demo-renderer.mjs", "scripts/replay-verify.mjs"],
 	"project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs"],
 	"ignoreExportsUsedInFile": true
 }

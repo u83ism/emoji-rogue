@@ -7,13 +7,13 @@ import type { Enemy, GameState, InventoryEntry, Item } from "./state.js";
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
-const isPositiveInteger = (value: unknown): value is number =>
+export const isPositiveInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value > 0;
 
 const isNonNegativeInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value >= 0;
 
-const isFiniteNumber = (value: unknown): value is number =>
+export const isFiniteNumber = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value);
 
 /** A column-major width×height grid whose every cell satisfies `isCell`. */
@@ -51,7 +51,7 @@ const standsOnFloor = (
 	return terrain[x]?.[y] === 0;
 };
 
-const isEnemyKind = (value: unknown): value is EnemyKind =>
+export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" || value === "bat";
 
 const isEnemyArray = (
@@ -67,7 +67,7 @@ const isEnemyArray = (
 			isPositiveInteger(enemy.hp),
 	);
 
-const isItemKind = (value: unknown): value is ItemKind =>
+export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "potion" || value === "sword" || value === "shield";
 
 const isItemArray = (

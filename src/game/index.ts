@@ -17,6 +17,10 @@ export type { EnemyKind, GameEvent, ItemKind } from "./events.js";
 export { buildFrameGrid } from "./frame.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
+export type { Replay } from "./replay.js";
+export { buildReplayGameState } from "./replay.js";
+export type { ReplayFileError } from "./replayFile.js";
+export { parseReplayFileContent } from "./replayFile.js";
 export type {
 	Action,
 	Direction,

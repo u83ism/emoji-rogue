@@ -419,6 +419,32 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a scroll item kind and a player-teleported event, rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [],
+			inventory: [{ kind: "scroll", quantity: 1 }],
+			events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "scroll", quantity: 0 }] },
+			"inventory",
+		);
+		expectRejected(
+			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "amulet" }] },
+			"items",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-teleported", payload: { x: -1, y: 4 } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

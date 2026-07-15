@@ -35,6 +35,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	food: { glyph: "🍖" },
 	/* Same glyph as potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },
+	/* Scroll: single-codepoint, Unicode 6.0. */
+	scroll: { glyph: "📜" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

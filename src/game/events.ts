@@ -1,7 +1,13 @@
 /** Events carry it so the shell can name the attacker. */
 export type EnemyKind = "zombie" | "bat";
 
-export type ItemKind = "potion" | "sword" | "shield" | "food" | "poison";
+export type ItemKind =
+	| "potion"
+	| "sword"
+	| "shield"
+	| "food"
+	| "poison"
+	| "scroll";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -91,6 +97,10 @@ export type GameEvent =
 	| {
 			readonly type: "player-poisoned";
 			readonly payload: { readonly damage: number };
+	  }
+	| {
+			readonly type: "player-teleported";
+			readonly payload: { readonly x: number; readonly y: number };
 	  };
 
 /**

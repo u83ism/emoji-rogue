@@ -81,6 +81,11 @@ describe("formatEvent", () => {
 				{ type: "player-died", payload: { by: "poison" } },
 				"毒薬を飲んで倒れた……",
 			],
+			[
+				{ type: "player-teleported", payload: { x: 5, y: 3 } },
+				"巻物を読んだ。テレポートした!",
+			],
+			[{ type: "item-picked-up", payload: { kind: "scroll" } }, "巻物を拾った"],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);
@@ -129,6 +134,9 @@ describe("formatInventoryEntry", () => {
 		);
 		expect(formatInventoryEntry({ kind: "food", quantity: 3 }, [])).toBe(
 			"食料 x3",
+		);
+		expect(formatInventoryEntry({ kind: "scroll", quantity: 1 }, [])).toBe(
+			"巻物 x1",
 		);
 	});
 

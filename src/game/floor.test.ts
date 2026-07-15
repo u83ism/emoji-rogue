@@ -52,6 +52,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "poison").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.items.filter((item) => item.kind === "scroll").length,
+			).toBeLessThanOrEqual(1);
 			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
@@ -186,6 +189,27 @@ describe("poison potion spawning", () => {
 				(item) => item.kind === "poison",
 			).length;
 			expect(poisonCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("teleport scroll spawning", () => {
+	it("spawns a scroll on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "scroll",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one scroll on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const scrollCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "scroll",
+			).length;
+			expect(scrollCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

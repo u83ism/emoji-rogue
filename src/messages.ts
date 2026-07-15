@@ -18,6 +18,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	shield: "盾",
 	food: "食料",
 	poison: "毒薬",
+	scroll: "巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -126,5 +127,7 @@ export const formatEvent = (
 			return `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`;
 		case "player-poisoned":
 			return `毒薬を飲んでしまった。${event.payload.damage}のダメージを受けた`;
+		case "player-teleported":
+			return "巻物を読んだ。テレポートした!";
 	}
 };

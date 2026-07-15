@@ -107,6 +107,14 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
+	it("draws a scroll with its own glyph", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const scroll = { x: 12, y: 2, kind: "scroll" as const }; /* distance 3 */
+		expect(buildFrameGrid({ ...wide, items: [scroll] })[2]?.[12]?.glyph).toBe(
+			"📜",
+		);
+	});
+
 	it("draws visible potions, with enemies taking precedence", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const potion = { x: 12, y: 2, kind: "potion" as const }; /* distance 3 */

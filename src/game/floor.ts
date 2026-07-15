@@ -13,6 +13,7 @@ import {
 	GOLD_PILES_PER_FLOOR,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
+	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
@@ -91,10 +92,10 @@ const collectSpawnPool = (
  * the down staircase, POTION_COUNT_PER_FLOOR potions, FOOD_COUNT_PER_FLOOR
  * food rations, GOLD_PILES_PER_FLOOR gold piles (random amount each),
  * TRAP_COUNT_PER_FLOOR hidden traps and — independently, each with its own
- * spawn chance — a sword, a shield and a poison potion (visually identical
- * to a real potion until identified), all drawn from the spawn pool.
- * Nothing shares a tile with anything else unless the pool ran dry (tiny
- * fully-visible maps).
+ * spawn chance — a sword, a shield, a poison potion (visually identical to a
+ * real potion until identified) and a teleport scroll, all drawn from the
+ * spawn pool. Nothing shares a tile with anything else unless the pool ran
+ * dry (tiny fully-visible maps).
  */
 export const buildFloorLayout = (
 	width: number,
@@ -160,6 +161,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < POISON_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "poison" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < SCROLL_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "scroll" });
 	}
 
 	const goldPiles: GoldPile[] = [];

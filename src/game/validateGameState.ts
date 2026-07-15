@@ -91,7 +91,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "sword" ||
 	value === "shield" ||
 	value === "food" ||
-	value === "poison";
+	value === "poison" ||
+	value === "scroll";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -177,6 +178,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isTrapKind(payload.kind) && isPositiveInteger(payload.damage);
 		case "player-poisoned":
 			return isPositiveInteger(payload.damage);
+		case "player-teleported":
+			return isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y);
 		default:
 			return false;
 	}

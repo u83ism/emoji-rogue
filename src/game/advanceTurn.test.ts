@@ -433,6 +433,54 @@ describe("advanceTurn", () => {
 		expect(next.identifiedPotionKinds).toEqual(["potion"]);
 	});
 
+	it("using a held scroll teleports the player, consumes the scroll, and consumes rng", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "scroll" as const, quantity: 2 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "scroll" },
+		});
+		expect(next.inventory).toEqual([{ kind: "scroll", quantity: 1 }]);
+		expect(next.rng).not.toEqual(state.rng);
+		expect(next.events).toEqual([
+			{
+				type: "player-teleported",
+				payload: { x: next.player.x, y: next.player.y },
+			},
+		]);
+	});
+
+	it("is deterministic: the same state always teleports to the same tile", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "scroll" as const, quantity: 1 }],
+		};
+		const action = { type: "use-item", payload: { kind: "scroll" } } as const;
+		expect(advanceTurn(state, action)).toEqual(advanceTurn(state, action));
+	});
+
+	it("never teleports onto a tile occupied by an enemy", () => {
+		let state = buildDungeonGameState(40, 20, 42);
+		state = {
+			...state,
+			inventory: [{ kind: "scroll" as const, quantity: 1 }],
+		};
+		for (let attempt = 0; attempt < 20; attempt++) {
+			const next = advanceTurn(state, {
+				type: "use-item",
+				payload: { kind: "scroll" },
+			});
+			for (const enemy of next.enemies) {
+				expect(enemy.x === next.player.x && enemy.y === next.player.y).toBe(
+					false,
+				);
+			}
+			state = { ...next, inventory: state.inventory };
+		}
+	});
+
 	it("every turn-consuming action ticks hunger down by one", () => {
 		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
 		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);

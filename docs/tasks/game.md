@@ -363,8 +363,10 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/advanceTurn.ts`: `applyUseItem`に`scroll`分岐を追加——現在の`state.rng`から一時的にステートフルな`Rng`を起こし(`floor.ts`の`descendStairs`と同じ既存パターン)、プレイヤー自身の座標と敵が乗っている座標を除いた床マスから1つ選んで`player`をそこへ差し替え、`rng`を更新、`player-teleported`を記録 + テスト(決定性・敵のマスには絶対に着地しないことを含む)
 - [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`scroll: 📜`(単一コードポイント)を追加
 - [x] `src/messages.ts`: `ITEM_NAMES`に`scroll: "巻物"`、`player-teleported`の文言(「巻物を読んだ。テレポートした!」) + テスト
-- [x] `src/game/validateGameState.ts`: `isItemKind`に`"scroll"`を追加。`player-teleported`イベントの検証ケース(座標が床上)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**(念のためshape guardテストを実行し構造不変を確認)
-- [ ] 実機スモークテスト: 巻物の出現・拾う(実名で表示されること)→使う→瞬間移動の見た目上の変化、着地マスが敵と重ならないことを確認
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"scroll"`を追加。`player-teleported`イベントの検証ケース(座標が0以上の整数——イベントログは履歴情報であり床上判定までは行わない、他の座標を持たないイベントペイロードと同水準の検証に揃えた)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**(念のためshape guardテストを実行し構造不変を確認)
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): BFS経路探索で安全な経路を計算し(`node dist/main.mjs --seed=24`)、実際に巻物を拾わせた。ログに(未鑑定システムに乗らないため)最初から「巻物を拾った」と実名で表示されること、`i`キーの持ち物オーバーレイで「b) 巻物 x1」と表示されること、選択して読むとログに「巻物を読んだ。テレポートした!」と表示され、マップ全体が別の部屋(別の敵🧟が見える全く違うレイアウト)に切り替わることを確認
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

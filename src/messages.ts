@@ -35,6 +35,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	confusion: "混乱の薬",
 	slow: "杖",
 	levitation: "浮遊の薬",
+	"protect-armor": "防具保護の巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -202,5 +203,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES.levitation}を飲んだ。体がふわりと浮いた!`;
 		case "levitation-faded":
 			return "浮遊の効果が切れた";
+		case "armor-protected":
+			return `${ITEM_NAMES["protect-armor"]}を読んだ。防具が錆びなくなった!`;
 	}
 };

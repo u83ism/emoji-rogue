@@ -658,6 +658,34 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held protect armor scroll sets armorProtected and logs armor-protected", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "protect-armor" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "protect-armor" },
+		});
+		expect(next.armorProtected).toBe(true);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([{ type: "armor-protected", payload: {} }]);
+	});
+
+	it("using a second protect armor scroll is consumed but changes nothing (already protected)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			armorProtected: true,
+			inventory: [{ kind: "protect-armor" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "protect-armor" },
+		});
+		expect(next.armorProtected).toBe(true);
+		expect(next.inventory).toEqual([]);
+	});
+
 	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

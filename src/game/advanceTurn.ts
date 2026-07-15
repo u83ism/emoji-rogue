@@ -355,6 +355,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "protect-armor") {
+		return {
+			...state,
+			armorProtected: true,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "armor-protected", payload: {} },
+			]),
+		};
+	}
+
 	if (kind === "food") {
 		const restored = Math.min(
 			FOOD_RATION_RESTORE_AMOUNT,

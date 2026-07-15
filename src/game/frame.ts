@@ -54,6 +54,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	confusion: { glyph: "💊" },
 	/* Same glyph again — levitation is unidentified until drunk too. */
 	levitation: { glyph: "💊" },
+	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
+	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
 	scroll: { glyph: "📜" },
 	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */

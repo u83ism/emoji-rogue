@@ -21,6 +21,7 @@ import {
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
+	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
@@ -259,6 +260,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < LEVITATION_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "levitation" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "protect-armor" });
 	}
 	if (
 		remaining.length > 0 &&

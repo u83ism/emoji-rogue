@@ -273,3 +273,6 @@ export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 15;
 export const LEVITATION_POTION_DURATION = 15;
 /** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
 export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25;
+
+/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. */
+export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;

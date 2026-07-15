@@ -147,6 +147,7 @@ describe("advanceEnemies", () => {
 			hasRingOfSustenance: false,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
+			armorProtected: false,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],
@@ -378,6 +379,20 @@ describe("advanceEnemies", () => {
 		]);
 	});
 
+	it("armorProtected skips the rust roll entirely, even on seed 1 which always rusts unprotected", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1),
+			armorProtected: true,
+			enemies: [aquator(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
+		]);
+	});
+
 	it("an aquator hit that fails its rust roll only deals damage", () => {
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1000),
@@ -470,6 +485,7 @@ describe("advanceEnemies", () => {
 			hasRingOfSustenance: false,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
+			armorProtected: false,
 			enemies: [zombie(5, 1, false)],
 			items: [],
 			inventory: [],

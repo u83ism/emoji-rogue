@@ -73,6 +73,7 @@ describe("deriveExploredState", () => {
 			hasRingOfSustenance: false,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
+			armorProtected: false,
 			enemies: [],
 			items: [],
 			inventory: [],

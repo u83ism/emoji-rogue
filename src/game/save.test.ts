@@ -41,6 +41,7 @@ describe("save file shape guard", () => {
 				playerFood: "number",
 				hasRingOfRegeneration: "boolean",
 				hasRingOfSustenance: "boolean",
+				armorProtected: "boolean",
 				confusedTurnsRemaining: "number",
 				levitationTurnsRemaining: "number",
 				enemies: [

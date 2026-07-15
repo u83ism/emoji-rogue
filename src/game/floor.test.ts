@@ -365,6 +365,27 @@ describe("levitation potion spawning", () => {
 	});
 });
 
+describe("protect armor scroll spawning", () => {
+	it("spawns a protect armor scroll on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "protect-armor",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one protect armor scroll on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const protectCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "protect-armor",
+			).length;
+			expect(protectCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("thief spawning", () => {
 	it("spawns a thief on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

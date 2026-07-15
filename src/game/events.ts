@@ -18,7 +18,8 @@ export type ItemKind =
 	| "wand"
 	| "confusion"
 	| "slow"
-	| "levitation";
+	| "levitation"
+	| "protect-armor";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -209,6 +210,11 @@ export type GameEvent =
 	| {
 			/** Fired the turn levitationTurnsRemaining reaches 0 — see applyLevitationTick. */
 			readonly type: "levitation-faded";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Sets armorProtected — see advanceEnemies' aquator rust check. */
+			readonly type: "armor-protected";
 			readonly payload: Record<string, never>;
 	  };
 

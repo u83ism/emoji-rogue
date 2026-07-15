@@ -120,7 +120,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "wand" ||
 	value === "confusion" ||
 	value === "slow" ||
-	value === "levitation";
+	value === "levitation" ||
+	value === "protect-armor";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -250,6 +251,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.turns);
 		case "levitation-faded":
 			return true;
+		case "armor-protected":
+			return true;
 		default:
 			return false;
 	}
@@ -334,6 +337,10 @@ export const validateGameState = (
 	const levitationTurnsRemaining = value.levitationTurnsRemaining;
 	if (!isNonNegativeInteger(levitationTurnsRemaining)) {
 		return err("levitationTurnsRemaining");
+	}
+	const armorProtected = value.armorProtected;
+	if (!isBooleanValue(armorProtected)) {
+		return err("armorProtected");
 	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
@@ -421,6 +428,7 @@ export const validateGameState = (
 		hasRingOfSustenance,
 		confusedTurnsRemaining,
 		levitationTurnsRemaining,
+		armorProtected,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,

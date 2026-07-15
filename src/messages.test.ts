@@ -181,6 +181,10 @@ describe("formatEvent", () => {
 				"浮遊の薬を飲んだ。体がふわりと浮いた!",
 			],
 			[{ type: "levitation-faded", payload: {} }, "浮遊の効果が切れた"],
+			[
+				{ type: "armor-protected", payload: {} },
+				"防具保護の巻物を読んだ。防具が錆びなくなった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

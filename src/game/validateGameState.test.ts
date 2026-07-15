@@ -383,6 +383,21 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed armor-protected event", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "armor-protected", payload: {} }],
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("rejects a non-boolean armorProtected", () => {
+		expectRejected(
+			{ ...buildValidState(), armorProtected: "true" },
+			"armorProtected",
+		);
+	});
+
 	it("rejects a non-integer or negative levitationTurnsRemaining", () => {
 		expectRejected(
 			{ ...buildValidState(), levitationTurnsRemaining: -1 },

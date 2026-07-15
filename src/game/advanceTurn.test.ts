@@ -384,6 +384,55 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held poison potion damages the player and identifies that kind", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: PLAYER_MAX_HP,
+			inventory: [{ kind: "poison" as const, quantity: 2 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "poison" },
+		});
+		expect(next.playerHp).toBe(PLAYER_MAX_HP - 4);
+		expect(next.inventory).toEqual([{ kind: "poison", quantity: 1 }]);
+		expect(next.identifiedPotionKinds).toEqual(["poison"]);
+		expect(next.events).toEqual([
+			{ type: "player-poisoned", payload: { damage: 4 } },
+		]);
+	});
+
+	it("a fatal poison potion ends the run without a bonus enemy hit the same turn", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 3,
+			inventory: [{ kind: "poison" as const, quantity: 1 }],
+			enemies: [zombie(5, 1)] /* adjacent to the player at (4,1) */,
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "poison" },
+		});
+		expect(next.playerHp).toBe(0);
+		expect(next.status).toBe("dead");
+		expect(next.events).toEqual([
+			{ type: "player-poisoned", payload: { damage: 4 } },
+			{ type: "player-died", payload: { by: "poison" } },
+		]);
+	});
+
+	it("drinking either potion kind only identifies that kind, not the other", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
+		expect(next.identifiedPotionKinds).toEqual(["potion"]);
+	});
+
 	it("every turn-consuming action ticks hunger down by one", () => {
 		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
 		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);

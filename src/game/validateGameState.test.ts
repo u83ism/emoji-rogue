@@ -386,6 +386,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a poison item kind, identifiedPotionKinds and a player-poisoned event, rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [],
+			inventory: [{ kind: "poison", quantity: 1 }],
+			identifiedPotionKinds: ["poison"],
+			events: [
+				{ type: "player-poisoned", payload: { damage: 4 } },
+				{ type: "player-died", payload: { by: "poison" } },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+		if (accepted.ok) {
+			expect(accepted.value.identifiedPotionKinds).toEqual(["poison"]);
+		}
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "poison", quantity: 0 }] },
+			"inventory",
+		);
+		expectRejected(
+			{ ...buildValidState(), identifiedPotionKinds: ["dragon"] },
+			"identifiedPotionKinds",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-poisoned", payload: { damage: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

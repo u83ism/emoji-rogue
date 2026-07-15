@@ -68,7 +68,10 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" || value === "bat";
 
 const isDeathCause = (value: unknown): value is DeathCause =>
-	isEnemyKind(value) || value === "hunger" || value === "trap";
+	isEnemyKind(value) ||
+	value === "hunger" ||
+	value === "trap" ||
+	value === "poison";
 
 const isEnemyArray = (
 	value: unknown,
@@ -87,7 +90,11 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "potion" ||
 	value === "sword" ||
 	value === "shield" ||
-	value === "food";
+	value === "food" ||
+	value === "poison";
+
+const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
+	Array.isArray(value) && value.every(isItemKind);
 
 const isItemArray = (
 	value: unknown,
@@ -168,6 +175,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.amount);
 		case "trap-triggered":
 			return isTrapKind(payload.kind) && isPositiveInteger(payload.damage);
+		case "player-poisoned":
+			return isPositiveInteger(payload.damage);
 		default:
 			return false;
 	}
@@ -262,6 +271,10 @@ export const validateGameState = (
 	if (!isInventoryArray(inventory)) {
 		return err("inventory");
 	}
+	const identifiedPotionKinds = value.identifiedPotionKinds;
+	if (!isItemKindArray(identifiedPotionKinds)) {
+		return err("identifiedPotionKinds");
+	}
 	const goldPiles = value.goldPiles;
 	if (!isGoldPileArray(goldPiles, terrain)) {
 		return err("goldPiles");
@@ -309,6 +322,7 @@ export const validateGameState = (
 			kind: entry.kind,
 			quantity: entry.quantity,
 		})),
+		identifiedPotionKinds: [...identifiedPotionKinds],
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,
 			y: pile.y,

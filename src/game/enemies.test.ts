@@ -112,6 +112,7 @@ describe("advanceEnemies", () => {
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],
+			identifiedPotionKinds: [],
 			goldPiles: [],
 			goldCollected: 0,
 			traps: [],

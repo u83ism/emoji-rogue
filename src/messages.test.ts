@@ -39,10 +39,7 @@ describe("formatEvent", () => {
 				{ type: "player-healed", payload: { by: "potion", amount: 0 } },
 				"回復薬を飲んだが、HPは満タンだった",
 			],
-			[
-				{ type: "item-picked-up", payload: { kind: "potion" } },
-				"回復薬を拾った",
-			],
+			[{ type: "item-picked-up", payload: { kind: "sword" } }, "剣を拾った"],
 			[
 				{ type: "game-won", payload: { floor: 10 } },
 				"10階に到達し、生還に成功した!",
@@ -76,20 +73,77 @@ describe("formatEvent", () => {
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
 				"矢のわなを踏んでしまった。2のダメージを受けた",
 			],
+			[
+				{ type: "player-poisoned", payload: { damage: 4 } },
+				"毒薬を飲んでしまった。4のダメージを受けた",
+			],
+			[
+				{ type: "player-died", payload: { by: "poison" } },
+				"毒薬を飲んで倒れた……",
+			],
 		];
 		for (const [event, expected] of cases) {
-			expect(formatEvent(event)).toBe(expected);
+			expect(formatEvent(event, [])).toBe(expected);
 		}
+	});
+
+	it("shows the generic unidentified name for a potion-family pickup not yet identified", () => {
+		expect(
+			formatEvent({ type: "item-picked-up", payload: { kind: "potion" } }, []),
+		).toBe("未鑑定の薬を拾った");
+		expect(
+			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, []),
+		).toBe("未鑑定の薬を拾った");
+	});
+
+	it("reveals the real name for a potion-family pickup once that kind is identified", () => {
+		expect(
+			formatEvent({ type: "item-picked-up", payload: { kind: "potion" } }, [
+				"potion",
+			]),
+		).toBe("回復薬を拾った");
+		expect(
+			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, [
+				"poison",
+			]),
+		).toBe("毒薬を拾った");
+		/* identifying one potion kind does not reveal the other */
+		expect(
+			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, [
+				"potion",
+			]),
+		).toBe("未鑑定の薬を拾った");
 	});
 });
 
 describe("formatInventoryEntry", () => {
 	it("formats a stack as name and quantity", () => {
-		expect(formatInventoryEntry({ kind: "potion", quantity: 2 })).toBe(
-			"回復薬 x2",
+		expect(
+			formatInventoryEntry({ kind: "potion", quantity: 2 }, ["potion"]),
+		).toBe("回復薬 x2");
+		expect(formatInventoryEntry({ kind: "sword", quantity: 1 }, [])).toBe(
+			"剣 x1",
 		);
-		expect(formatInventoryEntry({ kind: "sword", quantity: 1 })).toBe("剣 x1");
-		expect(formatInventoryEntry({ kind: "shield", quantity: 1 })).toBe("盾 x1");
-		expect(formatInventoryEntry({ kind: "food", quantity: 3 })).toBe("食料 x3");
+		expect(formatInventoryEntry({ kind: "shield", quantity: 1 }, [])).toBe(
+			"盾 x1",
+		);
+		expect(formatInventoryEntry({ kind: "food", quantity: 3 }, [])).toBe(
+			"食料 x3",
+		);
+	});
+
+	it("shows the generic unidentified name for an unidentified potion-family stack", () => {
+		expect(formatInventoryEntry({ kind: "potion", quantity: 2 }, [])).toBe(
+			"未鑑定の薬 x2",
+		);
+		expect(formatInventoryEntry({ kind: "poison", quantity: 1 }, [])).toBe(
+			"未鑑定の薬 x1",
+		);
+	});
+
+	it("reveals the real name once that potion kind is identified", () => {
+		expect(
+			formatInventoryEntry({ kind: "poison", quantity: 1 }, ["poison"]),
+		).toBe("毒薬 x1");
 	});
 });

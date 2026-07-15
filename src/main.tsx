@@ -159,7 +159,7 @@ const App = () => {
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
-					{formatEvent(event)}
+					{formatEvent(event, state.identifiedPotionKinds)}
 				</Text>
 			))}
 			{/* System notices (app/session concerns — never game events, never
@@ -182,7 +182,8 @@ const App = () => {
 					) : (
 						state.inventory.map((entry, index) => (
 							<Text key={entry.kind}>
-								{toInventoryLetter(index)}) {formatInventoryEntry(entry)}
+								{toInventoryLetter(index)}){" "}
+								{formatInventoryEntry(entry, state.identifiedPotionKinds)}
 							</Text>
 						))
 					)}

@@ -72,6 +72,7 @@ describe("deriveExploredState", () => {
 			enemies: [],
 			items: [],
 			inventory: [],
+			identifiedPotionKinds: [],
 			goldPiles: [],
 			goldCollected: 0,
 			traps: [],

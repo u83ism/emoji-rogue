@@ -49,6 +49,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "shield").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.items.filter((item) => item.kind === "poison").length,
+			).toBeLessThanOrEqual(1);
 			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
@@ -162,6 +165,27 @@ describe("shield spawning", () => {
 				(item) => item.kind === "shield",
 			).length;
 			expect(shieldCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("poison potion spawning", () => {
+	it("spawns a poison potion on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "poison",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one poison potion on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const poisonCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "poison",
+			).length;
+			expect(poisonCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

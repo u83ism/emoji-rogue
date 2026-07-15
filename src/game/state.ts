@@ -101,6 +101,8 @@ export interface GameState {
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */
 	readonly inventory: readonly InventoryEntry[];
+	/** Potion kinds identified this run (by drinking one) — see POTION_KINDS. */
+	readonly identifiedPotionKinds: readonly ItemKind[];
 	readonly goldPiles: readonly GoldPile[];
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;

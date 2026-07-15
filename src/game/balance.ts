@@ -93,6 +93,10 @@ export const SHIELD_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a shield spawns. */
 export const SHIELD_SPAWN_CHANCE_PERCENT = 30;
 
+export const POISON_DAMAGE = 4;
+/** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
+export const POISON_POTION_SPAWN_CHANCE_PERCENT = 30;
+
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;
 

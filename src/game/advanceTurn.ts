@@ -2,6 +2,7 @@ import {
 	FOOD_RATION_RESTORE_AMOUNT,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
+	POISON_DAMAGE,
 	POTION_HEAL_AMOUNT,
 	SHIELD_DEFENSE_BONUS,
 	SWORD_ATTACK_BONUS,
@@ -10,7 +11,7 @@ import {
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
-import { buildEventLog } from "./events.js";
+import { buildEventLog, POTION_KINDS } from "./events.js";
 import { descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
 import type {
@@ -64,6 +65,17 @@ const removeFromInventory = (
 			entry.kind === kind ? { ...entry, quantity: entry.quantity - 1 } : entry,
 		)
 		.filter((entry) => entry.quantity > 0);
+
+/** Adds `kind` to identifiedPotionKinds if it is a potion kind not already identified. */
+const identifyPotionKind = (
+	identifiedPotionKinds: readonly ItemKind[],
+	kind: ItemKind,
+): readonly ItemKind[] => {
+	if (!POTION_KINDS.includes(kind) || identifiedPotionKinds.includes(kind)) {
+		return identifiedPotionKinds;
+	}
+	return [...identifiedPotionKinds, kind];
+};
 
 /**
  * Picks up the item under the player's feet into inventory, if any — no
@@ -199,11 +211,35 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	const identifiedPotionKinds = identifyPotionKind(
+		state.identifiedPotionKinds,
+		kind,
+	);
+
+	if (kind === "poison") {
+		const playerHp = state.playerHp - POISON_DAMAGE;
+		const events: GameEvent[] = [
+			{ type: "player-poisoned", payload: { damage: POISON_DAMAGE } },
+		];
+		if (playerHp <= 0) {
+			events.push({ type: "player-died", payload: { by: "poison" } });
+		}
+		return {
+			...state,
+			playerHp: Math.max(0, playerHp),
+			inventory,
+			identifiedPotionKinds,
+			status: playerHp <= 0 ? "dead" : state.status,
+			events: buildEventLog(state.events, events),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
 		playerHp: state.playerHp + amount,
 		inventory,
+		identifiedPotionKinds,
 		events: buildEventLog(state.events, [
 			{ type: "player-healed", payload: { by: kind, amount } },
 		]),
@@ -281,6 +317,9 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			const afterUse = applyUseItem(state, action.payload.kind);
 			if (afterUse === state) {
 				return state; /* nothing of that kind held — no turn spent */
+			}
+			if (afterUse.status !== "playing") {
+				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
 			return applyHungerTick(advanceEnemies(afterUse));
 		}

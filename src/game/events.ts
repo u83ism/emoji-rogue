@@ -1,13 +1,19 @@
 /** Events carry it so the shell can name the attacker. */
 export type EnemyKind = "zombie" | "bat";
 
-export type ItemKind = "potion" | "sword" | "shield" | "food";
+export type ItemKind = "potion" | "sword" | "shield" | "food" | "poison";
+
+/**
+ * Kinds with a potion effect — visually identical (same glyph, same generic
+ * name) until identified. See GameState.identifiedPotionKinds.
+ */
+export const POTION_KINDS: readonly ItemKind[] = ["potion", "poison"];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
 export type TrapKind = "dart";
 
-/** What killed the player — an enemy kind, starvation, or a trap. */
-export type DeathCause = EnemyKind | "hunger" | "trap";
+/** What killed the player — an enemy kind, starvation, a trap, or a poison potion. */
+export type DeathCause = EnemyKind | "hunger" | "trap" | "poison";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -81,6 +87,10 @@ export type GameEvent =
 	| {
 			readonly type: "trap-triggered";
 			readonly payload: { readonly kind: TrapKind; readonly damage: number };
+	  }
+	| {
+			readonly type: "player-poisoned";
+			readonly payload: { readonly damage: number };
 	  };
 
 /**

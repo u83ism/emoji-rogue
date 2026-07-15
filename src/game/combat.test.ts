@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ZOMBIE_MAX_HP } from "./balance.js";
-import { applyPlayerAttack, isAdjacent } from "./combat.js";
+import { WAND_STRIKE_DAMAGE, ZOMBIE_MAX_HP } from "./balance.js";
+import { applyPlayerAttack, applyWandStrike, isAdjacent } from "./combat.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy } from "./state.js";
 
@@ -101,5 +101,58 @@ describe("applyPlayerAttack", () => {
 		expect(next.events).toEqual([
 			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
 		]);
+	});
+});
+
+describe("applyWandStrike", () => {
+	const state = buildArenaGameState(9, 9, 1);
+
+	it("deals a fixed WAND_STRIKE_DAMAGE regardless of playerAttackDamage and logs wand-struck", () => {
+		const target = zombie(5, 4, 10);
+		const boosted = { ...state, playerAttackDamage: 99, enemies: [target] };
+		const next = applyWandStrike(boosted, target);
+		expect(next.enemies).toEqual([zombie(5, 4, 10 - WAND_STRIKE_DAMAGE)]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
+			},
+		]);
+	});
+
+	it("removes a target whose hp reaches zero and logs the defeat", () => {
+		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
+		const bystander = zombie(7, 7);
+		const next = applyWandStrike(
+			{ ...state, enemies: [target, bystander] },
+			target,
+		);
+		expect(next.enemies).toEqual([bystander]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
+			},
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
+	});
+
+	it("wakes a sleeping target but never applies a sneak-attack multiplier", () => {
+		const target = zombie(5, 4, 10, false);
+		const next = applyWandStrike({ ...state, enemies: [target] }, target);
+		expect(next.enemies).toEqual([zombie(5, 4, 10 - WAND_STRIKE_DAMAGE, true)]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
+			},
+		]);
+	});
+
+	it("does not move the player or touch the terrain", () => {
+		const target = zombie(5, 4);
+		const next = applyWandStrike({ ...state, enemies: [target] }, target);
+		expect(next.player).toEqual(state.player);
+		expect(next.terrain).toBe(state.terrain);
 	});
 });

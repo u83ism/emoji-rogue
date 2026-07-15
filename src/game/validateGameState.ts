@@ -115,7 +115,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "ring" ||
 	value === "sustenance" ||
 	value === "enchant-weapon" ||
-	value === "enchant-armor";
+	value === "enchant-armor" ||
+	value === "wand";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -233,6 +234,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.bonus);
 		case "armor-rusted":
 			return isPositiveInteger(payload.amount);
+		case "wand-struck":
+			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
 		default:
 			return false;
 	}

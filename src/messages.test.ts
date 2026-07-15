@@ -163,6 +163,10 @@ describe("formatEvent", () => {
 				{ type: "armor-rusted", payload: { amount: 1 } },
 				"防具が錆びついた!防御力が1下がった",
 			],
+			[
+				{ type: "wand-struck", payload: { target: "zombie", damage: 3 } },
+				"杖から放たれた力がゾンビを貫いた!3のダメージを与えた!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

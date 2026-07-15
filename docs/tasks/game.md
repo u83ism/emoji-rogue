@@ -605,17 +605,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 原作Rogueの杖(wand)カテゴリを導入する。原作の杖は方向指定で狙いを付けるが、本実装は移動同様シンプルな単一キー操作を保っている(`docs/design.md`のUI方針)ため、狙い先UIを新設せず**視界内で最も近い敵を自動的に狙う**簡略化を採る——巻物・指輪と同じく「新しいUIを増やさず既存の`use-item`一発で完結させる」という一貫した方針の延長。視界内に敵が1体もいなければ、識別の巻物(マイルストーン26)の「対象が無ければ無効果」と同じ扱い(ターン消費なし・杖も消費しない)にする。倒す/生き残らせるロジックは`combat.ts`の`applyPlayerAttack`とほぼ同型だが、固定ダメージ(睡眠中でも不意打ち倍率は乗らない——安全な遠隔の代わりに近接ほどの一撃必殺は狙えない、というリスク・リターンの差別化)・命中対象は必ず起こす、という点が異なるため独立した関数として実装する。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"wand"`を追加。`GameEvent`に`wand-struck`(payload: `target: EnemyKind`・実ダメージ`damage`。`enemy-hit`と同形だが、"詠唱で発動する遠隔攻撃"という別の物語的瞬間として独立させる——`sneak-attack`が`enemy-hit`から独立しているのと同じ理由)を追加
-- [ ] `src/game/balance.ts`: `WAND_STRIKE_DAMAGE = 3`(近接の基礎攻撃力より高い——遠隔の安全さと引き換えに一撃必殺(不意打ち倍率)を狙えない代償)・`WAND_SPAWN_CHANCE_PERCENT = 15`(指輪と同じレア度の独立per-floor判定)を追加
-- [ ] `src/game/combat.ts`: `applyWandStrike(state, target)`(`applyPlayerAttack`と同型だが、ダメージは`state.playerAttackDamage`ではなく固定の`WAND_STRIKE_DAMAGE`、不意打ち倍率なし、命中した対象は生死問わず`awake: true`になる) + テスト
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で杖を1個抽選 + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`wand`分岐——`computeVisiblePoints`(既存のvision.tsユーティリティ)で視界内の敵を絞り込み、マンハッタン距離が最小の1体を選んで`applyWandStrike`。視界内に敵がいなければ`state`をそのまま返す(識別の巻物と同じ無効果パターン) + テスト(命中・撃破・視界内に敵なしでの無効果・視界外の敵は狙われないことを含む)
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`wand: 🔮`(単一コードポイント、Unicode 6.0)を追加
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`wand: "命中の杖"`、`wand-struck`の文言(「杖から放たれた力が◯を貫いた!◯のダメージを与えた!」) + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"wand"`を追加。`wand-struck`イベントの検証ケース(`enemy-hit`と同じ形)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、プレイヤーから離れた(隣接していない)視界内の敵に対して杖を使い、`enemies`が更新される(ダメージまたは撃破)こと・`wand-struck`イベントが記録されることを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"wand"`を追加。`GameEvent`に`wand-struck`(payload: `target: EnemyKind`・実ダメージ`damage`。`enemy-hit`と同形だが、"詠唱で発動する遠隔攻撃"という別の物語的瞬間として独立させる——`sneak-attack`が`enemy-hit`から独立しているのと同じ理由)を追加
+- [x] `src/game/balance.ts`: `WAND_STRIKE_DAMAGE = 3`(近接の基礎攻撃力より高い——遠隔の安全さと引き換えに一撃必殺(不意打ち倍率)を狙えない代償)・`WAND_SPAWN_CHANCE_PERCENT = 15`(指輪と同じレア度の独立per-floor判定)を追加
+- [x] `src/game/combat.ts`: `applyWandStrike(state, target)`(`applyPlayerAttack`と同型だが、ダメージは`state.playerAttackDamage`ではなく固定の`WAND_STRIKE_DAMAGE`、不意打ち倍率なし、命中した対象は生死問わず`awake: true`になる) + テスト
+- [x] `src/game/floor.ts`: スポーンプールから低確率で杖を1個抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`wand`分岐——`computeVisiblePoints`(既存のvision.tsユーティリティ)で視界内の敵を絞り込み、マンハッタン距離が最小の1体を選んで`applyWandStrike`。視界内に敵がいなければ`state`をそのまま返す(識別の巻物と同じ無効果パターン) + テスト(命中・撃破・視界内に敵なしでの無効果・視界外の敵は狙われないことを含む)
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`wand: 🔮`(単一コードポイント、Unicode 6.0)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`wand: "命中の杖"`、`wand-struck`の文言(「杖から放たれた力が◯を貫いた!◯のダメージを与えた!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"wand"`を追加。`wand-struck`イベントの検証ケース(`enemy-hit`と同じ形)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、プレイヤーから離れた(隣接していない)視界内の敵に対して杖を使い、`enemies`が更新される(ダメージまたは撃破)こと・`wand-struck`イベントが記録されることを確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、プレイヤーから3マス離れた(隣接していない)視界内のゾンビに杖を使い、プレイヤーが移動せずに`WAND_STRIKE_DAMAGE`(3)ダメージが入り`wand-struck`イベントが記録されること、視界内に敵がいない状態では`state`が変化せず消費もされない(同一参照)ことを確認。
+
+**マイルストーン39完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

@@ -6,6 +6,7 @@ import {
 	GOAL_FLOOR,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
+	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
@@ -381,6 +382,58 @@ describe("advanceTurn", () => {
 		expect(next.events).toEqual([
 			{ type: "weapon-enchanted", payload: { bonus: 1 } },
 		]);
+	});
+
+	it("using a held wand strikes the nearest visible (non-adjacent) enemy", () => {
+		/* WAND_STRIKE_DAMAGE exceeds ZOMBIE_MAX_HP, so a single hit kills it */
+		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [target],
+			inventory: [{ kind: "wand" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "wand" },
+		});
+		expect(next.player).toEqual(state.player); /* the player does not move */
+		expect(next.enemies).toEqual([]);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
+			},
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
+	});
+
+	it("using a held wand targets whichever visible enemy is closest", () => {
+		const near = zombie(6, 1);
+		const far = zombie(8, 1);
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [far, near],
+			inventory: [{ kind: "wand" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "wand" },
+		});
+		/* the near zombie is the one killed; the far one is untouched */
+		expect(next.enemies).toEqual([far]);
+	});
+
+	it("using a held wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "wand" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "wand" },
+		});
+		expect(next).toBe(state);
 	});
 
 	it("using a held shield permanently raises playerDefense when blessed", () => {

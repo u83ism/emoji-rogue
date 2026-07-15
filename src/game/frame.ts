@@ -64,6 +64,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"enchant-weapon": { glyph: "⚡" },
 	/* Sparkles: single-codepoint, Unicode 6.0 — distinct from the weapon bolt. */
 	"enchant-armor": { glyph: "✨" },
+	/* Crystal ball: single-codepoint, Unicode 6.0. */
+	wand: { glyph: "🔮" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

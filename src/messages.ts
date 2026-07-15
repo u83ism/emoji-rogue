@@ -30,6 +30,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	sustenance: "指輪",
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
+	wand: "命中の杖",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -185,5 +186,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES["enchant-armor"]}を読んだ。防御力が${event.payload.bonus}上がった!`;
 		case "armor-rusted":
 			return `防具が錆びついた!防御力が${event.payload.amount}下がった`;
+		case "wand-struck":
+			return `杖から放たれた力が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
 	}
 };

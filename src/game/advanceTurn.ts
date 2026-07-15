@@ -16,7 +16,7 @@ import {
 	SWORD_CURSE_CHANCE_PERCENT,
 	TRAP_DAMAGE,
 } from "./balance.js";
-import { applyPlayerAttack } from "./combat.js";
+import { applyPlayerAttack, applyWandStrike } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
@@ -31,7 +31,7 @@ import type {
 	InventoryEntry,
 	Position,
 } from "./state.js";
-import { deriveExploredState } from "./vision.js";
+import { computeVisiblePoints, deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>
@@ -242,6 +242,31 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
 };
 
 /**
+ * The closest (Manhattan distance) enemy currently in the player's field of
+ * view, or undefined if none are visible — a wand of striking's automatic
+ * aim, standing in for a manual targeting UI this project deliberately
+ * doesn't have (docs/design.md's single-key interaction rule).
+ */
+const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
+	const visiblePoints = computeVisiblePoints(state.terrain, state.player);
+	const visibleEnemies = state.enemies.filter((enemy) =>
+		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
+	);
+	return visibleEnemies.reduce<Enemy | undefined>((closest, candidate) => {
+		if (closest === undefined) {
+			return candidate;
+		}
+		const candidateDistance =
+			Math.abs(candidate.x - state.player.x) +
+			Math.abs(candidate.y - state.player.y);
+		const closestDistance =
+			Math.abs(closest.x - state.player.x) +
+			Math.abs(closest.y - state.player.y);
+		return candidateDistance < closestDistance ? candidate : closest;
+	}, undefined);
+};
+
+/**
  * Uses one held item of `kind`, consumed from inventory either way. A potion
  * heals up to the cap (using it at full health wastes it); a sword instead
  * permanently raises playerAttackDamage and a shield playerDefense — both
@@ -383,6 +408,14 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 				{ type: "ring-equipped", payload: { kind } },
 			]),
 		};
+	}
+
+	if (kind === "wand") {
+		const target = findNearestVisibleEnemy(state);
+		if (target === undefined) {
+			return state; /* nothing visible to aim at — same as an unheld item */
+		}
+		return applyWandStrike({ ...state, inventory }, target);
 	}
 
 	if (kind === "identify") {

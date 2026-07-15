@@ -249,3 +249,12 @@ export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20;
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
 export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+
+/**
+ * Fixed ranged damage a wand of striking deals — higher than the player's
+ * base melee damage as compensation for never getting a sneak-attack
+ * multiplier (see combat.ts's applyWandStrike).
+ */
+export const WAND_STRIKE_DAMAGE = 3;
+/** Chance (out of 100), independently rolled per floor, that a wand spawns. */
+export const WAND_SPAWN_CHANCE_PERCENT = 15;

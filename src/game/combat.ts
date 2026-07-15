@@ -1,4 +1,4 @@
-import { SNEAK_ATTACK_MULTIPLIER } from "./balance.js";
+import { SNEAK_ATTACK_MULTIPLIER, WAND_STRIKE_DAMAGE } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
@@ -27,6 +27,35 @@ export const applyPlayerAttack = (
 		isSneakAttack
 			? { type: "sneak-attack", payload: { target: target.kind, damage } }
 			: { type: "enemy-hit", payload: { target: target.kind, damage } },
+	];
+	if (remainingHp <= 0) {
+		events.push({ type: "enemy-defeated", payload: { target: target.kind } });
+	}
+
+	const enemies =
+		remainingHp <= 0
+			? state.enemies.filter((enemy) => enemy !== target)
+			: state.enemies.map((enemy) =>
+					enemy === target ? { ...enemy, hp: remainingHp, awake: true } : enemy,
+				);
+	return { ...state, enemies, events: buildEventLog(state.events, events) };
+};
+
+/**
+ * A wand of striking's fixed-damage ranged hit against `target`, resolved
+ * the same way applyPlayerAttack resolves melee — a kill removes the enemy,
+ * a survivor wakes up — but with none of its player-strength or sneak-attack
+ * dependence: WAND_STRIKE_DAMAGE is flat regardless of state.playerAttackDamage
+ * or whether `target` was asleep. The player does not move; only advanceTurn's
+ * caller decides whether the target was even reachable (visible) to aim at.
+ */
+export const applyWandStrike = (state: GameState, target: Enemy): GameState => {
+	const remainingHp = target.hp - WAND_STRIKE_DAMAGE;
+	const events: GameEvent[] = [
+		{
+			type: "wand-struck",
+			payload: { target: target.kind, damage: WAND_STRIKE_DAMAGE },
+		},
 	];
 	if (remainingHp <= 0) {
 		events.push({ type: "enemy-defeated", payload: { target: target.kind } });

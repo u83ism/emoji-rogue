@@ -14,7 +14,8 @@ export type ItemKind =
 	| "ring"
 	| "sustenance"
 	| "enchant-weapon"
-	| "enchant-armor";
+	| "enchant-armor"
+	| "wand";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -174,6 +175,11 @@ export type GameEvent =
 			/** Fired alongside player-hit when an aquator's rust roll succeeds. */
 			readonly type: "armor-rusted";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** Same shape as enemy-hit, kept separate for its own flavor text — see applyWandStrike. */
+			readonly type: "wand-struck";
+			readonly payload: { readonly target: EnemyKind; readonly damage: number };
 	  };
 
 /**

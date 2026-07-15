@@ -28,6 +28,7 @@ import {
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
+	WAND_SPAWN_CHANCE_PERCENT,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildEventLog, type GameEvent } from "./events.js";
@@ -268,6 +269,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < SUSTENANCE_RING_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "sustenance" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < WAND_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "wand" });
 	}
 
 	const goldPiles: GoldPile[] = [];

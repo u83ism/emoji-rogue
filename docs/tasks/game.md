@@ -413,6 +413,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン28 — 盗賊(ダメージなしで金貨を盗んで逃げる敵)
+
+オリジナルRogueのレプラコーン(妖精)に着想を得た、これまでと質の違う敵を追加する。ゾンビ・コウモリはどちらも「隣接したらプレイヤーのHPを削る」という同じ行動原理だったが、盗賊は隣接すると**ダメージを与えず金貨を盗んで即座に盤面から消える**(倒さなくても勝手にいなくなる)。マイルストーン9で確立した`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`の種類別ルックアップテーブルはそのまま使い回しつつ、`advanceEnemies`の隣接時分岐に初めて「敵種ごとに異なる効果」を持ち込む。出現数はゾンビ・コウモリのような深さスケーリングではなく、剣・盾と同じ「フロアごとの独立判定(0体か1体)」とする——レアな一撃離脱の遭遇、という原作の立ち位置に合わせるため。
+
+- [x] `src/game/events.ts`: `EnemyKind`に`"thief"`を追加。`GameEvent`に`gold-stolen`(payload: 実盗難量`amount`)を追加
+- [x] `src/game/balance.ts`: `THIEF_MAX_HP = 2`・`THIEF_ATTACK_DAMAGE = 0`(隣接時は攻撃ではなく窃盗のため未使用だが`Record<EnemyKind, number>`網羅のため必要)・`THIEF_ACTIONS_PER_TURN = 1`・`THIEF_STEAL_AMOUNT = 10`・`THIEF_SPAWN_CHANCE_PERCENT = 20`(剣・盾と同じ独立判定)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`に`thief`のエントリを追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`の隣接時分岐を敵種で分け、`thief`は`Math.min(THIEF_STEAL_AMOUNT, goldCollected)`だけ盗み(`goldCollected`accumulatorを新設)、`gold-stolen`を記録し、その場で盤面から除去(`nextEnemies`に積まない=倒さなくても消える)。所持金0でも隣接すれば必ず逃げる(盗む量0でも`gold-stolen`は記録) + テスト(窃盗・除去・所持金0でのふるまい・複数体いる場合に他の敵の行動へ影響しないことを含む)
+- [x] `src/game/floor.ts`: スポーンプールから低確率で盗賊を1体抽選(ゾンビ・コウモリの深さスケーリングとは別枠、剣・盾と同じ独立判定) + テスト
+- [x] `src/game/frame.ts`: `ENEMY_GLYPHS`に`thief: 👺`(単一コードポイント、Unicode 6.0)を追加
+- [x] `src/messages.ts`: `ENEMY_NAMES`に`thief: "盗賊"`、`gold-stolen`の文言(盗まれた量に応じて「盗賊に◯ゴールド盗まれた!」/「盗賊に襲われたが、何も盗られなかった」) + テスト
+- [x] `src/game/validateGameState.ts`: `isEnemyKind`に`"thief"`を追加。`gold-stolen`イベントの検証ケースを追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] 実機スモークテスト: 盗賊の見た目・隣接時に金貨を盗んで消えること・所持金への反映とログを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

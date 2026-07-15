@@ -300,6 +300,21 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。餓死の視覚演出(警告色・専用死因文言)の実機確認のみ上記の理由で保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン21 — 金貨とスコア
+
+オリジナルRogue最大の記号のひとつである金貨💰を導入する。Rogueの金貨は「持ち物」ではなく踏むだけで自動回収される特殊な資源で、ゲーム終了時にその合計額がそのままスコアになる(伝統的なUnix版Rogueの"You died with N gold"のような扱い)。よってアイテム(`ItemKind`・インベントリ)の枠組みには乗せず、`items`とは独立の`goldPiles`エンティティ+`GameState.goldCollected`という累計値で表現する。持ち物の選択使用のような操作は一切なく、踏んだ瞬間に加算されて消える一方向の資源なので、実装はこれまでのアイテムより単純。
+
+- [x] `src/game/state.ts`: `GoldPile`型(`Position & { readonly amount: number }`)と`GameState`に`goldPiles: readonly GoldPile[]`・`goldCollected: number`を追加
+- [x] `src/game/events.ts`: `GameEvent`に`gold-collected`(payload: `amount`)を追加
+- [x] `src/game/balance.ts`: `GOLD_PILES_PER_FLOOR = 3`・`GOLD_AMOUNT_MIN = 2`・`GOLD_AMOUNT_MAX = 20`を追加
+- [x] `src/game/floor.ts`: スポーンプールから`GOLD_PILES_PER_FLOOR`個、金額は`[GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX]`からrngで抽選して配置(既存のpotion/food抽選と同じ枠組み) + テスト
+- [x] `src/game/advanceTurn.ts`: 移動先に金貨があれば`goldCollected`に加算し`goldPiles`から除去、`gold-collected`を記録(アイテムと違い即時・無条件で回収 — 選択使用の概念がない) + テスト
+- [x] `src/game/frame.ts`: 金貨を💰で描画(単一コードポイント) + テスト
+- [x] `src/messages.ts`: `gold-collected`の文言(「◯ゴールドを手に入れた」) + テスト
+- [x] `src/main.tsx`: ステータスバーに所持金を表示(常時表示 — ゲーム終了後もそのまま残るのでそれが実質的な最終スコア表示を兼ねる。専用のスコア画面は作らない=最小実装)
+- [x] `src/game/validateGameState.ts`: `goldPiles`(床上・amount正整数)と`goldCollected`(0以上の整数)の検証を追加。構造変更のため**`SAVE_FORMAT_VERSION`を8に**
+- [ ] 実機スモークテスト: 金貨の視認・自動回収・ステータスバー表示・フロアまたぎでの累計維持を確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)

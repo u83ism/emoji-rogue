@@ -180,6 +180,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン13 — 2種類目のアイテム(剣・恒久攻撃力強化)
+
+インベントリ(マイルストーン10)導入以来、アイテム種は`potion`一つだけで「拾って即使わず貯める」設計が実質検証されていなかった。剣🔪を追加し、potionとは異なる使用挙動(消費して即回復 vs 消費して恒久強化)を持たせることでインベントリ設計の妥当性を検証する。剣は稀にフロアに出現し(`SWORD_SPAWN_CHANCE_PERCENT`、rng消費)、使うと`playerAttackDamage`が`SWORD_ATTACK_BONUS`だけ恒久的に上がる。複数本使えばそのぶん積み上がる(上限は設けない — HPのような「使いすぎると無駄になる」資源ではなく素直な強化なので)。
+
+- [x] `src/game/state.ts`: `GameState`に`playerAttackDamage: number`を追加(これまで`combat.ts`が直接参照していた定数`PLAYER_ATTACK_DAMAGE`を状態化。武器で変化しうる値は状態でなければならない、という核の設計原則の初適用)
+- [x] `src/game/events.ts`: `ItemKind`に`"sword"`を追加。`GameEvent`に`weapon-equipped`(payload: `kind`・`bonus`)を追加
+- [x] `src/game/balance.ts`: `SWORD_ATTACK_BONUS = 1`・`SWORD_SPAWN_CHANCE_PERCENT = 30`を追加
+- [x] `src/game/combat.ts`: `applyPlayerAttack`が定数`PLAYER_ATTACK_DAMAGE`ではなく`state.playerAttackDamage`を参照するように変更 + テスト
+- [x] `src/game/initialState.ts`: 初期状態の`playerAttackDamage`を`PLAYER_ATTACK_DAMAGE`で初期化
+- [x] `src/game/floor.ts`: スポーンプールから低確率(rng判定)で剣を1本抽選。フロアごとに独立判定(出るとは限らない) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`をkindで分岐(`potion`=既存の回復、`sword`=`playerAttackDamage`加算+在庫から1本消費+`weapon-equipped`記録) + テスト
+- [x] `src/game/frame.ts`: アイテム描画を`POTION_CELL`固定から`ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>>`参照に一般化(`sword: 🔪`追加)。3種目以降もテーブルに足すだけで済む形 + テスト
+- [x] `src/messages.ts`: `ITEM_NAMES`に`sword: "剣"`、`weapon-equipped`の文言(「剣を装備した。攻撃力が1上がった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"sword"`を追加。`GameState`に`playerAttackDamage`フィールドが増える構造変更のため**`SAVE_FORMAT_VERSION`を5に** + テスト
+- [ ] 実機スモークテスト: 剣の出現・拾う→インベントリで確認→装備・攻撃力上昇後の戦闘の手応え変化を確認(このセッションはリモート環境のため未実施)
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)

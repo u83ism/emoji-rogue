@@ -1,5 +1,6 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
+import { parseSeedArgument } from "./cliArgs.js";
 import { advanceTurn } from "./game/advanceTurn.js";
 import { PLAYER_MAX_HP } from "./game/balance.js";
 import type { GameEvent } from "./game/events.js";
@@ -58,7 +59,7 @@ const createSession = (): Session => {
 	if (loaded !== undefined) {
 		return { state: loaded, replay: undefined };
 	}
-	const seed = Date.now();
+	const seed = parseSeedArgument(process.argv.slice(2)) ?? Date.now();
 	return {
 		state: buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, seed),
 		replay: { width: MAP_WIDTH, height: MAP_HEIGHT, seed, actions: [] },

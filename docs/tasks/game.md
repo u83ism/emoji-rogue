@@ -478,6 +478,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン32 — イェンダーの魔除け(往復による真の勝利条件)
+
+これまでの勝利条件(`GOAL_FLOOR`到達で即勝利)は、オリジナルRogueの核——最深部でイェンダーの魔除けを手に入れ、地上まで生きて持ち帰る——を再現していなかった。今回、`GOAL_FLOOR`を「魔除けが眠る最深部」に意味を変え、そこに上り階段だけを置いて魔除けを配置し、往路(降りる)と復路(昇る)を対称な仕組みで実装する。**フロアは一切保存しない**という既存方針(降りるたびに新規生成)をそのまま踏襲し、昇るときも同様に毎回新規生成する——「同じ階に戻る」概念自体を持たせない設計にすることで、`GameState`に往復の履歴を持たせずに済む(実装コストを大きく下げる簡略化)。フロア1に戻った瞬間(上り階段を昇った先が1階未満になった瞬間)をゲーム終了の境界とし、魔除けを持っていれば勝利、持っていなければ(`quit`と同じ)`exited`で終える——後者に専用の敗北演出は設けない(原作でも道中撤退はただの中断であり死亡ではないため)。
+
+- [ ] `src/game/state.ts`: `Stairs = Position & { readonly direction: "up" | "down" }`を新設し`GameState.stairs`の型を`Position`から`Stairs`に変更。`GameState`に`amulet: Position | undefined`(現在のフロアに落ちている間だけ存在。原作同様1個のみ)と`hasAmulet: boolean`(一度手に入れたら永続、装備アイテムのような使用行為はない)を追加
+- [ ] `src/game/events.ts`: `GameEvent`に`amulet-obtained`(payloadなし)・`floor-ascended`(payload: `floor`、`floor-descended`と対称)を追加。`game-won`のpayloadを`{floor: number}`から`Record<string, never>`に変更(勝利は常に「地上に生還」を意味するようになり、階数を運ぶ意味がなくなったため)
+- [ ] `src/game/floor.ts`: `FloorLayout.stairs`を`Stairs`型に、`amulet: Position | undefined`を追加。`buildFloorLayout`に`stairsDirection: "up" | "down"`引数を追加(通常は渡された向きをそのまま使うが、**`floor === GOAL_FLOOR`のときは強制的に`"up"`**にし、階段の代わりに魔除けを1個確定配置する——他アイテムと違い抽選ではなく必ず出現)。`descendStairs`は`nextFloor === GOAL_FLOOR`のときだけ`stairsDirection: "up"`で生成し、それ以外は`"down"`(**即勝利分岐を撤去** — `GOAL_FLOOR`はもう終着点ではなく実際に歩けるフロアになる)。新規`ascendStairs(state)`: `nextFloor = state.floor - 1`。`nextFloor <= 1`なら新しいフロアを生成せず終了——`state.hasAmulet`なら`status: "won"`+`game-won`イベント、そうでなければ`status: "exited"`(`quit`と同じ、専用イベントなし)。それ以外は`buildFloorLayout(..., "up")`で生成し`floor-ascended`イベントを記録(`descendStairs`と対称の構造) + テスト(往路は従来どおり・`GOAL_FLOOR`到達で魔除けと上り階段が出ること・復路の各段で新規フロアが生成されること・魔除け無しで1階を割ると`exited`・魔除け持ちで1階を割ると`won`であることを含む)
+- [ ] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方で`stairs`に`direction: "down"`を付与、`amulet: undefined`・`hasAmulet: false`を初期化。`pickArenaStairs`の戻り値型を`Stairs`にするか、呼び出し側で`direction: "down"`を付与
+- [ ] `src/game/advanceTurn.ts`: `applyMove`の階段判定を`state.stairs.direction === "up" ? ascendStairs(state) : descendStairs(state)`に変更。新規`applyAmuletPickup`(金貨と同じ「移動先に落ちていたら即座に拾って`hasAmulet: true`にし`amulet-obtained`を記録」)を、地形踏破の効果チェーン(わな→金貨→アイテム→……)に追加 + テスト
+- [ ] `src/game/frame.ts`: `STAIRS_CELL`を`STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>>`(`down: 🔽`・`up: 🔼`、どちらも単一コードポイント・Unicode 6.0)に置き換え、`state.stairs.direction`で参照を切り替える。魔除け(`amulet`)を💎(単一コードポイント)で描画するオーバーレイを追加(重なり優先度: 金貨<アイテム<魔除け<階段<敵<プレイヤー。シルエット記憶なし=他アイテムと同じ扱い) + テスト
+- [ ] `src/messages.ts`: `amulet-obtained`(「イェンダーの魔除けを手に入れた!」)・`floor-ascended`(「◯階に上がった」)の文言を追加。`game-won`の文言をpayload変更に合わせて「イェンダーの魔除けを手に地上に帰還した!」に更新 + テスト
+- [ ] `src/game/validateGameState.ts`: `stairs`の検証に`direction`(`"up" | "down"`)を追加、`amulet`(`Position | undefined`、存在するなら床上)・`hasAmulet`(真偽値)の検証を追加。`game-won`イベントのpayload検証を(`floor-mapped`と同じ)空payload許容に変更、`amulet-obtained`・`floor-ascended`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を13に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardの`stairs`に`direction: "string"`、トップレベルに`amulet: undefined`・`hasAmulet: "boolean"`を追記
+- [ ] パイプライン確認: `npm run build`後、Nodeスクリプトで`buildDungeonGameState`→`descendStairs`を`GOAL_FLOOR`まで連打して魔除けと上り階段が実際に生成されることを確認し、続けて`ascendStairs`を1階を割るまで連打して`hasAmulet`の有無で`won`/`exited`が正しく分岐することを確認する(このセッションはリモート環境のためインタラクティブなtmux実機確認の代わりに、milestone 15/18と同じ「dist経由のスクリプト直接呼び出し」で代替する)
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

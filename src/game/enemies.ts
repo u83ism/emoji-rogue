@@ -8,6 +8,7 @@ import {
 	MIN_DAMAGE_TAKEN,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
+import { rollDamage } from "./damage.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
@@ -112,11 +113,12 @@ const stepWandering = (
  * One turn for every enemy, in array order, each acting
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts by kind, reduced by state.playerDefense
- * but never below MIN_DAMAGE_TAKEN); otherwise chases via A* while inside
- * the player's field of view, or wanders using (and advancing) the state's
- * RNG. The player's HP reaching zero ends the run and cuts short any
- * remaining actions, this enemy's and the rest of the array's alike.
+ * in place (a normally-distributed roll around balance.ts's per-kind mean,
+ * reduced by state.playerDefense, never below MIN_DAMAGE_TAKEN — see
+ * damage.ts); otherwise chases via A* while inside the player's field of
+ * view, or wanders using (and advancing) the state's RNG. The player's HP
+ * reaching zero ends the run and cuts short any remaining actions, this
+ * enemy's and the rest of the array's alike.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -143,10 +145,11 @@ export const advanceEnemies = (state: GameState): GameState => {
 			action++
 		) {
 			if (isAdjacent(next, state.player)) {
-				const damage = Math.max(
-					MIN_DAMAGE_TAKEN,
-					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense,
-				);
+				const meanDamage =
+					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense;
+				const roll = rollDamage(rng, meanDamage, MIN_DAMAGE_TAKEN);
+				const damage = roll.damage;
+				rng = roll.rng;
 				playerHp -= damage;
 				events.push({
 					type: "player-hit",

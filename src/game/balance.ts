@@ -1,7 +1,5 @@
 // Combat tuning knobs, all in one place. Values are provisional and expected
 // to change after real-terminal playtesting (docs/tasks/game.md, milestone 5).
-// Damage is a fixed amount — no dice — so combat stays deterministic; adding
-// an rng-driven damage range is a backlog item.
 
 import type { EnemyKind } from "./events.js";
 
@@ -9,6 +7,12 @@ export const PLAYER_MAX_HP = 10;
 export const PLAYER_ATTACK_DAMAGE = 1;
 /** However high playerDefense climbs, an enemy attack always deals at least this much. */
 export const MIN_DAMAGE_TAKEN = 1;
+/**
+ * Standard deviation for damage rolls (see damage.ts's rollDamage). Normal,
+ * not uniform, so hits cluster around the mean instead of swinging evenly
+ * across the whole range — see docs/tasks/game.md milestone 15.
+ */
+export const DAMAGE_VARIANCE_STDDEV = 0.5;
 
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;

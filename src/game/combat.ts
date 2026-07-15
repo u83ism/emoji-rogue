@@ -1,3 +1,4 @@
+import { rollDamage } from "./damage.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
@@ -6,16 +7,17 @@ export const isAdjacent = (left: Position, right: Position): boolean =>
 	Math.abs(left.x - right.x) + Math.abs(left.y - right.y) === 1;
 
 /**
- * The player's bump attack resolved against one enemy: damage comes from
- * `state.playerAttackDamage` (base plus any swords used so far), a kill
- * removes the enemy. The player does not move — attacking is what the
- * movement turn was spent on.
+ * The player's bump attack resolved against one enemy: damage rolls around
+ * `state.playerAttackDamage` (base plus any swords used so far, see
+ * damage.ts), never below 1, a kill removes the enemy. The player does not
+ * move — attacking is what the movement turn was spent on.
  */
 export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
-	const damage = state.playerAttackDamage;
+	const roll = rollDamage(state.rng, state.playerAttackDamage, 1);
+	const damage = roll.damage;
 	const remainingHp = target.hp - damage;
 	const events: GameEvent[] = [
 		{
@@ -33,5 +35,10 @@ export const applyPlayerAttack = (
 			: state.enemies.map((enemy) =>
 					enemy === target ? { ...enemy, hp: remainingHp } : enemy,
 				);
-	return { ...state, enemies, events: buildEventLog(state.events, events) };
+	return {
+		...state,
+		enemies,
+		events: buildEventLog(state.events, events),
+		rng: roll.rng,
+	};
 };

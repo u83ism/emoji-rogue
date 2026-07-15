@@ -89,7 +89,8 @@ const isEnemyArray = (
 			isRecord(enemy) &&
 			standsOnFloor(enemy, terrain) &&
 			isEnemyKind(enemy.kind) &&
-			isPositiveInteger(enemy.hp),
+			isPositiveInteger(enemy.hp) &&
+			isBooleanValue(enemy.awake),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -158,6 +159,8 @@ const isGameEvent = (value: unknown): boolean => {
 		case "player-hit":
 			return isEnemyKind(payload.by) && isPositiveInteger(payload.damage);
 		case "enemy-hit":
+			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
+		case "sneak-attack":
 			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
 		case "enemy-defeated":
 			return isEnemyKind(payload.target);
@@ -336,6 +339,7 @@ export const validateGameState = (
 			y: enemy.y,
 			kind: enemy.kind,
 			hp: enemy.hp,
+			awake: enemy.awake,
 		})),
 		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
 		inventory: inventory.map((entry) => ({

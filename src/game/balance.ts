@@ -41,6 +41,24 @@ export const THIEF_STEAL_AMOUNT = 10;
 export const THIEF_SPAWN_CHANCE_PERCENT = 20;
 
 /**
+ * All enemies spawn asleep (see floor.ts) and take no action until they wake
+ * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
+ * dealing this many times the normal damage (matching original Rogue).
+ */
+export const SNEAK_ATTACK_MULTIPLIER = 3;
+/**
+ * Chance (out of 100), rolled independently every turn a sleeping enemy is
+ * adjacent to or within sight of the player, that it wakes up this turn.
+ * Deliberately not "wakes for sure the instant it's adjacent/visible" — a
+ * bump attack only ever happens from an already-adjacent tile (movement is
+ * the only way to become adjacent, so there is always a prior turn standing
+ * next to the enemy), so a guaranteed-on-adjacency wake would make every
+ * approach wake the enemy one full turn before the player could ever attack,
+ * leaving no room for a real sneak attack.
+ */
+export const WAKE_CHANCE_PERCENT = 33;
+
+/**
  * Per-kind lookup tables so `advanceEnemies`/`floor.ts` stay kind-agnostic —
  * adding a third enemy kind means adding one entry here, not a new branch
  * elsewhere.

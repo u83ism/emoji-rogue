@@ -128,6 +128,7 @@ export const buildFloorLayout = (
 			...drawSpawnTile(pool, rng),
 			kind: "zombie",
 			hp: ENEMY_MAX_HP.zombie,
+			awake: false,
 		});
 	}
 	const batCount = calculateEnemyCountForFloor("bat", floor);
@@ -136,6 +137,7 @@ export const buildFloorLayout = (
 			...drawSpawnTile(pool, rng),
 			kind: "bat",
 			hp: ENEMY_MAX_HP.bat,
+			awake: false,
 		});
 	}
 	if (
@@ -146,6 +148,7 @@ export const buildFloorLayout = (
 			...drawSpawnTile(pool, rng),
 			kind: "thief",
 			hp: ENEMY_MAX_HP.thief,
+			awake: false,
 		});
 	}
 

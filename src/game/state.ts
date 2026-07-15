@@ -38,6 +38,8 @@ export interface Position {
 export type Enemy = Position & {
 	readonly kind: EnemyKind;
 	readonly hp: number;
+	/** Sleeping enemies take no action at all until woken — see advanceEnemies. */
+	readonly awake: boolean;
 };
 
 /** An item lying on the floor, waiting to be stepped on. */

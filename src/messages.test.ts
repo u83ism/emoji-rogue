@@ -14,6 +14,10 @@ describe("formatEvent", () => {
 				"ゾンビに1のダメージを与えた",
 			],
 			[
+				{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
+				"ゾンビに不意打ち!3のダメージを与えた!",
+			],
+			[
 				{ type: "enemy-defeated", payload: { target: "zombie" } },
 				"ゾンビをたおした!",
 			],

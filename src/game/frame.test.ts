@@ -33,7 +33,7 @@ describe("buildFrameGrid", () => {
 	it("draws enemies only while they are visible", () => {
 		/* 30x5 arena: player (15,2), radius 8 */
 		const wide = buildArenaGameState(30, 5, 1);
-		const zombie = { kind: "zombie", hp: 2 } as const;
+		const zombie = { kind: "zombie", hp: 2, awake: true } as const;
 		const seen = {
 			...wide,
 			enemies: [{ ...zombie, x: 20, y: 2 }] /* distance 5 */,
@@ -49,14 +49,14 @@ describe("buildFrameGrid", () => {
 
 	it("draws bats with their own glyph, distinct from zombies", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const bat = { kind: "bat", hp: 1 } as const;
+		const bat = { kind: "bat", hp: 1, awake: true } as const;
 		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
 	});
 
 	it("draws thieves with their own glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const thief = { kind: "thief", hp: 2 } as const;
+		const thief = { kind: "thief", hp: 2, awake: true } as const;
 		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
 	});
@@ -164,7 +164,7 @@ describe("buildFrameGrid", () => {
 		const covered = {
 			...wide,
 			items: [potion],
-			enemies: [{ x: 12, y: 2, kind: "zombie" as const, hp: 2 }],
+			enemies: [{ x: 12, y: 2, kind: "zombie" as const, hp: 2, awake: true }],
 		};
 		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("🧟");
 
@@ -199,7 +199,7 @@ describe("buildFrameGrid", () => {
 
 		const covered = {
 			...seen,
-			enemies: [{ x: 18, y: 2, kind: "zombie" as const, hp: 2 }],
+			enemies: [{ x: 18, y: 2, kind: "zombie" as const, hp: 2, awake: true }],
 		};
 		expect(buildFrameGrid(covered)[2]?.[18]?.glyph).toBe("🧟");
 	});

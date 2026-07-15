@@ -50,6 +50,11 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
+			/** Attacking a still-sleeping enemy — see SNEAK_ATTACK_MULTIPLIER. */
+			readonly type: "sneak-attack";
+			readonly payload: { readonly target: EnemyKind; readonly damage: number };
+	  }
+	| {
 			readonly type: "player-died";
 			readonly payload: { readonly by: DeathCause };
 	  }

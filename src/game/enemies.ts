@@ -7,6 +7,7 @@ import {
 	ENEMY_ATTACK_DAMAGE,
 	MIN_DAMAGE_TAKEN,
 	THIEF_STEAL_AMOUNT,
+	WAKE_CHANCE_PERCENT,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
 import { buildEventLog, type GameEvent } from "./events.js";
@@ -110,7 +111,14 @@ const stepWandering = (
 };
 
 /**
- * One turn for every enemy, in array order, each acting
+ * One turn for every enemy, in array order. A still-sleeping enemy (see
+ * Enemy.awake) takes no action at all unless it wakes this turn: while
+ * adjacent to the player, or inside the player's field of view (the same
+ * `visiblePoints` set used for the chase decision below, reused as a wake
+ * check), it rolls WAKE_CHANCE_PERCENT (consuming the state's RNG) each turn
+ * until it succeeds — not a guaranteed wake, so a fast enough attack can
+ * still land a sneak attack. Once awake, an enemy never sleeps again. Awake
+ * enemies act
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
  * in place (damage from balance.ts by kind, reduced by state.playerDefense
@@ -140,6 +148,22 @@ export const advanceEnemies = (state: GameState): GameState => {
 	const nextEnemies: Enemy[] = [];
 	for (const enemy of state.enemies) {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
+
+		let awake = enemy.awake;
+		if (
+			!awake &&
+			(isAdjacent(enemy, state.player) ||
+				visiblePoints.has(encodePointKey(enemy.x, enemy.y)))
+		) {
+			const roll = stepUniform(rng);
+			rng = roll.state;
+			awake = roll.value < WAKE_CHANCE_PERCENT / 100;
+		}
+		if (!awake) {
+			occupied.add(encodePointKey(enemy.x, enemy.y));
+			nextEnemies.push(enemy);
+			continue;
+		}
 
 		let next: Position = enemy;
 		let fled = false;
@@ -183,7 +207,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 		occupied.add(encodePointKey(next.x, next.y));
-		nextEnemies.push({ ...enemy, x: next.x, y: next.y });
+		nextEnemies.push({ ...enemy, x: next.x, y: next.y, awake: true });
 	}
 
 	return {

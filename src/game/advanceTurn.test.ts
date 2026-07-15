@@ -22,6 +22,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	y,
 	kind: "zombie",
 	hp: ZOMBIE_MAX_HP,
+	awake: true,
 });
 
 describe("advanceTurn", () => {
@@ -677,7 +678,9 @@ describe("advanceTurn", () => {
 		const state = {
 			...start,
 			stairs,
-			enemies: [{ ...stairs, kind: "zombie" as const, hp: ZOMBIE_MAX_HP }],
+			enemies: [
+				{ ...stairs, kind: "zombie" as const, hp: ZOMBIE_MAX_HP, awake: true },
+			],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(1);

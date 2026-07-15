@@ -71,7 +71,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				enemies: [{ x: 0, y: 0, kind: "zombie", hp: 2 }],
+				enemies: [{ x: 0, y: 0, kind: "zombie", hp: 2, awake: true }],
 			},
 			"enemies",
 		);
@@ -140,6 +140,10 @@ describe("validateGameState", () => {
 		);
 		expectRejected(
 			{ ...valid, enemies: [{ ...enemies[0], hp: 0 }] },
+			"enemies",
+		);
+		expectRejected(
+			{ ...valid, enemies: [{ ...enemies[0], awake: "true" }] },
 			"enemies",
 		);
 		expectRejected(
@@ -249,6 +253,35 @@ describe("validateGameState", () => {
 				...buildValidState(),
 				events: [
 					{ type: "armor-equipped", payload: { kind: "shield", bonus: 0 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed sneak-attack event and rejects a broken one", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "sneak-attack", payload: { target: "dragon", damage: 3 } },
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "sneak-attack", payload: { target: "zombie", damage: 0 } },
 				],
 			},
 			"events",

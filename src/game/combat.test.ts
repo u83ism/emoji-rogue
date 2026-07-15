@@ -4,11 +4,17 @@ import { applyPlayerAttack, isAdjacent } from "./combat.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy } from "./state.js";
 
-const zombie = (x: number, y: number, hp = ZOMBIE_MAX_HP): Enemy => ({
+const zombie = (
+	x: number,
+	y: number,
+	hp = ZOMBIE_MAX_HP,
+	awake = true,
+): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
 	hp,
+	awake,
 });
 
 describe("isAdjacent", () => {
@@ -66,6 +72,34 @@ describe("applyPlayerAttack", () => {
 		expect(next.enemies).toEqual([zombie(5, 4, 7)]);
 		expect(next.events).toEqual([
 			{ type: "enemy-hit", payload: { target: "zombie", damage: 3 } },
+		]);
+	});
+
+	it("a sneak attack on a sleeping target deals SNEAK_ATTACK_MULTIPLIER times the damage and wakes it", () => {
+		const target = zombie(5, 4, 10, false);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.enemies).toEqual([zombie(5, 4, 7, true)]);
+		expect(next.events).toEqual([
+			{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
+		]);
+	});
+
+	it("a sneak attack that kills logs sneak-attack then enemy-defeated", () => {
+		const target = zombie(5, 4, 3, false);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.enemies).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
+	});
+
+	it("a follow-up attack on an already-awake target is a normal hit, not another sneak attack", () => {
+		const target = zombie(5, 4, 10, true);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.enemies).toEqual([zombie(5, 4, 9, true)]);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
 		]);
 	});
 });

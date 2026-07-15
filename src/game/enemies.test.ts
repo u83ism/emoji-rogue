@@ -11,25 +11,28 @@ import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
 
-const zombie = (x: number, y: number): Enemy => ({
+const zombie = (x: number, y: number, awake = true): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
 	hp: ZOMBIE_MAX_HP,
+	awake,
 });
 
-const bat = (x: number, y: number): Enemy => ({
+const bat = (x: number, y: number, awake = true): Enemy => ({
 	x,
 	y,
 	kind: "bat",
 	hp: BAT_MAX_HP,
+	awake,
 });
 
-const thief = (x: number, y: number): Enemy => ({
+const thief = (x: number, y: number, awake = true): Enemy => ({
 	x,
 	y,
 	kind: "thief",
 	hp: THIEF_MAX_HP,
+	awake,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -248,5 +251,81 @@ describe("advanceEnemies", () => {
 			state.playerHp - 1,
 		); /* the zombie still attacked */
 		expect(next.goldCollected).toBe(40);
+	});
+
+	it("a sleeping enemy outside the player's view takes no action at all", () => {
+		const state: GameState = {
+			width: 7,
+			height: 3,
+			terrain: [
+				[1, 1, 1],
+				[1, 0, 1],
+				[1, 0, 1],
+				[1, 1, 1],
+				[1, 0, 1],
+				[1, 0, 1],
+				[1, 1, 1],
+			],
+			explored: buildUnexplored7x3(),
+			player: { x: 1, y: 1 },
+			playerHp: 10,
+			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
+			playerDefense: 0,
+			playerFood: 100,
+			enemies: [zombie(5, 1, false)],
+			items: [],
+			inventory: [],
+			identifiedPotionKinds: [],
+			goldPiles: [],
+			goldCollected: 0,
+			traps: [],
+			floor: 1,
+			stairs: { x: 2, y: 1 },
+			events: [],
+			rng: seedToState(1),
+			status: "playing",
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(5, 1, false)]); /* did not wander */
+		expect(next.rng).toEqual(state.rng); /* wandering would have advanced it */
+	});
+
+	/*
+	 * Waking is a WAKE_CHANCE_PERCENT roll each turn, not guaranteed (see
+	 * balance.ts) — buildCorridorState's fixed seed (1) happens to succeed the
+	 * very first roll, so these two exercise the "wakes" branch. The "stays
+	 * asleep despite being visible/adjacent" branch (the one that leaves room
+	 * for a sneak attack) is exercised separately below with a seed whose
+	 * first roll fails.
+	 */
+	it("a sleeping enemy inside the player's field of view wakes and chases the same turn", () => {
+		const state = buildCorridorState([zombie(7, 1, false)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(6, 1, true)]);
+	});
+
+	it("a sleeping enemy adjacent to the player wakes and attacks the same turn", () => {
+		const state = buildCorridorState([zombie(5, 1, false)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(5, 1, true)]);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+	});
+
+	it("a sleeping enemy adjacent to the player can fail its wake roll and stay asleep, taking no action", () => {
+		/* seed 678's first WAKE_CHANCE_PERCENT roll fails (see balance.ts) —
+		 * this is exactly the window a sneak attack relies on. */
+		const state = {
+			...buildArenaGameState(9, 3, 678),
+			enemies: [zombie(5, 1, false)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(5, 1, false)]);
+		expect(next.playerHp).toBe(
+			state.playerHp,
+		); /* no attack despite adjacency */
+		expect(next.events).toEqual([]);
 	});
 });

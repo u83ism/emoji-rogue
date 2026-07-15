@@ -126,6 +126,8 @@ export interface GameState {
 	readonly levitationTurnsRemaining: number;
 	/** Once set, an aquator's rust roll never triggers — see advanceEnemies. */
 	readonly armorProtected: boolean;
+	/** Turns left of shrunk field of view — see applyBlindnessTick and resolveViewRadius. */
+	readonly blindTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

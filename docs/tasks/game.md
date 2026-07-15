@@ -705,22 +705,25 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 これまでの一時状態(混乱・浮遊)はどちらも既存の仕組みへの副作用(移動方向の上書き・わな判定のスキップ)として実装できたが、盲目の薬は初めて**視界そのもの(`computeVisiblePoints`のFOV半径)を状態依存にする**。`src/game/vision.ts`の`VIEW_RADIUS`はこれまでモジュール内定数だったが、`resolveViewRadius(state)`という新しい導出関数を挟み、`state.blindTurnsRemaining > 0`なら`BLIND_VIEW_RADIUS`(隣接のみ)を返すようにする。呼び出し側で「今の状態でのプレイヤー視界」を求めている箇所(描画・探索済みグリッドの拡張・敵のAI視認判定・杖の自動照準)はすべてこの関数を経由するよう置き換える——フロア生成時のアイテム/敵配置(`floor.ts`)はプレイヤーの一時状態と無関係なので対象外。盲目の間は新しいマス目を探索済みにもできない(見えないのだから当然)ため、`deriveExploredState`も連動して縮む。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"blindness"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-blinded`(payload: 継続ターン数`turns`)・`blindness-faded`(payloadなし)を追加
-- [ ] `src/game/state.ts`: `GameState`に`blindTurnsRemaining: number`(構造変更)を追加
-- [ ] `src/game/balance.ts`: `BLIND_POTION_DURATION = 20`・`BLIND_POTION_SPAWN_CHANCE_PERCENT = 25`(他の未鑑定ポーションと同じ独立per-floor判定)・`BLIND_VIEW_RADIUS = 1`(隣接マスのみ)を追加
-- [ ] `src/game/vision.ts`: `computeVisiblePoints`に`radius`引数(デフォルト`VIEW_RADIUS`)を追加。新規`resolveViewRadius(state): number`(`blindTurnsRemaining > 0 ? BLIND_VIEW_RADIUS : VIEW_RADIUS`)をexportし、`deriveExploredState`内部の呼び出しをこれ経由に変更 + テスト
-- [ ] `src/game/blindness.ts`(新規、`confusion.ts`/`levitation.ts`と対になるファイル): `applyBlindnessTick(state)` — `blindTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`blindness-faded`を記録する純粋関数(rng不使用) + テスト
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で盲目の薬を1個抽選(見た目は回復薬と同一) + テスト
-- [ ] `src/game/frame.ts`・`src/game/enemies.ts`・`src/game/advanceTurn.ts`(杖の自動照準`findNearestVisibleEnemy`): 各所の`computeVisiblePoints(state.terrain, state.player)`呼び出しを`computeVisiblePoints(state.terrain, state.player, resolveViewRadius(state))`に置き換え
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`blindness`分岐(`blindTurnsRemaining`を`BLIND_POTION_DURATION`にセットし`player-blinded`を記録)を追加。move/wait/use-itemの3箇所すべてで`applyBlindnessTick`を(他のtickと並べて)呼ぶ + テスト(視界半径が実際に縮むこと・探索済みグリッドが盲目中は拡張されないこと・杖が隣接以外を自動照準しなくなることを含む)
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`blindness: 💊`(未鑑定のため回復薬等と同一)を追加
-- [ ] `src/main.tsx`: ステータスバーに盲目中であることを示す表示を追加(混乱中・浮遊中と同様の1項目)
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`blindness: "盲目の薬"`、`player-blinded`(「◯を飲んだ。目の前が真っ暗になった!」)・`blindness-faded`(「目が見えるようになった」)の文言 + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"blindness"`を追加。`blindTurnsRemaining`(0以上の整数)の検証、`player-blinded`/`blindness-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を19に** + テスト
-- [ ] `src/game/save.test.ts`: shape guardに`blindTurnsRemaining: "number"`を追記
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、盲目の薬を飲んだ状態と飲んでいない状態それぞれで`buildFrameGrid`の可視マス数を比較し、盲目中は視界が大幅に縮んでいることを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"blindness"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-blinded`(payload: 継続ターン数`turns`)・`blindness-faded`(payloadなし)を追加
+- [x] `src/game/state.ts`: `GameState`に`blindTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `BLIND_POTION_DURATION = 20`・`BLIND_POTION_SPAWN_CHANCE_PERCENT = 25`(他の未鑑定ポーションと同じ独立per-floor判定)・`BLIND_VIEW_RADIUS = 1`(隣接マスのみ)を追加
+- [x] `src/game/vision.ts`: `computeVisiblePoints`に`radius`引数(デフォルト`VIEW_RADIUS`)を追加。新規`resolveViewRadius(state): number`(`blindTurnsRemaining > 0 ? BLIND_VIEW_RADIUS : VIEW_RADIUS`)をexportし、`deriveExploredState`内部の呼び出しをこれ経由に変更 + テスト
+- [x] `src/game/blindness.ts`(新規、`confusion.ts`/`levitation.ts`と対になるファイル): `applyBlindnessTick(state)` — `blindTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`blindness-faded`を記録する純粋関数(rng不使用) + テスト
+- [x] `src/game/floor.ts`: スポーンプールから低確率で盲目の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [x] `src/game/frame.ts`・`src/game/enemies.ts`・`src/game/advanceTurn.ts`(杖の自動照準`findNearestVisibleEnemy`): 各所の`computeVisiblePoints(state.terrain, state.player)`呼び出しを`computeVisiblePoints(state.terrain, state.player, resolveViewRadius(state))`に置き換え
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`blindness`分岐(`blindTurnsRemaining`を`BLIND_POTION_DURATION`にセットし`player-blinded`を記録)を追加。move/wait/use-itemの3箇所すべてで`applyBlindnessTick`を(他のtickと並べて)呼ぶ + テスト(視界半径が実際に縮むこと・探索済みグリッドが盲目中は拡張されないこと・杖が隣接以外を自動照準しなくなることを含む)
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`blindness: 💊`(未鑑定のため回復薬等と同一)を追加
+- [x] `src/main.tsx`: ステータスバーに盲目中であることを示す表示を追加(混乱中・浮遊中と同様の1項目)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`blindness: "盲目の薬"`、`player-blinded`(「◯を飲んだ。目の前が真っ暗になった!」)・`blindness-faded`(「目が見えるようになった」)の文言 + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"blindness"`を追加。`blindTurnsRemaining`(0以上の整数)の検証、`player-blinded`/`blindness-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を19に** + テスト
+- [x] `src/game/save.test.ts`: shape guardに`blindTurnsRemaining: "number"`を追記
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、盲目の薬を飲んだ状態と飲んでいない状態それぞれで`buildFrameGrid`の可視マス数を比較し、盲目中は視界が大幅に縮んでいることを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`resolveViewRadius(state)`を`vision.ts`に導入し、`computeVisiblePoints`に`radius`引数を追加。盲目中(`blindTurnsRemaining > 0`)は`BLIND_VIEW_RADIUS`(隣接マスのみ)を返し、描画(`frame.ts`)・敵AIの視認判定(`enemies.ts`)・杖の自動照準(`advanceTurn.ts`の`findNearestVisibleEnemy`)・探索済みグリッドの拡張(`deriveExploredState`)の4箇所すべてがこの関数経由になった(フロア生成時のスポーン配置は対象外のまま)。盲目の薬(`blindness`)は他の未鑑定ポーションと同じ`identifiedPotionKinds`の型に乗り、`blindness.ts`の`applyBlindnessTick`が混乱・浮遊と同型の純粋カウントダウン関数として追加された。パイプライン確認スクリプトでは、盲目状態で1マス移動した際の新規探索マス数(9)が通常状態(225)より大幅に少ないことを実際に`dist/game/index.mjs`越しに確認した。テストは722件(前回706件から+16)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン44完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

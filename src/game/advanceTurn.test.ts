@@ -3,6 +3,7 @@ import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import {
+	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
 	GOAL_FLOOR,
 	LEVITATION_POTION_DURATION,
@@ -556,6 +557,28 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
+	it("using a held blindness potion sets blindTurnsRemaining and logs player-blinded", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "blindness" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "blindness" },
+		});
+		/* applyBlindnessTick runs as part of the same turn-consuming action */
+		expect(next.blindTurnsRemaining).toBe(BLIND_POTION_DURATION - 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["blindness"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-blinded" &&
+					event.payload.turns === BLIND_POTION_DURATION,
+			),
+		).toBe(true);
+	});
+
 	it("moving while confused ignores the intended direction in favor of a random one", () => {
 		/* at seed 1, the confused roll always picks north regardless of intent */
 		const state: GameState = {
@@ -591,6 +614,44 @@ describe("advanceTurn", () => {
 		expect(
 			current.events.some((event) => event.type === "confusion-faded"),
 		).toBe(true);
+	});
+
+	it("blindTurnsRemaining reaches 0 and fires blindness-faded", () => {
+		let current: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			blindTurnsRemaining: 1,
+		};
+		current = advanceTurn(current, { type: "wait" });
+		expect(current.blindTurnsRemaining).toBe(0);
+		expect(
+			current.events.some((event) => event.type === "blindness-faded"),
+		).toBe(true);
+	});
+
+	it("shrinks explored-tile growth while blind (reduced view radius)", () => {
+		/* buildArenaGameState pre-explores everything reachable at full radius,
+		 * so blank the explored grid first to isolate this one move's growth.
+		 * Exploration only re-derives on move, not on wait. */
+		const base = buildArenaGameState(15, 15, 1);
+		const blankExplored = base.explored.map((column) =>
+			column.map(() => false),
+		);
+
+		const sighted = advanceTurn(
+			{ ...base, explored: blankExplored },
+			move("east"),
+		);
+		const blinded = advanceTurn(
+			{ ...base, explored: blankExplored, blindTurnsRemaining: 5 },
+			move("east"),
+		);
+
+		const countExplored = (state: GameState): number =>
+			state.explored.reduce(
+				(total, column) => total + column.filter(Boolean).length,
+				0,
+			);
+		expect(countExplored(blinded)).toBeLessThan(countExplored(sighted));
 	});
 
 	it("using a held shield permanently raises playerDefense when blessed", () => {
@@ -973,6 +1034,7 @@ describe("advanceTurn", () => {
 				"strength",
 				"confusion",
 				"levitation",
+				"blindness",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

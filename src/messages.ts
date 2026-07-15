@@ -36,6 +36,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	slow: "杖",
 	levitation: "浮遊の薬",
 	"protect-armor": "防具保護の巻物",
+	blindness: "盲目の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -205,5 +206,9 @@ export const formatEvent = (
 			return "浮遊の効果が切れた";
 		case "armor-protected":
 			return `${ITEM_NAMES["protect-armor"]}を読んだ。防具が錆びなくなった!`;
+		case "player-blinded":
+			return `${ITEM_NAMES.blindness}を飲んだ。目の前が真っ暗になった!`;
+		case "blindness-faded":
+			return "目が見えるようになった";
 	}
 };

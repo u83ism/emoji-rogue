@@ -276,3 +276,10 @@ export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25;
 
 /** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. */
 export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+
+/** How many turns a blindness potion shrinks the player's field of view for. */
+export const BLIND_POTION_DURATION = 20;
+/** Chance (out of 100), independently rolled per floor, that a blindness potion spawns. */
+export const BLIND_POTION_SPAWN_CHANCE_PERCENT = 25;
+/** Field of view radius while blind — adjacent tiles only. */
+export const BLIND_VIEW_RADIUS = 1;

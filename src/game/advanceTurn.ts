@@ -1,6 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type RngState, stepUniform } from "../rng.js";
 import {
+	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
@@ -19,6 +20,7 @@ import {
 	SWORD_CURSE_CHANCE_PERCENT,
 	TRAP_DAMAGE,
 } from "./balance.js";
+import { applyBlindnessTick } from "./blindness.js";
 import { applyPlayerAttack, applyWandStrike } from "./combat.js";
 import { applyConfusionTick } from "./confusion.js";
 import { advanceEnemies } from "./enemies.js";
@@ -36,7 +38,11 @@ import type {
 	InventoryEntry,
 	Position,
 } from "./state.js";
-import { computeVisiblePoints, deriveExploredState } from "./vision.js";
+import {
+	computeVisiblePoints,
+	deriveExploredState,
+	resolveViewRadius,
+} from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>
@@ -259,7 +265,11 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
  * doesn't have (docs/design.md's single-key interaction rule).
  */
 const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
-	const visiblePoints = computeVisiblePoints(state.terrain, state.player);
+	const visiblePoints = computeVisiblePoints(
+		state.terrain,
+		state.player,
+		resolveViewRadius(state),
+	);
 	const visibleEnemies = state.enemies.filter((enemy) =>
 		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
 	);
@@ -550,6 +560,18 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "blindness") {
+		return {
+			...state,
+			blindTurnsRemaining: BLIND_POTION_DURATION,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{ type: "player-blinded", payload: { turns: BLIND_POTION_DURATION } },
+			]),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
@@ -635,15 +657,19 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return applyLevitationTick(
-					applyConfusionTick(
-						applyRegenerationTick(applyHungerTick(afterPlayer)),
+				return applyBlindnessTick(
+					applyLevitationTick(
+						applyConfusionTick(
+							applyRegenerationTick(applyHungerTick(afterPlayer)),
+						),
 					),
 				); /* descended — the new floor's enemies wait */
 			}
-			return applyLevitationTick(
-				applyConfusionTick(
-					applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
+			return applyBlindnessTick(
+				applyLevitationTick(
+					applyConfusionTick(
+						applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
+					),
 				),
 			);
 		}
@@ -654,9 +680,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return applyLevitationTick(
-				applyConfusionTick(
-					applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
+			return applyBlindnessTick(
+				applyLevitationTick(
+					applyConfusionTick(
+						applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
+					),
 				),
 			);
 		}
@@ -671,9 +699,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse.status !== "playing") {
 				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
-			return applyLevitationTick(
-				applyConfusionTick(
-					applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
+			return applyBlindnessTick(
+				applyLevitationTick(
+					applyConfusionTick(
+						applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
+					),
 				),
 			);
 		}

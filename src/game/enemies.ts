@@ -13,7 +13,7 @@ import {
 import { isAdjacent } from "./combat.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, InventoryEntry, Position } from "./state.js";
-import { computeVisiblePoints } from "./vision.js";
+import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /** Enemies move like the player: 4 directions, floor only. */
 const ENEMY_DIRECTIONS: readonly (readonly [number, number])[] = [
@@ -159,7 +159,11 @@ export const advanceEnemies = (state: GameState): GameState => {
 		return state;
 	}
 
-	const visiblePoints = computeVisiblePoints(state.terrain, state.player);
+	const visiblePoints = computeVisiblePoints(
+		state.terrain,
+		state.player,
+		resolveViewRadius(state),
+	);
 	const occupied = new Set(
 		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
 	);

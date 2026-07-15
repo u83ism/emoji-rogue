@@ -5,6 +5,7 @@ import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng } from "../rng.js";
 import {
 	AQUATOR_SPAWN_CHANCE_PERCENT,
+	BLIND_POTION_SPAWN_CHANCE_PERCENT,
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
 	calculateEnemyCountForFloor,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -260,6 +261,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < LEVITATION_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "levitation" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < BLIND_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "blindness" });
 	}
 	if (
 		remaining.length > 0 &&

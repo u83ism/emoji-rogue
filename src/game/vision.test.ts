@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
 import { seedToState } from "../rng.js";
-import { PLAYER_ATTACK_DAMAGE } from "./balance.js";
+import { BLIND_VIEW_RADIUS, PLAYER_ATTACK_DAMAGE } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { GameState } from "./state.js";
-import { computeVisiblePoints, deriveExploredState } from "./vision.js";
+import {
+	computeVisiblePoints,
+	deriveExploredState,
+	resolveViewRadius,
+} from "./vision.js";
 
 /**
  * A 7x3 corridor (column-major): one walkable row at y=1, cut in half by a
@@ -48,6 +52,32 @@ describe("computeVisiblePoints", () => {
 		expect(visible.has(encodePointKey(4, 1))).toBe(false);
 		expect(visible.has(encodePointKey(5, 1))).toBe(false);
 	});
+
+	it("respects a custom radius, seeing far fewer tiles when it shrinks", () => {
+		const state = buildArenaGameState(9, 7, 1);
+		const wide = computeVisiblePoints(state.terrain, state.player);
+		const narrow = computeVisiblePoints(state.terrain, state.player, 1);
+		expect(narrow.size).toBeLessThan(wide.size);
+		expect(narrow.has(encodePointKey(state.player.x, state.player.y))).toBe(
+			true,
+		);
+		expect(narrow.has(encodePointKey(0, 0))).toBe(false);
+	});
+});
+
+describe("resolveViewRadius", () => {
+	it("returns the normal radius when not blind", () => {
+		const state = buildArenaGameState(5, 5, 1);
+		expect(resolveViewRadius(state)).toBe(8);
+	});
+
+	it("returns the shrunken blind radius while blindTurnsRemaining is positive", () => {
+		const state: GameState = {
+			...buildArenaGameState(5, 5, 1),
+			blindTurnsRemaining: 5,
+		};
+		expect(resolveViewRadius(state)).toBe(BLIND_VIEW_RADIUS);
+	});
 });
 
 describe("deriveExploredState", () => {
@@ -74,6 +104,7 @@ describe("deriveExploredState", () => {
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
 			armorProtected: false,
+			blindTurnsRemaining: 0,
 			enemies: [],
 			items: [],
 			inventory: [],
@@ -95,5 +126,49 @@ describe("deriveExploredState", () => {
 		expect(next.explored[5]?.[1]).toBe(true); /* remembered */
 		expect(next.explored[4]?.[1]).toBe(false); /* never seen */
 		expect(state.explored[2]?.[1]).toBe(false); /* input not mutated */
+	});
+
+	it("explores fewer new cells while blind", () => {
+		const explored = buildUnexplored(7, 3);
+		const state: GameState = {
+			width: 7,
+			height: 3,
+			terrain: CORRIDOR_TERRAIN,
+			explored,
+			player: { x: 1, y: 1 },
+			playerHp: 10,
+			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
+			playerDefense: 0,
+			playerFood: 100,
+			hasRingOfRegeneration: false,
+			hasRingOfSustenance: false,
+			confusedTurnsRemaining: 0,
+			levitationTurnsRemaining: 0,
+			armorProtected: false,
+			blindTurnsRemaining: 5,
+			enemies: [],
+			items: [],
+			inventory: [],
+			identifiedPotionKinds: [],
+			goldPiles: [],
+			goldCollected: 0,
+			traps: [],
+			floor: 1,
+			stairs: { x: 2, y: 1, direction: "down" },
+			amulet: undefined,
+			hasAmulet: false,
+			events: [],
+			rng: seedToState(1),
+			status: "playing",
+		};
+		const next = deriveExploredState(state);
+
+		expect(next.explored[1]?.[1]).toBe(true); /* player's own tile */
+		expect(next.explored[2]?.[1]).toBe(
+			true,
+		); /* one tile away, still in radius 1 */
+		expect(next.explored[3]?.[1]).toBe(
+			false,
+		); /* two tiles away, too far while blind */
 	});
 });

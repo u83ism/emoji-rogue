@@ -121,7 +121,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "confusion" ||
 	value === "slow" ||
 	value === "levitation" ||
-	value === "protect-armor";
+	value === "protect-armor" ||
+	value === "blindness";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -253,6 +254,10 @@ const isGameEvent = (value: unknown): boolean => {
 			return true;
 		case "armor-protected":
 			return true;
+		case "player-blinded":
+			return isPositiveInteger(payload.turns);
+		case "blindness-faded":
+			return true;
 		default:
 			return false;
 	}
@@ -342,6 +347,10 @@ export const validateGameState = (
 	if (!isBooleanValue(armorProtected)) {
 		return err("armorProtected");
 	}
+	const blindTurnsRemaining = value.blindTurnsRemaining;
+	if (!isNonNegativeInteger(blindTurnsRemaining)) {
+		return err("blindTurnsRemaining");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -429,6 +438,7 @@ export const validateGameState = (
 		confusedTurnsRemaining,
 		levitationTurnsRemaining,
 		armorProtected,
+		blindTurnsRemaining,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,

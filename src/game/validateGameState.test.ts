@@ -420,6 +420,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects a non-integer or negative blindTurnsRemaining", () => {
+		expectRejected(
+			{ ...buildValidState(), blindTurnsRemaining: -1 },
+			"blindTurnsRemaining",
+		);
+		expectRejected(
+			{ ...buildValidState(), blindTurnsRemaining: 1.5 },
+			"blindTurnsRemaining",
+		);
+	});
+
+	it("accepts well-formed player-blinded and blindness-faded events and rejects a broken one", () => {
+		const blinded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-blinded", payload: { turns: 20 } }],
+		});
+		expect(blinded.ok).toBe(true);
+
+		const faded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "blindness-faded", payload: {} }],
+		});
+		expect(faded.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-blinded", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed wand-struck event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

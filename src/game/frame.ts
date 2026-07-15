@@ -2,7 +2,7 @@ import { encodePointKey } from "../pointkey.js";
 import type { Cell, TileGlyphs } from "../renderer/index.js";
 import type { EnemyKind, ItemKind } from "./events.js";
 import type { GameState, GameStatus } from "./state.js";
-import { computeVisiblePoints } from "./vision.js";
+import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 // Tile set limited to emoji already verified stable on a real terminal
 // (docs/tasks/modernization.md Stage 5).
@@ -54,6 +54,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	confusion: { glyph: "💊" },
 	/* Same glyph again — levitation is unidentified until drunk too. */
 	levitation: { glyph: "💊" },
+	/* Same glyph again — blindness is unidentified until drunk too. */
+	blindness: { glyph: "💊" },
 	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
 	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
@@ -128,7 +130,11 @@ const resolvePlayerCell = (status: GameStatus): Cell => {
  * the shell (`main.tsx`).
  */
 export const buildFrameGrid = (state: GameState): Cell[][] => {
-	const visiblePoints = computeVisiblePoints(state.terrain, state.player);
+	const visiblePoints = computeVisiblePoints(
+		state.terrain,
+		state.player,
+		resolveViewRadius(state),
+	);
 
 	const grid: Cell[][] = [];
 	for (let y = 0; y < state.height; y++) {

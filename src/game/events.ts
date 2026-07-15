@@ -19,7 +19,8 @@ export type ItemKind =
 	| "confusion"
 	| "slow"
 	| "levitation"
-	| "protect-armor";
+	| "protect-armor"
+	| "blindness";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -31,6 +32,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"strength",
 	"confusion",
 	"levitation",
+	"blindness",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -215,6 +217,16 @@ export type GameEvent =
 	| {
 			/** Sets armorProtected — see advanceEnemies' aquator rust check. */
 			readonly type: "armor-protected";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Drinking a blindness potion — see applyBlindnessTick and resolveViewRadius. */
+			readonly type: "player-blinded";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn blindTurnsRemaining reaches 0 — see applyBlindnessTick. */
+			readonly type: "blindness-faded";
 			readonly payload: Record<string, never>;
 	  };
 

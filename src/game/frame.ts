@@ -62,6 +62,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"raise-level": { glyph: "💊" },
 	/* Same glyph again — detect-monster is unidentified until drunk too. */
 	"detect-monster": { glyph: "💊" },
+	/* Same glyph again — life is unidentified until drunk too. */
+	life: { glyph: "💊" },
 	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
 	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */

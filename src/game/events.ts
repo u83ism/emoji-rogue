@@ -23,7 +23,8 @@ export type ItemKind =
 	| "blindness"
 	| "paralysis"
 	| "raise-level"
-	| "detect-monster";
+	| "detect-monster"
+	| "life";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -39,6 +40,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"paralysis",
 	"raise-level",
 	"detect-monster",
+	"life",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -259,6 +261,11 @@ export type GameEvent =
 			/** Fired the turn detectMonstersTurnsRemaining reaches 0 — see applyDetectMonstersTick. */
 			readonly type: "detect-monsters-faded";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Drinking a potion of life — permanently raises playerMaxHp and fully heals. */
+			readonly type: "player-revitalized";
+			readonly payload: { readonly maxHpBonus: number };
 	  };
 
 /**

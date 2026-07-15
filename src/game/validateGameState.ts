@@ -125,7 +125,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "blindness" ||
 	value === "paralysis" ||
 	value === "raise-level" ||
-	value === "detect-monster";
+	value === "detect-monster" ||
+	value === "life";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -271,6 +272,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.turns);
 		case "detect-monsters-faded":
 			return true;
+		case "player-revitalized":
+			return isPositiveInteger(payload.maxHpBonus);
 		default:
 			return false;
 	}

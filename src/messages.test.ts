@@ -215,6 +215,10 @@ describe("formatEvent", () => {
 				{ type: "detect-monsters-faded", payload: {} },
 				"敵の気配を感じられなくなった",
 			],
+			[
+				{ type: "player-revitalized", payload: { maxHpBonus: 5 } },
+				"生命の薬を飲んだ。最大HPが5上がり、体力が全回復した!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

@@ -847,16 +847,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 `docs/idea-memo.md`で有力候補とした「Brogueのpotion of life」(全回復+最大HPの恒久増加)を採用する。この薬の型は既存の武器強化/防具強化の巻物(呪いなしで恒久的にステータスを上げる消費アイテム)と全く同じで、対象が`playerAttackDamage`/`playerDefense`ではなく`playerMaxHp`になるだけ——`GameState`への新規フィールドは不要(既存の`playerMaxHp`/`playerHp`を直接書き換えるだけ)。マイルストーン48の「上級の薬」に続き、構造変更なしで完結する2件目のポーション追加になる。回復量が「最大HP上昇分」に依存するため既存の`player-healed`イベントを流用せず、専用の`player-revitalized`イベントで「最大HPが上がった」ことを明示する。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"life"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-revitalized`(payload: 最大HP上昇量`maxHpBonus`)を追加
-- [ ] `src/game/balance.ts`: `LIFE_POTION_MAX_HP_BONUS = 5`(マイルストーン45の`PLAYER_LEVEL_UP_HP_BONUS`より高め — 原作でも高価値な薬という位置づけ)・`LIFE_POTION_SPAWN_CHANCE_PERCENT = 15`(上級の薬と同じくやや低め)を追加
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`life`分岐(`playerMaxHp`を`LIFE_POTION_MAX_HP_BONUS`だけ増やし`playerHp`を新しい上限まで全回復、`player-revitalized`を記録)を追加 + テスト
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で生命の薬を1個抽選(見た目は回復薬と同一) + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`life: 💊`(未鑑定のため回復薬等と同一)を追加
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`life: "生命の薬"`、`player-revitalized`(「生命の薬を飲んだ。最大HPが◯上がり、体力が全回復した!」)の文言 + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"life"`を追加。`player-revitalized`イベントの検証ケースを追加(新規フィールドなし、`SAVE_FORMAT_VERSION`据え置き) + テスト
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、生命の薬を飲むと`playerMaxHp`が恒久的に増え`playerHp`が新しい上限まで全回復することを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"life"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-revitalized`(payload: 最大HP上昇量`maxHpBonus`)を追加
+- [x] `src/game/balance.ts`: `LIFE_POTION_MAX_HP_BONUS = 5`(マイルストーン45の`PLAYER_LEVEL_UP_HP_BONUS`より高め — 原作でも高価値な薬という位置づけ)・`LIFE_POTION_SPAWN_CHANCE_PERCENT = 15`(上級の薬と同じくやや低め)を追加
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`life`分岐(`playerMaxHp`を`LIFE_POTION_MAX_HP_BONUS`だけ増やし`playerHp`を新しい上限まで全回復、`player-revitalized`を記録)を追加 + テスト
+- [x] `src/game/floor.ts`: スポーンプールから低確率で生命の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`life: 💊`(未鑑定のため回復薬等と同一)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`life: "生命の薬"`、`player-revitalized`(「生命の薬を飲んだ。最大HPが◯上がり、体力が全回復した!」)の文言 + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"life"`を追加。`player-revitalized`イベントの検証ケースを追加(新規フィールドなし、`SAVE_FORMAT_VERSION`据え置き) + テスト
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、生命の薬を飲むと`playerMaxHp`が恒久的に増え`playerHp`が新しい上限まで全回復することを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+想定通り`GameState`への新規フィールド追加なし・`SAVE_FORMAT_VERSION`据え置きで完結した(マイルストーン48の上級の薬に続き2件目)。専用の`player-revitalized`イベントにより、生成された`player-healed`のような汎用回復メッセージではなく「最大HPが上がった」ことを明示するメッセージになった。パイプライン確認では、生命の薬を飲むと`playerMaxHp`が恒久的に増え`playerHp`が新しい上限まで全回復することを`dist/game/index.mjs`越しに確認した。テストは776件(前回772件から+4)すべて通過、型検査・lint・knip・buildも全てクリーン。`docs/idea-memo.md`の有力候補からの初採用が完了した。
+**マイルストーン51完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

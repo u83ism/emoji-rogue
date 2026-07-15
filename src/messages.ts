@@ -40,6 +40,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	paralysis: "麻痺の薬",
 	"raise-level": "レベルアップの薬",
 	"detect-monster": "索敵の薬",
+	life: "生命の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -236,5 +237,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES["detect-monster"]}を飲んだ。敵の気配を感じ取れるようになった!`;
 		case "detect-monsters-faded":
 			return "敵の気配を感じられなくなった";
+		case "player-revitalized":
+			return `${ITEM_NAMES.life}を飲んだ。最大HPが${event.payload.maxHpBonus}上がり、体力が全回復した!`;
 	}
 };

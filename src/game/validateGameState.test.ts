@@ -509,6 +509,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed player-revitalized event and rejects a broken one", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-revitalized", payload: { maxHpBonus: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-revitalized", payload: { maxHpBonus: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts well-formed player-blinded and blindness-faded events and rejects a broken one", () => {
 		const blinded = validateGameState({
 			...buildValidState(),

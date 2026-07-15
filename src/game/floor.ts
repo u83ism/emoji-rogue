@@ -19,6 +19,7 @@ import {
 	GOLD_PILES_PER_FLOOR,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
+	LIFE_POTION_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
@@ -289,6 +290,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "detect-monster" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < LIFE_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "life" });
 	}
 	if (
 		remaining.length > 0 &&

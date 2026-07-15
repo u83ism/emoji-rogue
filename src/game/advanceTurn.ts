@@ -8,6 +8,7 @@ import {
 	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
 	LEVITATION_POTION_DURATION,
+	LIFE_POTION_MAX_HP_BONUS,
 	MIN_PLAYER_ATTACK_DAMAGE,
 	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_FOOD,
@@ -620,6 +621,23 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 				{
 					type: "player-detected-monsters",
 					payload: { turns: DETECT_MONSTER_POTION_DURATION },
+				},
+			]),
+		};
+	}
+
+	if (kind === "life") {
+		const playerMaxHp = state.playerMaxHp + LIFE_POTION_MAX_HP_BONUS;
+		return {
+			...state,
+			playerMaxHp,
+			playerHp: playerMaxHp,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-revitalized",
+					payload: { maxHpBonus: LIFE_POTION_MAX_HP_BONUS },
 				},
 			]),
 		};

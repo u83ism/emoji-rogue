@@ -334,3 +334,8 @@ export const SCORE_AMULET_BONUS = 500;
 export const DETECT_MONSTER_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a detect monster potion spawns. */
 export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 25;
+
+/** Permanent playerMaxHp increase from a potion of life — higher than a level-up's bonus, a high-value find. */
+export const LIFE_POTION_MAX_HP_BONUS = 5;
+/** Chance (out of 100), independently rolled per floor, that a potion of life spawns — rare, like raise-level. */
+export const LIFE_POTION_SPAWN_CHANCE_PERCENT = 15;

@@ -8,6 +8,7 @@ import {
 	DETECT_MONSTER_POTION_DURATION,
 	GOAL_FLOOR,
 	LEVITATION_POTION_DURATION,
+	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
@@ -693,6 +694,28 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
+	it("using a held life potion permanently raises playerMaxHp and fully heals", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 3,
+			inventory: [{ kind: "life" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "life" },
+		});
+		expect(next.playerMaxHp).toBe(state.playerMaxHp + LIFE_POTION_MAX_HP_BONUS);
+		expect(next.playerHp).toBe(next.playerMaxHp);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["life"]);
+		expect(next.events).toEqual([
+			{
+				type: "player-revitalized",
+				payload: { maxHpBonus: LIFE_POTION_MAX_HP_BONUS },
+			},
+		]);
+	});
+
 	it("paralyzedTurnsRemaining reaches 0 and fires paralysis-faded", () => {
 		let current: GameState = {
 			...buildArenaGameState(9, 9, 1),
@@ -1200,6 +1223,7 @@ describe("advanceTurn", () => {
 				"paralysis",
 				"raise-level",
 				"detect-monster",
+				"life",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

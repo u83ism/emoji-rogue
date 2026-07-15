@@ -861,6 +861,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 想定通り`GameState`への新規フィールド追加なし・`SAVE_FORMAT_VERSION`据え置きで完結した(マイルストーン48の上級の薬に続き2件目)。専用の`player-revitalized`イベントにより、生成された`player-healed`のような汎用回復メッセージではなく「最大HPが上がった」ことを明示するメッセージになった。パイプライン確認では、生命の薬を飲むと`playerMaxHp`が恒久的に増え`playerHp`が新しい上限まで全回復することを`dist/game/index.mjs`越しに確認した。テストは776件(前回772件から+4)すべて通過、型検査・lint・knip・buildも全てクリーン。`docs/idea-memo.md`の有力候補からの初採用が完了した。
 **マイルストーン51完了(2026-07-15)。**
 
+## マイルストーン52 — クロンの風(1フロアへの粘りを防ぐ強制排出)
+
+`docs/idea-memo.md`で有力候補とした「シレンのクロンの風」(1つのフロアに長時間滞在すると警告の後に強制的に追い出される、粘り防止ギミック)を採用する。純粋に数値カウンタ+閾値超過時の強制効果だけで完結し、`descendStairs`という既存の階層遷移ロジックをそのまま再利用できる——実質的には「規定ターン数が経過したら自動で落とし穴を踏んだのと同じ扱いになる」という設計になる。GOAL_FLOOR(アミュレットのある最深部、上り階段しかない)は対象外とする——強制的な降下はGOAL_FLOORより下のフロアを作ってしまい「GOAL_FLOORから先は上りしかない」という既存の設計前提を壊すため。
+
+- [ ] `src/game/events.ts`: `GameEvent`に`winds-of-kron-warning`(payloadなし)・`winds-of-kron-eviction`(payloadなし)を追加
+- [ ] `src/game/state.ts`: `GameState`に`turnsOnCurrentFloor: number`(構造変更)を追加
+- [ ] `src/game/balance.ts`: `WINDS_OF_KRON_WARNING_TURNS = 150`(警告が出るターン数)・`WINDS_OF_KRON_EVICTION_TURNS = 200`(強制排出されるターン数)を追加
+- [ ] `src/game/windsOfKron.ts`(新規): `applyWindsOfKronTick(state)` — `state.floor >= GOAL_FLOOR`なら無条件で無視(GOAL_FLOORより下のフロアを生成しないため)。それ以外は`turnsOnCurrentFloor`を1増やし、`WINDS_OF_KRON_WARNING_TURNS`到達時に`winds-of-kron-warning`を記録、`WINDS_OF_KRON_EVICTION_TURNS`到達時に`winds-of-kron-eviction`を記録してから`descendStairs`(floor.ts)を呼んで強制的に次のフロアへ落とす(`turnsOnCurrentFloor`は`descendStairs`側でのフロア遷移時に0リセットされる) + テスト
+- [ ] `src/game/floor.ts`: `buildFloorTransition`(descendStairs/ascendStairs共通のヘルパー)が返す状態に`turnsOnCurrentFloor: 0`を追加。`ascendStairs`のフロア1到達による早期return(2箇所、勝利/退出)にも同様に追加 + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyTurnEndTicks`に`applyWindsOfKronTick`を追加(既存の呼び出し4箇所すべてに自動的に効く)
+- [ ] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方に`turnsOnCurrentFloor: 0`を追加
+- [ ] `src/messages.ts`: `winds-of-kron-warning`(「不気味な風を感じる。長居は禁物のようだ…」)・`winds-of-kron-eviction`(「クロンの風に吹き飛ばされた!」)の文言 + テスト
+- [ ] `src/game/validateGameState.ts`: `turnsOnCurrentFloor`(0以上の整数)の検証、`winds-of-kron-warning`/`winds-of-kron-eviction`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を23に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`turnsOnCurrentFloor: "number"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、同じフロアで`WINDS_OF_KRON_EVICTION_TURNS`回以上`wait`し続けると実際にフロアが強制的に切り替わり`winds-of-kron-eviction`イベントが記録されることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -46,6 +46,10 @@ describe("formatEvent", () => {
 				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
 				"剣を装備した。攻撃力が1上がった!",
 			],
+			[
+				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
+				"盾を装備した。防御力が1上がった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);
@@ -59,5 +63,6 @@ describe("formatInventoryEntry", () => {
 			"回復薬 x2",
 		);
 		expect(formatInventoryEntry({ kind: "sword", quantity: 1 })).toBe("剣 x1");
+		expect(formatInventoryEntry({ kind: "shield", quantity: 1 })).toBe("盾 x1");
 	});
 });

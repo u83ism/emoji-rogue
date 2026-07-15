@@ -67,6 +67,7 @@ describe("deriveExploredState", () => {
 			player: { x: 1, y: 1 },
 			playerHp: 10,
 			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
+			playerDefense: 0,
 			enemies: [],
 			items: [],
 			inventory: [],

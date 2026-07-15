@@ -75,6 +75,8 @@ export interface GameState {
 	readonly playerHp: number;
 	/** Base damage plus any permanent bonus from swords used so far. */
 	readonly playerAttackDamage: number;
+	/** Damage reduction from shields used so far (0 initially). See MIN_DAMAGE_TAKEN. */
+	readonly playerDefense: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

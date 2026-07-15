@@ -1,6 +1,7 @@
 import {
 	PLAYER_MAX_HP,
 	POTION_HEAL_AMOUNT,
+	SHIELD_DEFENSE_BONUS,
 	SWORD_ATTACK_BONUS,
 } from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
@@ -85,9 +86,9 @@ const applyItemPickup = (state: GameState): GameState => {
 /**
  * Uses one held item of `kind`, consumed from inventory either way. A potion
  * heals up to the cap (using it at full health wastes it); a sword instead
- * permanently raises playerAttackDamage — stacks with no cap, since it is a
- * reward, not a resource that can be wasted. Using a kind not held is a
- * no-op (same reference, no turn spent).
+ * permanently raises playerAttackDamage and a shield playerDefense — both
+ * stack with no cap, since they are rewards, not a resource that can be
+ * wasted. Using a kind not held is a no-op (same reference, no turn spent).
  */
 const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	const held = state.inventory.find((entry) => entry.kind === kind);
@@ -105,6 +106,20 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 				{
 					type: "weapon-equipped",
 					payload: { kind, bonus: SWORD_ATTACK_BONUS },
+				},
+			]),
+		};
+	}
+
+	if (kind === "shield") {
+		return {
+			...state,
+			playerDefense: state.playerDefense + SHIELD_DEFENSE_BONUS,
+			inventory,
+			events: buildEventLog(state.events, [
+				{
+					type: "armor-equipped",
+					payload: { kind, bonus: SHIELD_DEFENSE_BONUS },
 				},
 			]),
 		};

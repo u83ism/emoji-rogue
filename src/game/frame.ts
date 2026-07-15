@@ -26,10 +26,12 @@ const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 const STAIRS_CELL: Cell = { glyph: "🔽" };
 /* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require
- * one — see docs/design.md's "avoid combining sequences" rule. */
+ * one — see docs/design.md's "avoid combining sequences" rule. Shield uses a
+ * safety vest for the same reason (🛡️ needs a variation selector). */
 const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	potion: { glyph: "💊" },
 	sword: { glyph: "🔪" },
+	shield: { glyph: "🦺" },
 };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width

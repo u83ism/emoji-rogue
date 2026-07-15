@@ -8,6 +8,7 @@ import {
 	ENEMY_MAX_HP,
 	GOAL_FLOOR,
 	POTION_COUNT_PER_FLOOR,
+	SHIELD_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
@@ -73,9 +74,9 @@ const collectSpawnPool = (
  * digger terrain, the player at the center of the first room, zombies and
  * bats (counts scale with `floor`, see balance.ts's `calculateEnemyCountForFloor`),
  * the down staircase, POTION_COUNT_PER_FLOOR potions and — independently,
- * with SWORD_SPAWN_CHANCE_PERCENT odds — a sword, all drawn from the spawn
- * pool. Nothing shares a tile with anything else unless the pool ran dry
- * (tiny fully-visible maps).
+ * each with its own spawn chance — a sword and a shield, all drawn from the
+ * spawn pool. Nothing shares a tile with anything else unless the pool ran
+ * dry (tiny fully-visible maps).
  */
 export const buildFloorLayout = (
 	width: number,
@@ -126,6 +127,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < SWORD_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "sword" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < SHIELD_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "shield" });
 	}
 
 	return { terrain: columns, player, enemies, items, stairs };

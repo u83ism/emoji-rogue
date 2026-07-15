@@ -9,6 +9,7 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	potion: "回復薬",
 	sword: "剣",
+	shield: "盾",
 };
 
 // System notices (app/session concerns, never part of GameState). They speak
@@ -59,5 +60,7 @@ export const formatEvent = (event: GameEvent): string => {
 			return `${event.payload.floor}階に到達し、生還に成功した!`;
 		case "weapon-equipped":
 			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;
+		case "armor-equipped":
+			return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力が${event.payload.bonus}上がった!`;
 	}
 };

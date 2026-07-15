@@ -101,6 +101,14 @@ describe("validateGameState", () => {
 			{ ...buildValidState(), playerAttackDamage: "1" },
 			"playerAttackDamage",
 		);
+		expectRejected(
+			{ ...buildValidState(), playerDefense: -1 },
+			"playerDefense",
+		);
+		expectRejected(
+			{ ...buildValidState(), playerDefense: "1" },
+			"playerDefense",
+		);
 
 		const valid = buildValidState();
 		const enemies = valid.enemies;
@@ -134,7 +142,7 @@ describe("validateGameState", () => {
 			"items",
 		);
 		expectRejected(
-			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "shield" }] },
+			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "bow" }] },
 			"items",
 		);
 		expectRejected(
@@ -149,7 +157,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "item-picked-up", payload: { kind: "shield" } }],
+				events: [{ type: "item-picked-up", payload: { kind: "bow" } }],
 			},
 			"events",
 		);
@@ -183,7 +191,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "weapon-equipped", payload: { kind: "shield", bonus: 1 } },
+					{ type: "weapon-equipped", payload: { kind: "bow", bonus: 1 } },
 				],
 			},
 			"events",
@@ -199,12 +207,42 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords) and rejects a broken one", () => {
+	it("accepts a well-formed armor-equipped event and rejects a broken one", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "armor-equipped", payload: { kind: "bow", bonus: 1 } },
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "armor-equipped", payload: { kind: "shield", bonus: 0 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed inventory (including swords and shields) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			inventory: [
 				{ kind: "potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
+				{ kind: "shield", quantity: 1 },
 			],
 		});
 		expect(accepted.ok).toBe(true);
@@ -212,11 +250,12 @@ describe("validateGameState", () => {
 			expect(accepted.value.inventory).toEqual([
 				{ kind: "potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
+				{ kind: "shield", quantity: 1 },
 			]);
 		}
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "shield", quantity: 1 }] },
+			{ ...buildValidState(), inventory: [{ kind: "bow", quantity: 1 }] },
 			"inventory",
 		);
 		expectRejected(

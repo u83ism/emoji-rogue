@@ -258,6 +258,36 @@ describe("advanceTurn", () => {
 		expect(next.playerAttackDamage).toBe(3);
 	});
 
+	it("using a held shield permanently raises playerDefense instead of healing", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "shield" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "shield" },
+		});
+		expect(next.playerDefense).toBe(state.playerDefense + 1);
+		expect(next.playerHp).toBe(state.playerHp); /* shields don't heal */
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
+		]);
+	});
+
+	it("using a second shield stacks the defense bonus", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerDefense: 1 /* as if a first shield was already used */,
+			inventory: [{ kind: "shield" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "shield" },
+		});
+		expect(next.playerDefense).toBe(2);
+	});
+
 	it("moving onto the staircase descends to the next floor", () => {
 		/* teleport the stairs right next to the player (room centers always
 		 * have floor neighbors), then step east onto them */

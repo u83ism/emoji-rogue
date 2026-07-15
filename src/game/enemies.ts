@@ -2,7 +2,11 @@ import { createAStarPath } from "../path/index.js";
 import { encodePointKey } from "../pointkey.js";
 import type { RngState } from "../rng.js";
 import { stepUniform } from "../rng.js";
-import { ENEMY_ACTIONS_PER_TURN, ENEMY_ATTACK_DAMAGE } from "./balance.js";
+import {
+	ENEMY_ACTIONS_PER_TURN,
+	ENEMY_ATTACK_DAMAGE,
+	MIN_DAMAGE_TAKEN,
+} from "./balance.js";
 import { isAdjacent } from "./combat.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
@@ -108,9 +112,10 @@ const stepWandering = (
  * One turn for every enemy, in array order, each acting
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts, by kind); otherwise chases via A* while
- * inside the player's field of view, or wanders using (and advancing) the
- * state's RNG. The player's HP reaching zero ends the run and cuts short any
+ * in place (damage from balance.ts by kind, reduced by state.playerDefense
+ * but never below MIN_DAMAGE_TAKEN); otherwise chases via A* while inside
+ * the player's field of view, or wanders using (and advancing) the state's
+ * RNG. The player's HP reaching zero ends the run and cuts short any
  * remaining actions, this enemy's and the rest of the array's alike.
  */
 export const advanceEnemies = (state: GameState): GameState => {
@@ -138,7 +143,10 @@ export const advanceEnemies = (state: GameState): GameState => {
 			action++
 		) {
 			if (isAdjacent(next, state.player)) {
-				const damage = ENEMY_ATTACK_DAMAGE[enemy.kind];
+				const damage = Math.max(
+					MIN_DAMAGE_TAKEN,
+					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense,
+				);
 				playerHp -= damage;
 				events.push({
 					type: "player-hit",

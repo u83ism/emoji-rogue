@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
-import { BAT_MAX_HP, PLAYER_ATTACK_DAMAGE, ZOMBIE_MAX_HP } from "./balance.js";
+import {
+	BAT_MAX_HP,
+	MIN_DAMAGE_TAKEN,
+	PLAYER_ATTACK_DAMAGE,
+	ZOMBIE_MAX_HP,
+} from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
@@ -102,6 +107,7 @@ describe("advanceEnemies", () => {
 			player: { x: 1, y: 1 },
 			playerHp: 10,
 			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
+			playerDefense: 0,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],
@@ -147,6 +153,33 @@ describe("advanceEnemies", () => {
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
 			{ type: "player-died", payload: { by: "bat" } },
+		]);
+	});
+
+	it("playerDefense reduces incoming damage", () => {
+		const state = {
+			...buildCorridorState([zombie(5, 1)]),
+			playerDefense: 1,
+			playerHp: 5,
+		};
+		const next = advanceEnemies(state);
+		/* zombie deals 1; defense would reduce it to 0, but the floor wins */
+		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
+	});
+
+	it("however high playerDefense climbs, damage never drops below MIN_DAMAGE_TAKEN", () => {
+		const state = {
+			...buildCorridorState([zombie(5, 1)]),
+			playerDefense: 100,
+			playerHp: 5,
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
+		expect(next.events).toEqual([
+			{
+				type: "player-hit",
+				payload: { by: "zombie", damage: MIN_DAMAGE_TAKEN },
+			},
 		]);
 	});
 });

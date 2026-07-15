@@ -7,6 +7,8 @@ import type { EnemyKind } from "./events.js";
 
 export const PLAYER_MAX_HP = 10;
 export const PLAYER_ATTACK_DAMAGE = 1;
+/** However high playerDefense climbs, an enemy attack always deals at least this much. */
+export const MIN_DAMAGE_TAKEN = 1;
 
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;
@@ -77,6 +79,11 @@ export const POTION_HEAL_AMOUNT = 5;
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
 export const SWORD_SPAWN_CHANCE_PERCENT = 30;
+
+/** Permanent boost to playerDefense per shield used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
+export const SHIELD_DEFENSE_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that a shield spawns. */
+export const SHIELD_SPAWN_CHANCE_PERCENT = 30;
 
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;

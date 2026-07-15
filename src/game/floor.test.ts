@@ -45,6 +45,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "sword").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.items.filter((item) => item.kind === "shield").length,
+			).toBeLessThanOrEqual(1);
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);
@@ -124,6 +127,27 @@ describe("sword spawning", () => {
 				(item) => item.kind === "sword",
 			).length;
 			expect(swordCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("shield spawning", () => {
+	it("spawns a shield on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "shield",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one shield on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const shieldCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "shield",
+			).length;
+			expect(shieldCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

@@ -77,6 +77,19 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a bat as a valid enemy kind", () => {
+		const valid = buildValidState();
+		const enemies = valid.enemies;
+		if (!Array.isArray(enemies) || enemies.length === 0) {
+			throw new Error("unreachable: the dungeon state spawns enemies");
+		}
+		const result = validateGameState({
+			...valid,
+			enemies: [{ ...enemies[0], kind: "bat", hp: 1 }],
+		});
+		expect(result.ok).toBe(true);
+	});
+
 	it("rejects broken combat fields", () => {
 		expectRejected({ ...buildValidState(), playerHp: 0 }, "playerHp");
 		expectRejected({ ...buildValidState(), playerHp: 9999 }, "playerHp");

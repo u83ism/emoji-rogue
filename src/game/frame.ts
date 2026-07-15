@@ -1,5 +1,6 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell, TileGlyphs } from "../renderer/index.js";
+import type { EnemyKind } from "./events.js";
 import type { GameState } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
@@ -14,7 +15,11 @@ const PLAYER_CELL: Cell = { glyph: "🧑" };
 /* Single-codepoint, Unicode 6.0 — inside the "technically stable" emoji
  * category docs/design.md restricts tiles to. */
 const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
-const ENEMY_CELL: Cell = { glyph: "🧟" };
+/* Bat, also single-codepoint. Per-kind so a third enemy kind is one entry. */
+const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
+	zombie: { glyph: "🧟" },
+	bat: { glyph: "🦇" },
+};
 /* Down staircase (also single-codepoint, Unicode 6.0). */
 const STAIRS_CELL: Cell = { glyph: "🔽" };
 /* Healing potion (also single-codepoint, Unicode 6.0). */
@@ -96,7 +101,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 		const enemyRow = grid[enemy.y];
 		if (enemyRow !== undefined) {
-			enemyRow[enemy.x] = ENEMY_CELL;
+			enemyRow[enemy.x] = ENEMY_GLYPHS[enemy.kind];
 		}
 	}
 

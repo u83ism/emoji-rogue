@@ -2,6 +2,7 @@ import type { EnemyKind, GameEvent, ItemKind } from "./game/events.js";
 
 const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
+	bat: "コウモリ",
 };
 
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
-import { ZOMBIE_MAX_HP } from "./balance.js";
+import { BAT_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
@@ -10,6 +10,13 @@ const zombie = (x: number, y: number): Enemy => ({
 	y,
 	kind: "zombie",
 	hp: ZOMBIE_MAX_HP,
+});
+
+const bat = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "bat",
+	hp: BAT_MAX_HP,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -111,5 +118,33 @@ describe("advanceEnemies", () => {
 	it("is deterministic: same state in, same state out", () => {
 		const state = buildCorridorState([zombie(7, 1)]);
 		expect(advanceEnemies(state)).toEqual(advanceEnemies(state));
+	});
+
+	it("a bat chases two tiles per player turn (twice a zombie's speed)", () => {
+		const state = buildCorridorState([bat(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([bat(5, 1)]);
+	});
+
+	it("a bat adjacent to the player attacks twice per turn", () => {
+		const state = buildCorridorState([bat(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([bat(5, 1)]);
+		expect(next.playerHp).toBe(state.playerHp - 2);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+		]);
+	});
+
+	it("a bat's second attack is skipped once it already ended the run", () => {
+		const state = { ...buildCorridorState([bat(5, 1)]), playerHp: 1 };
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(0);
+		expect(next.status).toBe("dead");
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+			{ type: "player-died", payload: { by: "bat" } },
+		]);
 	});
 });

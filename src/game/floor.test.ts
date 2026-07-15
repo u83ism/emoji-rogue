@@ -27,6 +27,14 @@ describe("descendStairs", () => {
 		expect(below.status).toBe("playing");
 	});
 
+	it("spawns both zombies and bats", () => {
+		for (const state of [start, below]) {
+			const kinds = state.enemies.map((enemy) => enemy.kind);
+			expect(kinds.filter((kind) => kind === "zombie").length).toBe(3);
+			expect(kinds.filter((kind) => kind === "bat").length).toBe(2);
+		}
+	});
+
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
 			expect(state.items.length).toBe(2);

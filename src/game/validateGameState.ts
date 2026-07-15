@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_HP } from "./balance.js";
-import type { GameEvent } from "./events.js";
+import type { EnemyKind, GameEvent } from "./events.js";
 import type { Enemy, GameState, Item } from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -51,6 +51,9 @@ const standsOnFloor = (
 	return terrain[x]?.[y] === 0;
 };
 
+const isEnemyKind = (value: unknown): value is EnemyKind =>
+	value === "zombie" || value === "bat";
+
 const isEnemyArray = (
 	value: unknown,
 	terrain: readonly (readonly number[])[],
@@ -60,7 +63,7 @@ const isEnemyArray = (
 		(enemy) =>
 			isRecord(enemy) &&
 			standsOnFloor(enemy, terrain) &&
-			enemy.kind === "zombie" &&
+			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp),
 	);
 
@@ -81,13 +84,13 @@ const isGameEvent = (value: unknown): boolean => {
 	const payload = value.payload;
 	switch (value.type) {
 		case "player-hit":
-			return payload.by === "zombie" && isPositiveInteger(payload.damage);
+			return isEnemyKind(payload.by) && isPositiveInteger(payload.damage);
 		case "enemy-hit":
-			return payload.target === "zombie" && isPositiveInteger(payload.damage);
+			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
 		case "enemy-defeated":
-			return payload.target === "zombie";
+			return isEnemyKind(payload.target);
 		case "player-died":
-			return payload.by === "zombie";
+			return isEnemyKind(payload.by);
 		case "floor-descended":
 			return isPositiveInteger(payload.floor);
 		case "player-healed":

@@ -1,5 +1,5 @@
-/** The only enemy kind so far. Events carry it so the shell can name the attacker. */
-export type EnemyKind = "zombie";
+/** Events carry it so the shell can name the attacker. */
+export type EnemyKind = "zombie" | "bat";
 
 /** The only item kind so far. */
 export type ItemKind = "potion";

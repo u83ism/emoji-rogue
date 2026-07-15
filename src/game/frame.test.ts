@@ -47,6 +47,13 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
 	});
 
+	it("draws bats with their own glyph, distinct from zombies", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const bat = { kind: "bat", hp: 1 } as const;
+		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
+		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
+	});
+
 	it("draws the player as a skull once the run has ended in death", () => {
 		const dead = { ...state, status: "dead" as const };
 		expect(buildFrameGrid(dead)[state.player.y]?.[state.player.x]?.glyph).toBe(

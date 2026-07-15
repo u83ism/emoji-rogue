@@ -21,6 +21,10 @@ describe("formatEvent", () => {
 				{ type: "player-died", payload: { by: "zombie" } },
 				"ゾンビにやられた……",
 			],
+			[
+				{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+				"コウモリから1のダメージを受けた",
+			],
 			[{ type: "floor-descended", payload: { floor: 2 } }, "2階に降りた"],
 			[
 				{ type: "player-healed", payload: { by: "potion", amount: 5 } },

@@ -190,6 +190,36 @@ describe("advanceTurn", () => {
 		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
 	});
 
+	it("stepping onto a hidden trap springs it: damage dealt, trap consumed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			traps: [{ x: 5, y: 1, kind: "dart" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.traps).toEqual([]);
+		expect(next.playerHp).toBe(state.playerHp - 2);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
+		]);
+	});
+
+	it("a fatal trap ends the run without a bonus enemy hit the same turn", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 2,
+			traps: [{ x: 5, y: 1, kind: "dart" as const }],
+			enemies: [zombie(6, 1)] /* would be adjacent after the move */,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(0);
+		expect(next.status).toBe("dead");
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
+			{ type: "player-died", payload: { by: "trap" } },
+		]);
+	});
+
 	it("picking up a second potion of the same kind stacks the quantity", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

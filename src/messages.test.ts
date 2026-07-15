@@ -22,6 +22,11 @@ describe("formatEvent", () => {
 				"ゾンビにやられた……",
 			],
 			[
+				{ type: "player-died", payload: { by: "hunger" } },
+				"空腹のあまり倒れた……",
+			],
+			[{ type: "player-died", payload: { by: "trap" } }, "わなにやられた……"],
+			[
 				{ type: "player-hit", payload: { by: "bat", damage: 1 } },
 				"コウモリから1のダメージを受けた",
 			],
@@ -50,6 +55,27 @@ describe("formatEvent", () => {
 				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
 				"盾を装備した。防御力が1上がった!",
 			],
+			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
+			[
+				{ type: "player-starved", payload: { damage: 1 } },
+				"空腹で1のダメージを受けた",
+			],
+			[
+				{ type: "player-ate", payload: { amount: 50 } },
+				"食料を食べた。空腹度が50回復した",
+			],
+			[
+				{ type: "player-ate", payload: { amount: 0 } },
+				"食料を食べたが、空腹度は満タンだった",
+			],
+			[
+				{ type: "gold-collected", payload: { amount: 7 } },
+				"7ゴールドを手に入れた",
+			],
+			[
+				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
+				"矢のわなを踏んでしまった。2のダメージを受けた",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);
@@ -64,5 +90,6 @@ describe("formatInventoryEntry", () => {
 		);
 		expect(formatInventoryEntry({ kind: "sword", quantity: 1 })).toBe("剣 x1");
 		expect(formatInventoryEntry({ kind: "shield", quantity: 1 })).toBe("盾 x1");
+		expect(formatInventoryEntry({ kind: "food", quantity: 3 })).toBe("食料 x3");
 	});
 });

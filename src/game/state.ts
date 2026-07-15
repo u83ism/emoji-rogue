@@ -1,5 +1,5 @@
 import type { RngState } from "../rng.js";
-import type { EnemyKind, GameEvent, ItemKind } from "./events.js";
+import type { EnemyKind, GameEvent, ItemKind, TrapKind } from "./events.js";
 
 export type Direction = "north" | "south" | "west" | "east";
 
@@ -54,6 +54,15 @@ export type GoldPile = Position & {
 	readonly amount: number;
 };
 
+/**
+ * A hidden trap, sprung once stepped on and then removed — never drawn, even
+ * after triggering (no discovery/marking mechanic; see docs/tasks/game.md
+ * milestone 22).
+ */
+export type Trap = Position & {
+	readonly kind: TrapKind;
+};
+
 /** One stack of a held item kind. No capacity limit (yet) — see the backlog. */
 export interface InventoryEntry {
 	readonly kind: ItemKind;
@@ -95,6 +104,7 @@ export interface GameState {
 	readonly goldPiles: readonly GoldPile[];
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;
+	readonly traps: readonly Trap[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
 	/**

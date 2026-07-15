@@ -1,4 +1,9 @@
-import type { EnemyKind, GameEvent, ItemKind } from "./game/events.js";
+import type {
+	EnemyKind,
+	GameEvent,
+	ItemKind,
+	TrapKind,
+} from "./game/events.js";
 import type { InventoryEntry } from "./game/state.js";
 
 const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
@@ -11,6 +16,10 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	sword: "剣",
 	shield: "盾",
 	food: "食料",
+};
+
+const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
+	dart: "矢のわな",
 };
 
 // System notices (app/session concerns, never part of GameState). They speak
@@ -48,9 +57,13 @@ export const formatEvent = (event: GameEvent): string => {
 		case "enemy-defeated":
 			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
 		case "player-died":
-			return event.payload.by === "hunger"
-				? "空腹のあまり倒れた……"
-				: `${ENEMY_NAMES[event.payload.by]}にやられた……`;
+			if (event.payload.by === "hunger") {
+				return "空腹のあまり倒れた……";
+			}
+			if (event.payload.by === "trap") {
+				return "わなにやられた……";
+			}
+			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
 		case "floor-descended":
 			return `${event.payload.floor}階に降りた`;
 		case "player-healed":
@@ -75,5 +88,7 @@ export const formatEvent = (event: GameEvent): string => {
 				: `${ITEM_NAMES.food}を食べたが、空腹度は満タンだった`;
 		case "gold-collected":
 			return `${event.payload.amount}ゴールドを手に入れた`;
+		case "trap-triggered":
+			return `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`;
 	}
 };

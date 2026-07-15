@@ -5,7 +5,7 @@
 // rolled back, but the reusable rollDamage() in damage.ts is kept for when
 // dice-based damage is wanted again).
 
-import type { EnemyKind } from "./events.js";
+import type { EnemyKind, TrapKind } from "./events.js";
 
 export const PLAYER_MAX_HP = 10;
 export const PLAYER_ATTACK_DAMAGE = 1;
@@ -107,3 +107,11 @@ export const FOOD_COUNT_PER_FLOOR = 1;
 export const GOLD_PILES_PER_FLOOR = 3;
 export const GOLD_AMOUNT_MIN = 2;
 export const GOLD_AMOUNT_MAX = 20;
+
+export const TRAP_COUNT_PER_FLOOR = 2;
+export const DART_TRAP_DAMAGE = 2;
+
+/** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
+export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
+	dart: DART_TRAP_DAMAGE,
+};

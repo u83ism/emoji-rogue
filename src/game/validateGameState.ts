@@ -1,13 +1,20 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
-import type { DeathCause, EnemyKind, GameEvent, ItemKind } from "./events.js";
+import type {
+	DeathCause,
+	EnemyKind,
+	GameEvent,
+	ItemKind,
+	TrapKind,
+} from "./events.js";
 import type {
 	Enemy,
 	GameState,
 	GoldPile,
 	InventoryEntry,
 	Item,
+	Trap,
 } from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -61,7 +68,7 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" || value === "bat";
 
 const isDeathCause = (value: unknown): value is DeathCause =>
-	isEnemyKind(value) || value === "hunger";
+	isEnemyKind(value) || value === "hunger" || value === "trap";
 
 const isEnemyArray = (
 	value: unknown,
@@ -113,6 +120,18 @@ const isGoldPileArray = (
 			isPositiveInteger(pile.amount),
 	);
 
+const isTrapKind = (value: unknown): value is TrapKind => value === "dart";
+
+const isTrapArray = (
+	value: unknown,
+	terrain: readonly (readonly number[])[],
+): value is readonly Trap[] =>
+	Array.isArray(value) &&
+	value.every(
+		(trap) =>
+			isRecord(trap) && standsOnFloor(trap, terrain) && isTrapKind(trap.kind),
+	);
+
 const isGameEvent = (value: unknown): boolean => {
 	if (!isRecord(value) || !isRecord(value.payload)) {
 		return false;
@@ -147,6 +166,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isNonNegativeInteger(payload.amount);
 		case "gold-collected":
 			return isPositiveInteger(payload.amount);
+		case "trap-triggered":
+			return isTrapKind(payload.kind) && isPositiveInteger(payload.damage);
 		default:
 			return false;
 	}
@@ -249,6 +270,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(goldCollected)) {
 		return err("goldCollected");
 	}
+	const traps = value.traps;
+	if (!isTrapArray(traps, terrain)) {
+		return err("traps");
+	}
 	const events = value.events;
 	if (!isGameEventArray(events)) {
 		return err("events");
@@ -290,6 +315,11 @@ export const validateGameState = (
 			amount: pile.amount,
 		})),
 		goldCollected,
+		traps: traps.map((trap) => ({
+			x: trap.x,
+			y: trap.y,
+			kind: trap.kind,
+		})),
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },
 		status: "playing",

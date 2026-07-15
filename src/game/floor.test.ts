@@ -54,6 +54,8 @@ describe("descendStairs", () => {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
 				expect(pile.amount).toBeLessThanOrEqual(20);
 			}
+			expect(state.traps.length).toBe(2);
+			expect(state.traps.every((trap) => trap.kind === "dart")).toBe(true);
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);
@@ -62,6 +64,7 @@ describe("descendStairs", () => {
 				...state.enemies,
 				...state.items,
 				...state.goldPiles,
+				...state.traps,
 			];
 			for (const position of spawned) {
 				expect(state.terrain[position.x]?.[position.y]).toBe(0);

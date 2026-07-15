@@ -5,10 +5,11 @@ import {
 	POTION_HEAL_AMOUNT,
 	SHIELD_DEFENSE_BONUS,
 	SWORD_ATTACK_BONUS,
+	TRAP_DAMAGE,
 } from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
-import type { ItemKind } from "./events.js";
+import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog } from "./events.js";
 import { descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
@@ -110,6 +111,38 @@ const applyGoldPickup = (state: GameState): GameState => {
 };
 
 /**
+ * Springs any hidden trap under the player's feet: TRAP_DAMAGE[kind] damage,
+ * the trap consumed (one-time — never re-triggers, never becomes visible).
+ * A fatal hit ends the run with player-died(by: "trap"); advanceTurn's move
+ * case checks status right after this runs, so enemies never get a same-turn
+ * bonus hit on an already-trap-killed player.
+ */
+const applyTrapTrigger = (state: GameState): GameState => {
+	const trap = state.traps.find(
+		(candidate) =>
+			candidate.x === state.player.x && candidate.y === state.player.y,
+	);
+	if (trap === undefined) {
+		return state;
+	}
+	const damage = TRAP_DAMAGE[trap.kind];
+	const playerHp = state.playerHp - damage;
+	const events: GameEvent[] = [
+		{ type: "trap-triggered", payload: { kind: trap.kind, damage } },
+	];
+	if (playerHp <= 0) {
+		events.push({ type: "player-died", payload: { by: "trap" } });
+	}
+	return {
+		...state,
+		playerHp: Math.max(0, playerHp),
+		traps: state.traps.filter((candidate) => candidate !== trap),
+		status: playerHp <= 0 ? "dead" : state.status,
+		events: buildEventLog(state.events, events),
+	};
+};
+
+/**
  * Uses one held item of `kind`, consumed from inventory either way. A potion
  * heals up to the cap (using it at full health wastes it); a sword instead
  * permanently raises playerAttackDamage and a shield playerDefense — both
@@ -200,8 +233,10 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 		/* the whole floor is replaced, so this floor's enemies never act */
 		return descendStairs(state);
 	}
-	return applyGoldPickup(
-		applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+	return applyTrapTrigger(
+		applyGoldPickup(
+			applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+		),
 	);
 };
 
@@ -219,6 +254,9 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
 				return state; /* bumping a wall consumes no turn */
+			}
+			if (afterPlayer.status !== "playing") {
+				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
 				return applyHungerTick(

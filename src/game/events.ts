@@ -3,8 +3,11 @@ export type EnemyKind = "zombie" | "bat";
 
 export type ItemKind = "potion" | "sword" | "shield" | "food";
 
-/** What killed the player — an enemy kind, or starvation (milestone 20). */
-export type DeathCause = EnemyKind | "hunger";
+/** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
+export type TrapKind = "dart";
+
+/** What killed the player — an enemy kind, starvation, or a trap. */
+export type DeathCause = EnemyKind | "hunger" | "trap";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -74,6 +77,10 @@ export type GameEvent =
 	| {
 			readonly type: "gold-collected";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			readonly type: "trap-triggered";
+			readonly payload: { readonly kind: TrapKind; readonly damage: number };
 	  };
 
 /**

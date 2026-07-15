@@ -344,6 +344,48 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts well-formed hidden traps and a trap-triggered event, rejects broken ones", () => {
+		const floorSpot = buildDungeonGameState(20, 12, 42).stairs;
+
+		const accepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "dart" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
+				{ type: "player-died", payload: { by: "trap" } },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+		if (accepted.ok) {
+			expect(accepted.value.traps).toEqual([{ ...floorSpot, kind: "dart" }]);
+		}
+
+		expectRejected(
+			{ ...buildValidState(), traps: [{ x: 0, y: 0, kind: "dart" }] },
+			"traps",
+		);
+		expectRejected(
+			{ ...buildValidState(), traps: [{ ...floorSpot, kind: "pit" }] },
+			"traps",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-died", payload: { by: "curse" } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

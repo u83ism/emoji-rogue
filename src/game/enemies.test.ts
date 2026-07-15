@@ -114,6 +114,7 @@ describe("advanceEnemies", () => {
 			inventory: [],
 			goldPiles: [],
 			goldCollected: 0,
+			traps: [],
 			floor: 1,
 			stairs: { x: 2, y: 1 },
 			events: [],

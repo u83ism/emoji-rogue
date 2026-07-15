@@ -619,6 +619,25 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン39完了(2026-07-15)。**
 
+## マイルストーン40 — 混乱の薬(初のプレイヤー一時状態異常)
+
+これまでの薬・巻物・指輪はすべて「即座に・恒久的に」効果を発揮するものだった。原作Rogueの混乱の薬(potion of confusion)に着想を得て、初めて「一定ターン数だけ効果が続く一時的な状態異常」を導入する。混乱中は`move`アクションの意図した方向を無視し、rngで選んだランダムな方向に代わりに動く(壁にぶつかっても——通常なら「壁バンプはターン消費なし」だが、混乱中はランダム方向を選ぶ過程でrngを消費するため、結果として同一参照を返さずターンを消費する。「壁にぶつかって足踏みする」という原作の不確実さがここから自然に生まれる)。未鑑定ポーション(マイルストーン23)の4種類目として、既存の`POTION_KINDS`にそのまま乗る。
+
+- [ ] `src/game/events.ts`: `ItemKind`に`"confusion"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-confused`(payload: 継続ターン数`turns`)・`confusion-faded`(payloadなし、`floor-mapped`と同じ形)を追加
+- [ ] `src/game/state.ts`: `GameState`に`confusedTurnsRemaining: number`(構造変更)を追加
+- [ ] `src/game/balance.ts`: `CONFUSION_POTION_DURATION = 10`・`CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 30`(毒薬・怪力の薬と同じ独立per-floor判定)を追加
+- [ ] `src/game/confusion.ts`(新規、`hunger.ts`/`regeneration.ts`と対になるファイル): `applyConfusionTick(state)` — `confusedTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`confusion-faded`を記録する純粋関数。rng不使用(継続ターン数の消費自体は決定的) + テスト
+- [ ] `src/game/floor.ts`: スポーンプールから低確率で混乱の薬を1個抽選(毒薬・怪力の薬と同じ枠組み。見た目は回復薬と同一) + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyMove`の先頭で`state.confusedTurnsRemaining > 0`なら`stepUniform`で4方向から1つランダムに選び、プレイヤーが指定した方向の代わりにそちらを使う(rngを消費するため、壁に当たっても状態は同一参照にならず、結果的にターンを消費する)。`applyUseItem`に`confusion`分岐(`confusedTurnsRemaining`を`CONFUSION_POTION_DURATION`にセットし`player-confused`を記録。鑑定は他の未鑑定ポーションと同じ扱い)を追加。move/wait/use-itemの3箇所すべてで`applyConfusionTick`を(`applyHungerTick`/`applyRegenerationTick`と並べて)呼ぶ + テスト(意図しない方向への移動・意図しない方向にいた敵へのバンプ攻撃・壁方向を引いた場合にターンが消費されること・鑑定・継続ターン数の減衰を含む)
+- [ ] `src/game/frame.ts`: 変更なし(混乱はプレイヤー内部状態であり、独自の描画表現は持たせない——ステータスバー表示は`main.tsx`側の対象)
+- [ ] `src/main.tsx`: ステータスバーに混乱中であることを示す表示を追加(`満腹度`と同様の1項目。原作は視覚エフェクトを持つが、絵文字グリッドを崩さないテキスト表示に留める)
+- [ ] `src/messages.ts`: `ITEM_NAMES`に`confusion: "混乱の薬"`(未鑑定時は他の薬効同様「未鑑定の薬」)、`player-confused`(「◯を飲んだ。頭がくらくらする!」)・`confusion-faded`(「混乱がおさまった」)の文言 + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"confusion"`を追加。`confusedTurnsRemaining`(0以上の整数)の検証、`player-confused`/`confusion-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を15に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`confusedTurnsRemaining: "number"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、混乱の薬を飲んだ状態で複数ターン`move`を実行し、少なくとも1回は指定方向と異なる方向に移動する(または壁にぶつかってターンを消費する)ことを確認し、`confusedTurnsRemaining`が0まで減った時点で`confusion-faded`が記録されることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

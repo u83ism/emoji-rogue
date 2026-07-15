@@ -787,6 +787,22 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 `collectTeleportTargets`を`applyTrapTrigger`より前方に移動し、新設した`applyTrapTeleport(state)`ヘルパーに「乱数で移動先を選び`player-teleported`を記録し視界を更新する」ロジックを1本化。テレポート巻物側(`kind === "scroll"`分岐)もこのヘルパーを`{ ...applyTrapTeleport(state), inventory }`という形で呼び直すように書き換え、重複していたテレポート先選定ロジックを完全に統合した。テレポートの罠はGOAL_FLOORでも通常通りスポーンする(落とし穴と異なり、同一フロア内の移動でしかないため)。パイプライン確認では、テレポートの罠を踏むとダメージゼロ・トラップ消費・プレイヤー座標の変化・`trap-triggered`+`player-teleported`イベントの発火を`dist/game/index.mjs`越しに確認した。テストは750件(前回745件から+5)すべて通過、型検査・lint・knip・buildも全てクリーン。
 **マイルストーン47完了(2026-07-15)。**
 
+## マイルストーン48 — 上級の薬(レベルアップの薬、経験値システムを迂回する即時レベルアップ)
+
+マイルストーン45で経験値によるレベルアップを実装したが、原作Rogueにはもう一つ、敵を倒さずとも即座にレベルを1つ上げる**Potion of Raise Level**が存在する。この薬は「累積経験値が閾値を超える」という通常の成長ルートを迂回する特別な効果なので、`applyExperienceGain`(閾値判定・レベル上限10のキャップつき)とは別に、`experience.ts`へ`applyLevelUp(state)`という「`playerExperience`に一切触れず、`playerLevel`を無条件に+1し`playerMaxHp`/`playerHp`を恒久的に増やす」独立した純粋関数を新設する。無条件(上限なし)にする理由は、原作でもこの薬が終盤の伸びしろとして機能するため——`LEVEL_EXPERIENCE_THRESHOLDS`のレベル10キャップは「通常の狩りによる成長」だけに適用され、この薬による成長はそれを迂回してよい。`GameState`への新規フィールドは不要(既存の`playerLevel`/`playerMaxHp`/`playerHp`を直接書き換えるだけ)なので、構造変更なし・`SAVE_FORMAT_VERSION`据え置きで完結する初めての「未鑑定ポーション追加」マイルストーンになる。
+
+- [ ] `src/game/events.ts`: `ItemKind`に`"raise-level"`を追加し`POTION_KINDS`に加える(新規`GameEvent`は不要 — 既存の`player-leveled-up`をそのまま再利用)
+- [ ] `src/game/experience.ts`: `applyLevelUp(state): GameState`(`playerLevel`を無条件に+1、`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数、レベル上限なし・rng不使用) + テスト
+- [ ] `src/game/balance.ts`: `RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15`(他の未鑑定ポーションよりやや低め — 即時レベルアップは原作でも希少)を追加
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`raise-level`分岐(`applyLevelUp(state)`を呼び、`inventory`/`identifiedPotionKinds`を反映して返す)を追加 + テスト
+- [ ] `src/game/floor.ts`: スポーンプールから低確率で上級の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"raise-level": 💊`(未鑑定のため回復薬等と同一)を追加
+- [ ] `src/messages.ts`: `ITEM_NAMES`に`"raise-level": "レベルアップの薬"`を追加(飲んだ時のイベント文言は既存の`player-leveled-up`のものがそのまま出る) + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"raise-level"`を追加(新規フィールド・イベント検証は不要) + テスト
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、上級の薬を飲むと敵を倒さずに`playerLevel`が上がり`playerMaxHp`/`playerHp`が実際に増えることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

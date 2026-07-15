@@ -428,6 +428,16 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン29 — 呪われた剣・盾
+
+オリジナルRogueの「呪われた装備」を導入する。この実装では拾ったアイテムは`InventoryEntry`の個数カウントに合流し個体識別を失う(在庫は`{kind, quantity}`のスタックであって、個々の剣に呪いフラグを持たせる余地がない)ため、**呪いの当たり外れは装備(使用)した瞬間にその場で判定する**——スポーン時に呪いを固定してアイテム側に持たせる設計は採らない。この簡略化により`Item`の形は一切変わらず、`weapon-equipped`/`armor-equipped`イベントの`bonus`ペイロード(既存の`number`型)がそのまま負の値も表現できるため、新規のイベント種別もセーブ形式のバージョンアップも不要になる——これまでで最小の変更範囲。装備は現状「使ったら外せない」仕様なので、呪いで下がったステータスは原作同様そのまま張り付く。
+
+- [x] `src/game/balance.ts`: `SWORD_CURSE_CHANCE_PERCENT = 20`・`SHIELD_CURSE_CHANCE_PERCENT = 20`(独立判定)・`MIN_PLAYER_ATTACK_DAMAGE = 1`(呪われた剣で攻撃力が0以下に落ちないための下限。防御力は`MIN_DAMAGE_TAKEN`により被ダメージ側で既に下限が効いているため専用の下限は不要——呪われた盾が防御力を負にすると、むしろ被ダメージが増えるという筋の通った副作用になる)を追加
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`の`sword`/`shield`分岐で、使用の瞬間に`state.rng`を一時的にステートフルな`Rng`に起こして呪いを判定(既存の`descendStairs`/テレポート巻物と同じパターン)。呪われていれば`bonus`が負(剣は下限`MIN_PLAYER_ATTACK_DAMAGE`でクリップ)、そうでなければ従来どおり正の`bonus`を`weapon-equipped`/`armor-equipped`に記録し、`rng`を更新 + テスト(呪い有り無し両方・剣の下限クリップ・決定性を含む)
+- [x] `src/messages.ts`: `weapon-equipped`/`armor-equipped`の文言を`bonus`の符号で分岐(正なら従来どおり「上がった!」、負なら「呪われていた……◯下がった」) + テスト
+- [x] `src/game/validateGameState.ts`: `weapon-equipped`/`armor-equipped`の`bonus`検証を`isPositiveInteger`から「0以外の整数」(`isNonZeroInteger`)に緩和——正負どちらも受理する。ペイロードの型自体(`number`)は変わらないため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] 実機スモークテスト: 剣・盾を使った際に稀に「呪われていた」表示になりステータスが下がること、通常の当たりも引き続き機能することを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

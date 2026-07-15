@@ -47,6 +47,7 @@ describe("save file shape guard", () => {
 				armorProtected: "boolean",
 				confusedTurnsRemaining: "number",
 				blindTurnsRemaining: "number",
+				paralyzedTurnsRemaining: "number",
 				levitationTurnsRemaining: "number",
 				enemies: [
 					{

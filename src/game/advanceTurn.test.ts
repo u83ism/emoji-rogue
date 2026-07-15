@@ -7,6 +7,7 @@ import {
 	CONFUSION_POTION_DURATION,
 	GOAL_FLOOR,
 	LEVITATION_POTION_DURATION,
+	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
 	SLOW_WAND_DURATION,
@@ -580,6 +581,76 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
+	it("using a held paralysis potion sets paralyzedTurnsRemaining and logs player-paralyzed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "paralysis" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "paralysis" },
+		});
+		/* applyParalysisTick runs as part of the same turn-consuming action */
+		expect(next.paralyzedTurnsRemaining).toBe(PARALYSIS_POTION_DURATION - 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["paralysis"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-paralyzed" &&
+					event.payload.turns === PARALYSIS_POTION_DURATION,
+			),
+		).toBe(true);
+	});
+
+	it("paralyzedTurnsRemaining reaches 0 and fires paralysis-faded", () => {
+		let current: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			paralyzedTurnsRemaining: 1,
+		};
+		current = advanceTurn(current, { type: "wait" });
+		expect(current.paralyzedTurnsRemaining).toBe(0);
+		expect(
+			current.events.some((event) => event.type === "paralysis-faded"),
+		).toBe(true);
+	});
+
+	it("a paralyzed player cannot move — the position is unchanged but the turn still passes", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			paralyzedTurnsRemaining: 3,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual(state.player);
+		expect(next.paralyzedTurnsRemaining).toBe(2);
+		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
+	});
+
+	it("a paralyzed player cannot use an item — inventory is untouched but the turn still passes", () => {
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			paralyzedTurnsRemaining: 3,
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.paralyzedTurnsRemaining).toBe(2);
+		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
+	});
+
+	it("enemies still act while the player is paralyzed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			paralyzedTurnsRemaining: 3,
+			enemies: [zombie(5, 1)],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp - 1);
+	});
+
 	it("moving while confused ignores the intended direction in favor of a random one", () => {
 		/* at seed 1, the confused roll always picks north regardless of intent */
 		const state: GameState = {
@@ -1036,6 +1107,7 @@ describe("advanceTurn", () => {
 				"confusion",
 				"levitation",
 				"blindness",
+				"paralysis",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

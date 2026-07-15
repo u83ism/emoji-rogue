@@ -134,6 +134,8 @@ export interface GameState {
 	readonly armorProtected: boolean;
 	/** Turns left of shrunk field of view — see applyBlindnessTick and resolveViewRadius. */
 	readonly blindTurnsRemaining: number;
+	/** Turns left of being unable to act at all — see applyParalysisTick and advanceTurn. */
+	readonly paralyzedTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

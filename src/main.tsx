@@ -174,6 +174,12 @@ const App = () => {
 						<Text color="gray">盲目({state.blindTurnsRemaining})</Text>
 					</>
 				)}
+				{state.paralyzedTurnsRemaining > 0 && (
+					<>
+						<Text> </Text>
+						<Text color="red">麻痺({state.paralyzedTurnsRemaining})</Text>
+					</>
+				)}
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>

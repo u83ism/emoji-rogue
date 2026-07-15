@@ -8,6 +8,7 @@ import {
 	FOOD_RATION_RESTORE_AMOUNT,
 	LEVITATION_POTION_DURATION,
 	MIN_PLAYER_ATTACK_DAMAGE,
+	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_FOOD,
 	POISON_DAMAGE,
 	POTION_HEAL_AMOUNT,
@@ -28,6 +29,7 @@ import { buildEventLog, POTION_KINDS } from "./events.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
 import { applyLevitationTick } from "./levitation.js";
+import { applyParalysisTick } from "./paralysis.js";
 import { applyRegenerationTick } from "./regeneration.js";
 import type {
 	Action,
@@ -571,6 +573,21 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "paralysis") {
+		return {
+			...state,
+			paralyzedTurnsRemaining: PARALYSIS_POTION_DURATION,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-paralyzed",
+					payload: { turns: PARALYSIS_POTION_DURATION },
+				},
+			]),
+		};
+	}
+
 	const amount = Math.min(
 		POTION_HEAL_AMOUNT,
 		state.playerMaxHp - state.playerHp,
@@ -641,6 +658,21 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 };
 
 /**
+ * Every status-tick that runs at the end of a turn-consuming action, in a
+ * fixed order (hunger, regeneration, confusion, levitation, blindness,
+ * paralysis). Each tick is independently a no-op unless its own field is
+ * active, so the order among them does not affect the result.
+ */
+const applyTurnEndTicks = (state: GameState): GameState =>
+	applyParalysisTick(
+		applyBlindnessTick(
+			applyLevitationTick(
+				applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+			),
+		),
+	);
+
+/**
  * The pure game reducer: one action in, the next state out. Same state and
  * action always produce the same result; a blocked move returns the input
  * state unchanged (same reference).
@@ -651,6 +683,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
+			if (state.paralyzedTurnsRemaining > 0) {
+				/* Paralyzed: the intended move never happens, but the turn still
+				 * passes and enemies still act — same as a wait. */
+				return applyTurnEndTicks(advanceEnemies(state));
+			}
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
 				return state; /* bumping a wall consumes no turn */
@@ -659,21 +696,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return applyBlindnessTick(
-					applyLevitationTick(
-						applyConfusionTick(
-							applyRegenerationTick(applyHungerTick(afterPlayer)),
-						),
-					),
+				return applyTurnEndTicks(
+					afterPlayer,
 				); /* descended — the new floor's enemies wait */
 			}
-			return applyBlindnessTick(
-				applyLevitationTick(
-					applyConfusionTick(
-						applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
-					),
-				),
-			);
+			return applyTurnEndTicks(advanceEnemies(afterPlayer));
 		}
 		case "wait": {
 			/* Stand still for one turn; enemies still act. Without this a
@@ -682,17 +709,15 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return applyBlindnessTick(
-				applyLevitationTick(
-					applyConfusionTick(
-						applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
-					),
-				),
-			);
+			return applyTurnEndTicks(advanceEnemies(state));
 		}
 		case "use-item": {
 			if (state.status !== "playing") {
 				return state;
+			}
+			if (state.paralyzedTurnsRemaining > 0) {
+				/* Paralyzed: cannot use an item either — same as a wait. */
+				return applyTurnEndTicks(advanceEnemies(state));
 			}
 			const afterUse = applyUseItem(state, action.payload.kind);
 			if (afterUse === state) {
@@ -701,13 +726,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse.status !== "playing") {
 				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
-			return applyBlindnessTick(
-				applyLevitationTick(
-					applyConfusionTick(
-						applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
-					),
-				),
-			);
+			return applyTurnEndTicks(advanceEnemies(afterUse));
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write

@@ -37,6 +37,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	levitation: "浮遊の薬",
 	"protect-armor": "防具保護の巻物",
 	blindness: "盲目の薬",
+	paralysis: "麻痺の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -212,5 +213,9 @@ export const formatEvent = (
 			return "目が見えるようになった";
 		case "player-leveled-up":
 			return `レベルが上がった!(Lv.${event.payload.level})`;
+		case "player-paralyzed":
+			return `${ITEM_NAMES.paralysis}を飲んだ。体が動かなくなった!`;
+		case "paralysis-faded":
+			return "体が動くようになった";
 	}
 };

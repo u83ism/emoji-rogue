@@ -20,7 +20,8 @@ export type ItemKind =
 	| "slow"
 	| "levitation"
 	| "protect-armor"
-	| "blindness";
+	| "blindness"
+	| "paralysis";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -33,6 +34,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"confusion",
 	"levitation",
 	"blindness",
+	"paralysis",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -233,6 +235,16 @@ export type GameEvent =
 			/** Fired each level gained — see applyExperienceGain. */
 			readonly type: "player-leveled-up";
 			readonly payload: { readonly level: number };
+	  }
+	| {
+			/** Drinking a paralysis potion — see applyParalysisTick. */
+			readonly type: "player-paralyzed";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn paralyzedTurnsRemaining reaches 0 — see applyParalysisTick. */
+			readonly type: "paralysis-faded";
+			readonly payload: Record<string, never>;
 	  };
 
 /**

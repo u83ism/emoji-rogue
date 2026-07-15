@@ -751,20 +751,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 原作Rogueのポーションのうち、混乱・浮遊・盲目(これまで実装済み)と並ぶ危険な一種が**麻痺**——効いている間はプレイヤーが一切の行動を取れず(移動もアイテム使用も不可)、それでもターンは経過して敵は行動し続ける。これまでの一時状態(混乱=移動方向の上書き、浮遊=わな無効化、盲目=視界半径縮小)はどれも「行動はできるが結果が変わる」タイプだったのに対し、麻痺は初めて「行動そのものを無効化する」タイプになる。`advanceTurn`の`move`/`use-item`ケースの先頭で`state.paralyzedTurnsRemaining > 0`を検知したら、実際の移動・アイテム使用ロジックを一切実行せず`wait`と同じ「敵だけが行動する」経路に落とす。また、5つ目のターン終端tick(空腹・再生・混乱・浮遊・盲目)が並ぶ`applyBlindnessTick(applyLevitationTick(applyConfusionTick(applyRegenerationTick(applyHungerTick(...)))))`という5重ネストが`move`の2箇所・`wait`・`use-item`の計4箇所に重複していたので、本マイルストーンで`applyTurnEndTicks(state)`という1つの純粋関数に括り出し、麻痺tickを含めた6重ネストの重複をこれ以上増やさないようにする。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"paralysis"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-paralyzed`(payload: 継続ターン数`turns`)・`paralysis-faded`(payloadなし)を追加
-- [ ] `src/game/state.ts`: `GameState`に`paralyzedTurnsRemaining: number`(構造変更)を追加
-- [ ] `src/game/balance.ts`: `PARALYSIS_POTION_DURATION = 3`(他の一時状態より短いが行動皆無という重さで釣り合わせる)・`PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 25`を追加
-- [ ] `src/game/paralysis.ts`(新規、`confusion.ts`/`levitation.ts`/`blindness.ts`と対になるファイル): `applyParalysisTick(state)` — `paralyzedTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`paralysis-faded`を記録する純粋関数(rng不使用) + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyTurnEndTicks(state): GameState`(空腹→再生→混乱→浮遊→盲目→麻痺の6tickをまとめる純粋関数)を新設し、`move`(2箇所)・`wait`・`use-item`の計4箇所の重複したネストをこれ呼び出しに置き換える。`move`・`use-item`の先頭に`state.paralyzedTurnsRemaining > 0`の分岐を追加し、麻痺中は実際の移動/アイテム使用ロジックを飛ばして`applyTurnEndTicks(advanceEnemies(state))`(=waitと同じ経路)を返す。`applyUseItem`に`paralysis`分岐(`paralyzedTurnsRemaining`を`PARALYSIS_POTION_DURATION`にセットし`player-paralyzed`を記録)を追加 + テスト(麻痺中に移動しようとしても位置が変わらないこと・アイテムを使おうとしても持ち物が減らないこと・それでも敵は行動しターンが経過することを含む)
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で麻痺の薬を1個抽選(見た目は回復薬と同一) + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`paralysis: 💊`(未鑑定のため回復薬等と同一)を追加
-- [ ] `src/main.tsx`: ステータスバーに麻痺中であることを示す表示を追加(混乱中・浮遊中・盲目と同様の1項目)
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`paralysis: "麻痺の薬"`、`player-paralyzed`(「◯を飲んだ。体が動かなくなった!」)・`paralysis-faded`(「体が動くようになった」)の文言 + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"paralysis"`を追加。`paralyzedTurnsRemaining`(0以上の整数)の検証、`player-paralyzed`/`paralysis-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を21に** + テスト
-- [ ] `src/game/save.test.ts`: shape guardに`paralyzedTurnsRemaining: "number"`を追記
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、麻痺中に移動アクションを送っても実際には位置が変わらずターンだけ経過することを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"paralysis"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-paralyzed`(payload: 継続ターン数`turns`)・`paralysis-faded`(payloadなし)を追加
+- [x] `src/game/state.ts`: `GameState`に`paralyzedTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `PARALYSIS_POTION_DURATION = 3`(他の一時状態より短いが行動皆無という重さで釣り合わせる)・`PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 25`を追加
+- [x] `src/game/paralysis.ts`(新規、`confusion.ts`/`levitation.ts`/`blindness.ts`と対になるファイル): `applyParalysisTick(state)` — `paralyzedTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`paralysis-faded`を記録する純粋関数(rng不使用) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyTurnEndTicks(state): GameState`(空腹→再生→混乱→浮遊→盲目→麻痺の6tickをまとめる純粋関数)を新設し、`move`(2箇所)・`wait`・`use-item`の計4箇所の重複したネストをこれ呼び出しに置き換える。`move`・`use-item`の先頭に`state.paralyzedTurnsRemaining > 0`の分岐を追加し、麻痺中は実際の移動/アイテム使用ロジックを飛ばして`applyTurnEndTicks(advanceEnemies(state))`(=waitと同じ経路)を返す。`applyUseItem`に`paralysis`分岐(`paralyzedTurnsRemaining`を`PARALYSIS_POTION_DURATION`にセットし`player-paralyzed`を記録)を追加 + テスト(麻痺中に移動しようとしても位置が変わらないこと・アイテムを使おうとしても持ち物が減らないこと・それでも敵は行動しターンが経過することを含む)
+- [x] `src/game/floor.ts`: スポーンプールから低確率で麻痺の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`paralysis: 💊`(未鑑定のため回復薬等と同一)を追加
+- [x] `src/main.tsx`: ステータスバーに麻痺中であることを示す表示を追加(混乱中・浮遊中・盲目と同様の1項目)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`paralysis: "麻痺の薬"`、`player-paralyzed`(「◯を飲んだ。体が動かなくなった!」)・`paralysis-faded`(「体が動くようになった」)の文言 + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"paralysis"`を追加。`paralyzedTurnsRemaining`(0以上の整数)の検証、`player-paralyzed`/`paralysis-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を21に** + テスト
+- [x] `src/game/save.test.ts`: shape guardに`paralyzedTurnsRemaining: "number"`を追記
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、麻痺中に移動アクションを送っても実際には位置が変わらずターンだけ経過することを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`advanceTurn`の`move`/`use-item`ケースの先頭に`state.paralyzedTurnsRemaining > 0`の分岐を追加し、麻痺中は実際の移動・アイテム使用ロジックを一切実行せず`applyTurnEndTicks(advanceEnemies(state))`(waitと同じ経路)に落とすことで、混乱・浮遊・盲目とは異なる「行動そのものを無効化する」一時状態を実現した。あわせて、5〜6重にネストされたターン終端tickの呼び出しが`move`(2箇所)・`wait`・`use-item`の計4箇所に重複していたのを`applyTurnEndTicks(state)`という1つの純粋関数に統合し、今後tickが増えてもこの重複が増えないようにした。パイプライン確認では、麻痺中に移動アクションを送ってもプレイヤー座標が変わらず、それでも空腹度が減りターンが経過し、隣接する敵が実際に攻撃してくることを`dist/game/index.mjs`越しに確認した。テストは745件(前回731件から+14)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン46完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

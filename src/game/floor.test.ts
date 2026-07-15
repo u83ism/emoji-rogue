@@ -407,6 +407,27 @@ describe("blindness potion spawning", () => {
 	});
 });
 
+describe("paralysis potion spawning", () => {
+	it("spawns a paralysis potion on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "paralysis",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one paralysis potion on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const paralysisCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "paralysis",
+			).length;
+			expect(paralysisCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("thief spawning", () => {
 	it("spawns a thief on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

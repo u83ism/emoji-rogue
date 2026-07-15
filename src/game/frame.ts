@@ -56,6 +56,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	levitation: { glyph: "💊" },
 	/* Same glyph again — blindness is unidentified until drunk too. */
 	blindness: { glyph: "💊" },
+	/* Same glyph again — paralysis is unidentified until drunk too. */
+	paralysis: { glyph: "💊" },
 	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
 	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */

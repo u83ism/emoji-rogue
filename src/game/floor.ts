@@ -20,6 +20,7 @@ import {
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
+	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -267,6 +268,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < BLIND_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "blindness" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < PARALYSIS_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "paralysis" });
 	}
 	if (
 		remaining.length > 0 &&

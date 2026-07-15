@@ -443,6 +443,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects a non-integer or negative paralyzedTurnsRemaining", () => {
+		expectRejected(
+			{ ...buildValidState(), paralyzedTurnsRemaining: -1 },
+			"paralyzedTurnsRemaining",
+		);
+		expectRejected(
+			{ ...buildValidState(), paralyzedTurnsRemaining: 1.5 },
+			"paralyzedTurnsRemaining",
+		);
+	});
+
+	it("accepts well-formed player-paralyzed and paralysis-faded events and rejects a broken one", () => {
+		const paralyzed = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-paralyzed", payload: { turns: 3 } }],
+		});
+		expect(paralyzed.ok).toBe(true);
+
+		const faded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "paralysis-faded", payload: {} }],
+		});
+		expect(faded.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-paralyzed", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts well-formed player-blinded and blindness-faded events and rejects a broken one", () => {
 		const blinded = validateGameState({
 			...buildValidState(),

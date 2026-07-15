@@ -333,8 +333,26 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン23 — 未鑑定ポーション(毒薬)
+
+オリジナルRogueの真骨頂である「未鑑定アイテム」を導入する。今回は最小構成として、既存の回復薬💊と外見(絵文字)が全く同じ毒薬を1種追加し、「拾っただけでは・持ち物に入れただけでは種類が分からず、実際に飲むまで(またはこの実行内でその種類を一度でも鑑定するまで)判別できない」という核だけを実装する。**将来の拡張のためにあえて残す部分**: 実行ごとにランダムなフレーバーテキスト("青い薬"等)を各薬効に割り当てる方式は今回は入れない(その割り当て自体が人間向け文字列でありGameStateに直接持たせるとi18n規律に抵触するため、`messages.ts`側だけで解決できる設計になるまで保留)。今回は単に「未鑑定の薬」という共通の汎用名で表示するに留める——スコープを抑えつつ核心のゲームプレイ(見た目では善悪が分からない薬を飲むかどうかの判断)は再現できる。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"poison"`を追加。`POTION_KINDS: readonly ItemKind[] = ["potion", "poison"]`(薬効を持つ=未鑑定システム対象の種類一覧、共有ヘルパー用)を追加。`DeathCause`に`"poison"`を追加。`GameEvent`に`player-poisoned`(payload: 実ダメージ`damage`)を追加
+- [x] `src/game/state.ts`: `GameState`に`identifiedPotionKinds: readonly ItemKind[]`(この実行中に一度でも鑑定=使用した薬効の一覧)を追加
+- [x] `src/game/balance.ts`: `POISON_DAMAGE = 4`・`POISON_POTION_SPAWN_CHANCE_PERCENT = 30`(剣・盾と同じ独立判定の仕組み)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で毒薬を1個抽選(既存の剣・盾抽選と同じ枠組み。外見(絵文字)は回復薬と同一のため、拾った時点では区別がつかない) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`poison`分岐を追加(`POISON_DAMAGE`だけ`playerHp`を削り`player-poisoned`を記録。HPが0以下なら`player-died(by: "poison")`+`status: "dead"`)。回復薬・毒薬のどちらを使っても、その種類を`identifiedPotionKinds`に追加(鑑定)。`use-item`アクションの実行後、毒薬で致死した場合は同ターンの敵の行動をスキップ(マイルストーン22のわな死亡ガードと同じ理由) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`poison: 💊`(回復薬と同一の絵文字——未鑑定の間は見た目で区別できないという核を絵文字レベルでも体現する)を追加
+- [x] `src/messages.ts`: `formatEvent`・`formatInventoryEntry`の両方に`identifiedPotionKinds`引数を追加(核のデータに依存する表示のため、シェルから明示的に渡す形にした)。`item-picked-up`とインベントリ表示は、対象が`POTION_KINDS`に含まれ未鑑定なら共通の汎用名「未鑑定の薬」を、鑑定済みまたは薬効以外のアイテムなら実名を表示。`player-poisoned`の文言、`player-died`の`DeathCause`分岐に`"poison"`を追加(「毒薬を飲んで倒れた……」) + テスト
+- [x] `src/main.tsx`・`demo/main.js`: `formatEvent`/`formatInventoryEntry`の呼び出しに`state.identifiedPotionKinds`を渡すよう更新(シグネチャ変更への追従)
+- [x] `src/game/initialState.ts`: 両ビルダーの初期状態に`identifiedPotionKinds: []`を追加
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"poison"`を追加。`isDeathCause`に`"poison"`を追加。`identifiedPotionKinds`フィールドの検証(各要素が`isItemKind`)、`player-poisoned`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を10に**
+- [ ] 実機スモークテスト: 毒薬が回復薬と見分けがつかないこと・飲んだ時のダメージとログ・鑑定後は同種の薬が実名で表示されること・毒薬死亡時の専用死因文言を確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
+- ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)
+- 他の未鑑定アイテム(巻物、指輪など)・呪われたアイテムの導入(マイルストーン23で確立した「`identifiedPotionKinds`的な鑑定リスト+`messages.ts`側での表示分岐」という型を横展開できる)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { GameEvent } from "./game/events.js";
-import { formatEvent, formatInventoryEntry } from "./messages.js";
+import {
+	formatEvent,
+	formatInventoryEntry,
+	formatScoreSummary,
+} from "./messages.js";
 
 describe("formatEvent", () => {
 	it("turns every event kind into a Japanese log line", () => {
@@ -304,5 +308,16 @@ describe("formatInventoryEntry", () => {
 		expect(
 			formatInventoryEntry({ kind: "strength", quantity: 1 }, ["strength"]),
 		).toBe("怪力の薬 x1");
+	});
+});
+
+describe("formatScoreSummary", () => {
+	it("includes the score, level, floor, gold, and amulet status", () => {
+		expect(formatScoreSummary(1234, 5, 3, 150, true)).toBe(
+			"スコア: 1234(Lv.3, B5F, 所持金150, 護符あり)",
+		);
+		expect(formatScoreSummary(100, 1, 1, 0, false)).toBe(
+			"スコア: 100(Lv.1, B1F, 所持金0, 護符なし)",
+		);
 	});
 });

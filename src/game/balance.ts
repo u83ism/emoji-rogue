@@ -324,3 +324,8 @@ export const PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 25;
 
 /** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
 export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15;
+
+/** Final-score weights — see calculateScore in score.ts. */
+export const SCORE_PER_FLOOR = 100;
+export const SCORE_PER_LEVEL = 50;
+export const SCORE_AMULET_BONUS = 500;

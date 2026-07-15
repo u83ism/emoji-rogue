@@ -92,6 +92,18 @@ export const formatInventoryEntry = (
 ): string =>
 	`${resolveItemDisplayName(entry.kind, identifiedPotionKinds)} x${entry.quantity}`;
 
+/** The one-line run summary shown once the game ends — see calculateScore in game/score.ts. */
+export const formatScoreSummary = (
+	score: number,
+	floor: number,
+	playerLevel: number,
+	goldCollected: number,
+	hasAmulet: boolean,
+): string =>
+	`スコア: ${score}(Lv.${playerLevel}, B${floor}F, 所持金${goldCollected}, ${
+		hasAmulet ? "護符あり" : "護符なし"
+	})`;
+
 /**
  * The single place where game events become human-readable text (Japanese
  * for now). The core (src/game/) never produces strings, so swapping locale

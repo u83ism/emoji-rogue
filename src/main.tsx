@@ -12,11 +12,13 @@ import { buildDungeonGameState } from "./game/initialState.js";
 import { toInventoryLetter, toUseItemAction } from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import type { Replay } from "./game/replay.js";
+import { calculateScore } from "./game/score.js";
 import type { Action, GameState } from "./game/state.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
 	formatEvent,
 	formatInventoryEntry,
+	formatScoreSummary,
 	GAME_SAVED_MESSAGE,
 	INVENTORY_EMPTY_MESSAGE,
 	INVENTORY_TITLE,
@@ -186,6 +188,17 @@ const App = () => {
 					{formatEvent(event, state.identifiedPotionKinds)}
 				</Text>
 			))}
+			{(state.status === "dead" || state.status === "won") && (
+				<Text bold color="yellow">
+					{formatScoreSummary(
+						calculateScore(state),
+						state.floor,
+						state.playerLevel,
+						state.goldCollected,
+						state.hasAmulet,
+					)}
+				</Text>
+			)}
 			{/* System notices (app/session concerns — never game events, never
 			 * saved), kept visually apart from the log by a blank line. */}
 			{(showFullWidthWarning || state.status === "suspended") && (

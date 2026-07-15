@@ -810,12 +810,15 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 原作Rogueはプレイヤーが死亡または(アミュレットを持ち帰って)クリアすると、所持金・到達階層・レベル・死因をもとにしたスコアを表示して終了する。現状の`main.tsx`は`state.status`が`"playing"`でなくなると`formatEvent`によるログの最終行(「たおされた」「アミュレットを手に入れて帰還した」等)だけを画面に残したまま`exit()`しており、スコアという総括的な締めの表示がない。この機能はプレイヤーがすでに持っている`GameState`のフィールド(`goldCollected`・`floor`・`playerLevel`・`hasAmulet`)だけから導出できるので、`GameState`に新規フィールドは不要——`src/game/score.ts`に`calculateScore(state): number`という純粋関数(`derive*`命名規則どおり、乱数・I/O不使用)を追加し、`main.tsx`が run 終了時にそれを呼んで1行のスコアサマリーを表示するだけで完結する。
 
-- [ ] `src/game/score.ts`(新規): `calculateScore(state: GameState): number` — `goldCollected + floor * SCORE_PER_FLOOR + playerLevel * SCORE_PER_LEVEL + (hasAmulet ? SCORE_AMULET_BONUS : 0)`という単純な決定的合算。`src/game/balance.ts`に`SCORE_PER_FLOOR = 100`・`SCORE_PER_LEVEL = 50`・`SCORE_AMULET_BONUS = 500`を追加 + テスト
-- [ ] `src/game/index.ts`: `calculateScore`を再エクスポート(shellが使うための公開API、他のderive系関数と同じ扱い)
-- [ ] `src/main.tsx`: `state.status`が`"dead"`または`"won"`になった最終フレームで、ログの下に「スコア: ◯(Lv.◯, B◯F, 所持金◯, 護符あり/なし)」という1行のサマリーをステータスバーと同じ`<Box>`パターンで表示する。`exit()`を呼ぶ`useEffect`の直前にこの表示があるため、Inkのレンダーサイクル上この最終フレームは画面に残ったままプロセスが終了する(既存の死亡/勝利ログ行と同じ仕組み)
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、所持金・到達階層・レベル・アミュレット所持を組み合わせた複数パターンの`GameState`に対し`calculateScore`が期待通りの値を返すことを確認する
+- [x] `src/game/score.ts`(新規): `calculateScore(state: GameState): number` — `goldCollected + floor * SCORE_PER_FLOOR + playerLevel * SCORE_PER_LEVEL + (hasAmulet ? SCORE_AMULET_BONUS : 0)`という単純な決定的合算。`src/game/balance.ts`に`SCORE_PER_FLOOR = 100`・`SCORE_PER_LEVEL = 50`・`SCORE_AMULET_BONUS = 500`を追加 + テスト
+- [x] `src/game/index.ts`: `calculateScore`を再エクスポート(shellが使うための公開API、他のderive系関数と同じ扱い)
+- [x] `src/main.tsx`: `state.status`が`"dead"`または`"won"`になった最終フレームで、ログの下に「スコア: ◯(Lv.◯, B◯F, 所持金◯, 護符あり/なし)」という1行のサマリーをステータスバーと同じ`<Box>`パターンで表示する。`exit()`を呼ぶ`useEffect`の直前にこの表示があるため、Inkのレンダーサイクル上この最終フレームは画面に残ったままプロセスが終了する(既存の死亡/勝利ログ行と同じ仕組み)
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、所持金・到達階層・レベル・アミュレット所持を組み合わせた複数パターンの`GameState`に対し`calculateScore`が期待通りの値を返すことを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`GameState`への新規フィールド追加なし・`SAVE_FORMAT_VERSION`据え置きで完結した(既存フィールドからの純粋な導出のみ)。`messages.ts`に`formatScoreSummary`を追加し、スコア文言の組み立ても他の`formatEvent`/`formatInventoryEntry`と同じくshell側の1箇所に集約した。`main.tsx`では`state.status`が`"dead"`/`"won"`になった最終フレームでログの下にスコア行を1行追加しただけで、既存の「最終フレームが画面に残ったままexitする」という仕組みをそのまま利用した。パイプライン確認では、所持金・到達階層・レベル・アミュレット所持を組み合わせた複数パターンで`calculateScore`が期待通り増減することを`dist/game/index.mjs`越しに確認した。テストは760件(前回756件から+4)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン49完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

@@ -21,6 +21,7 @@ export type { Replay } from "./replay.js";
 export { buildReplayGameState } from "./replay.js";
 export type { ReplayFileError } from "./replayFile.js";
 export { parseReplayFileContent } from "./replayFile.js";
+export { calculateScore } from "./score.js";
 export type {
 	Action,
 	Direction,

@@ -435,8 +435,10 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/balance.ts`: `SWORD_CURSE_CHANCE_PERCENT = 20`・`SHIELD_CURSE_CHANCE_PERCENT = 20`(独立判定)・`MIN_PLAYER_ATTACK_DAMAGE = 1`(呪われた剣で攻撃力が0以下に落ちないための下限。防御力は`MIN_DAMAGE_TAKEN`により被ダメージ側で既に下限が効いているため専用の下限は不要——呪われた盾が防御力を負にすると、むしろ被ダメージが増えるという筋の通った副作用になる)を追加
 - [x] `src/game/advanceTurn.ts`: `applyUseItem`の`sword`/`shield`分岐で、使用の瞬間に`state.rng`を一時的にステートフルな`Rng`に起こして呪いを判定(既存の`descendStairs`/テレポート巻物と同じパターン)。呪われていれば`bonus`が負(剣は下限`MIN_PLAYER_ATTACK_DAMAGE`でクリップ)、そうでなければ従来どおり正の`bonus`を`weapon-equipped`/`armor-equipped`に記録し、`rng`を更新 + テスト(呪い有り無し両方・剣の下限クリップ・決定性を含む)
 - [x] `src/messages.ts`: `weapon-equipped`/`armor-equipped`の文言を`bonus`の符号で分岐(正なら従来どおり「上がった!」、負なら「呪われていた……◯下がった」) + テスト
-- [x] `src/game/validateGameState.ts`: `weapon-equipped`/`armor-equipped`の`bonus`検証を`isPositiveInteger`から「0以外の整数」(`isNonZeroInteger`)に緩和——正負どちらも受理する。ペイロードの型自体(`number`)は変わらないため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] 実機スモークテスト: 剣・盾を使った際に稀に「呪われていた」表示になりステータスが下がること、通常の当たりも引き続き機能することを確認
+- [x] `src/game/validateGameState.ts`: `weapon-equipped`の`bonus`検証を`isPositiveInteger`から「任意の整数」(`isInteger`、剣は下限クリップで実質増分が0になる場合があるため0も許容)に、`armor-equipped`は「0以外の整数」(`isNonZeroInteger`、盾には下限クリップがなく±1で固定)に緩和。`playerDefense`自体も呪われた盾で負になりうるため`isNonNegativeInteger`から`isInteger`へ緩和。ペイロード・フィールドの型自体(`number`)は変わらないため**`SAVE_FORMAT_VERSION`は据え置き**
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): `state.rng`の初期ドローと`SWORD_CURSE_CHANCE_PERCENT`/`SHIELD_CURSE_CHANCE_PERCENT`の判定式を突き合わせるNodeスクリプトで、剣が確実に呪われ・盾が確実に祝福される乱数状態になる(seed, 経路)の組を事前に特定してから`node dist/main.mjs --seed=806`を実機起動。BFS経路で剣まで移動して装備すると「剣を装備したが、呪われていた……攻撃力は変わらなかった」(基礎攻撃力1が`MIN_PLAYER_ATTACK_DAMAGE`でクリップされ実質増減なし)が表示され、続けて盾まで移動して装備すると「盾を装備した。防御力が1上がった!」が表示され、呪い有り/無し両方の文言分岐と実際のステータス変化を同一セッションで確認できた(道中は戦闘なし、HPは10/10のまま終始変化なし)
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

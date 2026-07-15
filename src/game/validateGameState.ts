@@ -26,6 +26,12 @@ export const isPositiveInteger = (value: unknown): value is number =>
 const isNonNegativeInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value >= 0;
 
+const isInteger = (value: unknown): value is number =>
+	typeof value === "number" && Number.isInteger(value);
+
+const isNonZeroInteger = (value: unknown): value is number =>
+	isInteger(value) && value !== 0;
+
 export const isFiniteNumber = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value);
 
@@ -166,9 +172,9 @@ const isGameEvent = (value: unknown): boolean => {
 		case "game-won":
 			return isPositiveInteger(payload.floor);
 		case "weapon-equipped":
-			return isItemKind(payload.kind) && isPositiveInteger(payload.bonus);
+			return isItemKind(payload.kind) && isInteger(payload.bonus);
 		case "armor-equipped":
-			return isItemKind(payload.kind) && isPositiveInteger(payload.bonus);
+			return isItemKind(payload.kind) && isNonZeroInteger(payload.bonus);
 		case "player-hungry":
 			return true;
 		case "player-starved":
@@ -253,7 +259,7 @@ export const validateGameState = (
 		return err("playerAttackDamage");
 	}
 	const playerDefense = value.playerDefense;
-	if (!isNonNegativeInteger(playerDefense)) {
+	if (!isInteger(playerDefense)) {
 		return err("playerDefense");
 	}
 	const playerFood = value.playerFood;

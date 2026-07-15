@@ -114,9 +114,19 @@ export const formatEvent = (
 		case "game-won":
 			return `${event.payload.floor}階に到達し、生還に成功した!`;
 		case "weapon-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;
+			if (event.payload.bonus > 0) {
+				return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;
+			}
+			return event.payload.bonus < 0
+				? `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……攻撃力が${-event.payload.bonus}下がった`
+				: `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……攻撃力は変わらなかった`;
 		case "armor-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力が${event.payload.bonus}上がった!`;
+			if (event.payload.bonus > 0) {
+				return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力が${event.payload.bonus}上がった!`;
+			}
+			return event.payload.bonus < 0
+				? `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……防御力が${-event.payload.bonus}下がった`
+				: `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……防御力は変わらなかった`;
 		case "player-hungry":
 			return "空腹を感じてきた";
 		case "player-starved":

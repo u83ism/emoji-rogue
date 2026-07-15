@@ -103,11 +103,22 @@ export const POTION_HEAL_AMOUNT = 5;
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
 export const SWORD_SPAWN_CHANCE_PERCENT = 30;
+/**
+ * Chance (out of 100) that a sword turns out cursed the moment it's used —
+ * rolled fresh at use time, not at spawn (see docs/tasks/game.md milestone
+ * 29: inventory stacks lose per-item identity, so there is nowhere to pin a
+ * curse flag onto a specific sword ahead of time).
+ */
+export const SWORD_CURSE_CHANCE_PERCENT = 20;
+/** However cursed a sword, playerAttackDamage never drops below this. */
+export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 
 /** Permanent boost to playerDefense per shield used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
 export const SHIELD_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a shield spawns. */
 export const SHIELD_SPAWN_CHANCE_PERCENT = 30;
+/** Chance (out of 100) that a shield turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
+export const SHIELD_CURSE_CHANCE_PERCENT = 20;
 
 export const POISON_DAMAGE = 4;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */

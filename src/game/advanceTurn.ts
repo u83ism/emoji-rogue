@@ -1,14 +1,17 @@
 import { encodePointKey } from "../pointkey.js";
-import { createRng } from "../rng.js";
+import { createRng, type RngState } from "../rng.js";
 import {
 	FOOD_RATION_RESTORE_AMOUNT,
+	MIN_PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
 	POISON_DAMAGE,
 	POTION_HEAL_AMOUNT,
+	SHIELD_CURSE_CHANCE_PERCENT,
 	SHIELD_DEFENSE_BONUS,
 	STRENGTH_POTION_ATTACK_BONUS,
 	SWORD_ATTACK_BONUS,
+	SWORD_CURSE_CHANCE_PERCENT,
 	TRAP_DAMAGE,
 } from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
@@ -69,6 +72,23 @@ const removeFromInventory = (
 			entry.kind === kind ? { ...entry, quantity: entry.quantity - 1 } : entry,
 		)
 		.filter((entry) => entry.quantity > 0);
+
+/**
+ * Whether an equipped sword/shield turns out cursed, rolled fresh at use
+ * time (see SWORD_CURSE_CHANCE_PERCENT's comment for why not at spawn),
+ * consuming (and advancing) the rng in the same temporary-stateful-Rng
+ * pattern floor.ts's descendStairs and the teleport scroll both use.
+ */
+const rollCurse = (
+	rngState: RngState,
+	chancePercent: number,
+): { readonly cursed: boolean; readonly rng: RngState } => {
+	const rng = createRng(1).setState(rngState);
+	return {
+		cursed: rng.getUniformInt(0, 99) < chancePercent,
+		rng: rng.getState(),
+	};
+};
 
 /** Adds `kind` to identifiedPotionKinds if it is a potion kind not already identified. */
 const identifyPotionKind = (
@@ -202,29 +222,39 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	const inventory = removeFromInventory(state.inventory, kind);
 
 	if (kind === "sword") {
+		const { cursed, rng } = rollCurse(state.rng, SWORD_CURSE_CHANCE_PERCENT);
+		const rawBonus = cursed ? -SWORD_ATTACK_BONUS : SWORD_ATTACK_BONUS;
+		const playerAttackDamage = Math.max(
+			MIN_PLAYER_ATTACK_DAMAGE,
+			state.playerAttackDamage + rawBonus,
+		);
 		return {
 			...state,
-			playerAttackDamage: state.playerAttackDamage + SWORD_ATTACK_BONUS,
+			playerAttackDamage,
 			inventory,
+			rng,
 			events: buildEventLog(state.events, [
 				{
 					type: "weapon-equipped",
-					payload: { kind, bonus: SWORD_ATTACK_BONUS },
+					payload: {
+						kind,
+						bonus: playerAttackDamage - state.playerAttackDamage,
+					},
 				},
 			]),
 		};
 	}
 
 	if (kind === "shield") {
+		const { cursed, rng } = rollCurse(state.rng, SHIELD_CURSE_CHANCE_PERCENT);
+		const bonus = cursed ? -SHIELD_DEFENSE_BONUS : SHIELD_DEFENSE_BONUS;
 		return {
 			...state,
-			playerDefense: state.playerDefense + SHIELD_DEFENSE_BONUS,
+			playerDefense: state.playerDefense + bonus,
 			inventory,
+			rng,
 			events: buildEventLog(state.events, [
-				{
-					type: "armor-equipped",
-					payload: { kind, bonus: SHIELD_DEFENSE_BONUS },
-				},
+				{ type: "armor-equipped", payload: { kind, bonus } },
 			]),
 		};
 	}

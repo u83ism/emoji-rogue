@@ -93,7 +93,11 @@ export interface GameState {
 	readonly playerHp: number;
 	/** Base damage plus any permanent bonus from swords used so far. */
 	readonly playerAttackDamage: number;
-	/** Damage reduction from shields used so far (0 initially). See MIN_DAMAGE_TAKEN. */
+	/**
+	 * Damage reduction from shields used so far (0 initially) — can go negative
+	 * from a cursed shield (see MIN_DAMAGE_TAKEN, which floors damage taken
+	 * regardless).
+	 */
 	readonly playerDefense: number;
 	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
 	readonly playerFood: number;

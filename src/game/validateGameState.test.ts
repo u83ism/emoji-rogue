@@ -115,7 +115,10 @@ describe("validateGameState", () => {
 			"playerAttackDamage",
 		);
 		expectRejected(
-			{ ...buildValidState(), playerDefense: -1 },
+			{
+				...buildValidState(),
+				playerDefense: 1.5,
+			} /* cursed shields make negative valid, but non-integers never are */,
 			"playerDefense",
 		);
 		expectRejected(
@@ -216,7 +219,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "weapon-equipped", payload: { kind: "sword", bonus: 0 } },
+					{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1.5 } },
 				],
 			},
 			"events",

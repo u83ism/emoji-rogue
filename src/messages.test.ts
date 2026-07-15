@@ -52,6 +52,18 @@ describe("formatEvent", () => {
 				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
 				"盾を装備した。防御力が1上がった!",
 			],
+			[
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -1 } },
+				"剣を装備したが、呪われていた……攻撃力が1下がった",
+			],
+			[
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 0 } },
+				"剣を装備したが、呪われていた……攻撃力は変わらなかった",
+			],
+			[
+				{ type: "armor-equipped", payload: { kind: "shield", bonus: -1 } },
+				"盾を装備したが、呪われていた……防御力が1下がった",
+			],
 			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
 			[
 				{ type: "player-starved", payload: { damage: 1 } },

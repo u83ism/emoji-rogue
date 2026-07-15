@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
-import { calculateEnemyCountForFloor, GOAL_FLOOR } from "./balance.js";
+import {
+	calculateEnemyCountForFloor,
+	GOAL_FLOOR,
+	MONSTER_HOUSE_ENEMY_COUNT,
+} from "./balance.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { buildDungeonGameState } from "./initialState.js";
 
@@ -34,10 +38,16 @@ describe("descendStairs", () => {
 	});
 
 	it("spawns both zombies and bats", () => {
+		/* a monster house room, if it rolled on this floor, adds up to
+		 * MONSTER_HOUSE_ENEMY_COUNT more zombies/bats on top of the base count */
 		for (const state of [start, below]) {
 			const kinds = state.enemies.map((enemy) => enemy.kind);
-			expect(kinds.filter((kind) => kind === "zombie").length).toBe(3);
-			expect(kinds.filter((kind) => kind === "bat").length).toBe(2);
+			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
+			const batCount = kinds.filter((kind) => kind === "bat").length;
+			expect(zombieCount).toBeGreaterThanOrEqual(3);
+			expect(zombieCount).toBeLessThanOrEqual(3 + MONSTER_HOUSE_ENEMY_COUNT);
+			expect(batCount).toBeGreaterThanOrEqual(2);
+			expect(batCount).toBeLessThanOrEqual(2 + MONSTER_HOUSE_ENEMY_COUNT);
 		}
 	});
 
@@ -125,16 +135,22 @@ describe("descendStairs", () => {
 	});
 
 	it("spawns more enemies on deeper floors, matching the scaling formula", () => {
+		/* a monster house room, if it rolled on this floor, adds up to
+		 * MONSTER_HOUSE_ENEMY_COUNT more zombies/bats on top of the scaled count */
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= 7; floor++) {
 			state = descendStairs(state);
 			const kinds = state.enemies.map((enemy) => enemy.kind);
-			expect(kinds.filter((kind) => kind === "zombie").length).toBe(
-				calculateEnemyCountForFloor("zombie", floor),
+			const zombieBase = calculateEnemyCountForFloor("zombie", floor);
+			const batBase = calculateEnemyCountForFloor("bat", floor);
+			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
+			const batCount = kinds.filter((kind) => kind === "bat").length;
+			expect(zombieCount).toBeGreaterThanOrEqual(zombieBase);
+			expect(zombieCount).toBeLessThanOrEqual(
+				zombieBase + MONSTER_HOUSE_ENEMY_COUNT,
 			);
-			expect(kinds.filter((kind) => kind === "bat").length).toBe(
-				calculateEnemyCountForFloor("bat", floor),
-			);
+			expect(batCount).toBeGreaterThanOrEqual(batBase);
+			expect(batCount).toBeLessThanOrEqual(batBase + MONSTER_HOUSE_ENEMY_COUNT);
 		}
 	});
 });
@@ -494,6 +510,32 @@ describe("life potion spawning", () => {
 				(item) => item.kind === "life",
 			).length;
 			expect(lifeCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("monster house spawning", () => {
+	/* every ordinary zombie/bat spawns asleep — any awake one is monster house evidence */
+	const countAwakeZombiesAndBats = (seed: number): number =>
+		buildDungeonGameState(40, 20, seed).enemies.filter(
+			(enemy) =>
+				(enemy.kind === "zombie" || enemy.kind === "bat") && enemy.awake,
+		).length;
+
+	it("spawns a room of awake enemies on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from(
+			{ length: 30 },
+			(_, index) => countAwakeZombiesAndBats(index + 1) > 0,
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never adds more than MONSTER_HOUSE_ENEMY_COUNT awake zombies/bats", () => {
+		for (let seed = 1; seed <= 30; seed++) {
+			expect(countAwakeZombiesAndBats(seed)).toBeLessThanOrEqual(
+				MONSTER_HOUSE_ENEMY_COUNT,
+			);
 		}
 	});
 });

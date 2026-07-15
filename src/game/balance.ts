@@ -344,3 +344,8 @@ export const LIFE_POTION_SPAWN_CHANCE_PERCENT = 15;
 export const WINDS_OF_KRON_WARNING_TURNS = 150;
 /** Turns spent on one floor before the player is forcibly evicted to the next floor down. */
 export const WINDS_OF_KRON_EVICTION_TURNS = 200;
+
+/** Chance (out of 100), independently rolled per floor, that a monster house room spawns — see buildFloorLayout. */
+export const MONSTER_HOUSE_SPAWN_CHANCE_PERCENT = 15;
+/** Extra enemies dumped into a monster house room, all pre-awake. */
+export const MONSTER_HOUSE_ENEMY_COUNT = 4;

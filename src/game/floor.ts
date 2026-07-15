@@ -1,5 +1,6 @@
 import { at } from "../indexing.js";
 import { createDiggerMap } from "../map/digger.js";
+import type { Room } from "../map/features.js";
 import { getRoomCenter } from "../map/features.js";
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng } from "../rng.js";
@@ -21,6 +22,8 @@ import {
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	LIFE_POTION_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
+	MONSTER_HOUSE_ENEMY_COUNT,
+	MONSTER_HOUSE_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
@@ -71,6 +74,40 @@ const drawSpawnTile = (pool: Position[], rng: Rng): Position => {
 	const index = rng.getUniformInt(0, pool.length - 1);
 	const picked = at(pool, index);
 	pool.splice(index, 1);
+	return picked;
+};
+
+/**
+ * Same as drawSpawnTile, but restricted to one room's interior (room.x1..x2,
+ * room.y1..y2 are inclusive floor bounds — the walls sit one tile further
+ * out). Undefined if the pool has no tile left inside that room — see
+ * buildFloorLayout's monster house roll.
+ */
+const drawSpawnTileInRoom = (
+	pool: Position[],
+	room: Room,
+	rng: Rng,
+): Position | undefined => {
+	const indexesInRoom = pool
+		.map((_, index) => index)
+		.filter((index) => {
+			const position = at(pool, index);
+			return (
+				position.x >= room.x1 &&
+				position.x <= room.x2 &&
+				position.y >= room.y1 &&
+				position.y <= room.y2
+			);
+		});
+	if (indexesInRoom.length === 0) {
+		return undefined;
+	}
+	const pickedIndex = at(
+		indexesInRoom,
+		rng.getUniformInt(0, indexesInRoom.length - 1),
+	);
+	const picked = at(pool, pickedIndex);
+	pool.splice(pickedIndex, 1);
 	return picked;
 };
 
@@ -204,6 +241,38 @@ export const buildFloorLayout = (
 			awake: false,
 			slowedTurnsRemaining: 0,
 		});
+	}
+
+	/*
+	 * Monster house: a whole extra room's worth of already-awake enemies,
+	 * dumped into one room other than the player's starting room. Unlike
+	 * every other spawn above, these start awake — walking in is an ambush,
+	 * not a sneak-attack opportunity.
+	 */
+	const otherRooms = dungeon.getRooms().filter((room) => room !== firstRoom);
+	if (
+		otherRooms.length > 0 &&
+		pool.length > 0 &&
+		rng.getUniformInt(0, 99) < MONSTER_HOUSE_SPAWN_CHANCE_PERCENT
+	) {
+		const monsterHouseRoom = at(
+			otherRooms,
+			rng.getUniformInt(0, otherRooms.length - 1),
+		);
+		for (let i = 0; i < MONSTER_HOUSE_ENEMY_COUNT; i++) {
+			const tile = drawSpawnTileInRoom(pool, monsterHouseRoom, rng);
+			if (tile === undefined) {
+				break;
+			}
+			const kind = i % 2 === 0 ? "zombie" : "bat";
+			enemies.push({
+				...tile,
+				kind,
+				hp: ENEMY_MAX_HP[kind],
+				awake: true,
+				slowedTurnsRemaining: 0,
+			});
+		}
 	}
 
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);

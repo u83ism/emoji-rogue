@@ -143,7 +143,10 @@ const stepWandering = (
  * stands its ground: every landed hit additionally rolls
  * AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off playerDefense
  * (armor-rusted), so its later hits in the same fight — this turn's or a
- * future one's — land harder. Non-adjacent
+ * future one's — land harder. An awake enemy with slowedTurnsRemaining > 0
+ * (see the slow wand) skips this turn's action entirely — no movement, no
+ * attack — while the counter ticks down, checked right after the sleep
+ * check above. Non-adjacent
  * enemies chase via A* while inside the player's field of view, or wander
  * using (and advancing) the state's RNG. The player's HP reaching zero ends
  * the run and cuts short any remaining actions, this enemy's and the rest of
@@ -183,6 +186,16 @@ export const advanceEnemies = (state: GameState): GameState => {
 		if (!awake) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
 			nextEnemies.push(enemy);
+			continue;
+		}
+
+		if (enemy.slowedTurnsRemaining > 0) {
+			occupied.add(encodePointKey(enemy.x, enemy.y));
+			nextEnemies.push({
+				...enemy,
+				awake,
+				slowedTurnsRemaining: enemy.slowedTurnsRemaining - 1,
+			});
 			continue;
 		}
 

@@ -30,8 +30,10 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	sustenance: "指輪",
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
-	wand: "命中の杖",
+	/* Generic name, like ring/sustenance — which effect it grants only shows once used. */
+	wand: "杖",
 	confusion: "混乱の薬",
+	slow: "杖",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -193,5 +195,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES.confusion}を飲んだ。頭がくらくらする!`;
 		case "confusion-faded":
 			return "混乱がおさまった";
+		case "enemy-slowed":
+			return `杖の力で${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
 	}
 };

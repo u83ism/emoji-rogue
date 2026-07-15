@@ -23,6 +23,7 @@ import {
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
+	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
@@ -147,6 +148,7 @@ export const buildFloorLayout = (
 			kind: "zombie",
 			hp: ENEMY_MAX_HP.zombie,
 			awake: false,
+			slowedTurnsRemaining: 0,
 		});
 	}
 	const batCount = calculateEnemyCountForFloor("bat", floor);
@@ -156,6 +158,7 @@ export const buildFloorLayout = (
 			kind: "bat",
 			hp: ENEMY_MAX_HP.bat,
 			awake: false,
+			slowedTurnsRemaining: 0,
 		});
 	}
 	if (
@@ -167,6 +170,7 @@ export const buildFloorLayout = (
 			kind: "thief",
 			hp: ENEMY_MAX_HP.thief,
 			awake: false,
+			slowedTurnsRemaining: 0,
 		});
 	}
 	if (
@@ -178,6 +182,7 @@ export const buildFloorLayout = (
 			kind: "nymph",
 			hp: ENEMY_MAX_HP.nymph,
 			awake: false,
+			slowedTurnsRemaining: 0,
 		});
 	}
 	if (
@@ -189,6 +194,7 @@ export const buildFloorLayout = (
 			kind: "aquator",
 			hp: ENEMY_MAX_HP.aquator,
 			awake: false,
+			slowedTurnsRemaining: 0,
 		});
 	}
 
@@ -282,6 +288,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < WAND_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "wand" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < SLOW_WAND_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "slow" });
 	}
 
 	const goldPiles: GoldPile[] = [];

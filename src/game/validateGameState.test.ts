@@ -317,6 +317,50 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed enemy-slowed event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "enemy-slowed", payload: { target: "zombie", turns: 5 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-slowed", payload: { target: "dragon", turns: 5 } },
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-slowed", payload: { target: "zombie", turns: 0 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("rejects a non-integer or negative slowedTurnsRemaining on an enemy", () => {
+		const valid = buildValidState();
+		const enemies = valid.enemies;
+		if (!Array.isArray(enemies) || enemies.length === 0) {
+			throw new Error("unreachable: the dungeon state spawns enemies");
+		}
+		expectRejected(
+			{
+				...valid,
+				enemies: [{ ...enemies[0], slowedTurnsRemaining: -1 }],
+			},
+			"enemies",
+		);
+	});
+
 	it("rejects a non-integer or negative confusedTurnsRemaining", () => {
 		expectRejected(
 			{ ...buildValidState(), confusedTurnsRemaining: -1 },

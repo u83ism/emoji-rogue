@@ -12,6 +12,7 @@ import {
 	POTION_HEAL_AMOUNT,
 	SHIELD_CURSE_CHANCE_PERCENT,
 	SHIELD_DEFENSE_BONUS,
+	SLOW_WAND_DURATION,
 	STRENGTH_POTION_ATTACK_BONUS,
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
@@ -421,6 +422,28 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 			return state; /* nothing visible to aim at — same as an unheld item */
 		}
 		return applyWandStrike({ ...state, inventory }, target);
+	}
+
+	if (kind === "slow") {
+		const target = findNearestVisibleEnemy(state);
+		if (target === undefined) {
+			return state; /* nothing visible to aim at — same as an unheld item */
+		}
+		return {
+			...state,
+			inventory,
+			enemies: state.enemies.map((enemy) =>
+				enemy === target
+					? { ...enemy, slowedTurnsRemaining: SLOW_WAND_DURATION }
+					: enemy,
+			),
+			events: buildEventLog(state.events, [
+				{
+					type: "enemy-slowed",
+					payload: { target: target.kind, turns: SLOW_WAND_DURATION },
+				},
+			]),
+		};
 	}
 
 	if (kind === "identify") {

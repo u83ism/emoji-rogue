@@ -263,3 +263,8 @@ export const WAND_SPAWN_CHANCE_PERCENT = 15;
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */
 export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 30;
+
+/** How many turns a wand of slow monster freezes its target for. */
+export const SLOW_WAND_DURATION = 5;
+/** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
+export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 15;

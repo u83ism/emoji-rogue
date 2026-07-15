@@ -99,7 +99,8 @@ const isEnemyArray = (
 			standsOnFloor(enemy, terrain) &&
 			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp) &&
-			isBooleanValue(enemy.awake),
+			isBooleanValue(enemy.awake) &&
+			isNonNegativeInteger(enemy.slowedTurnsRemaining),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -117,7 +118,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "enchant-weapon" ||
 	value === "enchant-armor" ||
 	value === "wand" ||
-	value === "confusion";
+	value === "confusion" ||
+	value === "slow";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -241,6 +243,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.turns);
 		case "confusion-faded":
 			return true;
+		case "enemy-slowed":
+			return isEnemyKind(payload.target) && isPositiveInteger(payload.turns);
 		default:
 			return false;
 	}
@@ -417,6 +421,7 @@ export const validateGameState = (
 			kind: enemy.kind,
 			hp: enemy.hp,
 			awake: enemy.awake,
+			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
 		})),
 		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
 		inventory: inventory.map((entry) => ({

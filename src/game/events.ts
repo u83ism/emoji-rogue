@@ -16,7 +16,8 @@ export type ItemKind =
 	| "enchant-weapon"
 	| "enchant-armor"
 	| "wand"
-	| "confusion";
+	| "confusion"
+	| "slow";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -192,6 +193,11 @@ export type GameEvent =
 			/** Fired the turn confusedTurnsRemaining reaches 0 — see applyConfusionTick. */
 			readonly type: "confusion-faded";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A wand of slow monster freezing its target — see advanceEnemies. */
+			readonly type: "enemy-slowed";
+			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  };
 
 /**

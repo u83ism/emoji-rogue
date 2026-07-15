@@ -644,19 +644,21 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 命中の杖(マイルストーン39)に続く2種類目の杖。狙い先ロジック(視界内最近接の敵を自動選択)は`findNearestVisibleEnemy`をそのまま再利用し、ダメージの代わりに対象の敵を一定ターン完全に凍結させる——原作の"wand of slow monster"を「行動速度半減」ではなく「Nターン完全に行動不能」に簡略化した実装(スケジューラを持たないこの実装では速度の概念自体がプレーンデータの行動回数(`ENEMY_ACTIONS_PER_TURN`)でしかなく、個体ごとの速度を一時的に書き換える仕組みがないため)。指輪(再生・満腹)と同じ「2種類目は同じ絵文字を共有し、効果は使うまで名前からは分からない」という型を杖カテゴリにも適用する。プレイヤー側の一時状態(混乱、マイルストーン40)に続き、初めて敵側にも一時状態(`Enemy.slowedTurnsRemaining`)を持たせる。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"slow"`を追加。`GameEvent`に`enemy-slowed`(payload: `target: EnemyKind`・継続ターン数`turns`)を追加
-- [ ] `src/game/state.ts`: `Enemy`に`slowedTurnsRemaining: number`(構造変更)を追加
-- [ ] `src/game/balance.ts`: `SLOW_WAND_DURATION = 5`・`SLOW_WAND_SPAWN_CHANCE_PERCENT = 15`(命中の杖と同じレア度の独立per-floor判定)を追加
-- [ ] `src/game/floor.ts`: 敵生成時に全種`slowedTurnsRemaining: 0`で初期化。スポーンプールから低確率で鈍足の杖を1個抽選 + テスト
-- [ ] `src/game/enemies.ts`: `advanceEnemies`で「眠っていない」判定の直後、`slowedTurnsRemaining > 0`なら1減らすだけでこのターンの行動(移動・攻撃)を一切スキップする分岐を追加(`!awake`の分岐と対称の構造) + テスト(凍結中は動かない・攻撃しない、カウントダウン、0に達すると通常行動に復帰することを含む)
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`slow`分岐——`findNearestVisibleEnemy`(命中の杖と共用)で対象を選び、視界内に敵がいなければ`state`をそのまま返す(命中の杖と同じ無効果パターン)。対象が見つかれば`slowedTurnsRemaining`を`SLOW_WAND_DURATION`にセットし`enemy-slowed`を記録 + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`slow: 🔮`(命中の杖と同一の絵文字——指輪2種と同じ「杖という括りまでしか地面の見た目では分からない」扱い)を追加
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`slow: "杖"`(命中の杖も汎用名"杖"に統一し、指輪と同じ「効果は使うまで名前からも分からない」型に揃える——既存の`wand: "命中の杖"`は`"杖"`へ改称)、`enemy-slowed`の文言(「杖の力で◯の動きを封じた!」) + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"slow"`を追加。`enemies`の各要素に`slowedTurnsRemaining`(0以上の整数)の検証を追加。`enemy-slowed`イベントの検証ケースを追加。`Enemy`の構造変更のため**`SAVE_FORMAT_VERSION`を16に** + テスト
-- [ ] `src/game/save.test.ts`: shape guardの`enemies`要素に`slowedTurnsRemaining: "number"`を追記
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内・隣接の敵に鈍足の杖を使い、以後数ターンその敵が完全に動かない(位置・HPとも不変)こと、`SLOW_WAND_DURATION`経過後は通常どおり動き出すことを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"slow"`を追加。`GameEvent`に`enemy-slowed`(payload: `target: EnemyKind`・継続ターン数`turns`)を追加
+- [x] `src/game/state.ts`: `Enemy`に`slowedTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `SLOW_WAND_DURATION = 5`・`SLOW_WAND_SPAWN_CHANCE_PERCENT = 15`(命中の杖と同じレア度の独立per-floor判定)を追加
+- [x] `src/game/floor.ts`: 敵生成時に全種`slowedTurnsRemaining: 0`で初期化。スポーンプールから低確率で鈍足の杖を1個抽選 + テスト
+- [x] `src/game/enemies.ts`: `advanceEnemies`で「眠っていない」判定の直後、`slowedTurnsRemaining > 0`なら1減らすだけでこのターンの行動(移動・攻撃)を一切スキップする分岐を追加(`!awake`の分岐と対称の構造) + テスト(凍結中は動かない・攻撃しない、カウントダウン、0に達すると通常行動に復帰することを含む)
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`slow`分岐——`findNearestVisibleEnemy`(命中の杖と共用)で対象を選び、視界内に敵がいなければ`state`をそのまま返す(命中の杖と同じ無効果パターン)。対象が見つかれば`slowedTurnsRemaining`を`SLOW_WAND_DURATION`にセットし`enemy-slowed`を記録 + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`slow: 🔮`(命中の杖と同一の絵文字——指輪2種と同じ「杖という括りまでしか地面の見た目では分からない」扱い)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`slow: "杖"`(命中の杖も汎用名"杖"に統一し、指輪と同じ「効果は使うまで名前からも分からない」型に揃える——既存の`wand: "命中の杖"`は`"杖"`へ改称)、`enemy-slowed`の文言(「杖の力で◯の動きを封じた!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"slow"`を追加。`enemies`の各要素に`slowedTurnsRemaining`(0以上の整数)の検証を追加。`enemy-slowed`イベントの検証ケースを追加。`Enemy`の構造変更のため**`SAVE_FORMAT_VERSION`を16に** + テスト
+- [x] `src/game/save.test.ts`: shape guardの`enemies`要素に`slowedTurnsRemaining: "number"`を追記
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内・隣接の敵に鈍足の杖を使い、以後数ターンその敵が完全に動かない(位置・HPとも不変)こと、`SLOW_WAND_DURATION`経過後は通常どおり動き出すことを確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、隣接するゾンビに鈍足の杖を使い、以後の凍結ターン中は`playerHp`が一切減らないこと(=凍結中は攻撃してこない)、凍結が明けた直後の`wait`ではゾンビが通常どおり攻撃してくることを確認。
+
+**マイルストーン41完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

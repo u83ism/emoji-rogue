@@ -19,6 +19,7 @@ const zombie = (x: number, y: number, awake = true): Enemy => ({
 	kind: "zombie",
 	hp: ZOMBIE_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 const bat = (x: number, y: number, awake = true): Enemy => ({
@@ -27,6 +28,7 @@ const bat = (x: number, y: number, awake = true): Enemy => ({
 	kind: "bat",
 	hp: BAT_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 const thief = (x: number, y: number, awake = true): Enemy => ({
@@ -35,6 +37,7 @@ const thief = (x: number, y: number, awake = true): Enemy => ({
 	kind: "thief",
 	hp: THIEF_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 const nymph = (x: number, y: number, awake = true): Enemy => ({
@@ -43,6 +46,7 @@ const nymph = (x: number, y: number, awake = true): Enemy => ({
 	kind: "nymph",
 	hp: NYMPH_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 const aquator = (x: number, y: number, awake = true): Enemy => ({
@@ -51,6 +55,7 @@ const aquator = (x: number, y: number, awake = true): Enemy => ({
 	kind: "aquator",
 	hp: AQUATOR_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -411,6 +416,34 @@ describe("advanceEnemies", () => {
 		expect(next.playerDefense).toBe(
 			4,
 		); /* 5 - 1, from the one successful roll */
+	});
+
+	it("a slowed enemy takes no action at all — no movement, no attack — while frozen", () => {
+		const state: GameState = {
+			...buildCorridorState([{ ...zombie(5, 1), slowedTurnsRemaining: 2 }]),
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([
+			{ ...zombie(5, 1), slowedTurnsRemaining: 1 },
+		]);
+		expect(next.playerHp).toBe(state.playerHp); /* no attack landed */
+		expect(next.events).toEqual([]);
+	});
+
+	it("a slowed enemy resumes normal behavior once the counter reaches 0", () => {
+		let current: GameState = buildCorridorState([
+			{ ...zombie(5, 1), slowedTurnsRemaining: 1 },
+		]);
+		current =
+			advanceEnemies(current); /* countdown: 1 -> 0, still frozen this turn */
+		expect(current.enemies).toEqual([
+			{ ...zombie(5, 1), slowedTurnsRemaining: 0 },
+		]);
+		current = advanceEnemies(current); /* now acts normally */
+		expect(current.playerHp).toBe(9);
+		expect(current.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
 	});
 
 	it("a sleeping enemy outside the player's view takes no action at all", () => {

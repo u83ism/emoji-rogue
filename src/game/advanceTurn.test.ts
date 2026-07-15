@@ -7,6 +7,7 @@ import {
 	GOAL_FLOOR,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
+	SLOW_WAND_DURATION,
 	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
@@ -25,6 +26,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	kind: "zombie",
 	hp: ZOMBIE_MAX_HP,
 	awake: true,
+	slowedTurnsRemaining: 0,
 });
 
 describe("advanceTurn", () => {
@@ -433,6 +435,44 @@ describe("advanceTurn", () => {
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { kind: "wand" },
+		});
+		expect(next).toBe(state);
+	});
+
+	it("using a held slow wand freezes the nearest visible (non-adjacent) enemy", () => {
+		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [target],
+			inventory: [{ kind: "slow" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "slow" },
+		});
+		expect(next.player).toEqual(state.player); /* the player does not move */
+		/* advanceEnemies runs as part of the same turn-consuming action, so the
+		 * freezing turn itself already counts as the first tick */
+		expect(next.enemies).toEqual([
+			{ ...target, slowedTurnsRemaining: SLOW_WAND_DURATION - 1 },
+		]);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{
+				type: "enemy-slowed",
+				payload: { target: "zombie", turns: SLOW_WAND_DURATION },
+			},
+		]);
+	});
+
+	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "slow" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "slow" },
 		});
 		expect(next).toBe(state);
 	});
@@ -999,6 +1039,7 @@ describe("advanceTurn", () => {
 					kind: "zombie" as const,
 					hp: ZOMBIE_MAX_HP,
 					awake: true,
+					slowedTurnsRemaining: 0,
 				},
 			],
 		};

@@ -49,6 +49,7 @@ describe("save file shape guard", () => {
 						kind: "string",
 						hp: "number",
 						awake: "boolean",
+						slowedTurnsRemaining: "number",
 					},
 				],
 				items: [{ x: "number", y: "number", kind: "string" }],

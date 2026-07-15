@@ -539,6 +539,34 @@ describe("wand spawning", () => {
 	});
 });
 
+describe("slow wand spawning", () => {
+	it("spawns a slow wand on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "slow",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one slow wand on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const slowWandCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "slow",
+			).length;
+			expect(slowWandCount).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("spawned enemies start with slowedTurnsRemaining at 0", () => {
+		const state = buildDungeonGameState(40, 20, 12345);
+		for (const enemy of state.enemies) {
+			expect(enemy.slowedTurnsRemaining).toBe(0);
+		}
+	});
+});
+
 describe("sustenance ring spawning", () => {
 	it("spawns a sustenance ring on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

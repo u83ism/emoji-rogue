@@ -15,6 +15,7 @@ const zombie = (
 	kind: "zombie",
 	hp,
 	awake,
+	slowedTurnsRemaining: 0,
 });
 
 describe("isAdjacent", () => {

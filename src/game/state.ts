@@ -40,6 +40,8 @@ export type Enemy = Position & {
 	readonly hp: number;
 	/** Sleeping enemies take no action at all until woken — see advanceEnemies. */
 	readonly awake: boolean;
+	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */
+	readonly slowedTurnsRemaining: number;
 };
 
 /** An item lying on the floor, waiting to be stepped on. */

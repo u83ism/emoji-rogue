@@ -172,6 +172,10 @@ describe("formatEvent", () => {
 				"混乱の薬を飲んだ。頭がくらくらする!",
 			],
 			[{ type: "confusion-faded", payload: {} }, "混乱がおさまった"],
+			[
+				{ type: "enemy-slowed", payload: { target: "zombie", turns: 5 } },
+				"杖の力でゾンビの動きを封じた!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

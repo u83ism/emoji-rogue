@@ -460,6 +460,21 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン31 — 再生の指輪
+
+オリジナルRogueの指輪(ring)を導入する。数ある指輪効果のうち、既存の仕組みと自然に噛み合う「再生の指輪(ring of regeneration、装備しているだけで自然にHPが回復し続ける)」をまず1種類だけ実装する(他の指輪は`docs/design.md`のバックログへ)。潜在的アイテム(未鑑定ポーション)のような鑑定の仕組みは持たせず、巻物と同じく拾った時点で実名が分かる単純な形にする(マイルストーン24の前例を踏襲)。
+
+- [ ] `src/game/events.ts`: `ItemKind`に`"ring"`を追加。`GameEvent`に`ring-equipped`(payload: `kind: ItemKind`)・`player-regenerated`(payload: 実回復量`amount`)を追加(列挙値追加のみ)
+- [ ] `src/game/balance.ts`: `RING_SPAWN_CHANCE_PERCENT = 15`(剣・盾と同じ独立per-floor判定)・`RING_REGEN_CHANCE_PERCENT = 20`(指輪装備中・HPが満タンでない間、毎ターン独立に判定——`WAKE_CHANCE_PERCENT`と同じ「毎ターン確率判定」の型を再利用)を追加
+- [ ] `src/game/state.ts`: `GameState`に`hasRingOfRegeneration: boolean`を追加(構造変更)
+- [ ] `src/game/floor.ts`: `RING_SPAWN_CHANCE_PERCENT`による指輪の独立per-floorスポーンを追加
+- [ ] `src/game/regeneration.ts`(新規、`hunger.ts`と対になるファイル): `applyRegenerationTick(state)` — `hasRingOfRegeneration`かつHPが満タン未満なら`state.rng`を一時的にステートフルな`Rng`に起こして`RING_REGEN_CHANCE_PERCENT`判定、成功すればHP+1と`player-regenerated`を記録(外れてもrngは進める、`descendStairs`/呪い判定と同じ「毎回rngは消費するが結果に関わらず状態を返す」パターン) + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`ring`分岐(`hasRingOfRegeneration`を`true`にして`ring-equipped`を記録。既に装備済みでも再度使うと消費されるだけで効果に変化はない——剣・盾のような際限ない加算効果ではなく単なるオンオフなため)を追加。`applyHungerTick`を呼んでいる全箇所(move/wait/use-item)に`applyRegenerationTick`も追加で呼ぶ + テスト
+- [ ] `src/messages.ts`: `ring-equipped`(例:「指輪を身につけた。じわじわとHPが回復するようになった!」)・`player-regenerated`(例:「指輪の力でHPが1回復した」)の文言 + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"ring"`を追加。`hasRingOfRegeneration`(真偽値)の検証、`ring-equipped`/`player-regenerated`イベントの検証ケースを追加。`GameState`の構造変更のため**`SAVE_FORMAT_VERSION`を12に**
+- [ ] `src/game/save.test.ts`: shape guardに`hasRingOfRegeneration: "boolean"`を追記
+- [ ] 実機スモークテスト: 指輪を拾って装備すると「指輪を身につけた」表示になること、HPが減っている状態でターンを重ねると自然に回復するログが流れることを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -19,6 +19,7 @@ import {
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
+	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
@@ -103,7 +104,7 @@ const collectSpawnPool = (
  * TRAP_COUNT_PER_FLOOR hidden traps and — independently, each with its own
  * spawn chance — a sword, a shield, a poison potion (visually identical to a
  * real potion until identified), a teleport scroll, a magic mapping scroll,
- * an identify scroll and a ring of regeneration, all drawn from the spawn
+ * an identify scroll, a ring of regeneration and a ring of sustenance, all drawn from the spawn
  * pool. Nothing shares a tile with anything else unless the pool ran dry
  * (tiny fully-visible maps). `stairsDirection` sets the generated staircase's
  * direction, except on GOAL_FLOOR, where it is always forced to "up" (there
@@ -221,6 +222,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < RING_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "ring" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < SUSTENANCE_RING_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "sustenance" });
 	}
 
 	const goldPiles: GoldPile[] = [];

@@ -193,3 +193,13 @@ export const RING_SPAWN_CHANCE_PERCENT = 15;
  * idiom as WAKE_CHANCE_PERCENT.
  */
 export const RING_REGEN_CHANCE_PERCENT = 20;
+
+/** Chance (out of 100), independently rolled per floor, that a ring of sustenance spawns. */
+export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 15;
+/**
+ * Chance (out of 100), rolled independently every turn a ring of sustenance
+ * is equipped, that the whole hunger tick (food loss, and any starvation
+ * consequences) is skipped this turn — same "roll every eligible turn"
+ * idiom as RING_REGEN_CHANCE_PERCENT.
+ */
+export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;

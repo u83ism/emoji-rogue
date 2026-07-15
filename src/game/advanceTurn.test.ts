@@ -419,6 +419,22 @@ describe("advanceTurn", () => {
 		expect(next.inventory).toEqual([]);
 	});
 
+	it("using a held sustenance ring sets hasRingOfSustenance and logs ring-equipped", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "sustenance" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "sustenance" },
+		});
+		expect(next.hasRingOfSustenance).toBe(true);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "ring-equipped", payload: { kind: "sustenance" } },
+		]);
+	});
+
 	it("a ring of regeneration heals HP over time via waiting turns (wired into every turn-consuming action)", () => {
 		const state = {
 			...buildArenaGameState(

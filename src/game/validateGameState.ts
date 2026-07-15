@@ -108,7 +108,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "mapping" ||
 	value === "identify" ||
 	value === "strength" ||
-	value === "ring";
+	value === "ring" ||
+	value === "sustenance";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -287,6 +288,10 @@ export const validateGameState = (
 	if (!isBooleanValue(hasRingOfRegeneration)) {
 		return err("hasRingOfRegeneration");
 	}
+	const hasRingOfSustenance = value.hasRingOfSustenance;
+	if (!isBooleanValue(hasRingOfSustenance)) {
+		return err("hasRingOfSustenance");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -370,6 +375,7 @@ export const validateGameState = (
 		playerDefense,
 		playerFood,
 		hasRingOfRegeneration,
+		hasRingOfSustenance,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,

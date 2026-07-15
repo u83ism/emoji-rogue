@@ -52,6 +52,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	identify: { glyph: "🔍" },
 	/* Ring: single-codepoint, Unicode 6.0. */
 	ring: { glyph: "💍" },
+	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
+	sustenance: { glyph: "💍" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

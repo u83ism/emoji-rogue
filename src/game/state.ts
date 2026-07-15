@@ -116,6 +116,8 @@ export interface GameState {
 	readonly playerFood: number;
 	/** Once equipped, heals HP over time — see applyRegenerationTick. Never turns back off. */
 	readonly hasRingOfRegeneration: boolean;
+	/** Once equipped, may skip a hunger tick — see applyHungerTick. Never turns back off. */
+	readonly hasRingOfSustenance: boolean;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

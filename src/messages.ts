@@ -24,6 +24,8 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	identify: "識別の巻物",
 	strength: "怪力の薬",
 	ring: "指輪",
+	/* Same generic name as ring — which effect it grants only shows once worn. */
+	sustenance: "指輪",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -161,7 +163,9 @@ export const formatEvent = (
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 		case "ring-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
+			return event.payload.kind === "sustenance"
+				? `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`
+				: `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
 	}

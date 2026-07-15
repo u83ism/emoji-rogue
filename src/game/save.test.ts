@@ -40,6 +40,7 @@ describe("save file shape guard", () => {
 				playerDefense: "number",
 				playerFood: "number",
 				hasRingOfRegeneration: "boolean",
+				hasRingOfSustenance: "boolean",
 				enemies: [
 					{
 						x: "number",

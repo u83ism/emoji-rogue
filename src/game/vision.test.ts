@@ -70,6 +70,7 @@ describe("deriveExploredState", () => {
 			playerDefense: 0,
 			playerFood: 100,
 			hasRingOfRegeneration: false,
+			hasRingOfSustenance: false,
 			enemies: [],
 			items: [],
 			inventory: [],

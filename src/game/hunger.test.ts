@@ -77,4 +77,35 @@ describe("applyHungerTick", () => {
 		};
 		expect(applyHungerTick(state)).toBe(state);
 	});
+
+	/*
+	 * Whether a ring of sustenance skips the tick is a
+	 * SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT chance (see balance.ts) — seed 1's
+	 * first roll succeeds (skips), seed 2000's fails (ticks normally).
+	 */
+	it("skips the whole tick (food and rng only) when the ring's roll succeeds", () => {
+		const state: GameState = {
+			...buildArenaGameState(5, 5, 1),
+			hasRingOfSustenance: true,
+		};
+		const next = applyHungerTick(state);
+		expect(next.playerFood).toBe(state.playerFood);
+		expect(next.events).toEqual([]);
+		expect(next.rng).not.toEqual(state.rng);
+	});
+
+	it("ticks normally, still consuming rng, when the ring's roll fails", () => {
+		const state: GameState = {
+			...buildArenaGameState(5, 5, 2000),
+			hasRingOfSustenance: true,
+		};
+		const next = applyHungerTick(state);
+		expect(next.playerFood).toBe(state.playerFood - 1);
+		expect(next.rng).not.toEqual(state.rng);
+	});
+
+	it("never touches rng without the ring", () => {
+		const state = buildArenaGameState(5, 5, 1);
+		expect(applyHungerTick(state).rng).toEqual(state.rng);
+	});
 });

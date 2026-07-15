@@ -317,6 +317,21 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed sustenance ring-equipped event", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "ring-equipped", payload: { kind: "sustenance" } }],
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("rejects a non-boolean hasRingOfSustenance", () => {
+		expectRejected(
+			{ ...buildValidState(), hasRingOfSustenance: "true" },
+			"hasRingOfSustenance",
+		);
+	});
+
 	it("accepts a well-formed inventory (including swords, shields and food) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),

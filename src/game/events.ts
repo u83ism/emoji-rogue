@@ -11,7 +11,8 @@ export type ItemKind =
 	| "mapping"
 	| "identify"
 	| "strength"
-	| "ring";
+	| "ring"
+	| "sustenance";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic

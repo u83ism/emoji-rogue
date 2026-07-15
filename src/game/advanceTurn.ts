@@ -343,6 +343,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "sustenance") {
+		return {
+			...state,
+			hasRingOfSustenance: true,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "ring-equipped", payload: { kind } },
+			]),
+		};
+	}
+
 	if (kind === "identify") {
 		const target = POTION_KINDS.find(
 			(potionKind) => !state.identifiedPotionKinds.includes(potionKind),

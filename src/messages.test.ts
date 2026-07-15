@@ -132,6 +132,10 @@ describe("formatEvent", () => {
 				"指輪を身につけた。じわじわとHPが回復するようになった!",
 			],
 			[
+				{ type: "ring-equipped", payload: { kind: "sustenance" } },
+				"指輪を身につけた。空腹の進みがゆるやかになった!",
+			],
+			[
 				{ type: "player-regenerated", payload: { amount: 1 } },
 				"指輪の力でHPが1回復した",
 			],

@@ -398,6 +398,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン27 — 怪力の薬(未鑑定ポーション第3種)
+
+未鑑定ポーション(マイルストーン23)に「良い」薬効を追加し、「毒薬(悪い)1種・回復薬(中立〜良い)1種」だった構成を「回復薬・怪力の薬(良い)・毒薬(悪い)」の3すくみに広げる。効果は剣(マイルストーン13)と同じ`playerAttackDamage`の恒久加算——ただし恒久強化を提供する経路がもう1つ増える形になる。`POTION_KINDS`に追加するだけで既存の未鑑定表示・識別の巻物(マイルストーン26)がそのまま横展開される。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"strength"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-strengthened`(payload: 実加算量`bonus`)を追加
+- [x] `src/game/balance.ts`: `STRENGTH_POTION_ATTACK_BONUS = 1`(剣と同じ量)・`STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 30`(毒薬と同じ独立判定の仕組み)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で怪力の薬を1個抽選(見た目は回復薬・毒薬と同一のため区別がつかない) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`strength`分岐を追加(`playerAttackDamage`に`STRENGTH_POTION_ATTACK_BONUS`を加算・`player-strengthened`を記録)。回復薬・毒薬・怪力の薬いずれを使っても`identifiedPotionKinds`に鑑定される + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`strength: 💊`(回復薬・毒薬と同一の絵文字)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`strength: "怪力の薬"`、`player-strengthened`の文言(「怪力の薬を飲んだ。攻撃力が◯上がった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"strength"`を追加。`player-strengthened`イベントの検証ケースを追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] 実機スモークテスト: 怪力の薬が回復薬・毒薬と見分けがつかないこと・飲んだ時の攻撃力上昇とログ・鑑定後は実名で表示されることを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -233,6 +233,25 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。
 
+## マイルストーン16 — README整備
+
+「歩く→ダンジョンに潜る→敵と戦う→アイテムを拾って使う→フロアを降りる→勝利/死亡→セーブして再開」という一通りのゲームループが揃ったので、区切りとしてREADMEを現状に合わせて書き直す。旧README(マイルストーン1〜2時点の記述のまま放置)は「敵・アイテム・FOVはこれから」と書かれていて実態と大きく乖離していた。
+
+- [x] 「現在の状態」を現状(FOV・敵2種・階層/勝利条件・アイテム3種+インベントリ・セーブロード)に合わせて書き直す
+- [x] 操作方法を全キー(移動hjkl/矢印・待機`.`/スペース・インベントリ開閉`i`・使用は文字キー・セーブ`s`・終了`q`)に更新
+- [x] 半角入力モードでプレイすることを明記(全角IME検知の警告は実装済みだが事前告知もあるとよい、というバックログ項目への対応)
+- [x] 動作環境の推奨フォントを明記(Windows Terminal既定のCascadia Mono/Codeを基準線として案内。絵文字自体はフォントフォールバックで描画されるため主要フォントは等幅なら何でもよい、という既存の説明はそのまま維持)
+
+## マイルストーン17 — ブラウザデモ(GitHub Pages想定)
+
+コア(`advanceTurn`・`buildFrameGrid`)は無改造で動くので、`Cell[][]`をCSS GridのDOMに描く新規シェルを`demo/`に書く。絵文字幅問題(端末最大の地雷)はブラウザではCSSでセル幅を明示できるため存在しない。Inkコンポーネント(`GameScreen`/`MapRow`)の再利用は狙わない — xterm.jsハックより素のDOMシェル新書きの方が筋がいいため。
+
+- [x] `src/game/index.ts`(新規): 埋め込み先(ブラウザデモ等)向けのゲーム層公開APIバレル。`src/index.ts`(近代化rot.jsツールボックス側のバレル)とは別物として新設 — ツールボックスとゲーム層の境界を保つ。`advanceTurn`・`buildDungeonGameState`・`buildFrameGrid`・関連型に加え、`src/messages.ts`(ゲーム層の外にあるシェル向けi18n集約点)の`formatEvent`/`formatInventoryEntry`/`INVENTORY_TITLE`/`INVENTORY_EMPTY_MESSAGE`も再エクスポートし、デモ側の import 元を1つに保つ
+- [x] `tsdown.config.ts`: `src/game/index.ts`をビルドエントリに追加(`dist/game/index.mjs`として出力)
+- [x] `docs/architecture.md`: ディレクトリマップに`src/game/index.ts`の行を追加
+- [x] `demo/index.html` + `demo/main.js`(新規、素のJS・ビルド不要): `dist/game/index.mjs`を`<script type="module">`から直import。`Cell[][]`をCSS GridのDOMセルとして描画、ステータスバー(階数・HP)・直近ログ・インベントリオーバーレイ(`i`キー開閉+文字キー選択、端末版のキー体系を踏襲)を実装。`?seed=123`のURLパラメータでシード指定に対応。セーブ/ロードは対象外(ブラウザにファイルシステムがないため。将来欲しくなったら`localStorage`が差し込み口)
+- [x] 実機確認: ブラウザで実際に操作し、移動・戦闘・アイテム使用・フロア降下・勝利/死亡までひととおり触って確認(このセッション内でPlaywright等によるヘッドレス確認を実施)
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)
@@ -242,6 +261,4 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - リプレイ(初期状態+アクションログの再生)
 - 絵文字セット(100種程度)の選定(`docs/design.md` の未解決項目)
 - 視界方式の再検討: 現行はshadowcasting(放射状・半径8)。オリジナルRogue/不思議のダンジョン式「部屋に入ったら部屋全体が見える+通路は周囲1マス」に変える場合は、部屋矩形をGameStateに保存する必要がある(diggerの`getRooms()`は生成時に捨てているため)。プレイフィールを見て判断
-- README整備: Windows Terminal必須・推奨フォント・「表示崩れは既知の制約」の明文化(`docs/design.md`の方針)に加え、**半角入力モードでプレイすること**を記載(全角モード検知の警告は実装済みだが事前告知もあるとよい)
 - リリース運用(正式リリースを始めるとき、2026-07-14の議論): ①アプリはsemver、セーブ形式は単調増加の整数、**両者は独立の軸**でCHANGELOGに対照表(アプリver↔形式ver)を記録 ②コードの互換判定は`formatVersion`のみ(アプリverをパースして判定に使わない) ③セーブに`appVersion`を参考情報として併記(サポート用、判定不使用) ④旧形式の切り捨てをやめる時期になったら`parseSaveFileContent`の`unsupported-version`分岐がマイグレーションの差し込み口 ⑤既製のsemverスキルはConventional Commits前提でGitmoji規約と不適合 — 必要になったら自作`/release`スキル(バンプ→CHANGELOG→タグ→push)を書く
-- ブラウザデモ(GitHub Pages): コア(リデューサ・`buildFrameGrid`)は無改造で動くので、`Cell[][]`をCSS GridのDOMに描く30〜50行のシェルを`demo/`に新書きするだけ。依存追加なしで`dist/index.mjs`を`<script type="module">`から直import。注意点: ①tsconfigにDOM libがない(demo/は素のJSか別tsconfig)②game層を公開APIに出すかtsdownエントリ追加が必要③Inkコンポーネントの再利用は狙わない(xterm.jsハック不要、DOMシェル新書きが正道)。`?seed=123`のURLパラメータでシード共有デモも最小コストで可能。端末最大の地雷だった絵文字幅問題はCSSでセル幅を決められるブラウザでは存在しない

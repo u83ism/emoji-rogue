@@ -123,8 +123,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン8完了(2026-07-15)。** shape guard(形式バンプ忘れ防止)が初の実運用で機能した(items追加でテストが落ち、formatVersion 3へのバンプを強制)。
 
+## マイルストーン9 — 敵のバリエーション追加(コウモリ・行動速度に差をつける)
+
+🧟(ゾンビ)しか出ない現状に2種類目の敵🦇(コウモリ)を追加する。ただの見た目違いではなく「1HPで即死するが、プレイヤーのターン中に2回行動する」ことで初めて敵に速度差をつける。バックログの「スケジューラ接続」を検討したが、`src/scheduler/`の`Scheduler`はクロージャ+`EventQueue`(可変ヒープ)を内包しメソッドを持つオブジェクトのため、シリアライズ可能でなければならない`GameState`には直接格納できない(設計方針の「関数値はGameStateに入れない」に抵触)。よって速度差は**種類ごとの「1ターンあたりの行動回数」というプレーンデータ**(`balance.ts`の`ENEMY_ACTIONS_PER_TURN`)で表現し、`advanceEnemies`内でその回数だけ行動ループを回す方式を採用した。`src/scheduler/`は今回は使わず、将来リデューサ外の用途向けに引き続き温存する。
+
+- [x] `src/game/events.ts`: `EnemyKind`に`"bat"`を追加(`GameEvent`の型は`EnemyKind`を参照するだけなので構造変更なし)
+- [x] `src/game/balance.ts`: `BAT_MAX_HP = 1`・`BAT_ATTACK_DAMAGE = 1`・`ZOMBIE_ACTIONS_PER_TURN = 1`・`BAT_ACTIONS_PER_TURN = 2`、および種類→値の参照テーブル`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`(`Readonly<Record<EnemyKind, number>>`)を追加。フロアごとの出現数も`ZOMBIE_COUNT_PER_FLOOR = 3`・`BAT_COUNT_PER_FLOOR = 2`としてここに集約
+- [x] `src/game/enemies.ts`: `advanceEnemies`を「敵1体につき`ENEMY_ACTIONS_PER_TURN[kind]`回、隣接なら攻撃・視界内ならA*追跡・視界外ならランダム徘徊、を繰り返す」ループに変更(死亡確定後は残り行動もスキップ)。ダメージは`ENEMY_ATTACK_DAMAGE[enemy.kind]`を参照(ゾンビ固定値だった箇所を種類非依存に一般化) + テスト(コウモリが1ターンで2マス追跡する・隣接し続ければ2回攻撃する)
+- [x] `src/game/floor.ts`: スポーンプールからゾンビ`ZOMBIE_COUNT_PER_FLOOR`体に続けてコウモリ`BAT_COUNT_PER_FLOOR`体を抽選(階段・アイテムより先。位置は全て重複しない) + テスト
+- [x] `src/game/frame.ts`: コウモリを🦇で描画(単一コードポイント)。視界内判定・重なり優先度は既存の敵と同じ扱い + テスト
+- [x] `src/messages.ts`: `ENEMY_NAMES`に`bat: "コウモリ"`を追加 + テスト
+- [x] `src/game/validateGameState.ts`: 敵・イベントのkind検証を`"zombie"`固定から`"zombie" | "bat"`に拡張(フィールドの型・キー構成は変わらないため**SAVE_FORMAT_VERSIONは据え置き** — shape guardテストの`kind: "string"`は文字列であることしか見ておらず列挙値の追加を検知しない設計。念のためshape guardテストを実行して構造不変を確認した) + テスト
+- [x] 実機スモークテスト: 🦇の見た目・素早い接近・低HPでの即死・隣接し続けた場合の連続攻撃を確認(2026-07-15)
+
+**マイルストーン9完了(2026-07-15)。**
+
 ## バックログ(マイルストーン未整理)
-- スケジューラ接続(敵に速度差をつける。`src/scheduler/`のspeed schedulerを温存中)
+- スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - ダメージの乱数幅(戦闘は当面決定的。プレイフィールを見て`state.rng`消費で幅を持たせるか判断)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照
 - セーブ/ロード(GameStateのシリアライズ)

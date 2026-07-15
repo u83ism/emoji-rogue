@@ -2,7 +2,11 @@ import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { parseSeedArgument } from "./cliArgs.js";
 import { advanceTurn } from "./game/advanceTurn.js";
-import { PLAYER_MAX_HP } from "./game/balance.js";
+import {
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+	PLAYER_MAX_FOOD,
+	PLAYER_MAX_HP,
+} from "./game/balance.js";
 import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
@@ -30,6 +34,12 @@ const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
 const LOG_LINE_COUNT = 3;
 const LOW_HP_THRESHOLD = 3;
+
+/** Warns in yellow once food drops to the hunger threshold. */
+const resolveFoodTextStyle = (
+	playerFood: number,
+): { readonly color?: string } =>
+	playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD ? { color: "yellow" } : {};
 
 /** Death and victory get their own color to stand out from ordinary log lines. */
 const resolveLogLineStyle = (
@@ -139,6 +149,10 @@ const App = () => {
 				<Text>{state.floor}F </Text>
 				<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
 					HP {state.playerHp}/{PLAYER_MAX_HP}
+				</Text>
+				<Text> </Text>
+				<Text {...resolveFoodTextStyle(state.playerFood)}>
+					満腹度 {state.playerFood}/{PLAYER_MAX_FOOD}
 				</Text>
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (

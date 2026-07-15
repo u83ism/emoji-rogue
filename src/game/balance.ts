@@ -95,3 +95,11 @@ export const SHIELD_SPAWN_CHANCE_PERCENT = 30;
 
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;
+
+export const PLAYER_MAX_FOOD = 100;
+/** playerFood at or below this triggers a one-time player-hungry warning. */
+export const PLAYER_HUNGER_WARNING_THRESHOLD = 30;
+/** HP lost per turn while playerFood is at 0. */
+export const STARVATION_DAMAGE_PER_TURN = 1;
+export const FOOD_RATION_RESTORE_AMOUNT = 50;
+export const FOOD_COUNT_PER_FLOOR = 1;

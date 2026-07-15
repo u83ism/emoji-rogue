@@ -109,6 +109,9 @@ describe("validateGameState", () => {
 			{ ...buildValidState(), playerDefense: "1" },
 			"playerDefense",
 		);
+		expectRejected({ ...buildValidState(), playerFood: -1 }, "playerFood");
+		expectRejected({ ...buildValidState(), playerFood: 101 }, "playerFood");
+		expectRejected({ ...buildValidState(), playerFood: "1" }, "playerFood");
 
 		const valid = buildValidState();
 		const enemies = valid.enemies;
@@ -236,13 +239,14 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords and shields) and rejects a broken one", () => {
+	it("accepts a well-formed inventory (including swords, shields and food) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			inventory: [
 				{ kind: "potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
 				{ kind: "shield", quantity: 1 },
+				{ kind: "food", quantity: 2 },
 			],
 		});
 		expect(accepted.ok).toBe(true);
@@ -251,6 +255,7 @@ describe("validateGameState", () => {
 				{ kind: "potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
 				{ kind: "shield", quantity: 1 },
+				{ kind: "food", quantity: 2 },
 			]);
 		}
 
@@ -261,6 +266,41 @@ describe("validateGameState", () => {
 		expectRejected(
 			{ ...buildValidState(), inventory: [{ kind: "potion", quantity: 0 }] },
 			"inventory",
+		);
+	});
+
+	it("accepts a well-formed hunger-related event set and rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "player-hungry", payload: {} },
+				{ type: "player-starved", payload: { damage: 1 } },
+				{ type: "player-ate", payload: { amount: 50 } },
+				{ type: "player-died", payload: { by: "hunger" } },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-starved", payload: { damage: 0 } }],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-ate", payload: { amount: -1 } }],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-died", payload: { by: "starvation" } }],
+			},
+			"events",
 		);
 	});
 

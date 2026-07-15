@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
-import { GOAL_FLOOR, PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
+import {
+	GOAL_FLOOR,
+	PLAYER_MAX_FOOD,
+	PLAYER_MAX_HP,
+	ZOMBIE_MAX_HP,
+} from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
@@ -286,6 +291,58 @@ describe("advanceTurn", () => {
 			payload: { kind: "shield" },
 		});
 		expect(next.playerDefense).toBe(2);
+	});
+
+	it("using a held food ration restores food up to the cap, one consumed from inventory", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerFood: 70 /* missing 30, a ration restores 50: the cap must win */,
+			inventory: [{ kind: "food" as const, quantity: 2 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "food" },
+		});
+		/* restored to the cap (100), then the same turn's hunger tick takes one back */
+		expect(next.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+		expect(next.inventory).toEqual([{ kind: "food", quantity: 1 }]);
+		expect(next.events).toEqual([
+			{ type: "player-ate", payload: { amount: 30 } },
+		]);
+	});
+
+	it("using the last food ration at full satiety wastes it (amount 0) and empties the stack", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "food" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "food" },
+		});
+		/* already full, so eating restores nothing; the turn's hunger tick still applies */
+		expect(next.playerFood).toBe(state.playerFood - 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "player-ate", payload: { amount: 0 } },
+		]);
+	});
+
+	it("every turn-consuming action ticks hunger down by one", () => {
+		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
+		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+
+		const moved = advanceTurn(buildArenaGameState(9, 3, 1), move("east"));
+		expect(moved.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+
+		const usedItem = advanceTurn(
+			{
+				...buildArenaGameState(9, 3, 1),
+				inventory: [{ kind: "potion" as const, quantity: 1 }],
+			},
+			{ type: "use-item", payload: { kind: "potion" } },
+		);
+		expect(usedItem.playerFood).toBe(PLAYER_MAX_FOOD - 1);
 	});
 
 	it("moving onto the staircase descends to the next floor", () => {

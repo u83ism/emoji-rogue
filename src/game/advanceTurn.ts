@@ -1,4 +1,6 @@
 import {
+	FOOD_RATION_RESTORE_AMOUNT,
+	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
 	POTION_HEAL_AMOUNT,
 	SHIELD_DEFENSE_BONUS,
@@ -9,6 +11,7 @@ import { advanceEnemies } from "./enemies.js";
 import type { ItemKind } from "./events.js";
 import { buildEventLog } from "./events.js";
 import { descendStairs } from "./floor.js";
+import { applyHungerTick } from "./hunger.js";
 import type {
 	Action,
 	Direction,
@@ -125,6 +128,21 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "food") {
+		const restored = Math.min(
+			FOOD_RATION_RESTORE_AMOUNT,
+			PLAYER_MAX_FOOD - state.playerFood,
+		);
+		return {
+			...state,
+			playerFood: state.playerFood + restored,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "player-ate", payload: { amount: restored } },
+			]),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
@@ -178,9 +196,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return state; /* bumping a wall consumes no turn */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return afterPlayer; /* descended — the new floor's enemies wait */
+				return applyHungerTick(
+					afterPlayer,
+				); /* descended — the new floor's enemies wait */
 			}
-			return advanceEnemies(afterPlayer);
+			return applyHungerTick(advanceEnemies(afterPlayer));
 		}
 		case "wait": {
 			/* Stand still for one turn; enemies still act. Without this a
@@ -189,7 +209,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return advanceEnemies(state);
+			return applyHungerTick(advanceEnemies(state));
 		}
 		case "use-item": {
 			if (state.status !== "playing") {
@@ -199,7 +219,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse === state) {
 				return state; /* nothing of that kind held — no turn spent */
 			}
-			return advanceEnemies(afterUse);
+			return applyHungerTick(advanceEnemies(afterUse));
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write

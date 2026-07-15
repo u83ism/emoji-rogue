@@ -108,6 +108,7 @@ describe("advanceEnemies", () => {
 			playerHp: 10,
 			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 			playerDefense: 0,
+			playerFood: 100,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],

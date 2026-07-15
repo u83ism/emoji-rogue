@@ -10,6 +10,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	potion: "回復薬",
 	sword: "剣",
 	shield: "盾",
+	food: "食料",
 };
 
 // System notices (app/session concerns, never part of GameState). They speak
@@ -47,7 +48,9 @@ export const formatEvent = (event: GameEvent): string => {
 		case "enemy-defeated":
 			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
 		case "player-died":
-			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
+			return event.payload.by === "hunger"
+				? "空腹のあまり倒れた……"
+				: `${ENEMY_NAMES[event.payload.by]}にやられた……`;
 		case "floor-descended":
 			return `${event.payload.floor}階に降りた`;
 		case "player-healed":
@@ -62,5 +65,13 @@ export const formatEvent = (event: GameEvent): string => {
 			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;
 		case "armor-equipped":
 			return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力が${event.payload.bonus}上がった!`;
+		case "player-hungry":
+			return "空腹を感じてきた";
+		case "player-starved":
+			return `空腹で${event.payload.damage}のダメージを受けた`;
+		case "player-ate":
+			return event.payload.amount > 0
+				? `${ITEM_NAMES.food}を食べた。空腹度が${event.payload.amount}回復した`
+				: `${ITEM_NAMES.food}を食べたが、空腹度は満タンだった`;
 	}
 };

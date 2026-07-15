@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
-import { PLAYER_MAX_HP } from "./balance.js";
-import type { EnemyKind, GameEvent, ItemKind } from "./events.js";
+import { PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
+import type { DeathCause, EnemyKind, GameEvent, ItemKind } from "./events.js";
 import type { Enemy, GameState, InventoryEntry, Item } from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -54,6 +54,9 @@ const standsOnFloor = (
 export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" || value === "bat";
 
+const isDeathCause = (value: unknown): value is DeathCause =>
+	isEnemyKind(value) || value === "hunger";
+
 const isEnemyArray = (
 	value: unknown,
 	terrain: readonly (readonly number[])[],
@@ -68,7 +71,10 @@ const isEnemyArray = (
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
-	value === "potion" || value === "sword" || value === "shield";
+	value === "potion" ||
+	value === "sword" ||
+	value === "shield" ||
+	value === "food";
 
 const isItemArray = (
 	value: unknown,
@@ -102,7 +108,7 @@ const isGameEvent = (value: unknown): boolean => {
 		case "enemy-defeated":
 			return isEnemyKind(payload.target);
 		case "player-died":
-			return isEnemyKind(payload.by);
+			return isDeathCause(payload.by);
 		case "floor-descended":
 			return isPositiveInteger(payload.floor);
 		case "player-healed":
@@ -115,6 +121,12 @@ const isGameEvent = (value: unknown): boolean => {
 			return isItemKind(payload.kind) && isPositiveInteger(payload.bonus);
 		case "armor-equipped":
 			return isItemKind(payload.kind) && isPositiveInteger(payload.bonus);
+		case "player-hungry":
+			return true;
+		case "player-starved":
+			return isPositiveInteger(payload.damage);
+		case "player-ate":
+			return isNonNegativeInteger(payload.amount);
 		default:
 			return false;
 	}
@@ -180,6 +192,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(playerDefense)) {
 		return err("playerDefense");
 	}
+	const playerFood = value.playerFood;
+	if (!isNonNegativeInteger(playerFood) || playerFood > PLAYER_MAX_FOOD) {
+		return err("playerFood");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -226,6 +242,7 @@ export const validateGameState = (
 		playerHp,
 		playerAttackDamage,
 		playerDefense,
+		playerFood,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y },
 		enemies: enemies.map((enemy) => ({

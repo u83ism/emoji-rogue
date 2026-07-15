@@ -1,7 +1,10 @@
 /** Events carry it so the shell can name the attacker. */
 export type EnemyKind = "zombie" | "bat";
 
-export type ItemKind = "potion" | "sword" | "shield";
+export type ItemKind = "potion" | "sword" | "shield" | "food";
+
+/** What killed the player — an enemy kind, or starvation (milestone 20). */
+export type DeathCause = EnemyKind | "hunger";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -26,7 +29,7 @@ export type GameEvent =
 	  }
 	| {
 			readonly type: "player-died";
-			readonly payload: { readonly by: EnemyKind };
+			readonly payload: { readonly by: DeathCause };
 	  }
 	| {
 			readonly type: "floor-descended";
@@ -52,6 +55,21 @@ export type GameEvent =
 	| {
 			readonly type: "armor-equipped";
 			readonly payload: { readonly kind: ItemKind; readonly bonus: number };
+	  }
+	| {
+			/** Fired once, the turn playerFood crosses the warning threshold going down. */
+			readonly type: "player-hungry";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Fired every turn spent at 0 food, alongside the HP loss it causes. */
+			readonly type: "player-starved";
+			readonly payload: { readonly damage: number };
+	  }
+	| {
+			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. */
+			readonly type: "player-ate";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

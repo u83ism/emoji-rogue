@@ -77,6 +77,8 @@ export interface GameState {
 	readonly playerAttackDamage: number;
 	/** Damage reduction from shields used so far (0 initially). See MIN_DAMAGE_TAKEN. */
 	readonly playerDefense: number;
+	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
+	readonly playerFood: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

@@ -32,6 +32,7 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	potion: { glyph: "💊" },
 	sword: { glyph: "🔪" },
 	shield: { glyph: "🦺" },
+	food: { glyph: "🍖" },
 };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width

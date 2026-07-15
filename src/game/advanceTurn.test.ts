@@ -3,6 +3,7 @@ import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import {
+	CONFUSION_POTION_DURATION,
 	GOAL_FLOOR,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
@@ -436,6 +437,66 @@ describe("advanceTurn", () => {
 		expect(next).toBe(state);
 	});
 
+	it("using a held confusion potion sets confusedTurnsRemaining and logs player-confused", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "confusion" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "confusion" },
+		});
+		/* applyConfusionTick runs as part of the same turn-consuming action, so
+		 * the drinking turn itself already counts as the first tick */
+		expect(next.confusedTurnsRemaining).toBe(CONFUSION_POTION_DURATION - 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["confusion"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-confused" &&
+					event.payload.turns === CONFUSION_POTION_DURATION,
+			),
+		).toBe(true);
+	});
+
+	it("moving while confused ignores the intended direction in favor of a random one", () => {
+		/* at seed 1, the confused roll always picks north regardless of intent */
+		const state: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			confusedTurnsRemaining: 5,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: state.player.x, y: state.player.y - 1 });
+		expect(next.confusedTurnsRemaining).toBe(4);
+	});
+
+	it("a confused stumble into a wall still spends the turn (unlike a normal wall bump)", () => {
+		/* seed 1's confused roll picks north; placed just south of the wall so
+		 * that roll bumps into it instead of moving */
+		const state: GameState = {
+			...buildArenaGameState(5, 5, 1),
+			player: { x: 2, y: 1 },
+			confusedTurnsRemaining: 5,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual(state.player); /* did not move */
+		expect(next).not.toBe(state); /* but the turn was still spent */
+		expect(next.confusedTurnsRemaining).toBe(4);
+	});
+
+	it("confusedTurnsRemaining reaches 0 and fires confusion-faded", () => {
+		let current: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			confusedTurnsRemaining: 1,
+		};
+		current = advanceTurn(current, { type: "wait" });
+		expect(current.confusedTurnsRemaining).toBe(0);
+		expect(
+			current.events.some((event) => event.type === "confusion-faded"),
+		).toBe(true);
+	});
+
 	it("using a held shield permanently raises playerDefense when blessed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),
@@ -782,7 +843,12 @@ describe("advanceTurn", () => {
 	it("is a no-op (same reference, no turn spent) once everything is already identified", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			identifiedPotionKinds: ["potion", "poison", "strength"] as const,
+			identifiedPotionKinds: [
+				"potion",
+				"poison",
+				"strength",
+				"confusion",
+			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {

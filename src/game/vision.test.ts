@@ -71,6 +71,7 @@ describe("deriveExploredState", () => {
 			playerFood: 100,
 			hasRingOfRegeneration: false,
 			hasRingOfSustenance: false,
+			confusedTurnsRemaining: 0,
 			enemies: [],
 			items: [],
 			inventory: [],

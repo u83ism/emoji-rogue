@@ -167,6 +167,11 @@ describe("formatEvent", () => {
 				{ type: "wand-struck", payload: { target: "zombie", damage: 3 } },
 				"杖から放たれた力がゾンビを貫いた!3のダメージを与えた!",
 			],
+			[
+				{ type: "player-confused", payload: { turns: 10 } },
+				"混乱の薬を飲んだ。頭がくらくらする!",
+			],
+			[{ type: "confusion-faded", payload: {} }, "混乱がおさまった"],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);
@@ -179,6 +184,12 @@ describe("formatEvent", () => {
 		).toBe("未鑑定の薬を拾った");
 		expect(
 			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, []),
+		).toBe("未鑑定の薬を拾った");
+		expect(
+			formatEvent(
+				{ type: "item-picked-up", payload: { kind: "confusion" } },
+				[],
+			),
 		).toBe("未鑑定の薬を拾った");
 	});
 

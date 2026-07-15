@@ -118,6 +118,8 @@ export interface GameState {
 	readonly hasRingOfRegeneration: boolean;
 	/** Once equipped, may skip a hunger tick — see applyHungerTick. Never turns back off. */
 	readonly hasRingOfSustenance: boolean;
+	/** Turns left of randomized movement — see applyConfusionTick and applyMove. 0 means not confused. */
+	readonly confusedTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

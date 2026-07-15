@@ -1,6 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
-import { createRng, type RngState } from "../rng.js";
+import { createRng, type RngState, stepUniform } from "../rng.js";
 import {
+	CONFUSION_POTION_DURATION,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
@@ -17,6 +18,7 @@ import {
 	TRAP_DAMAGE,
 } from "./balance.js";
 import { applyPlayerAttack, applyWandStrike } from "./combat.js";
+import { applyConfusionTick } from "./confusion.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
@@ -41,6 +43,7 @@ const DIRECTION_VECTORS: Readonly<
 	west: [-1, 0],
 	east: [1, 0],
 };
+const ALL_DIRECTIONS: readonly Direction[] = ["north", "south", "west", "east"];
 
 const findEnemyAt = (
 	state: GameState,
@@ -272,8 +275,10 @@ const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
  * permanently raises playerAttackDamage and a shield playerDefense — both
  * stack with no cap, since they are rewards, not a resource that can be
  * wasted. A ring sets hasRingOfRegeneration (an on/off flag, not stackable —
- * using a second ring is consumed but changes nothing). Using a kind not
- * held is a no-op (same reference, no turn spent).
+ * using a second ring is consumed but changes nothing). A confusion potion
+ * sets confusedTurnsRemaining, which randomizes the direction of every move
+ * until it counts back down to 0 (see applyMove, applyConfusionTick). Using
+ * a kind not held is a no-op (same reference, no turn spent).
  */
 const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	const held = state.inventory.find((entry) => entry.kind === kind);
@@ -474,6 +479,21 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "confusion") {
+		return {
+			...state,
+			confusedTurnsRemaining: CONFUSION_POTION_DURATION,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-confused",
+					payload: { turns: CONFUSION_POTION_DURATION },
+				},
+			]),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
@@ -493,29 +513,48 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
  * floor (picking up any item, gold or the amulet lying there). Bumping a
  * wall consumes no turn (returns the input state, same reference); the
  * other three all do.
+ *
+ * While confusedTurnsRemaining is set, the intended `direction` is ignored
+ * in favor of a uniformly random one (consuming state.rng) — even a wall
+ * bump then returns a state with a new rng, so (unlike normal wall bumps)
+ * confused stumbling still costs the turn, matching the original's
+ * uncertainty around walking while confused.
  */
 const applyMove = (state: GameState, direction: Direction): GameState => {
-	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
-	const x = state.player.x + deltaX;
-	const y = state.player.y + deltaY;
+	let effectiveDirection = direction;
+	let rng = state.rng;
+	if (state.confusedTurnsRemaining > 0) {
+		const roll = stepUniform(rng);
+		rng = roll.state;
+		const picked =
+			ALL_DIRECTIONS[Math.floor(roll.value * ALL_DIRECTIONS.length)];
+		effectiveDirection = picked ?? direction;
+	}
+	const stateWithRng = rng === state.rng ? state : { ...state, rng };
 
-	const target = findEnemyAt(state, x, y);
+	const [deltaX, deltaY] = DIRECTION_VECTORS[effectiveDirection];
+	const x = stateWithRng.player.x + deltaX;
+	const y = stateWithRng.player.y + deltaY;
+
+	const target = findEnemyAt(stateWithRng, x, y);
 	if (target !== undefined) {
-		return applyPlayerAttack(state, target);
+		return applyPlayerAttack(stateWithRng, target);
 	}
-	if (!isFloor(state, x, y)) {
-		return state;
+	if (!isFloor(stateWithRng, x, y)) {
+		return stateWithRng;
 	}
-	if (x === state.stairs.x && y === state.stairs.y) {
+	if (x === stateWithRng.stairs.x && y === stateWithRng.stairs.y) {
 		/* the whole floor is replaced, so this floor's enemies never act */
-		return state.stairs.direction === "up"
-			? ascendStairs(state)
-			: descendStairs(state);
+		return stateWithRng.stairs.direction === "up"
+			? ascendStairs(stateWithRng)
+			: descendStairs(stateWithRng);
 	}
 	return applyTrapTrigger(
 		applyGoldPickup(
 			applyAmuletPickup(
-				applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+				applyItemPickup(
+					deriveExploredState({ ...stateWithRng, player: { x, y } }),
+				),
 			),
 		),
 	);
@@ -540,12 +579,12 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return applyRegenerationTick(
-					applyHungerTick(afterPlayer),
+				return applyConfusionTick(
+					applyRegenerationTick(applyHungerTick(afterPlayer)),
 				); /* descended — the new floor's enemies wait */
 			}
-			return applyRegenerationTick(
-				applyHungerTick(advanceEnemies(afterPlayer)),
+			return applyConfusionTick(
+				applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
 			);
 		}
 		case "wait": {
@@ -555,7 +594,9 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return applyRegenerationTick(applyHungerTick(advanceEnemies(state)));
+			return applyConfusionTick(
+				applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
+			);
 		}
 		case "use-item": {
 			if (state.status !== "playing") {
@@ -568,7 +609,9 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse.status !== "playing") {
 				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
-			return applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse)));
+			return applyConfusionTick(
+				applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
+			);
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write

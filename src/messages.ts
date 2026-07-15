@@ -31,6 +31,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
 	wand: "命中の杖",
+	confusion: "混乱の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -188,5 +189,9 @@ export const formatEvent = (
 			return `防具が錆びついた!防御力が${event.payload.amount}下がった`;
 		case "wand-struck":
 			return `杖から放たれた力が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
+		case "player-confused":
+			return `${ITEM_NAMES.confusion}を飲んだ。頭がくらくらする!`;
+		case "confusion-faded":
+			return "混乱がおさまった";
 	}
 };

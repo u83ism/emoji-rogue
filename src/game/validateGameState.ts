@@ -116,7 +116,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "sustenance" ||
 	value === "enchant-weapon" ||
 	value === "enchant-armor" ||
-	value === "wand";
+	value === "wand" ||
+	value === "confusion";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -236,6 +237,10 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.amount);
 		case "wand-struck":
 			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
+		case "player-confused":
+			return isPositiveInteger(payload.turns);
+		case "confusion-faded":
+			return true;
 		default:
 			return false;
 	}
@@ -312,6 +317,10 @@ export const validateGameState = (
 	const hasRingOfSustenance = value.hasRingOfSustenance;
 	if (!isBooleanValue(hasRingOfSustenance)) {
 		return err("hasRingOfSustenance");
+	}
+	const confusedTurnsRemaining = value.confusedTurnsRemaining;
+	if (!isNonNegativeInteger(confusedTurnsRemaining)) {
+		return err("confusedTurnsRemaining");
 	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
@@ -397,6 +406,7 @@ export const validateGameState = (
 		playerFood,
 		hasRingOfRegeneration,
 		hasRingOfSustenance,
+		confusedTurnsRemaining,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,

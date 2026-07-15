@@ -295,6 +295,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts well-formed player-confused and confusion-faded events and rejects a broken one", () => {
+		const confused = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-confused", payload: { turns: 10 } }],
+		});
+		expect(confused.ok).toBe(true);
+
+		const faded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "confusion-faded", payload: {} }],
+		});
+		expect(faded.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-confused", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("rejects a non-integer or negative confusedTurnsRemaining", () => {
+		expectRejected(
+			{ ...buildValidState(), confusedTurnsRemaining: -1 },
+			"confusedTurnsRemaining",
+		);
+		expectRejected(
+			{ ...buildValidState(), confusedTurnsRemaining: 1.5 },
+			"confusedTurnsRemaining",
+		);
+	});
+
 	it("accepts a well-formed wand-struck event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

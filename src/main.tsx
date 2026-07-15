@@ -156,6 +156,12 @@ const App = () => {
 				</Text>
 				<Text> </Text>
 				<Text color="yellow">💰{state.goldCollected}</Text>
+				{state.confusedTurnsRemaining > 0 && (
+					<>
+						<Text> </Text>
+						<Text color="magenta">混乱中({state.confusedTurnsRemaining})</Text>
+					</>
+				)}
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>

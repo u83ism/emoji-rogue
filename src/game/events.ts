@@ -15,7 +15,8 @@ export type ItemKind =
 	| "sustenance"
 	| "enchant-weapon"
 	| "enchant-armor"
-	| "wand";
+	| "wand"
+	| "confusion";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -25,6 +26,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"potion",
 	"poison",
 	"strength",
+	"confusion",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -180,6 +182,16 @@ export type GameEvent =
 			/** Same shape as enemy-hit, kept separate for its own flavor text — see applyWandStrike. */
 			readonly type: "wand-struck";
 			readonly payload: { readonly target: EnemyKind; readonly damage: number };
+	  }
+	| {
+			/** Drinking a confusion potion — see applyConfusionTick and applyMove. */
+			readonly type: "player-confused";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn confusedTurnsRemaining reaches 0 — see applyConfusionTick. */
+			readonly type: "confusion-faded";
+			readonly payload: Record<string, never>;
 	  };
 
 /**

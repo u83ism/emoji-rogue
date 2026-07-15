@@ -383,6 +383,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン26 — 巻物第3号(識別の巻物)
+
+飲むリスクを負わずに未鑑定ポーション(マイルストーン23)を鑑定できる「識別の巻物」を導入する。`identifiedPotionKinds`という状態は既に存在するため、この巻物は「`POTION_KINDS`のうち未鑑定の最初の1種を`identifiedPotionKinds`に加える」だけの薄い効果になる——巻物カテゴリの中でもテレポート・地図に続き最も単純な実装になる見込み。鑑定すべき対象が(すでに全種鑑定済みで)何もない場合は、アイテムを持っていないときの`use-item`と同じ「無効果・ターン消費なし・巻物も消費しない」扱いにする(同一参照を返す既存の慣習を踏襲)。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"identify"`を追加。`GameEvent`に`potion-identified`(payload: 鑑定した`kind`)を追加
+- [x] `src/game/balance.ts`: `IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 30`(他の巻物と同じ独立判定の仕組み)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で識別の巻物を1個抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`identify`分岐を追加——`POTION_KINDS`から`identifiedPotionKinds`に含まれない最初の種類を選び鑑定リストに追加、`potion-identified`を記録(rng不使用、決定的)。鑑定対象が無ければ`state`をそのまま返す(ターン消費なし・巻物も消費しない) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`identify: 🔍`(単一コードポイント)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`identify: "識別の巻物"`、`potion-identified`の文言(「◯の正体を見破った!」——鑑定はその瞬間に正体を明かすイベントなので`player-healed`等と同様、常に実名で表示) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"identify"`を追加。`potion-identified`イベントの検証ケース(`kind`が`isItemKind`)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] 実機スモークテスト: 識別の巻物の出現・拾う→使う→未鑑定だった薬が実名で表示されるようになることを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

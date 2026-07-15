@@ -1,0 +1,70 @@
+body {
+	background: #111;
+	color: #eee;
+	font-family: system-ui, sans-serif;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 1em;
+}
+
+h1 {
+	font-size: 1.2em;
+	margin: 0 0 0.25em;
+}
+
+.hint {
+	font-size: 0.85em;
+	color: #999;
+	margin: 0 0 0.75em;
+	text-align: center;
+}
+
+.map {
+	display: grid;
+	grid-auto-rows: 1.4em;
+	background: #000;
+	line-height: 1.4em;
+}
+
+.cell {
+	width: 1.4em;
+	height: 1.4em;
+	font-size: 1em;
+	text-align: center;
+	overflow: hidden;
+}
+
+.status {
+	margin-top: 0.5em;
+	font-weight: bold;
+}
+
+.log {
+	margin-top: 0.25em;
+	min-height: 3.6em;
+	font-size: 0.9em;
+}
+
+.log-died {
+	color: #f66;
+	font-weight: bold;
+}
+
+.log-won {
+	color: #6f6;
+	font-weight: bold;
+}
+
+.inventory {
+	margin-top: 0.5em;
+	border: 1px solid #555;
+	padding: 0.5em 0.75em;
+	font-size: 0.9em;
+}
+
+.seed {
+	margin-top: 0.75em;
+	font-size: 0.75em;
+	color: #666;
+}

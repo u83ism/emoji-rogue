@@ -50,6 +50,7 @@ seed
 | `src/color.ts` `src/text.ts` `src/stringgenerator.ts` `src/noise/` | 色演算 / `%c{}`書式トークナイザ / マルコフ連鎖名前生成 / simplexノイズ | 独立した小物 |
 | `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts` | 共有ヘルパー | `at`/`toXy` / 座標キー / `DIRS`方向テーブル |
 | `src/index.ts` | 公開APIバレル | エクスポート一覧 = 公開API全景 |
+| `src/game/index.ts` | ゲーム層の公開APIバレル | `src/index.ts`(近代化rot.jsツールボックス側)とは別物。`demo/`のようなCLI外の埋め込み先向けに`advanceTurn`・`buildDungeonGameState`・`buildFrameGrid`等を再エクスポート |
 
 ## map/ の読み方
 

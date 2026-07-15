@@ -138,7 +138,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン10 — インベントリ導入(即時使用をやめ、選択使用UIを追加)
+
+回復薬は「踏んだら即飲む」だったが、これを「拾って持ち物に貯め、任意のタイミングで使う」に変更する。UI面の投資として、`i`キーで開閉する持ち物オーバーレイ(Ink `Box`の`borderStyle`、文字a/b/c…で選択)を新設した。アイテム種はまだ`potion`のみだが、`GameState.inventory`は種類ごとのスタック(`{kind, quantity}`)として持たせ、種類が増えても構造を変えずに済む形にしてある。
+
+- [x] `src/game/state.ts`: `InventoryEntry`(`{kind: ItemKind, quantity: number}`)を新設し`GameState.inventory: readonly InventoryEntry[]`を追加(容量上限はまだ設けない — 必要になったらバックログへ)。`Action`に`{type: "use-item", payload: {kind: ItemKind}}`を追加
+- [x] `src/game/events.ts`: `GameEvent`に`item-picked-up`(payload: `kind`)を追加。既存の`player-healed`は「使った」時にのみ発火するよう用途を変更(構造は不変)
+- [x] `src/game/advanceTurn.ts`: 床のアイテムを踏んだら`inventory`に加算するだけ(即使用しない)+ `item-picked-up`を記録。新規`use-item`アクション: 対象の種類を1個消費してpotionなら上限クリップで回復(在庫が無ければ同一参照を返しターン消費なし、`wait`と同様に敵ターンへ進む) + テスト(拾う・スタック・使用・満タン使用・在庫なし・ターン消費の確認)
+- [x] `src/game/inventoryKeymap.ts`(新規): `toInventoryLetter(index)`(a, b, c…の割当)と`toUseItemAction(input, inventory)`(オーバーレイ内でのキー→`use-item`アクション変換、純粋関数)+ テスト。通常プレイ中のキー変換(`keymap.ts`)とは責務を分けた
+- [x] `src/messages.ts`: `formatInventoryEntry(entry)`(例:「回復薬 x2」)と`item-picked-up`の文言(「回復薬を拾った」)、オーバーレイの見出し`INVENTORY_TITLE`・空表示`INVENTORY_EMPTY_MESSAGE`を追加 + テスト
+- [x] `src/main.tsx`: `i`で持ち物オーバーレイの開閉(オーバーレイが開いている間だけ、キー入力の解釈先をリスト選択に切り替える)。**開閉状態はGameStateに入れない**(表示上の関心事であり世界のシミュレーションに影響しないため、セーブに載せてはいけない — 既存の「システム通知はシェルの持ち物」という区別と同じ理屈)。オーバーレイを開いたままの状態遷移(死亡等)は`useEffect`側の終了処理に任せる
+- [x] `src/game/validateGameState.ts`: `inventory`フィールドの検証(`kind`・`quantity`は正整数)を追加。`items`/`GameEvent`のkind検証も個別リテラル比較から共通の`isItemKind`ガードに統一。`GameState`にフィールドが増える構造変更のため**`SAVE_FORMAT_VERSION`を4に** + テスト
+- [ ] 実機スモークテスト: 拾う→オーバーレイで確認→使う一連の操作感、空表示、`i`/Escでのキャンセル、フロアまたぎでの持ち越し、セーブ/ロード(形式4)を確認(このセッションはリモート環境のため未実施)
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
+
 ## バックログ(マイルストーン未整理)
+- 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - ダメージの乱数幅(戦闘は当面決定的。プレイフィールを見て`state.rng`消費で幅を持たせるか判断)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照

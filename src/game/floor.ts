@@ -15,6 +15,7 @@ import {
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
+	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
@@ -98,9 +99,10 @@ const collectSpawnPool = (
  * rations, GOLD_PILES_PER_FLOOR gold piles (random amount each),
  * TRAP_COUNT_PER_FLOOR hidden traps and — independently, each with its own
  * spawn chance — a sword, a shield, a poison potion (visually identical to a
- * real potion until identified), a teleport scroll, a magic mapping scroll
- * and an identify scroll, all drawn from the spawn pool. Nothing shares a
- * tile with anything else unless the pool ran dry (tiny fully-visible maps).
+ * real potion until identified), a teleport scroll, a magic mapping scroll,
+ * an identify scroll and a ring of regeneration, all drawn from the spawn
+ * pool. Nothing shares a tile with anything else unless the pool ran dry
+ * (tiny fully-visible maps).
  */
 export const buildFloorLayout = (
 	width: number,
@@ -203,6 +205,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "identify" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < RING_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "ring" });
 	}
 
 	const goldPiles: GoldPile[] = [];

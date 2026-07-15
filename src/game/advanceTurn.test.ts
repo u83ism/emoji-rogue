@@ -389,6 +389,53 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "ring" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "ring" },
+		});
+		expect(next.hasRingOfRegeneration).toBe(true);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "ring-equipped", payload: { kind: "ring" } },
+		]);
+	});
+
+	it("using a second ring is consumed but changes nothing (already equipped)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			hasRingOfRegeneration: true,
+			inventory: [{ kind: "ring" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "ring" },
+		});
+		expect(next.hasRingOfRegeneration).toBe(true);
+		expect(next.inventory).toEqual([]);
+	});
+
+	it("a ring of regeneration heals HP over time via waiting turns (wired into every turn-consuming action)", () => {
+		const state = {
+			...buildArenaGameState(
+				9,
+				3,
+				1,
+			) /* this seed's first regen roll succeeds */,
+			hasRingOfRegeneration: true,
+			playerHp: PLAYER_MAX_HP - 3,
+		};
+		const next = advanceTurn(state, { type: "wait" });
+		expect(next.playerHp).toBe(state.playerHp + 1);
+		expect(
+			next.events.some((event) => event.type === "player-regenerated"),
+		).toBe(true);
+	});
+
 	it("using a held food ration restores food up to the cap, one consumed from inventory", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

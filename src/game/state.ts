@@ -103,6 +103,8 @@ export interface GameState {
 	readonly playerDefense: number;
 	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
 	readonly playerFood: number;
+	/** Once equipped, heals HP over time — see applyRegenerationTick. Never turns back off. */
+	readonly hasRingOfRegeneration: boolean;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

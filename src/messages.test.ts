@@ -122,6 +122,14 @@ describe("formatEvent", () => {
 				{ type: "gold-stolen", payload: { amount: 0 } },
 				"盗賊に襲われたが、何も盗られなかった",
 			],
+			[
+				{ type: "ring-equipped", payload: { kind: "ring" } },
+				"指輪を身につけた。じわじわとHPが回復するようになった!",
+			],
+			[
+				{ type: "player-regenerated", payload: { amount: 1 } },
+				"指輪の力でHPが1回復した",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

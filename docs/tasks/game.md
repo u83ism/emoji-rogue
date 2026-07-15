@@ -464,23 +464,27 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 オリジナルRogueの指輪(ring)を導入する。数ある指輪効果のうち、既存の仕組みと自然に噛み合う「再生の指輪(ring of regeneration、装備しているだけで自然にHPが回復し続ける)」をまず1種類だけ実装する(他の指輪は`docs/design.md`のバックログへ)。潜在的アイテム(未鑑定ポーション)のような鑑定の仕組みは持たせず、巻物と同じく拾った時点で実名が分かる単純な形にする(マイルストーン24の前例を踏襲)。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"ring"`を追加。`GameEvent`に`ring-equipped`(payload: `kind: ItemKind`)・`player-regenerated`(payload: 実回復量`amount`)を追加(列挙値追加のみ)
-- [ ] `src/game/balance.ts`: `RING_SPAWN_CHANCE_PERCENT = 15`(剣・盾と同じ独立per-floor判定)・`RING_REGEN_CHANCE_PERCENT = 20`(指輪装備中・HPが満タンでない間、毎ターン独立に判定——`WAKE_CHANCE_PERCENT`と同じ「毎ターン確率判定」の型を再利用)を追加
-- [ ] `src/game/state.ts`: `GameState`に`hasRingOfRegeneration: boolean`を追加(構造変更)
-- [ ] `src/game/floor.ts`: `RING_SPAWN_CHANCE_PERCENT`による指輪の独立per-floorスポーンを追加
-- [ ] `src/game/regeneration.ts`(新規、`hunger.ts`と対になるファイル): `applyRegenerationTick(state)` — `hasRingOfRegeneration`かつHPが満タン未満なら`state.rng`を一時的にステートフルな`Rng`に起こして`RING_REGEN_CHANCE_PERCENT`判定、成功すればHP+1と`player-regenerated`を記録(外れてもrngは進める、`descendStairs`/呪い判定と同じ「毎回rngは消費するが結果に関わらず状態を返す」パターン) + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`ring`分岐(`hasRingOfRegeneration`を`true`にして`ring-equipped`を記録。既に装備済みでも再度使うと消費されるだけで効果に変化はない——剣・盾のような際限ない加算効果ではなく単なるオンオフなため)を追加。`applyHungerTick`を呼んでいる全箇所(move/wait/use-item)に`applyRegenerationTick`も追加で呼ぶ + テスト
-- [ ] `src/messages.ts`: `ring-equipped`(例:「指輪を身につけた。じわじわとHPが回復するようになった!」)・`player-regenerated`(例:「指輪の力でHPが1回復した」)の文言 + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"ring"`を追加。`hasRingOfRegeneration`(真偽値)の検証、`ring-equipped`/`player-regenerated`イベントの検証ケースを追加。`GameState`の構造変更のため**`SAVE_FORMAT_VERSION`を12に**
-- [ ] `src/game/save.test.ts`: shape guardに`hasRingOfRegeneration: "boolean"`を追記
-- [ ] 実機スモークテスト: 指輪を拾って装備すると「指輪を身につけた」表示になること、HPが減っている状態でターンを重ねると自然に回復するログが流れることを確認
+- [x] `src/game/events.ts`: `ItemKind`に`"ring"`を追加。`GameEvent`に`ring-equipped`(payload: `kind: ItemKind`)・`player-regenerated`(payload: 実回復量`amount`)を追加(列挙値追加のみ)
+- [x] `src/game/balance.ts`: `RING_SPAWN_CHANCE_PERCENT = 15`(剣・盾と同じ独立per-floor判定)・`RING_REGEN_CHANCE_PERCENT = 20`(指輪装備中・HPが満タンでない間、毎ターン独立に判定——`WAKE_CHANCE_PERCENT`と同じ「毎ターン確率判定」の型を再利用)を追加
+- [x] `src/game/state.ts`: `GameState`に`hasRingOfRegeneration: boolean`を追加(構造変更)
+- [x] `src/game/floor.ts`: `RING_SPAWN_CHANCE_PERCENT`による指輪の独立per-floorスポーンを追加 + テスト
+- [x] `src/game/regeneration.ts`(新規、`hunger.ts`と対になるファイル): `applyRegenerationTick(state)` — `hasRingOfRegeneration`かつHPが満タン未満なら`state.rng`を一時的にステートフルな`Rng`に起こして`RING_REGEN_CHANCE_PERCENT`判定、成功すればHP+1と`player-regenerated`を記録(外れてもrngは進める、`descendStairs`/呪い判定と同じ「毎回rngは消費するが結果に関わらず状態を返す」パターン) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`ring`分岐(`hasRingOfRegeneration`を`true`にして`ring-equipped`を記録。既に装備済みでも再度使うと消費されるだけで効果に変化はない——剣・盾のような際限ない加算効果ではなく単なるオンオフなため)を追加。`applyHungerTick`を呼んでいる全箇所(move/wait/use-item)に`applyRegenerationTick`も追加で呼ぶ + テスト
+- [x] `src/messages.ts`: `ring-equipped`(例:「指輪を身につけた。じわじわとHPが回復するようになった!」)・`player-regenerated`(例:「指輪の力でHPが1回復した」)の文言 + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"ring"`を追加。`hasRingOfRegeneration`(真偽値)の検証、`ring-equipped`/`player-regenerated`イベントの検証ケースを追加。`GameState`の構造変更のため**`SAVE_FORMAT_VERSION`を12に** + テスト
+- [x] `src/game/save.test.ts`: shape guardに`hasRingOfRegeneration: "boolean"`を追記
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`ring: 💍`(単一コードポイント、Unicode 6.0)を追加
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): 罠を踏んでHPを減らしてから指輪を拾い装備し、その後1ターン待つとHPが自然回復する(seed, 経路)の組をNodeスクリプトで事前に特定してから`node dist/main.mjs --seed=1273`を実機起動。矢のわなを踏んでHP8/10になった後、指輪💍を拾って装備すると「指輪を身につけた。じわじわとHPが回復するようになった!」表示になり、続けて1ターン待つとHPが9/10に回復し「指輪の力でHPが1回復した」を確認
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)
 - ブラウザデモ(`demo/main.js`)のステータスバーがマイルストーン20〜22(満腹度・所持金・わな)に追従できていない(今回`formatEvent`/`formatInventoryEntry`呼び出しのシグネチャ変更にだけ追従し、表示自体の拡充はスコープ外とした)。CLI版と表示内容を揃えたくなったら着手する
 - `formatEvent`が描画のたびに現在の鑑定状態で評価されるため、鑑定済みになった潜在的アイテムの過去ログ行の表示が遡って変わる件(マイルストーン23で確認・許容と判断)。気になる場合はイベント発生時点の鑑定状態をpayloadに焼き込む設計に変更する
-- 他の未鑑定アイテム(指輪など)・呪われたアイテムの導入(マイルストーン23で確立した「`identifiedPotionKinds`的な鑑定リスト+`messages.ts`側での表示分岐」という型を横展開できる。巻物はマイルストーン24でこの型を使わない単純な形で導入した——巻物自体を未鑑定にしたくなったら再検討)
+- 他の指輪効果の追加(マイルストーン31では再生の指輪のみ実装。原作Rogueには他に怪力・耐久・索敵・透明視・瞬間移動・敵召喚・敏捷・防御・隠密・遅消化などがある。追加する際、複数種類になったら「拾った時点で実名が分かる」単純な形のままにするか、`identifiedPotionKinds`的な鑑定リストに切り替えるか判断する)
+- 他の未鑑定アイテムカテゴリの導入(マイルストーン23で確立した「`identifiedPotionKinds`的な鑑定リスト+`messages.ts`側での表示分岐」という型を横展開できる。巻物・指輪はどちらもこの型を使わない単純な形で導入した——将来的に未鑑定にしたくなったら再検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照

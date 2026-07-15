@@ -320,3 +320,24 @@ describe("thief spawning", () => {
 		}
 	});
 });
+
+describe("ring spawning", () => {
+	it("spawns a ring on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "ring",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one ring on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const ringCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "ring",
+			).length;
+			expect(ringCount).toBeLessThanOrEqual(1);
+		}
+	});
+});

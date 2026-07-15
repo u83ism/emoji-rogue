@@ -45,6 +45,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	mapping: { glyph: "🧭" },
 	/* Magnifying glass: single-codepoint, Unicode 6.0. */
 	identify: { glyph: "🔍" },
+	/* Ring: single-codepoint, Unicode 6.0. */
+	ring: { glyph: "💍" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

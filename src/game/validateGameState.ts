@@ -102,7 +102,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "scroll" ||
 	value === "mapping" ||
 	value === "identify" ||
-	value === "strength";
+	value === "strength" ||
+	value === "ring";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -200,6 +201,10 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.bonus);
 		case "gold-stolen":
 			return isNonNegativeInteger(payload.amount);
+		case "ring-equipped":
+			return isItemKind(payload.kind);
+		case "player-regenerated":
+			return isPositiveInteger(payload.amount);
 		default:
 			return false;
 	}
@@ -269,6 +274,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(playerFood) || playerFood > PLAYER_MAX_FOOD) {
 		return err("playerFood");
 	}
+	const hasRingOfRegeneration = value.hasRingOfRegeneration;
+	if (!isBooleanValue(hasRingOfRegeneration)) {
+		return err("hasRingOfRegeneration");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -332,6 +341,7 @@ export const validateGameState = (
 		playerAttackDamage,
 		playerDefense,
 		playerFood,
+		hasRingOfRegeneration,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y },
 		enemies: enemies.map((enemy) => ({

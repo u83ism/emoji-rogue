@@ -20,6 +20,7 @@ import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
 import { descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
+import { applyRegenerationTick } from "./regeneration.js";
 import type {
 	Action,
 	Direction,
@@ -212,7 +213,9 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
  * heals up to the cap (using it at full health wastes it); a sword instead
  * permanently raises playerAttackDamage and a shield playerDefense — both
  * stack with no cap, since they are rewards, not a resource that can be
- * wasted. Using a kind not held is a no-op (same reference, no turn spent).
+ * wasted. A ring sets hasRingOfRegeneration (an on/off flag, not stackable —
+ * using a second ring is consumed but changes nothing). Using a kind not
+ * held is a no-op (same reference, no turn spent).
  */
 const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	const held = state.inventory.find((entry) => entry.kind === kind);
@@ -301,6 +304,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 			inventory,
 			events: buildEventLog(state.events, [
 				{ type: "floor-mapped", payload: {} },
+			]),
+		};
+	}
+
+	if (kind === "ring") {
+		return {
+			...state,
+			hasRingOfRegeneration: true,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "ring-equipped", payload: { kind } },
 			]),
 		};
 	}
@@ -422,11 +436,13 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return applyHungerTick(
-					afterPlayer,
+				return applyRegenerationTick(
+					applyHungerTick(afterPlayer),
 				); /* descended — the new floor's enemies wait */
 			}
-			return applyHungerTick(advanceEnemies(afterPlayer));
+			return applyRegenerationTick(
+				applyHungerTick(advanceEnemies(afterPlayer)),
+			);
 		}
 		case "wait": {
 			/* Stand still for one turn; enemies still act. Without this a
@@ -435,7 +451,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return applyHungerTick(advanceEnemies(state));
+			return applyRegenerationTick(applyHungerTick(advanceEnemies(state)));
 		}
 		case "use-item": {
 			if (state.status !== "playing") {
@@ -448,7 +464,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse.status !== "playing") {
 				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
-			return applyHungerTick(advanceEnemies(afterUse));
+			return applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse)));
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write

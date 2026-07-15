@@ -10,7 +10,8 @@ export type ItemKind =
 	| "scroll"
 	| "mapping"
 	| "identify"
-	| "strength";
+	| "strength"
+	| "ring";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -129,6 +130,15 @@ export type GameEvent =
 	| {
 			/** amount is the actual gold stolen — 0 when the thief struck with nothing to take. */
 			readonly type: "gold-stolen";
+			readonly payload: { readonly amount: number };
+	  }
+	| {
+			readonly type: "ring-equipped";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** Fired only when the roll succeeds — see applyRegenerationTick. */
+			readonly type: "player-regenerated";
 			readonly payload: { readonly amount: number };
 	  };
 

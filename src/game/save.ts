@@ -2,8 +2,8 @@ import { err, ok, type Result } from "../result.js";
 import type { GameState } from "./state.js";
 import { isRecord, validateGameState } from "./validateGameState.js";
 
-/** Bump on any breaking change to the GameState shape. 2: floor + stairs. 3: items. 4: inventory. 5: playerAttackDamage. 6: playerDefense. 7: playerFood. 8: goldPiles + goldCollected. 9: traps. 10: identifiedPotionKinds. 11: enemies[].awake. */
-export const SAVE_FORMAT_VERSION = 11;
+/** Bump on any breaking change to the GameState shape. 2: floor + stairs. 3: items. 4: inventory. 5: playerAttackDamage. 6: playerDefense. 7: playerFood. 8: goldPiles + goldCollected. 9: traps. 10: identifiedPotionKinds. 11: enemies[].awake. 12: hasRingOfRegeneration. */
+export const SAVE_FORMAT_VERSION = 12;
 
 export type SaveFileError =
 	| { readonly kind: "malformed-json" }

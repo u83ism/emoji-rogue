@@ -178,3 +178,13 @@ export const DART_TRAP_DAMAGE = 2;
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 };
+
+/** Chance (out of 100), independently rolled per floor, that a ring spawns. */
+export const RING_SPAWN_CHANCE_PERCENT = 15;
+/**
+ * Chance (out of 100), rolled independently every turn a ring of
+ * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it
+ * heals 1 HP this turn — same "roll every eligible turn, not guaranteed"
+ * idiom as WAKE_CHANCE_PERCENT.
+ */
+export const RING_REGEN_CHANCE_PERCENT = 20;

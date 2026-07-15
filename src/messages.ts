@@ -23,6 +23,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	mapping: "地図の巻物",
 	identify: "識別の巻物",
 	strength: "怪力の薬",
+	ring: "指輪",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -155,5 +156,9 @@ export const formatEvent = (
 			return event.payload.amount > 0
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
+		case "ring-equipped":
+			return `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
+		case "player-regenerated":
+			return `指輪の力でHPが${event.payload.amount}回復した`;
 	}
 };

@@ -288,6 +288,42 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed ring-equipped and player-regenerated event and rejects broken ones", () => {
+		const equipped = validateGameState({
+			...buildValidState(),
+			events: [{ type: "ring-equipped", payload: { kind: "ring" } }],
+		});
+		expect(equipped.ok).toBe(true);
+
+		const regenerated = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-regenerated", payload: { amount: 1 } }],
+		});
+		expect(regenerated.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "ring-equipped", payload: { kind: "bow" } }],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-regenerated", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("rejects a non-boolean hasRingOfRegeneration", () => {
+		expectRejected(
+			{ ...buildValidState(), hasRingOfRegeneration: "true" },
+			"hasRingOfRegeneration",
+		);
+	});
+
 	it("accepts a well-formed inventory (including swords, shields and food) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),

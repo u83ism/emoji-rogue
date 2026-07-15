@@ -73,5 +73,10 @@ export const calculateEnemyCountForFloor = (
 export const POTION_COUNT_PER_FLOOR = 2;
 export const POTION_HEAL_AMOUNT = 5;
 
+/** Permanent boost to playerAttackDamage per sword used. Stacks — no cap. */
+export const SWORD_ATTACK_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that a sword spawns. */
+export const SWORD_SPAWN_CHANCE_PERCENT = 30;
+
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;

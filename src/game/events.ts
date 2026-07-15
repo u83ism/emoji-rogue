@@ -1,8 +1,7 @@
 /** Events carry it so the shell can name the attacker. */
 export type EnemyKind = "zombie" | "bat";
 
-/** The only item kind so far. */
-export type ItemKind = "potion";
+export type ItemKind = "potion" | "sword";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -45,6 +44,10 @@ export type GameEvent =
 	| {
 			readonly type: "game-won";
 			readonly payload: { readonly floor: number };
+	  }
+	| {
+			readonly type: "weapon-equipped";
+			readonly payload: { readonly kind: ItemKind; readonly bonus: number };
 	  };
 
 /**

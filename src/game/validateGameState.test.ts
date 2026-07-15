@@ -93,6 +93,14 @@ describe("validateGameState", () => {
 	it("rejects broken combat fields", () => {
 		expectRejected({ ...buildValidState(), playerHp: 0 }, "playerHp");
 		expectRejected({ ...buildValidState(), playerHp: 9999 }, "playerHp");
+		expectRejected(
+			{ ...buildValidState(), playerAttackDamage: 0 },
+			"playerAttackDamage",
+		);
+		expectRejected(
+			{ ...buildValidState(), playerAttackDamage: "1" },
+			"playerAttackDamage",
+		);
 
 		const valid = buildValidState();
 		const enemies = valid.enemies;
@@ -126,7 +134,7 @@ describe("validateGameState", () => {
 			"items",
 		);
 		expectRejected(
-			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "sword" }] },
+			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "shield" }] },
 			"items",
 		);
 		expectRejected(
@@ -141,7 +149,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "item-picked-up", payload: { kind: "sword" } }],
+				events: [{ type: "item-picked-up", payload: { kind: "shield" } }],
 			},
 			"events",
 		);
@@ -162,20 +170,53 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
-	it("accepts a well-formed inventory and rejects a broken one", () => {
+	it("accepts a well-formed weapon-equipped event and rejects a broken one", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "weapon-equipped", payload: { kind: "shield", bonus: 1 } },
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "weapon-equipped", payload: { kind: "sword", bonus: 0 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed inventory (including swords) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
-			inventory: [{ kind: "potion", quantity: 3 }],
+			inventory: [
+				{ kind: "potion", quantity: 3 },
+				{ kind: "sword", quantity: 1 },
+			],
 		});
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
 			expect(accepted.value.inventory).toEqual([
 				{ kind: "potion", quantity: 3 },
+				{ kind: "sword", quantity: 1 },
 			]);
 		}
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "sword", quantity: 1 }] },
+			{ ...buildValidState(), inventory: [{ kind: "shield", quantity: 1 }] },
 			"inventory",
 		);
 		expectRejected(

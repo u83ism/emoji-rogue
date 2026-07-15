@@ -228,6 +228,36 @@ describe("advanceTurn", () => {
 		expect(next).toBe(state);
 	});
 
+	it("using a held sword permanently raises playerAttackDamage instead of healing", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "sword" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "sword" },
+		});
+		expect(next.playerAttackDamage).toBe(state.playerAttackDamage + 1);
+		expect(next.playerHp).toBe(state.playerHp); /* swords don't heal */
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+		]);
+	});
+
+	it("using a second sword stacks the attack bonus", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerAttackDamage: 2 /* as if a first sword was already used */,
+			inventory: [{ kind: "sword" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "sword" },
+		});
+		expect(next.playerAttackDamage).toBe(3);
+	});
+
 	it("moving onto the staircase descends to the next floor", () => {
 		/* teleport the stairs right next to the player (room centers always
 		 * have floor neighbors), then step east onto them */

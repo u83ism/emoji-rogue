@@ -73,6 +73,8 @@ export interface GameState {
 	readonly explored: readonly (readonly boolean[])[];
 	readonly player: Position;
 	readonly playerHp: number;
+	/** Base damage plus any permanent bonus from swords used so far. */
+	readonly playerAttackDamage: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

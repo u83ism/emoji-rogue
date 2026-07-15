@@ -1,4 +1,8 @@
-import { PLAYER_MAX_HP, POTION_HEAL_AMOUNT } from "./balance.js";
+import {
+	PLAYER_MAX_HP,
+	POTION_HEAL_AMOUNT,
+	SWORD_ATTACK_BONUS,
+} from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
 import type { ItemKind } from "./events.js";
@@ -79,10 +83,10 @@ const applyItemPickup = (state: GameState): GameState => {
 };
 
 /**
- * Drinks a potion from inventory: hp is restored up to the cap, the item is
- * consumed either way (using it at full health wastes it), and the event
- * carries the hp actually gained. Only "potion" exists so far — a second
- * item kind would need this to branch on `kind`. Using a kind not held is a
+ * Uses one held item of `kind`, consumed from inventory either way. A potion
+ * heals up to the cap (using it at full health wastes it); a sword instead
+ * permanently raises playerAttackDamage — stacks with no cap, since it is a
+ * reward, not a resource that can be wasted. Using a kind not held is a
  * no-op (same reference, no turn spent).
  */
 const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
@@ -90,11 +94,27 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	if (held === undefined) {
 		return state;
 	}
+	const inventory = removeFromInventory(state.inventory, kind);
+
+	if (kind === "sword") {
+		return {
+			...state,
+			playerAttackDamage: state.playerAttackDamage + SWORD_ATTACK_BONUS,
+			inventory,
+			events: buildEventLog(state.events, [
+				{
+					type: "weapon-equipped",
+					payload: { kind, bonus: SWORD_ATTACK_BONUS },
+				},
+			]),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
 		playerHp: state.playerHp + amount,
-		inventory: removeFromInventory(state.inventory, kind),
+		inventory,
 		events: buildEventLog(state.events, [
 			{ type: "player-healed", payload: { by: kind, amount } },
 		]),

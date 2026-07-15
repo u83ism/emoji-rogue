@@ -1,4 +1,3 @@
-import { PLAYER_ATTACK_DAMAGE } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
@@ -7,19 +6,21 @@ export const isAdjacent = (left: Position, right: Position): boolean =>
 	Math.abs(left.x - right.x) + Math.abs(left.y - right.y) === 1;
 
 /**
- * The player's bump attack resolved against one enemy: damage is fixed
- * (see balance.ts), a kill removes the enemy. The player does not move —
- * attacking is what the movement turn was spent on.
+ * The player's bump attack resolved against one enemy: damage comes from
+ * `state.playerAttackDamage` (base plus any swords used so far), a kill
+ * removes the enemy. The player does not move — attacking is what the
+ * movement turn was spent on.
  */
 export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
-	const remainingHp = target.hp - PLAYER_ATTACK_DAMAGE;
+	const damage = state.playerAttackDamage;
+	const remainingHp = target.hp - damage;
 	const events: GameEvent[] = [
 		{
 			type: "enemy-hit",
-			payload: { target: target.kind, damage: PLAYER_ATTACK_DAMAGE },
+			payload: { target: target.kind, damage },
 		},
 	];
 	if (remainingHp <= 0) {

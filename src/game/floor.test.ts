@@ -38,7 +38,13 @@ describe("descendStairs", () => {
 
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
-			expect(state.items.length).toBe(2);
+			/* potions are guaranteed; the sword is a per-floor chance (0 or 1) */
+			expect(state.items.filter((item) => item.kind === "potion").length).toBe(
+				2,
+			);
+			expect(
+				state.items.filter((item) => item.kind === "sword").length,
+			).toBeLessThanOrEqual(1);
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);
@@ -97,6 +103,27 @@ describe("descendStairs", () => {
 			expect(kinds.filter((kind) => kind === "bat").length).toBe(
 				calculateEnemyCountForFloor("bat", floor),
 			);
+		}
+	});
+});
+
+describe("sword spawning", () => {
+	it("spawns a sword on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "sword",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one sword on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const swordCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "sword",
+			).length;
+			expect(swordCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

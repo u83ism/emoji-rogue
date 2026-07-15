@@ -58,4 +58,14 @@ describe("applyPlayerAttack", () => {
 		expect(next.player).toEqual(state.player);
 		expect(next.terrain).toBe(state.terrain);
 	});
+
+	it("deals playerAttackDamage, not a hardcoded amount (a sword raises it)", () => {
+		const target = zombie(5, 4, 10);
+		const boosted = { ...state, playerAttackDamage: 3, enemies: [target] };
+		const next = applyPlayerAttack(boosted, target);
+		expect(next.enemies).toEqual([zombie(5, 4, 7)]);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 3 } },
+		]);
+	});
 });

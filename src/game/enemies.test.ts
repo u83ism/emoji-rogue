@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
-import { BAT_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
+import { BAT_MAX_HP, PLAYER_ATTACK_DAMAGE, ZOMBIE_MAX_HP } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
@@ -101,6 +101,7 @@ describe("advanceEnemies", () => {
 			explored: buildUnexplored7x3(),
 			player: { x: 1, y: 1 },
 			playerHp: 10,
+			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],

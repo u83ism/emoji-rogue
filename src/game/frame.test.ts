@@ -91,6 +91,14 @@ describe("buildFrameGrid", () => {
 		expect(layered[2]?.[29]).toEqual({ glyph: "　" });
 	});
 
+	it("draws a sword with its own glyph, distinct from potions", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const sword = { x: 12, y: 2, kind: "sword" as const }; /* distance 3 */
+		expect(buildFrameGrid({ ...wide, items: [sword] })[2]?.[12]?.glyph).toBe(
+			"🔪",
+		);
+	});
+
 	it("draws visible potions, with enemies taking precedence", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const potion = { x: 12, y: 2, kind: "potion" as const }; /* distance 3 */

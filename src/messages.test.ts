@@ -42,6 +42,10 @@ describe("formatEvent", () => {
 				{ type: "game-won", payload: { floor: 10 } },
 				"10階に到達し、生還に成功した!",
 			],
+			[
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+				"剣を装備した。攻撃力が1上がった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);
@@ -54,5 +58,6 @@ describe("formatInventoryEntry", () => {
 		expect(formatInventoryEntry({ kind: "potion", quantity: 2 })).toBe(
 			"回復薬 x2",
 		);
+		expect(formatInventoryEntry({ kind: "sword", quantity: 1 })).toBe("剣 x1");
 	});
 });

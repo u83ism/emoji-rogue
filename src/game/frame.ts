@@ -1,6 +1,6 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell, TileGlyphs } from "../renderer/index.js";
-import type { EnemyKind } from "./events.js";
+import type { EnemyKind, ItemKind } from "./events.js";
 import type { GameState, GameStatus } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
@@ -24,8 +24,13 @@ const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 };
 /* Down staircase (also single-codepoint, Unicode 6.0). */
 const STAIRS_CELL: Cell = { glyph: "🔽" };
-/* Healing potion (also single-codepoint, Unicode 6.0). */
-const POTION_CELL: Cell = { glyph: "💊" };
+/* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
+ * needed) rather than the crossed-swords/dagger emoji, which both require
+ * one — see docs/design.md's "avoid combining sequences" rule. */
+const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
+	potion: { glyph: "💊" },
+	sword: { glyph: "🔪" },
+};
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
@@ -95,7 +100,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 		const itemRow = grid[item.y];
 		if (itemRow !== undefined) {
-			itemRow[item.x] = POTION_CELL;
+			itemRow[item.x] = ITEM_GLYPHS[item.kind];
 		}
 	}
 

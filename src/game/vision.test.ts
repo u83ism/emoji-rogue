@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
 import { seedToState } from "../rng.js";
+import { PLAYER_ATTACK_DAMAGE } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { GameState } from "./state.js";
 import { computeVisiblePoints, deriveExploredState } from "./vision.js";
@@ -65,6 +66,7 @@ describe("deriveExploredState", () => {
 			explored,
 			player: { x: 1, y: 1 },
 			playerHp: 10,
+			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 			enemies: [],
 			items: [],
 			inventory: [],

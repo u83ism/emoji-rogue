@@ -67,7 +67,8 @@ const isEnemyArray = (
 			isPositiveInteger(enemy.hp),
 	);
 
-const isItemKind = (value: unknown): value is ItemKind => value === "potion";
+const isItemKind = (value: unknown): value is ItemKind =>
+	value === "potion" || value === "sword";
 
 const isItemArray = (
 	value: unknown,
@@ -110,6 +111,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isItemKind(payload.kind);
 		case "game-won":
 			return isPositiveInteger(payload.floor);
+		case "weapon-equipped":
+			return isItemKind(payload.kind) && isPositiveInteger(payload.bonus);
 		default:
 			return false;
 	}
@@ -167,6 +170,10 @@ export const validateGameState = (
 	if (!isPositiveInteger(playerHp) || playerHp > PLAYER_MAX_HP) {
 		return err("playerHp");
 	}
+	const playerAttackDamage = value.playerAttackDamage;
+	if (!isPositiveInteger(playerAttackDamage)) {
+		return err("playerAttackDamage");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -211,6 +218,7 @@ export const validateGameState = (
 		explored,
 		player: { x: player.x, y: player.y },
 		playerHp,
+		playerAttackDamage,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y },
 		enemies: enemies.map((enemy) => ({

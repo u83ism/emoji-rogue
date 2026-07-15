@@ -1,7 +1,7 @@
 import { at } from "../indexing.js";
 import { createArenaMap } from "../map/arena.js";
 import { createRng, seedToState } from "../rng.js";
-import { PLAYER_MAX_HP } from "./balance.js";
+import { PLAYER_ATTACK_DAMAGE, PLAYER_MAX_HP } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildFloorLayout } from "./floor.js";
 import type { GameState, Position } from "./state.js";
@@ -60,6 +60,7 @@ export function buildArenaGameState(
 		explored: buildUnexploredColumns(width, height),
 		player,
 		playerHp: PLAYER_MAX_HP,
+		playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 		enemies: [],
 		items: [],
 		inventory: [],
@@ -93,6 +94,7 @@ export function buildDungeonGameState(
 		explored: buildUnexploredColumns(width, height),
 		player: layout.player,
 		playerHp: PLAYER_MAX_HP,
+		playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 		enemies: layout.enemies,
 		items: layout.items,
 		inventory: [],

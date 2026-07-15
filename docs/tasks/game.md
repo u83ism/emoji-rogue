@@ -317,6 +317,20 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン22 — 隠しわな(ダーツトラップ)
+
+オリジナルRogueのもう一つの根幹要素である「わな」を導入する。Rogueのわなは踏むまで見えない(発見・解除といった要素は今回は入れない=最小実装)。今回は最も単純な1種類——矢が飛んできてダメージを受けるダーツトラップ——だけを実装し、`TrapKind`をルックアップテーブル参照にしておく(マイルストーン9のENEMY_MAX_HP方式と同じ「種類を増やすなら1エントリ追加するだけ」の形)ことで、落とし穴(トラップドア降下)や毒矢などの追加を後から差し込みやすくする。**発見後も表示しない**(踏んだ瞬間に効果を発揮して消える一方向の存在)ため、`frame.ts`への変更は不要——金貨よりもさらに単純な実装になる。プレイヤーがわなで死亡する経路も初めて生まれるため、マイルストーン20の`DeathCause`をさらに拡張する。
+
+- [x] `src/game/events.ts`: `TrapKind = "dart"`を新設。`DeathCause`に`"trap"`を追加(`EnemyKind | "hunger" | "trap"`)。`GameEvent`に`trap-triggered`(payload: `kind`・実ダメージ`damage`)を追加
+- [x] `src/game/state.ts`: `Trap`型(`Position & { readonly kind: TrapKind }`)と`GameState`に`traps: readonly Trap[]`を追加
+- [x] `src/game/balance.ts`: `TRAP_COUNT_PER_FLOOR = 2`・`DART_TRAP_DAMAGE = 2`と種類→ダメージのルックアップテーブル`TRAP_DAMAGE: Readonly<Record<TrapKind, number>>`を追加
+- [x] `src/game/floor.ts`: スポーンプールから`TRAP_COUNT_PER_FLOOR`個のダーツトラップを抽選(既存の金貨/アイテム抽選と同じ枠組み。位置が伏せられている以外は同じ仕組み) + テスト
+- [x] `src/game/advanceTurn.ts`: 移動先に(伏せられた)わながあれば即発動——`TRAP_DAMAGE[kind]`だけ`playerHp`を削り`trap-triggered`を記録、`traps`からは即除去(一度きり)。HPが0以下なら`player-died(by: "trap")`+`status: "dead"` + テスト
+- [x] `src/messages.ts`: `trap-triggered`の文言(「矢のわなを踏んでしまった。◯のダメージを受けた」)、`player-died`の`DeathCause`分岐に`"trap"`を追加(「わなにやられた……」) + テスト
+- [x] `src/game/initialState.ts`: 両ビルダーの初期状態に`traps`(アリーナ版は`[]`、ダンジョン版は`layout.traps`)を追加
+- [x] `src/game/validateGameState.ts`: `isTrapKind`・`isDeathCause`の更新、`traps`フィールドの検証(床上・kind検証)、`trap-triggered`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を9に**
+- [ ] 実機スモークテスト: わなを踏んでのダメージ・ログ表示・(乱数次第で)わな死亡時の専用死因文言を確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)

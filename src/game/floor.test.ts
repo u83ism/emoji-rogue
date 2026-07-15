@@ -49,10 +49,20 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "shield").length,
 			).toBeLessThanOrEqual(1);
+			expect(state.goldPiles.length).toBe(3);
+			for (const pile of state.goldPiles) {
+				expect(pile.amount).toBeGreaterThanOrEqual(2);
+				expect(pile.amount).toBeLessThanOrEqual(20);
+			}
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);
-			const spawned = [state.stairs, ...state.enemies, ...state.items];
+			const spawned = [
+				state.stairs,
+				...state.enemies,
+				...state.items,
+				...state.goldPiles,
+			];
 			for (const position of spawned) {
 				expect(state.terrain[position.x]?.[position.y]).toBe(0);
 				const key = encodePointKey(position.x, position.y);

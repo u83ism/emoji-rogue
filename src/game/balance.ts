@@ -103,3 +103,7 @@ export const PLAYER_HUNGER_WARNING_THRESHOLD = 30;
 export const STARVATION_DAMAGE_PER_TURN = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;
 export const FOOD_COUNT_PER_FLOOR = 1;
+
+export const GOLD_PILES_PER_FLOOR = 3;
+export const GOLD_AMOUNT_MIN = 2;
+export const GOLD_AMOUNT_MAX = 20;

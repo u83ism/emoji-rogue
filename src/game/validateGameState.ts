@@ -2,7 +2,13 @@ import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
 import type { DeathCause, EnemyKind, GameEvent, ItemKind } from "./events.js";
-import type { Enemy, GameState, InventoryEntry, Item } from "./state.js";
+import type {
+	Enemy,
+	GameState,
+	GoldPile,
+	InventoryEntry,
+	Item,
+} from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -95,6 +101,18 @@ const isInventoryArray = (value: unknown): value is readonly InventoryEntry[] =>
 			isPositiveInteger(entry.quantity),
 	);
 
+const isGoldPileArray = (
+	value: unknown,
+	terrain: readonly (readonly number[])[],
+): value is readonly GoldPile[] =>
+	Array.isArray(value) &&
+	value.every(
+		(pile) =>
+			isRecord(pile) &&
+			standsOnFloor(pile, terrain) &&
+			isPositiveInteger(pile.amount),
+	);
+
 const isGameEvent = (value: unknown): boolean => {
 	if (!isRecord(value) || !isRecord(value.payload)) {
 		return false;
@@ -127,6 +145,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.damage);
 		case "player-ate":
 			return isNonNegativeInteger(payload.amount);
+		case "gold-collected":
+			return isPositiveInteger(payload.amount);
 		default:
 			return false;
 	}
@@ -221,6 +241,14 @@ export const validateGameState = (
 	if (!isInventoryArray(inventory)) {
 		return err("inventory");
 	}
+	const goldPiles = value.goldPiles;
+	if (!isGoldPileArray(goldPiles, terrain)) {
+		return err("goldPiles");
+	}
+	const goldCollected = value.goldCollected;
+	if (!isNonNegativeInteger(goldCollected)) {
+		return err("goldCollected");
+	}
 	const events = value.events;
 	if (!isGameEventArray(events)) {
 		return err("events");
@@ -256,6 +284,12 @@ export const validateGameState = (
 			kind: entry.kind,
 			quantity: entry.quantity,
 		})),
+		goldPiles: goldPiles.map((pile) => ({
+			x: pile.x,
+			y: pile.y,
+			amount: pile.amount,
+		})),
+		goldCollected,
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },
 		status: "playing",

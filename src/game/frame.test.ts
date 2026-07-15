@@ -126,6 +126,25 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(far)[2]?.[27]?.glyph).not.toBe("💊");
 	});
 
+	it("draws visible gold piles, with items taking precedence", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const pile = { x: 12, y: 2, amount: 5 }; /* distance 3 */
+		expect(buildFrameGrid({ ...wide, goldPiles: [pile] })[2]?.[12]?.glyph).toBe(
+			"💰",
+		);
+
+		const covered = {
+			...wide,
+			goldPiles: [pile],
+			items: [{ x: 12, y: 2, kind: "potion" as const }],
+		};
+		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("💊");
+
+		/* out of sight (distance 12): not drawn */
+		const far = { ...wide, goldPiles: [{ ...pile, x: 27 }] };
+		expect(buildFrameGrid(far)[2]?.[27]?.glyph).not.toBe("💰");
+	});
+
 	it("draws the staircase while visible, enemies take precedence on it", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const seen = { ...wide, stairs: { x: 18, y: 2 } }; /* distance 3 */

@@ -154,6 +154,8 @@ const App = () => {
 				<Text {...resolveFoodTextStyle(state.playerFood)}>
 					満腹度 {state.playerFood}/{PLAYER_MAX_FOOD}
 				</Text>
+				<Text> </Text>
+				<Text color="yellow">💰{state.goldCollected}</Text>
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>

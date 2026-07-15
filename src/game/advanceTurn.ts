@@ -87,6 +87,29 @@ const applyItemPickup = (state: GameState): GameState => {
 };
 
 /**
+ * Adds any gold pile under the player's feet straight to goldCollected — no
+ * inventory slot, no use-item step, unlike Item. Picking up gold is
+ * unconditional and immediate.
+ */
+const applyGoldPickup = (state: GameState): GameState => {
+	const pile = state.goldPiles.find(
+		(candidate) =>
+			candidate.x === state.player.x && candidate.y === state.player.y,
+	);
+	if (pile === undefined) {
+		return state;
+	}
+	return {
+		...state,
+		goldCollected: state.goldCollected + pile.amount,
+		goldPiles: state.goldPiles.filter((candidate) => candidate !== pile),
+		events: buildEventLog(state.events, [
+			{ type: "gold-collected", payload: { amount: pile.amount } },
+		]),
+	};
+};
+
+/**
  * Uses one held item of `kind`, consumed from inventory either way. A potion
  * heals up to the cap (using it at full health wastes it); a sword instead
  * permanently raises playerAttackDamage and a shield playerDefense — both
@@ -177,7 +200,9 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 		/* the whole floor is replaced, so this floor's enemies never act */
 		return descendStairs(state);
 	}
-	return applyItemPickup(deriveExploredState({ ...state, player: { x, y } }));
+	return applyGoldPickup(
+		applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+	);
 };
 
 /**

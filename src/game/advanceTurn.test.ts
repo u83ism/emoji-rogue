@@ -164,6 +164,32 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("stepping onto a gold pile collects it immediately (no inventory slot)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			goldPiles: [{ x: 5, y: 1, amount: 7 }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.goldPiles).toEqual([]);
+		expect(next.goldCollected).toBe(state.goldCollected + 7);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "gold-collected", payload: { amount: 7 } },
+		]);
+	});
+
+	it("collecting gold and an item on the same tile does both", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			goldPiles: [{ x: 5, y: 1, amount: 3 }],
+			items: [{ x: 5, y: 1, kind: "potion" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.goldCollected).toBe(3);
+		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
+	});
+
 	it("picking up a second potion of the same kind stacks the quantity", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

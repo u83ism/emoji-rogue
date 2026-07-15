@@ -8,13 +8,16 @@ import {
 	ENEMY_MAX_HP,
 	FOOD_COUNT_PER_FLOOR,
 	GOAL_FLOOR,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
+	GOLD_PILES_PER_FLOOR,
 	POTION_COUNT_PER_FLOOR,
 	SHIELD_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildEventLog } from "./events.js";
-import type { Enemy, GameState, Item, Position } from "./state.js";
+import type { Enemy, GameState, GoldPile, Item, Position } from "./state.js";
 import { computeVisiblePoints, deriveExploredState } from "./vision.js";
 
 /** Everything one dungeon floor is made of, before it becomes game state. */
@@ -23,6 +26,7 @@ export interface FloorLayout {
 	readonly player: Position;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
+	readonly goldPiles: readonly GoldPile[];
 	readonly stairs: Position;
 }
 
@@ -75,9 +79,10 @@ const collectSpawnPool = (
  * digger terrain, the player at the center of the first room, zombies and
  * bats (counts scale with `floor`, see balance.ts's `calculateEnemyCountForFloor`),
  * the down staircase, POTION_COUNT_PER_FLOOR potions, FOOD_COUNT_PER_FLOOR
- * food rations and — independently, each with its own spawn chance — a sword
- * and a shield, all drawn from the spawn pool. Nothing shares a tile with
- * anything else unless the pool ran dry (tiny fully-visible maps).
+ * food rations, GOLD_PILES_PER_FLOOR gold piles (random amount each) and —
+ * independently, each with its own spawn chance — a sword and a shield, all
+ * drawn from the spawn pool. Nothing shares a tile with anything else unless
+ * the pool ran dry (tiny fully-visible maps).
  */
 export const buildFloorLayout = (
 	width: number,
@@ -139,16 +144,24 @@ export const buildFloorLayout = (
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "shield" });
 	}
 
-	return { terrain: columns, player, enemies, items, stairs };
+	const goldPiles: GoldPile[] = [];
+	for (let i = 0; i < GOLD_PILES_PER_FLOOR && remaining.length > 0; i++) {
+		goldPiles.push({
+			...drawSpawnTile(remaining, rng),
+			amount: rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX),
+		});
+	}
+
+	return { terrain: columns, player, enemies, items, goldPiles, stairs };
 };
 
 /**
  * The next floor down, generated from the state's own RNG so a whole
  * multi-floor run stays reproducible from (dimensions, seed) alone. HP, the
- * inventory, the event log and the floor counter carry over; terrain,
- * enemies, staircase and the explored grid start fresh. Pure: deterministic
- * in its argument. Reaching GOAL_FLOOR ends the run in victory instead —
- * no new floor is generated, the RNG is left untouched.
+ * inventory, goldCollected, the event log and the floor counter carry over;
+ * terrain, enemies, staircase, gold piles and the explored grid start fresh.
+ * Pure: deterministic in its argument. Reaching GOAL_FLOOR ends the run in
+ * victory instead — no new floor is generated, the RNG is left untouched.
  */
 export const descendStairs = (state: GameState): GameState => {
 	const nextFloor = state.floor + 1;
@@ -172,6 +185,7 @@ export const descendStairs = (state: GameState): GameState => {
 		player: layout.player,
 		enemies: layout.enemies,
 		items: layout.items,
+		goldPiles: layout.goldPiles,
 		stairs: layout.stairs,
 		events: buildEventLog(state.events, [
 			{ type: "floor-descended", payload: { floor: nextFloor } },

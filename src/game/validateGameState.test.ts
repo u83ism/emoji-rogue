@@ -304,6 +304,46 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts well-formed gold piles and a gold-collected event, rejects broken ones", () => {
+		/* the staircase tile is always floor, wherever this dungeon put it */
+		const floorSpot = buildDungeonGameState(20, 12, 42).stairs;
+
+		const accepted = validateGameState({
+			...buildValidState(),
+			goldPiles: [{ ...floorSpot, amount: 5 }],
+			goldCollected: 10,
+			events: [{ type: "gold-collected", payload: { amount: 5 } }],
+		});
+		expect(accepted.ok).toBe(true);
+		if (accepted.ok) {
+			expect(accepted.value.goldPiles).toEqual([{ ...floorSpot, amount: 5 }]);
+			expect(accepted.value.goldCollected).toBe(10);
+		}
+
+		expectRejected(
+			{
+				...buildValidState(),
+				goldPiles: [{ x: 0, y: 0, amount: 5 }] /* perimeter wall */,
+			},
+			"goldPiles",
+		);
+		expectRejected(
+			{ ...buildValidState(), goldPiles: [{ ...floorSpot, amount: 0 }] },
+			"goldPiles",
+		);
+		expectRejected(
+			{ ...buildValidState(), goldCollected: -1 },
+			"goldCollected",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "gold-collected", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

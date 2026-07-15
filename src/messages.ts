@@ -73,5 +73,7 @@ export const formatEvent = (event: GameEvent): string => {
 			return event.payload.amount > 0
 				? `${ITEM_NAMES.food}を食べた。空腹度が${event.payload.amount}回復した`
 				: `${ITEM_NAMES.food}を食べたが、空腹度は満タンだった`;
+		case "gold-collected":
+			return `${event.payload.amount}ゴールドを手に入れた`;
 	}
 };

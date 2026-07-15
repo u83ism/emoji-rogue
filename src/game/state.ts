@@ -45,6 +45,15 @@ export type Item = Position & {
 	readonly kind: ItemKind;
 };
 
+/**
+ * A pile of gold lying on the floor. Unlike Item, gold is never held or
+ * used — stepping on it immediately adds its amount to goldCollected and
+ * removes the pile, so it needs no ItemKind or inventory entry.
+ */
+export type GoldPile = Position & {
+	readonly amount: number;
+};
+
 /** One stack of a held item kind. No capacity limit (yet) — see the backlog. */
 export interface InventoryEntry {
 	readonly kind: ItemKind;
@@ -83,6 +92,9 @@ export interface GameState {
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */
 	readonly inventory: readonly InventoryEntry[];
+	readonly goldPiles: readonly GoldPile[];
+	/** Running total of gold collected across the whole run — also the de facto final score. */
+	readonly goldCollected: number;
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
 	/**

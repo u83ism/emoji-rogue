@@ -34,6 +34,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	shield: { glyph: "🦺" },
 	food: { glyph: "🍖" },
 };
+/* Money bag: single-codepoint, Unicode 6.0. */
+const GOLD_CELL: Cell = { glyph: "💰" };
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
@@ -96,7 +98,17 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		grid.push(row);
 	}
 
-	/* overlay order = precedence, lowest first: items < stairs < enemies < player */
+	/* overlay order = precedence, lowest first: gold < items < stairs < enemies < player */
+	for (const pile of state.goldPiles) {
+		if (!visiblePoints.has(encodePointKey(pile.x, pile.y))) {
+			continue;
+		}
+		const goldRow = grid[pile.y];
+		if (goldRow !== undefined) {
+			goldRow[pile.x] = GOLD_CELL;
+		}
+	}
+
 	for (const item of state.items) {
 		if (!visiblePoints.has(encodePointKey(item.x, item.y))) {
 			continue;

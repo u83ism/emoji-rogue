@@ -70,6 +70,10 @@ export type GameEvent =
 			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. */
 			readonly type: "player-ate";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			readonly type: "gold-collected";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

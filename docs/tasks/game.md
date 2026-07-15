@@ -271,6 +271,16 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機確認のみ保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン19 — CLI版でのシード指定対応
+
+マイルストーン1の設計方針「セーブ・リプレイ・シード共有(デイリーチャレンジ)が構造的にほぼ無料になる」のうち、シード共有だけが未対応だった。ブラウザデモ(マイルストーン17)には既に`?seed=123`があるので、CLI版にも対称な`--seed=123`起動引数を追加する。引数解析は純粋関数なので**対話的なTTY操作なしでVitestだけで検証できる**。
+
+- [x] `src/cliArgs.ts`(新規、シェル層): `parseSeedArgument(argv: readonly string[]): number | undefined`。`--seed=<正の数>`を1つ拾う純粋関数(`process.argv`は渡す側=`main.tsx`が知っていればよく、この関数自体はNode非依存)。ブラウザデモの`readSeedFromUrl`と同じ検証規則(有限の正の数のみ)に揃えた + テスト
+- [x] `src/main.tsx`: `createSession`が`parseSeedArgument(process.argv.slice(2)) ?? Date.now()`でシードを決定(セーブから再開した場合はそもそもシード指定が意味を持たないため従来どおり無視)
+- [x] README: `--seed=123`起動引数を遊び方に追記
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)

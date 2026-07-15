@@ -4,6 +4,7 @@ import { getRoomCenter } from "../map/features.js";
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng } from "../rng.js";
 import {
+	AQUATOR_SPAWN_CHANCE_PERCENT,
 	calculateEnemyCountForFloor,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -174,6 +175,17 @@ export const buildFloorLayout = (
 			...drawSpawnTile(pool, rng),
 			kind: "nymph",
 			hp: ENEMY_MAX_HP.nymph,
+			awake: false,
+		});
+	}
+	if (
+		pool.length > 0 &&
+		rng.getUniformInt(0, 99) < AQUATOR_SPAWN_CHANCE_PERCENT
+	) {
+		enemies.push({
+			...drawSpawnTile(pool, rng),
+			kind: "aquator",
+			hp: ENEMY_MAX_HP.aquator,
 			awake: false,
 		});
 	}

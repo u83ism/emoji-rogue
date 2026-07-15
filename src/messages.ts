@@ -12,6 +12,7 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	bat: "コウモリ",
 	thief: "盗賊",
 	nymph: "ニンフ",
+	aquator: "アクエーター",
 };
 
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
@@ -182,5 +183,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。攻撃力が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":
 			return `${ITEM_NAMES["enchant-armor"]}を読んだ。防御力が${event.payload.bonus}上がった!`;
+		case "armor-rusted":
+			return `防具が錆びついた!防御力が${event.payload.amount}下がった`;
 	}
 };

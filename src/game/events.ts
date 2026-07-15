@@ -1,5 +1,5 @@
 /** Events carry it so the shell can name the attacker. */
-export type EnemyKind = "zombie" | "bat" | "thief" | "nymph";
+export type EnemyKind = "zombie" | "bat" | "thief" | "nymph" | "aquator";
 
 export type ItemKind =
 	| "potion"
@@ -169,6 +169,11 @@ export type GameEvent =
 			/** Always a positive bonus — enchant-armor is never cursed, unlike a found shield. */
 			readonly type: "armor-enchanted";
 			readonly payload: { readonly bonus: number };
+	  }
+	| {
+			/** Fired alongside player-hit when an aquator's rust roll succeeds. */
+			readonly type: "armor-rusted";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

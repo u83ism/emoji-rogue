@@ -48,6 +48,16 @@ export const NYMPH_ATTACK_DAMAGE = 0;
 export const NYMPH_ACTIONS_PER_TURN = 1;
 export const NYMPH_SPAWN_CHANCE_PERCENT = 20;
 
+// Neither flees nor scales with depth like zombie/bat — a sturdier enemy
+// that stands and fights, whose hits have a chance to also rust the
+// player's armor (see advanceEnemies's playerDefense accumulator).
+export const AQUATOR_MAX_HP = 3;
+export const AQUATOR_ATTACK_DAMAGE = 1;
+export const AQUATOR_ACTIONS_PER_TURN = 1;
+/** Chance (out of 100), independently rolled every time an aquator's attack lands, that it also rusts armor. */
+export const AQUATOR_RUST_CHANCE_PERCENT = 33;
+export const AQUATOR_SPAWN_CHANCE_PERCENT = 20;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -76,12 +86,14 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	bat: BAT_MAX_HP,
 	thief: THIEF_MAX_HP,
 	nymph: NYMPH_MAX_HP,
+	aquator: AQUATOR_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
 	bat: BAT_ATTACK_DAMAGE,
 	thief: THIEF_ATTACK_DAMAGE,
 	nymph: NYMPH_ATTACK_DAMAGE,
+	aquator: AQUATOR_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -93,6 +105,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	bat: BAT_ACTIONS_PER_TURN,
 	thief: THIEF_ACTIONS_PER_TURN,
 	nymph: NYMPH_ACTIONS_PER_TURN,
+	aquator: AQUATOR_ACTIONS_PER_TURN,
 };
 
 /** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */

@@ -27,6 +27,8 @@ const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	 * better than the newer (Unicode 10) fairy emoji, which this project's
 	 * stability rule (docs/design.md) avoids. */
 	nymph: { glyph: "👻" },
+	/* Octopus: single-codepoint, Unicode 6.0. */
+	aquator: { glyph: "🐙" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

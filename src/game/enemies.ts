@@ -3,6 +3,7 @@ import { encodePointKey } from "../pointkey.js";
 import type { RngState } from "../rng.js";
 import { stepUniform } from "../rng.js";
 import {
+	AQUATOR_RUST_CHANCE_PERCENT,
 	ENEMY_ACTIONS_PER_TURN,
 	ENEMY_ATTACK_DAMAGE,
 	MIN_DAMAGE_TAKEN,
@@ -132,13 +133,17 @@ const stepWandering = (
  * enemies act
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts by kind, reduced by state.playerDefense
- * but never below MIN_DAMAGE_TAKEN) — except a thief, which steals up to
- * THIEF_STEAL_AMOUNT gold instead of dealing damage, and a nymph, which
- * steals one random held item stack instead (rng-picked when more than one
- * kind is held; item-stolen fires with kind: undefined if the inventory was
- * empty). Both flee the board for good afterward (never rejoin
- * `nextEnemies`, killed or not). Non-adjacent
+ * in place (damage from balance.ts by kind, reduced by the (locally
+ * accumulated) playerDefense but never below MIN_DAMAGE_TAKEN) — except a
+ * thief, which steals up to THIEF_STEAL_AMOUNT gold instead of dealing
+ * damage, and a nymph, which steals one random held item stack instead
+ * (rng-picked when more than one kind is held; item-stolen fires with kind:
+ * undefined if the inventory was empty). Both flee the board for good
+ * afterward (never rejoin `nextEnemies`, killed or not). An aquator instead
+ * stands its ground: every landed hit additionally rolls
+ * AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off playerDefense
+ * (armor-rusted), so its later hits in the same fight — this turn's or a
+ * future one's — land harder. Non-adjacent
  * enemies chase via A* while inside the player's field of view, or wander
  * using (and advancing) the state's RNG. The player's HP reaching zero ends
  * the run and cuts short any remaining actions, this enemy's and the rest of
@@ -158,6 +163,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 	let playerHp = state.playerHp;
 	let goldCollected = state.goldCollected;
 	let inventory = state.inventory;
+	let playerDefense = state.playerDefense;
 	let died = false;
 	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
@@ -214,13 +220,21 @@ export const advanceEnemies = (state: GameState): GameState => {
 				}
 				const damage = Math.max(
 					MIN_DAMAGE_TAKEN,
-					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense,
+					ENEMY_ATTACK_DAMAGE[enemy.kind] - playerDefense,
 				);
 				playerHp -= damage;
 				events.push({
 					type: "player-hit",
 					payload: { by: enemy.kind, damage },
 				});
+				if (enemy.kind === "aquator") {
+					const rustRoll = stepUniform(rng);
+					rng = rustRoll.state;
+					if (rustRoll.value < AQUATOR_RUST_CHANCE_PERCENT / 100) {
+						playerDefense -= 1;
+						events.push({ type: "armor-rusted", payload: { amount: 1 } });
+					}
+				}
 				if (playerHp <= 0) {
 					died = true;
 					events.push({ type: "player-died", payload: { by: enemy.kind } });
@@ -247,6 +261,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: Math.max(0, playerHp),
 		goldCollected,
 		inventory,
+		playerDefense,
 		enemies: nextEnemies,
 		events: buildEventLog(state.events, events),
 		rng,

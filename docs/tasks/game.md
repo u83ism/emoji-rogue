@@ -588,16 +588,18 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 これまでの敵は「ダメージを与える(ゾンビ・コウモリ)」か「盗んで逃げる(盗賊・ニンフ)」のどちらかだったが、原作Rogueのアクエーター(Aquator)に着想を得て「居座って攻撃し続けながら、確率で追加の副作用(防具の劣化)を与える」という3つ目の行動原理を導入する。逃げも消えもしない点でゾンビ・コウモリの仲間だが、通常ダメージに加えて`AQUATOR_RUST_CHANCE_PERCENT`の確率で`playerDefense`を1下げる——盾で積んだ防御力を溶かしていく持続的な脅威になる。深さスケーリングはせず盗賊・ニンフと同じ独立per-floor抽選とする(原作でも中層以降に出る中堅モンスターであり、ゾンビ・コウモリのような雑魚湧きにはしない)。
 
-- [ ] `src/game/events.ts`: `EnemyKind`に`"aquator"`を追加。`GameEvent`に`armor-rusted`(payload: 実減少量`amount`。`player-hit`と同じターンに追加で1件積む形——`player-hit`自体の形は変えない)を追加
-- [ ] `src/game/balance.ts`: `AQUATOR_MAX_HP = 3`(居座って戦うため他より頑丈)・`AQUATOR_ATTACK_DAMAGE = 1`・`AQUATOR_ACTIONS_PER_TURN = 1`・`AQUATOR_RUST_CHANCE_PERCENT = 33`(隣接攻撃が命中するたびに独立判定、`WAKE_CHANCE_PERCENT`と同じ規模感)・`AQUATOR_SPAWN_CHANCE_PERCENT = 20`(盗賊・ニンフと同じ独立per-floor判定)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`に`aquator`のエントリを追加
-- [ ] `src/game/enemies.ts`: `advanceEnemies`に`playerDefense`のローカルアキュムレータ(`goldCollected`/`inventory`と同じパターン)を追加し、ダメージ計算の`state.playerDefense`参照をこのローカル変数に置き換える(同ターン内で複数回被弾しても劣化が反映されるように)。隣接攻撃が通常どおり命中した後、`enemy.kind === "aquator"`なら`state.rng`を消費して`AQUATOR_RUST_CHANCE_PERCENT`判定し、成功すれば`playerDefense`を1減らして`armor-rusted`を記録(下限なし——呪われた盾で既に負値を許容している設計をそのまま踏襲) + テスト(錆びる・錆びない両方、他の敵種では発動しないこと、同ターン複数回被弾での累積を含む)
-- [ ] `src/game/floor.ts`: スポーンプールから低確率でアクエーターを1体抽選(盗賊・ニンフと同じ独立per-floor判定、深さスケーリングなし) + テスト
-- [ ] `src/game/frame.ts`: `ENEMY_GLYPHS`に`aquator: 🐙`(単一コードポイント、Unicode 6.0)を追加
-- [ ] `src/messages.ts`: `ENEMY_NAMES`に`aquator: "アクエーター"`を追加。`armor-rusted`の文言(「防具が錆びついた!防御力が◯下がった」) + テスト
-- [ ] `src/game/validateGameState.ts`: `isEnemyKind`に`"aquator"`を追加。`armor-rusted`イベントの検証ケース(`amount`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、アクエーターに隣接した状態で`wait`を複数ターン実行し、`playerDefense`が徐々に下がっていくこと・`armor-rusted`イベントが記録されること・アクエーターが逃げずに居座り続けることを確認する
+- [x] `src/game/events.ts`: `EnemyKind`に`"aquator"`を追加。`GameEvent`に`armor-rusted`(payload: 実減少量`amount`。`player-hit`と同じターンに追加で1件積む形——`player-hit`自体の形は変えない)を追加
+- [x] `src/game/balance.ts`: `AQUATOR_MAX_HP = 3`(居座って戦うため他より頑丈)・`AQUATOR_ATTACK_DAMAGE = 1`・`AQUATOR_ACTIONS_PER_TURN = 1`・`AQUATOR_RUST_CHANCE_PERCENT = 33`(隣接攻撃が命中するたびに独立判定、`WAKE_CHANCE_PERCENT`と同じ規模感)・`AQUATOR_SPAWN_CHANCE_PERCENT = 20`(盗賊・ニンフと同じ独立per-floor判定)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`に`aquator`のエントリを追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`に`playerDefense`のローカルアキュムレータ(`goldCollected`/`inventory`と同じパターン)を追加し、ダメージ計算の`state.playerDefense`参照をこのローカル変数に置き換える(同ターン内で複数回被弾しても劣化が反映されるように)。隣接攻撃が通常どおり命中した後、`enemy.kind === "aquator"`なら`state.rng`を消費して`AQUATOR_RUST_CHANCE_PERCENT`判定し、成功すれば`playerDefense`を1減らして`armor-rusted`を記録(下限なし——呪われた盾で既に負値を許容している設計をそのまま踏襲) + テスト(錆びる・錆びない両方、他の敵種では発動しないこと、同ターン複数回被弾での累積を含む)
+- [x] `src/game/floor.ts`: スポーンプールから低確率でアクエーターを1体抽選(盗賊・ニンフと同じ独立per-floor判定、深さスケーリングなし) + テスト
+- [x] `src/game/frame.ts`: `ENEMY_GLYPHS`に`aquator: 🐙`(単一コードポイント、Unicode 6.0)を追加
+- [x] `src/messages.ts`: `ENEMY_NAMES`に`aquator: "アクエーター"`を追加。`armor-rusted`の文言(「防具が錆びついた!防御力が◯下がった」) + テスト
+- [x] `src/game/validateGameState.ts`: `isEnemyKind`に`"aquator"`を追加。`armor-rusted`イベントの検証ケース(`amount`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、アクエーターに隣接した状態で`wait`を複数ターン実行し、`playerDefense`が徐々に下がっていくこと・`armor-rusted`イベントが記録されること・アクエーターが逃げずに居座り続けることを確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、seed 1でアクエーターに隣接させ`wait`を3ターン実行し、1ターン目で`armor-rusted`が発生して`playerDefense`が-1になり、2ターン目以降はその劣化を反映してダメージが1→2に増えること、3ターンを通じてアクエーターが盤面に居座り続ける(盗賊・ニンフのように消えない)ことを確認。
+
+**マイルストーン38完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

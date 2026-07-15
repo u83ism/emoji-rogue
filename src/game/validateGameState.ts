@@ -79,7 +79,8 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" ||
 	value === "bat" ||
 	value === "thief" ||
-	value === "nymph";
+	value === "nymph" ||
+	value === "aquator";
 
 const isDeathCause = (value: unknown): value is DeathCause =>
 	isEnemyKind(value) ||
@@ -230,6 +231,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.bonus);
 		case "armor-enchanted":
 			return isPositiveInteger(payload.bonus);
+		case "armor-rusted":
+			return isPositiveInteger(payload.amount);
 		default:
 			return false;
 	}

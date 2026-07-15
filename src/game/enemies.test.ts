@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
 import {
+	AQUATOR_MAX_HP,
 	BAT_MAX_HP,
 	MIN_DAMAGE_TAKEN,
 	NYMPH_MAX_HP,
@@ -41,6 +42,14 @@ const nymph = (x: number, y: number, awake = true): Enemy => ({
 	y,
 	kind: "nymph",
 	hp: NYMPH_MAX_HP,
+	awake,
+});
+
+const aquator = (x: number, y: number, awake = true): Enemy => ({
+	x,
+	y,
+	kind: "aquator",
+	hp: AQUATOR_MAX_HP,
 	awake,
 });
 
@@ -338,6 +347,69 @@ describe("advanceEnemies", () => {
 			state.playerHp - 1,
 		); /* the zombie still attacked */
 		expect(next.inventory).toEqual([]);
+	});
+
+	/*
+	 * Whether a landed aquator hit also rusts armor is an
+	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 1's first
+	 * roll succeeds, seed 1000's fails.
+	 */
+	it("an adjacent aquator deals damage, stands its ground, and may rust armor", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [aquator(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([
+			aquator(5, 1),
+		]); /* stays, unlike thief/nymph */
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.playerDefense).toBe(state.playerDefense - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
+			{ type: "armor-rusted", payload: { amount: 1 } },
+		]);
+	});
+
+	it("an aquator hit that fails its rust roll only deals damage", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1000),
+			enemies: [aquator(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
+		]);
+	});
+
+	it("only an aquator's hits can rust armor — a zombie never does", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+	});
+
+	it("rust from one aquator carries into the next aquator's turn via the shared accumulator", () => {
+		/* at seed 1, only the first of these two aquators' rolls succeeds */
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1),
+			playerDefense: 5,
+			enemies: [aquator(5, 1), aquator(3, 1)],
+		};
+		const next = advanceEnemies(state);
+		const rustedEvents = next.events.filter(
+			(event) => event.type === "armor-rusted",
+		);
+		expect(rustedEvents.length).toBe(1);
+		expect(next.playerDefense).toBe(
+			4,
+		); /* 5 - 1, from the one successful roll */
 	});
 
 	it("a sleeping enemy outside the player's view takes no action at all", () => {

@@ -517,6 +517,20 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン33完了(2026-07-15)。**
 
+## マイルストーン34 — 落とし穴(2種類目のわな・強制フロア降下)
+
+わな(マイルストーン22)の2種類目として、踏むと強制的に次のフロアへ落下する落とし穴を追加する。ダメージは0固定(原作でも一撃の脅威というより「不本意な降下」自体が罰則)。**新しい降下ロジックは作らない** — `floor.ts`の`descendStairs(state)`は「今いるフロアを次の階に丸ごと差し替える」純粋関数として既に自己完結しており、階段を踏んで呼ばれるかわなを踏んで呼ばれるかを区別しない。よって`advanceTurn.ts`の`applyTrapTrigger`は、trapdoor系のわなが発動しプレイヤーが生存していれば、わな自身の`trap-triggered`イベントを積んだ状態でそのまま`descendStairs`に渡すだけでよい——GOAL_FLOOR到達時の魔除け配置・上り階段強制もdescendStairs側の既存ロジックがそのまま効く。GOAL_FLOOR(最深部、これより下がない)に落とし穴が湧くと`descendStairs`が11階を生成してしまい深さの上限が壊れるため、**GOAL_FLOOR では落とし穴を抽選しない**(既存の下り階段強制"up"と同じ理由の除外)。
+
+- [ ] `src/game/events.ts`: `TrapKind`に`"trapdoor"`を追加(列挙値追加のみ、`trap-triggered`イベントの形は不変)
+- [ ] `src/game/balance.ts`: `TRAPDOOR_DAMAGE = 0`・`TRAPDOOR_SPAWN_CHANCE_PERCENT = 15`(剣・盾と同じ独立per-floor判定)を追加し、`TRAP_DAMAGE`に`trapdoor: TRAPDOOR_DAMAGE`を追加
+- [ ] `src/game/floor.ts`: `TRAP_COUNT_PER_FLOOR`個のダーツとは別枠で、**`floor !== GOAL_FLOOR`のときだけ**`TRAPDOOR_SPAWN_CHANCE_PERCENT`で落とし穴を1個抽選 + テスト(GOAL_FLOORでは湧かないことを含む)
+- [ ] `src/game/advanceTurn.ts`: `applyTrapTrigger`で、わな発動後もプレイヤーが生存していて発動したわなが`trapdoor`なら、その時点の状態を`descendStairs`に渡して返す(通常のダーツはこれまでどおり状態を返すだけ) + テスト(落下でフロアが進むこと・道連れの敵ターンが起きないこと・GOAL_FLOOR到達時の魔除け配置もdescendStairs経由でそのまま効くことを含む)
+- [ ] `src/messages.ts`: `TRAP_NAMES`に`trapdoor: "落とし穴"`を追加。`trap-triggered`の文言をダメージ0のときは「◯を踏んでしまった!」(ダメージ節を省略)に分岐(将来の0ダメージわなにも一般化できる形) + テスト
+- [ ] `src/game/validateGameState.ts`: `isTrapKind`に`"trapdoor"`を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、`traps`に落とし穴を1個仕込んだ状態を用意し、そこへ`advanceTurn`(move)で踏ませて`floor`が1つ進み`trap-triggered`→`floor-descended`の順でイベントが積まれることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

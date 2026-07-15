@@ -725,6 +725,25 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 `resolveViewRadius(state)`を`vision.ts`に導入し、`computeVisiblePoints`に`radius`引数を追加。盲目中(`blindTurnsRemaining > 0`)は`BLIND_VIEW_RADIUS`(隣接マスのみ)を返し、描画(`frame.ts`)・敵AIの視認判定(`enemies.ts`)・杖の自動照準(`advanceTurn.ts`の`findNearestVisibleEnemy`)・探索済みグリッドの拡張(`deriveExploredState`)の4箇所すべてがこの関数経由になった(フロア生成時のスポーン配置は対象外のまま)。盲目の薬(`blindness`)は他の未鑑定ポーションと同じ`identifiedPotionKinds`の型に乗り、`blindness.ts`の`applyBlindnessTick`が混乱・浮遊と同型の純粋カウントダウン関数として追加された。パイプライン確認スクリプトでは、盲目状態で1マス移動した際の新規探索マス数(9)が通常状態(225)より大幅に少ないことを実際に`dist/game/index.mjs`越しに確認した。テストは722件(前回706件から+16)すべて通過、型検査・lint・knip・buildも全てクリーン。
 **マイルストーン44完了(2026-07-15)。**
 
+## マイルストーン45 — 経験値とレベルアップ(原作Rogueの基礎システムの再現)
+
+これまでの44マイルストーンで敵・アイテム・わな・一時状態異常など多くの要素を再現してきたが、原作Rogueの根幹システムの一つである**経験値によるレベルアップ**がまだ存在しない——`playerHp`の上限は`PLAYER_MAX_HP`というモジュール内定数のまま、敵を倒しても数値的な見返りは一切ない。本マイルストーンでは`GameState`に`playerLevel`・`playerExperience`・`playerMaxHp`(構造変更)を追加し、敵を倒す(`enemy-defeated`)たびに種別ごとの固定経験値を獲得、累積が閾値を超えるとレベルが上がって最大HPが恒久的に増える(現在HPも同量回復)という原作の骨格をシンプルな形で再現する。装備や乱数要素は絡めず、決定的な固定値のみで完結させる——`combat.ts`の「ダメージは固定値、乱数なし」という既存方針(マイルストーン15)と同じ考え方。
+
+- [ ] `src/game/events.ts`: `GameEvent`に`player-leveled-up`(payload: 到達レベル`level`)を追加
+- [ ] `src/game/state.ts`: `GameState`に`playerLevel: number`・`playerExperience: number`・`playerMaxHp: number`(すべて構造変更)を追加。`playerHp`の意味は変わらない(現在値)が、上限は今後`state.playerMaxHp`を参照する
+- [ ] `src/game/balance.ts`: `PLAYER_LEVEL_UP_HP_BONUS = 3`(レベルアップ1回あたりの最大HP増加量)・`LEVEL_EXPERIENCE_THRESHOLDS`(レベル2〜10到達に必要な累積経験値の配列、原作同様おおよそ倍々で増加させる)・`ENEMY_EXPERIENCE_REWARD`(`ENEMY_MAX_HP`と同じ idiom の`EnemyKind`別ルックアップ表、HPが高い敵ほど多め)を追加
+- [ ] `src/game/experience.ts`(新規): `applyExperienceGain(state, amount): GameState` — `playerExperience`に加算し、`LEVEL_EXPERIENCE_THRESHOLDS`を超えるたびに`playerLevel`を1つずつ上げ`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数(乱数不使用、複数レベル同時到達にも対応するループ) + テスト
+- [ ] `src/game/combat.ts`: `applyPlayerAttack`・`applyWandStrike`の両方で、撃破(`remainingHp <= 0`)時に`applyExperienceGain(nextState, ENEMY_EXPERIENCE_REWARD[target.kind])`を経由してから返すよう変更 + テスト
+- [ ] `PLAYER_MAX_HP`(モジュール内定数)への依存を`state.playerMaxHp`に置き換える箇所: `src/game/regeneration.ts`(上限判定)・`src/game/advanceTurn.ts`(回復薬の回復量クランプ)・`src/game/validateGameState.ts`(`playerHp`の上限検証を`playerMaxHp`との比較に変更しつつ`playerMaxHp`自体の検証も追加)・`src/main.tsx`(ステータスバーのHP表示)
+- [ ] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方に`playerLevel: 1`・`playerExperience: 0`・`playerMaxHp: PLAYER_MAX_HP`(初期値)を追加
+- [ ] `src/main.tsx`: ステータスバーにレベル表示を追加(例: `Lv.1`)
+- [ ] `src/messages.ts`: `player-leveled-up`の文言(例:「レベルが上がった!(Lv.◯)」) + テスト
+- [ ] `src/game/validateGameState.ts`: `playerLevel`(1以上の整数)・`playerExperience`(0以上の整数)・`playerMaxHp`(正の整数、`playerHp`以上)の検証、`player-leveled-up`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を20に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`playerLevel`・`playerExperience`・`playerMaxHp`(いずれも`"number"`)を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、敵を複数体倒して経験値が累積しレベルアップ時に`playerMaxHp`/`playerHp`が実際に増えることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

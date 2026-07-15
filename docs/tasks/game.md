@@ -497,6 +497,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン32完了(2026-07-15)。**
 
+## マイルストーン33 — 満腹の指輪(2種類目の指輪効果)
+
+バックログの「他の指輪効果の追加」に着手する最初の1件。再生の指輪(マイルストーン31)は`playerHp`を回復する効果だったが、今回は原作Rogueの"ring of slow digestion"に相当する、空腹の進みを遅らせる指輪を追加する。単純な恒久加算(剣・盾)の追加コピーにはせず、`hunger.ts`の`applyHungerTick`に「装備中は確率で空腹ティックそのものをスキップする」という新しい種類の作用を持ち込むことで、指輪という枠組みがHP回復以外にも展開できることを示す。バックログの判断ポイント(単純名称のままか鑑定リストに切り替えるか)は**単純名称のまま**を選ぶ——再生の指輪と同様、拾った時点で実名が分かる(未鑑定システムはポーションだけの枠組みとして温存する)。`ring-equipped`イベントの`payload.kind`は元から`ItemKind`型で指輪の種類を問わず汎用だったため、イベント・セーブ形式への影響はGameStateに1フィールド足す分だけで済む。
+	
+- [ ] `src/game/events.ts`: `ItemKind`に`"sustenance"`を追加(列挙値追加のみ)
+- [ ] `src/game/state.ts`: `GameState`に`hasRingOfSustenance: boolean`を追加(`hasRingOfRegeneration`と対称、構造変更)
+- [ ] `src/game/balance.ts`: `SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 15`(再生の指輪と同じ独立per-floor判定)・`SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50`(装備中、毎ターン独立に判定——外れれば通常どおり空腹ティックが起きる)を追加
+- [ ] `src/game/floor.ts`: `RING_SPAWN_CHANCE_PERCENT`による指輪抽選とは独立に、`SUSTENANCE_RING_SPAWN_CHANCE_PERCENT`で満腹の指輪を抽選 + テスト
+- [ ] `src/game/hunger.ts`: `applyHungerTick`の先頭に「`hasRingOfSustenance`なら`state.rng`を一時的にステートフルな`Rng`に起こして`SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT`判定、成功すれば空腹ティックそのものを丸ごとスキップ(食料もHPも変化なし、イベントなし)、外れれば通常どおり進める」を追加(`hasRingOfRegeneration`でない通常時はrngを一切消費しない既存の決定的経路を維持) + テスト(スキップ成功・失敗・指輪なしでの無変更を含む)
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`sustenance`分岐(`hasRingOfSustenance`を`true`にして`ring-equipped`を記録。既存の`ring`分岐と対称) + テスト
+- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`sustenance: 💍`(再生の指輪と同一の絵文字——未鑑定システムには乗らないため実名は拾った時点で分かるが、地面の見た目は指輪同士で共通にする)を追加
+- [ ] `src/messages.ts`: `ITEM_NAMES`に`sustenance: "満腹の指輪"`を追加。`ring-equipped`の文言を`payload.kind`で分岐(`sustenance`なら「満腹の指輪を身につけた。空腹の進みがゆるやかになった!」、それ以外は既存の再生文言) + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"sustenance"`を追加。`hasRingOfSustenance`(真偽値)の検証を追加。構造変更のため**`SAVE_FORMAT_VERSION`を14に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`hasRingOfSustenance: "boolean"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、満腹の指輪を装備した状態と装備していない状態それぞれで`advanceTurn`(wait)を多数回実行し、指輪ありの方が`playerFood`の減少ペースが約半分になることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

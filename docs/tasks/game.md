@@ -895,6 +895,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 想定通り新規`GameEvent`・GameState構造変更ともに不要で完結した(`Enemy.awake`は既存フィールド)。既存の「ゾンビ/コウモリの出現数はフロア深度のスケーリング式に厳密に一致する」というテストがモンスターハウスの追加出現と衝突したため、`floor.test.ts`の該当2件を`toBeGreaterThanOrEqual`/`toBeLessThanOrEqual`による範囲アサーションに書き換えて両立させた。パイプライン確認では、複数シードのダンジョンで`awake: true`のゾンビ/コウモリ(通常は全て`awake: false`で出現するため、これ自体がモンスターハウスの証拠になる)が実際にクラスタ状に出現するケースと出現しないケースの両方を`dist/game/index.mjs`越しに確認した。テストは789件(前回787件から+2、既存2件の書き換えは純増ではない)すべて通過、型検査・lint・knip・buildも全てクリーン。`docs/idea-memo.md`の有力候補から3件目の採用が完了した。
 **マイルストーン53完了(2026-07-15)。**
 
+## マイルストーン54 — コンダクト(縛りプレイの自己申告記録とスコアボーナス)
+
+`docs/idea-memo.md`で有力候補とした「NetHackのコンダクト」(自制ルールを守り通した記録をスコアに反映する縛りプレイ要素)を採用する。ただし調査時の想定(「既存のイベント列から導出できる」)には見落としがあった——`GameState.events`は表示用に直近`EVENT_LOG_LIMIT`(20件)だけを保持するローリングウィンドウで、ラン全体の履歴を保持していないため、ラン全体を通じた「一度も攻撃していない」を`events`から導出することはできない。そのため本マイルストーンでは、攻撃/食事という「一度起きたら二度と戻らない」性質の行動を`GameState`に恒久フラグ(`hasAttacked`・`hasEaten`)として直接持たせ、行動が起きた瞬間に一度だけtrueにする方式を取る——`goldCollected`(ローリングログではなく累計を直接持つフィールド)と同じ考え方。原作Rogueの本筋からは外れるが、`calculateScore`という既存の「GameStateの恒久フィールドから導出する純粋関数」にボーナス加算するだけなので、マイルストーン49の設計思想を素直に拡張する形になる。
+
+- [ ] `src/game/state.ts`: `GameState`に`hasAttacked: boolean`・`hasEaten: boolean`(ともに初期値`false`、一度trueになったら戻らない、構造変更)を追加
+- [ ] `src/game/balance.ts`: `SCORE_PACIFIST_BONUS = 300`(一度も攻撃していない場合のスコアボーナス)・`SCORE_FOODLESS_BONUS = 300`(一度も食事していない場合のスコアボーナス)を追加
+- [ ] `src/game/combat.ts`: `applyPlayerAttack`・`applyWandStrike`のどちらも、呼ばれた時点で必ず攻撃が発生している(呼び出し自体が攻撃行動)ため、返す状態に`hasAttacked: true`を含める + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`の`food`分岐で`hasEaten: true`を返す状態に含める + テスト
+- [ ] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方に`hasAttacked: false`・`hasEaten: false`を追加
+- [ ] `src/game/score.ts`: `calculateScore`に`!state.hasAttacked`なら`SCORE_PACIFIST_BONUS`、`!state.hasEaten`なら`SCORE_FOODLESS_BONUS`を加算するロジックを追加 + テスト
+- [ ] `src/messages.ts`: `formatConducts(hasAttacked, hasEaten): string`(守り通したコンダクトを「非殺生・不食」のように`・`区切りで返す、何も守っていなければ空文字列)を追加 + テスト
+- [ ] `src/main.tsx`: 終了画面のスコア行の下に、`formatConducts`が空文字列でなければ「称号: ◯」という行を追加表示する
+- [ ] `src/game/validateGameState.ts`: `hasAttacked`・`hasEaten`(ともにboolean)の検証を追加。構造変更のため**`SAVE_FORMAT_VERSION`を24に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`hasAttacked: "boolean"`・`hasEaten: "boolean"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、一度も攻撃/食事していない状態と、攻撃/食事済みの状態それぞれで`calculateScore`の差がボーナス分だけ存在することを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

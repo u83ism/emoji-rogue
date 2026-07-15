@@ -99,6 +99,10 @@ describe("formatEvent", () => {
 				"落とし穴を踏んでしまった!",
 			],
 			[
+				{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
+				"テレポートの罠を踏んでしまった!",
+			],
+			[
 				{ type: "player-poisoned", payload: { damage: 4 } },
 				"毒薬を飲んでしまった。4のダメージを受けた",
 			],

@@ -773,16 +773,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 原作Rogueのわなにはこれまで実装済みの矢(ダメージ)・落とし穴(強制降下)に加えて、テレポートの罠がある——踏むとダメージなしでフロア内のランダムな地点へ瞬間移動させられる。都合の良いことに、この移動先選定ロジック(自分の座標・敵がいる座標を除いた床タイルから乱数で1つ選ぶ)は`advanceTurn.ts`の`collectTeleportTargets`としてテレポートの巻物(マイルストーン相当、`kind === "scroll"`分岐)がすでに実装済みなので、わな版は「乱数消費して移動先を選び`deriveExploredState`で視界を更新する」という同じロジックを`applyTrapTrigger`から再利用するだけで済む。落とし穴と同様、GOAL_FLOOR上でも問題なく機能する(同一フロア内の移動でしかないため、落とし穴のような「その先のフロアを生成してしまう」問題が起きない)。
 
-- [ ] `src/game/events.ts`: `TrapKind`に`"teleport"`を追加。`player-teleported`イベントは巻物用に既存のものをそのまま再利用(新規イベント型は不要)
-- [ ] `src/game/balance.ts`: `TRAP_DAMAGE`に`teleport: 0`(ダメージなし、落とし穴と同じ0ダメージ扱い)を追加。`TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20`(落とし穴の`TRAPDOOR_SPAWN_CHANCE_PERCENT`と同じidiom、ただしGOAL_FLOOR除外はしない)を追加
-- [ ] `src/game/advanceTurn.ts`: `collectTeleportTargets`を`applyTrapTrigger`より前方に定義し直す(現状は巻物分岐でしか使われておらず`applyTrapTrigger`より後ろにある)。`applyTrapTrigger`内で`trap.kind === "teleport"`かつ生存時に、テレポート巻物と同じ「乱数で移動先を選び`player-teleported`を記録し`deriveExploredState`で視界を更新する」ロジックを適用する新規ヘルパー`applyTrapTeleport(state)`を追加して呼び出す + テスト
-- [ ] `src/game/floor.ts`: `TRAPDOOR_SPAWN_CHANCE_PERCENT`と同じ独立per-floor判定でテレポートの罠を1個抽選してスポーンプールに追加(GOAL_FLOOR除外なし) + テスト
-- [ ] `src/messages.ts`: `TRAP_NAMES`に`teleport: "テレポートの罠"`を追加 + テスト
-- [ ] `src/game/validateGameState.ts`: `isTrapKind`に`"teleport"`を追加。`trap-triggered`イベントの0ダメージ許容分岐(現状`trapdoor`のみ)に`teleport`も加える + テスト
-- [ ] `src/game/save.test.ts`: 構造変更なし(既存の`traps`配列の`kind: "string"`がそのまま`"teleport"`もカバーするため、shape guard自体の追記は不要 — 念のため確認のみ)
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、テレポートの罠を踏むとダメージを受けずにプレイヤー座標が変わり`player-teleported`イベントが記録されることを確認する
+- [x] `src/game/events.ts`: `TrapKind`に`"teleport"`を追加。`player-teleported`イベントは巻物用に既存のものをそのまま再利用(新規イベント型は不要)
+- [x] `src/game/balance.ts`: `TRAP_DAMAGE`に`teleport: 0`(ダメージなし、落とし穴と同じ0ダメージ扱い)を追加。`TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20`(落とし穴の`TRAPDOOR_SPAWN_CHANCE_PERCENT`と同じidiom、ただしGOAL_FLOOR除外はしない)を追加
+- [x] `src/game/advanceTurn.ts`: `collectTeleportTargets`を`applyTrapTrigger`より前方に定義し直す(現状は巻物分岐でしか使われておらず`applyTrapTrigger`より後ろにある)。`applyTrapTrigger`内で`trap.kind === "teleport"`かつ生存時に、テレポート巻物と同じ「乱数で移動先を選び`player-teleported`を記録し`deriveExploredState`で視界を更新する」ロジックを適用する新規ヘルパー`applyTrapTeleport(state)`を追加して呼び出す + テスト
+- [x] `src/game/floor.ts`: `TRAPDOOR_SPAWN_CHANCE_PERCENT`と同じ独立per-floor判定でテレポートの罠を1個抽選してスポーンプールに追加(GOAL_FLOOR除外なし) + テスト
+- [x] `src/messages.ts`: `TRAP_NAMES`に`teleport: "テレポートの罠"`を追加 + テスト
+- [x] `src/game/validateGameState.ts`: `isTrapKind`に`"teleport"`を追加。`trap-triggered`イベントの0ダメージ許容分岐(現状`trapdoor`のみ)に`teleport`も加える + テスト
+- [x] `src/game/save.test.ts`: 構造変更なし(既存の`traps`配列の`kind: "string"`がそのまま`"teleport"`もカバーするため、shape guard自体の追記は不要 — 念のため確認のみ)
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、テレポートの罠を踏むとダメージを受けずにプレイヤー座標が変わり`player-teleported`イベントが記録されることを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`collectTeleportTargets`を`applyTrapTrigger`より前方に移動し、新設した`applyTrapTeleport(state)`ヘルパーに「乱数で移動先を選び`player-teleported`を記録し視界を更新する」ロジックを1本化。テレポート巻物側(`kind === "scroll"`分岐)もこのヘルパーを`{ ...applyTrapTeleport(state), inventory }`という形で呼び直すように書き換え、重複していたテレポート先選定ロジックを完全に統合した。テレポートの罠はGOAL_FLOORでも通常通りスポーンする(落とし穴と異なり、同一フロア内の移動でしかないため)。パイプライン確認では、テレポートの罠を踏むとダメージゼロ・トラップ消費・プレイヤー座標の変化・`trap-triggered`+`player-teleported`イベントの発火を`dist/game/index.mjs`越しに確認した。テストは750件(前回745件から+5)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン47完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

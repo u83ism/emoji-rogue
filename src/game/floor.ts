@@ -31,6 +31,7 @@ import {
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
+	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
@@ -343,6 +344,13 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < TRAPDOOR_SPAWN_CHANCE_PERCENT
 	) {
 		traps.push({ ...drawSpawnTile(remaining, rng), kind: "trapdoor" });
+	}
+	/* allowed on GOAL_FLOOR too — it only relocates the player within the floor */
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < TELEPORT_TRAP_SPAWN_CHANCE_PERCENT
+	) {
+		traps.push({ ...drawSpawnTile(remaining, rng), kind: "teleport" });
 	}
 
 	return {

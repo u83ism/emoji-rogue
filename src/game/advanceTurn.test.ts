@@ -250,6 +250,38 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("stepping onto a teleport trap relocates the player without damage", () => {
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			traps: [{ x: 5, y: 4, kind: "teleport" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp); /* no damage */
+		expect(next.traps).toEqual([]); /* consumed */
+		expect(next.player).not.toEqual({ x: 5, y: 4 }); /* relocated elsewhere */
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
+			{
+				type: "player-teleported",
+				payload: { x: next.player.x, y: next.player.y },
+			},
+		]);
+	});
+
+	it("levitating floats over a teleport trap: no relocation, trap left armed", () => {
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			levitationTurnsRemaining: 5,
+			traps: [{ x: 5, y: 4, kind: "teleport" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 4 });
+		expect(next.traps).toEqual(state.traps); /* untouched, still hidden */
+		expect(next.events.some((event) => event.type === "trap-triggered")).toBe(
+			false,
+		);
+	});
+
 	it("levitating floats over a dart trap: no damage, trap left armed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

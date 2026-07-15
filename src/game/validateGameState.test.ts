@@ -817,6 +817,24 @@ describe("validateGameState", () => {
 			],
 		});
 		expect(trapdoorAccepted.ok).toBe(true);
+
+		const teleportTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "teleport" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
+			],
+		});
+		expect(teleportTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "teleport", damage: -1 } },
+				],
+			},
+			"events",
+		);
 		expectRejected(
 			{
 				...buildValidState(),

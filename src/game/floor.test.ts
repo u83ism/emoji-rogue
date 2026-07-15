@@ -705,3 +705,37 @@ describe("trapdoor spawning", () => {
 		}
 	});
 });
+
+describe("teleport trap spawning", () => {
+	it("spawns a teleport trap on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).traps.some(
+				(trap) => trap.kind === "teleport",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one teleport trap on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const teleportTrapCount = buildDungeonGameState(
+				40,
+				20,
+				seed,
+			).traps.filter((trap) => trap.kind === "teleport").length;
+			expect(teleportTrapCount).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("can spawn on GOAL_FLOOR too, unlike a trapdoor", () => {
+		const spawnsOnGoalFloor = Array.from({ length: 30 }, (_, index) => {
+			let state = buildDungeonGameState(40, 20, index + 1);
+			for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+				state = descendStairs(state);
+			}
+			return state.traps.some((trap) => trap.kind === "teleport");
+		});
+		expect(spawnsOnGoalFloor.some((spawned) => spawned)).toBe(true);
+	});
+});

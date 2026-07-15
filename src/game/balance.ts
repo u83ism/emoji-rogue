@@ -225,11 +225,21 @@ export const DART_TRAP_DAMAGE = 2;
 export const TRAPDOOR_DAMAGE = 0;
 /** Chance (out of 100), independently rolled per floor (never on GOAL_FLOOR), that a trapdoor spawns. */
 export const TRAPDOOR_SPAWN_CHANCE_PERCENT = 15;
+/** No damage — the penalty is being relocated at random, see advanceTurn.ts's applyTrapTeleport. */
+export const TELEPORT_TRAP_DAMAGE = 0;
+/**
+ * Chance (out of 100), independently rolled per floor, that a teleport trap
+ * spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, but (unlike a
+ * trapdoor) allowed on GOAL_FLOOR too, since it only relocates the player
+ * within the same floor rather than generating one beyond it.
+ */
+export const TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20;
 
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 	trapdoor: TRAPDOOR_DAMAGE,
+	teleport: TELEPORT_TRAP_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */

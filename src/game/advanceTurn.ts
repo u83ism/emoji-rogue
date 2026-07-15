@@ -187,6 +187,60 @@ const applyGoldPickup = (state: GameState): GameState => {
 };
 
 /**
+ * Every floor tile a teleport scroll (or teleport trap) may land on: not the
+ * player's own tile, not one occupied by an enemy (the "enemies never share
+ * the player's tile" invariant must survive teleporting too). Falls back to
+ * the player's own tile only if the map has no other floor tile at all (tiny
+ * arenas).
+ */
+const collectTeleportTargets = (state: GameState): readonly Position[] => {
+	const occupied = new Set(
+		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
+	);
+	const tiles: Position[] = [];
+	for (let x = 0; x < state.terrain.length; x++) {
+		const column = state.terrain[x] ?? [];
+		for (let y = 0; y < column.length; y++) {
+			if (column[y] !== 0) {
+				continue;
+			}
+			if (x === state.player.x && y === state.player.y) {
+				continue;
+			}
+			if (occupied.has(encodePointKey(x, y))) {
+				continue;
+			}
+			tiles.push({ x, y });
+		}
+	}
+	return tiles.length > 0 ? tiles : [state.player];
+};
+
+/**
+ * Relocates the player to a random floor tile (same rng-consuming pick as
+ * the teleport scroll) and refreshes the explored grid from the new
+ * position. Shared by both the teleport scroll and the teleport trap.
+ */
+const applyTrapTeleport = (state: GameState): GameState => {
+	const targets = collectTeleportTargets(state);
+	const rng = createRng(1).setState(state.rng);
+	const target = targets[rng.getUniformInt(0, targets.length - 1)];
+	if (target === undefined) {
+		throw new Error(
+			"unreachable: collectTeleportTargets always returns at least one tile",
+		);
+	}
+	return deriveExploredState({
+		...state,
+		player: target,
+		rng: rng.getState(),
+		events: buildEventLog(state.events, [
+			{ type: "player-teleported", payload: { x: target.x, y: target.y } },
+		]),
+	});
+};
+
+/**
  * Springs any hidden trap under the player's feet: TRAP_DAMAGE[kind] damage,
  * the trap consumed (one-time — never re-triggers, never becomes visible).
  * A fatal hit ends the run with player-died(by: "trap"); advanceTurn's move
@@ -194,9 +248,12 @@ const applyGoldPickup = (state: GameState): GameState => {
  * bonus hit on an already-trap-killed player. A trapdoor that the player
  * survives additionally hands the (already trap-triggered) state straight to
  * descendStairs — the whole floor gets replaced exactly as if the player had
- * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. While
+ * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. A
+ * teleport trap that the player survives (it deals no damage, so always)
+ * instead hands off to applyTrapTeleport — same relocation as the teleport
+ * scroll, just triggered by a footstep instead of an inventory item. While
  * levitationTurnsRemaining is set, no trap can trigger at all — the player
- * floats over it (dart or trapdoor alike), and it stays armed underneath.
+ * floats over it (any kind alike), and it stays armed underneath.
  */
 const applyTrapTrigger = (state: GameState): GameState => {
 	if (state.levitationTurnsRemaining > 0) {
@@ -227,36 +284,10 @@ const applyTrapTrigger = (state: GameState): GameState => {
 	if (trap.kind === "trapdoor" && afterTrap.status === "playing") {
 		return descendStairs(afterTrap);
 	}
-	return afterTrap;
-};
-
-/**
- * Every floor tile a teleport scroll may land on: not the player's own tile,
- * not one occupied by an enemy (the "enemies never share the player's tile"
- * invariant must survive teleporting too). Falls back to the player's own
- * tile only if the map has no other floor tile at all (tiny arenas).
- */
-const collectTeleportTargets = (state: GameState): readonly Position[] => {
-	const occupied = new Set(
-		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
-	);
-	const tiles: Position[] = [];
-	for (let x = 0; x < state.terrain.length; x++) {
-		const column = state.terrain[x] ?? [];
-		for (let y = 0; y < column.length; y++) {
-			if (column[y] !== 0) {
-				continue;
-			}
-			if (x === state.player.x && y === state.player.y) {
-				continue;
-			}
-			if (occupied.has(encodePointKey(x, y))) {
-				continue;
-			}
-			tiles.push({ x, y });
-		}
+	if (trap.kind === "teleport" && afterTrap.status === "playing") {
+		return applyTrapTeleport(afterTrap);
 	}
-	return tiles.length > 0 ? tiles : [state.player];
+	return afterTrap;
 };
 
 /**
@@ -393,23 +424,7 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 	}
 
 	if (kind === "scroll") {
-		const targets = collectTeleportTargets(state);
-		const rng = createRng(1).setState(state.rng);
-		const target = targets[rng.getUniformInt(0, targets.length - 1)];
-		if (target === undefined) {
-			throw new Error(
-				"unreachable: collectTeleportTargets always returns at least one tile",
-			);
-		}
-		return deriveExploredState({
-			...state,
-			player: target,
-			inventory,
-			rng: rng.getState(),
-			events: buildEventLog(state.events, [
-				{ type: "player-teleported", payload: { x: target.x, y: target.y } },
-			]),
-		});
+		return { ...applyTrapTeleport(state), inventory };
 	}
 
 	if (kind === "mapping") {

@@ -160,7 +160,7 @@ const isGoldPileArray = (
 	);
 
 const isTrapKind = (value: unknown): value is TrapKind =>
-	value === "dart" || value === "trapdoor";
+	value === "dart" || value === "trapdoor" || value === "teleport";
 
 const isTrapArray = (
 	value: unknown,
@@ -213,8 +213,8 @@ const isGameEvent = (value: unknown): boolean => {
 		case "gold-collected":
 			return isPositiveInteger(payload.amount);
 		case "trap-triggered":
-			/* trapdoor is the only zero-damage trap kind — see TRAPDOOR_DAMAGE */
-			return payload.kind === "trapdoor"
+			/* trapdoor and teleport are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE */
+			return payload.kind === "trapdoor" || payload.kind === "teleport"
 				? isNonNegativeInteger(payload.damage)
 				: isTrapKind(payload.kind) && isPositiveInteger(payload.damage);
 		case "player-poisoned":

@@ -46,6 +46,7 @@ const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
 const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	dart: "矢のわな",
 	trapdoor: "落とし穴",
+	teleport: "テレポートの罠",
 };
 
 /**

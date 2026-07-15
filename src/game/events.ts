@@ -25,7 +25,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
-export type TrapKind = "dart";
+export type TrapKind = "dart" | "trapdoor";
 
 /** What killed the player — an enemy kind, starvation, a trap, or a poison potion. */
 export type DeathCause = EnemyKind | "hunger" | "trap" | "poison";

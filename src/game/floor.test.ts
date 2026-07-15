@@ -72,8 +72,10 @@ describe("descendStairs", () => {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
 				expect(pile.amount).toBeLessThanOrEqual(20);
 			}
-			expect(state.traps.length).toBe(2);
-			expect(state.traps.every((trap) => trap.kind === "dart")).toBe(true);
+			expect(state.traps.filter((trap) => trap.kind === "dart").length).toBe(2);
+			expect(
+				state.traps.filter((trap) => trap.kind === "trapdoor").length,
+			).toBeLessThanOrEqual(1);
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);
@@ -408,6 +410,38 @@ describe("sustenance ring spawning", () => {
 				seed,
 			).items.filter((item) => item.kind === "sustenance").length;
 			expect(sustenanceRingCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("trapdoor spawning", () => {
+	it("spawns a trapdoor on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).traps.some(
+				(trap) => trap.kind === "trapdoor",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one trapdoor on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const trapdoorCount = buildDungeonGameState(40, 20, seed).traps.filter(
+				(trap) => trap.kind === "trapdoor",
+			).length;
+			expect(trapdoorCount).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("never spawns on GOAL_FLOOR (there is nothing lower to fall to)", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			let state = buildDungeonGameState(40, 20, seed);
+			for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+				state = descendStairs(state);
+			}
+			expect(state.floor).toBe(GOAL_FLOOR);
+			expect(state.traps.some((trap) => trap.kind === "trapdoor")).toBe(false);
 		}
 	});
 });

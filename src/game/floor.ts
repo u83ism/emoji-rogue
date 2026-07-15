@@ -23,6 +23,7 @@ import {
 	SWORD_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
+	TRAPDOOR_SPAWN_CHANCE_PERCENT,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildEventLog, type GameEvent } from "./events.js";
@@ -241,6 +242,14 @@ export const buildFloorLayout = (
 	const traps: Trap[] = [];
 	for (let i = 0; i < TRAP_COUNT_PER_FLOOR && remaining.length > 0; i++) {
 		traps.push({ ...drawSpawnTile(remaining, rng), kind: "dart" });
+	}
+	/* never on GOAL_FLOOR — a trapdoor there would generate a floor beyond it */
+	if (
+		floor !== GOAL_FLOOR &&
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < TRAPDOOR_SPAWN_CHANCE_PERCENT
+	) {
+		traps.push({ ...drawSpawnTile(remaining, rng), kind: "trapdoor" });
 	}
 
 	return {

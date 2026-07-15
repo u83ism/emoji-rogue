@@ -472,6 +472,15 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+
+		const trapdoorAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "trapdoor" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
+			],
+		});
+		expect(trapdoorAccepted.ok).toBe(true);
 		expectRejected(
 			{
 				...buildValidState(),

@@ -178,10 +178,15 @@ export const GOLD_AMOUNT_MAX = 20;
 
 export const TRAP_COUNT_PER_FLOOR = 2;
 export const DART_TRAP_DAMAGE = 2;
+/** No damage — the penalty is the forced descent itself, see floor.ts's descendStairs. */
+export const TRAPDOOR_DAMAGE = 0;
+/** Chance (out of 100), independently rolled per floor (never on GOAL_FLOOR), that a trapdoor spawns. */
+export const TRAPDOOR_SPAWN_CHANCE_PERCENT = 15;
 
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
+	trapdoor: TRAPDOOR_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */

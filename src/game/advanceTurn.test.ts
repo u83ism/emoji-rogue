@@ -221,6 +221,27 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("stepping onto a trapdoor drops the player to the next floor (no damage)", () => {
+		/* descendStairs' floor generation needs digger-sized dimensions, unlike
+		 * the tiny arena fixture used by the other trap tests above */
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			playerHp: 4,
+			traps: [
+				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
+			],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(state.floor + 1);
+		expect(next.playerHp).toBe(4); /* the new floor's enemies wait a turn */
+		expect(next.terrain).not.toEqual(state.terrain);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
+			{ type: "floor-descended", payload: { floor: state.floor + 1 } },
+		]);
+	});
+
 	it("picking up a second potion of the same kind stacks the quantity", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -737,6 +758,26 @@ describe("advanceTurn", () => {
 		expect(next.amulet).not.toBeUndefined();
 		expect(next.hasAmulet).toBe(false);
 		expect(next.events).toEqual([
+			{ type: "floor-descended", payload: { floor: GOAL_FLOOR } },
+		]);
+	});
+
+	it("falling through a trapdoor into GOAL_FLOOR also gets the amulet and an up staircase", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			floor: GOAL_FLOOR - 1,
+			traps: [
+				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
+			],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.status).toBe("playing");
+		expect(next.floor).toBe(GOAL_FLOOR);
+		expect(next.stairs.direction).toBe("up");
+		expect(next.amulet).not.toBeUndefined();
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
 			{ type: "floor-descended", payload: { floor: GOAL_FLOOR } },
 		]);
 	});

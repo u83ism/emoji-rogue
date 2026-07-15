@@ -33,6 +33,7 @@ const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
 
 const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	dart: "矢のわな",
+	trapdoor: "落とし穴",
 };
 
 /**
@@ -147,7 +148,9 @@ export const formatEvent = (
 		case "gold-collected":
 			return `${event.payload.amount}ゴールドを手に入れた`;
 		case "trap-triggered":
-			return `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`;
+			return event.payload.damage > 0
+				? `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`
+				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;
 		case "player-poisoned":
 			return `毒薬を飲んでしまった。${event.payload.damage}のダメージを受けた`;
 		case "player-teleported":

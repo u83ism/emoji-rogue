@@ -95,6 +95,10 @@ describe("formatEvent", () => {
 				"矢のわなを踏んでしまった。2のダメージを受けた",
 			],
 			[
+				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
+				"落とし穴を踏んでしまった!",
+			],
+			[
 				{ type: "player-poisoned", payload: { damage: 4 } },
 				"毒薬を飲んでしまった。4のダメージを受けた",
 			],

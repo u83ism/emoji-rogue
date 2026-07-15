@@ -176,7 +176,10 @@ const applyGoldPickup = (state: GameState): GameState => {
  * the trap consumed (one-time — never re-triggers, never becomes visible).
  * A fatal hit ends the run with player-died(by: "trap"); advanceTurn's move
  * case checks status right after this runs, so enemies never get a same-turn
- * bonus hit on an already-trap-killed player.
+ * bonus hit on an already-trap-killed player. A trapdoor that the player
+ * survives additionally hands the (already trap-triggered) state straight to
+ * descendStairs — the whole floor gets replaced exactly as if the player had
+ * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included.
  */
 const applyTrapTrigger = (state: GameState): GameState => {
 	const trap = state.traps.find(
@@ -194,13 +197,17 @@ const applyTrapTrigger = (state: GameState): GameState => {
 	if (playerHp <= 0) {
 		events.push({ type: "player-died", payload: { by: "trap" } });
 	}
-	return {
+	const afterTrap: GameState = {
 		...state,
 		playerHp: Math.max(0, playerHp),
 		traps: state.traps.filter((candidate) => candidate !== trap),
 		status: playerHp <= 0 ? "dead" : state.status,
 		events: buildEventLog(state.events, events),
 	};
+	if (trap.kind === "trapdoor" && afterTrap.status === "playing") {
+		return descendStairs(afterTrap);
+	}
+	return afterTrap;
 };
 
 /**

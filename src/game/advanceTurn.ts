@@ -1,6 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type RngState } from "../rng.js";
 import {
+	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
 	MIN_PLAYER_ATTACK_DAMAGE,
@@ -301,6 +302,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 			rng,
 			events: buildEventLog(state.events, [
 				{ type: "armor-equipped", payload: { kind, bonus } },
+			]),
+		};
+	}
+
+	if (kind === "enchant-armor") {
+		return {
+			...state,
+			playerDefense: state.playerDefense + ENCHANT_ARMOR_BONUS,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
 			]),
 		};
 	}

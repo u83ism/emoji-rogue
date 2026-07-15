@@ -13,7 +13,8 @@ export type ItemKind =
 	| "strength"
 	| "ring"
 	| "sustenance"
-	| "enchant-weapon";
+	| "enchant-weapon"
+	| "enchant-armor";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -162,6 +163,11 @@ export type GameEvent =
 	| {
 			/** Always a positive bonus — enchant-weapon is never cursed, unlike a found sword. */
 			readonly type: "weapon-enchanted";
+			readonly payload: { readonly bonus: number };
+	  }
+	| {
+			/** Always a positive bonus — enchant-armor is never cursed, unlike a found shield. */
+			readonly type: "armor-enchanted";
 			readonly payload: { readonly bonus: number };
 	  };
 

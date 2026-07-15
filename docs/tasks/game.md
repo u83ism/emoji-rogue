@@ -571,16 +571,18 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 マイルストーン36(武器強化の巻物)と対称に、盾の呪いリスクなしで`playerDefense`を上げる巻物を追加する。実装は前回の型をそのまま踏襲するだけ——新規の設計判断は発生しない見込み。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"enchant-armor"`を追加。`GameEvent`に`armor-enchanted`(payload: 実加算量`bonus`)を追加(列挙値追加のみ)
-- [ ] `src/game/balance.ts`: `ENCHANT_ARMOR_BONUS = 1`(盾と同じ量)・`ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20`(武器強化の巻物と同じ独立per-floor判定)を追加
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で防具強化の巻物を1個抽選 + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`enchant-armor`分岐(呪い判定なしで`playerDefense`に`ENCHANT_ARMOR_BONUS`を無条件加算・`armor-enchanted`を記録。rng不使用、決定的) + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"enchant-armor"`のglyphを追加(武器強化の⚡とかぶらない別の単一コードポイント絵文字)
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`"enchant-armor": "防具強化の巻物"`、`armor-enchanted`の文言(「防具強化の巻物を読んだ。防御力が◯上がった!」) + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"enchant-armor"`を追加。`armor-enchanted`イベントの検証ケース(`bonus`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、防具強化の巻物を持った状態で`use-item`アクションを実行し、`playerDefense`が加算され`armor-enchanted`イベントが記録されること(呪いによる減算が絶対に起きないこと)を確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"enchant-armor"`を追加。`GameEvent`に`armor-enchanted`(payload: 実加算量`bonus`)を追加(列挙値追加のみ)
+- [x] `src/game/balance.ts`: `ENCHANT_ARMOR_BONUS = 1`(盾と同じ量)・`ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20`(武器強化の巻物と同じ独立per-floor判定)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で防具強化の巻物を1個抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`enchant-armor`分岐(呪い判定なしで`playerDefense`に`ENCHANT_ARMOR_BONUS`を無条件加算・`armor-enchanted`を記録。rng不使用、決定的) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`"enchant-armor"`のglyphを追加(武器強化の⚡とかぶらない別の単一コードポイント絵文字)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`"enchant-armor": "防具強化の巻物"`、`armor-enchanted`の文言(「防具強化の巻物を読んだ。防御力が◯上がった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"enchant-armor"`を追加。`armor-enchanted`イベントの検証ケース(`bonus`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、防具強化の巻物を持った状態で`use-item`アクションを実行し、`playerDefense`が加算され`armor-enchanted`イベントが記録されること(呪いによる減算が絶対に起きないこと)を確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、盾の呪い判定を確実に引くseed 1で防具強化の巻物を3回連続使用し、`playerDefense`が+3・rngが一切変化しない(呪い判定が起きない)・3件の`armor-enchanted`イベントが記録されることを確認。
+
+**マイルストーン37完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

@@ -429,6 +429,25 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held enchant armor scroll always raises playerDefense, never cursed", () => {
+		/* seed 1 is the one that curses a shield above — an enchant scroll must
+		 * still succeed unconditionally from the same rng state */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "enchant-armor" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "enchant-armor" },
+		});
+		expect(next.playerDefense).toBe(state.playerDefense + 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.rng).toEqual(state.rng); /* deterministic, no curse roll */
+		expect(next.events).toEqual([
+			{ type: "armor-enchanted", payload: { bonus: 1 } },
+		]);
+	});
+
 	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

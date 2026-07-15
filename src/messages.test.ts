@@ -155,6 +155,10 @@ describe("formatEvent", () => {
 				{ type: "weapon-enchanted", payload: { bonus: 1 } },
 				"武器強化の巻物を読んだ。攻撃力が1上がった!",
 			],
+			[
+				{ type: "armor-enchanted", payload: { bonus: 1 } },
+				"防具強化の巻物を読んだ。防御力が1上がった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

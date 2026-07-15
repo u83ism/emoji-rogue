@@ -60,6 +60,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	sustenance: { glyph: "💍" },
 	/* High voltage: single-codepoint, stable since Unicode 4.0. */
 	"enchant-weapon": { glyph: "⚡" },
+	/* Sparkles: single-codepoint, Unicode 6.0 — distinct from the weapon bolt. */
+	"enchant-armor": { glyph: "✨" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

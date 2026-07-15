@@ -197,6 +197,27 @@ describe("shield spawning", () => {
 	});
 });
 
+describe("enchant armor scroll spawning", () => {
+	it("spawns an enchant armor scroll on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "enchant-armor",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one enchant armor scroll on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const enchantCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "enchant-armor",
+			).length;
+			expect(enchantCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("poison potion spawning", () => {
 	it("spawns a poison potion on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

@@ -113,7 +113,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "strength" ||
 	value === "ring" ||
 	value === "sustenance" ||
-	value === "enchant-weapon";
+	value === "enchant-weapon" ||
+	value === "enchant-armor";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -226,6 +227,8 @@ const isGameEvent = (value: unknown): boolean => {
 		case "player-regenerated":
 			return isPositiveInteger(payload.amount);
 		case "weapon-enchanted":
+			return isPositiveInteger(payload.bonus);
+		case "armor-enchanted":
 			return isPositiveInteger(payload.bonus);
 		default:
 			return false;

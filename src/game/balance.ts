@@ -228,3 +228,11 @@ export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
 export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+
+/**
+ * Permanent boost to playerDefense per scroll read — same magnitude as a
+ * shield, but (like enchant-weapon) never cursed.
+ */
+export const ENCHANT_ARMOR_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
+export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;

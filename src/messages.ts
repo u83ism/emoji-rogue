@@ -1,4 +1,5 @@
 import type { EnemyKind, GameEvent, ItemKind } from "./game/events.js";
+import type { InventoryEntry } from "./game/state.js";
 
 const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
@@ -19,6 +20,16 @@ export const FULL_WIDTH_INPUT_WARNING =
 /** Shown once the shell is writing the suspend save and about to exit. */
 export const GAME_SAVED_MESSAGE =
 	"セーブしました。次回起動時に続きから再開します";
+
+/** Title line atop the inventory overlay while it's open. */
+export const INVENTORY_TITLE = "持ち物(iかEscで閉じる)";
+
+/** Shown inside the inventory overlay when nothing is held. */
+export const INVENTORY_EMPTY_MESSAGE = "何も持っていません";
+
+/** One inventory row, e.g. "回復薬 x2". */
+export const formatInventoryEntry = (entry: InventoryEntry): string =>
+	`${ITEM_NAMES[entry.kind]} x${entry.quantity}`;
 
 /**
  * The single place where game events become human-readable text (Japanese
@@ -41,5 +52,7 @@ export const formatEvent = (event: GameEvent): string => {
 			return event.payload.amount > 0
 				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
+		case "item-picked-up":
+			return `${ITEM_NAMES[event.payload.kind]}を拾った`;
 	}
 };

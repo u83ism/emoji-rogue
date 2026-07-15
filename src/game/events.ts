@@ -34,9 +34,13 @@ export type GameEvent =
 			readonly payload: { readonly floor: number };
 	  }
 	| {
-			/** amount is the actual hp gained — 0 when picked up at full health. */
+			/** amount is the actual hp gained — 0 when drunk at full health. */
 			readonly type: "player-healed";
 			readonly payload: { readonly by: ItemKind; readonly amount: number };
+	  }
+	| {
+			readonly type: "item-picked-up";
+			readonly payload: { readonly kind: ItemKind };
 	  };
 
 /**

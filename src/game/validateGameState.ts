@@ -1,8 +1,8 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_HP } from "./balance.js";
-import type { EnemyKind, GameEvent } from "./events.js";
-import type { Enemy, GameState, Item } from "./state.js";
+import type { EnemyKind, GameEvent, ItemKind } from "./events.js";
+import type { Enemy, GameState, InventoryEntry, Item } from "./state.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -67,6 +67,8 @@ const isEnemyArray = (
 			isPositiveInteger(enemy.hp),
 	);
 
+const isItemKind = (value: unknown): value is ItemKind => value === "potion";
+
 const isItemArray = (
 	value: unknown,
 	terrain: readonly (readonly number[])[],
@@ -74,7 +76,16 @@ const isItemArray = (
 	Array.isArray(value) &&
 	value.every(
 		(item) =>
-			isRecord(item) && standsOnFloor(item, terrain) && item.kind === "potion",
+			isRecord(item) && standsOnFloor(item, terrain) && isItemKind(item.kind),
+	);
+
+const isInventoryArray = (value: unknown): value is readonly InventoryEntry[] =>
+	Array.isArray(value) &&
+	value.every(
+		(entry) =>
+			isRecord(entry) &&
+			isItemKind(entry.kind) &&
+			isPositiveInteger(entry.quantity),
 	);
 
 const isGameEvent = (value: unknown): boolean => {
@@ -94,7 +105,9 @@ const isGameEvent = (value: unknown): boolean => {
 		case "floor-descended":
 			return isPositiveInteger(payload.floor);
 		case "player-healed":
-			return payload.by === "potion" && isNonNegativeInteger(payload.amount);
+			return isItemKind(payload.by) && isNonNegativeInteger(payload.amount);
+		case "item-picked-up":
+			return isItemKind(payload.kind);
 		default:
 			return false;
 	}
@@ -173,6 +186,10 @@ export const validateGameState = (
 	if (!isItemArray(items, terrain)) {
 		return err("items");
 	}
+	const inventory = value.inventory;
+	if (!isInventoryArray(inventory)) {
+		return err("inventory");
+	}
 	const events = value.events;
 	if (!isGameEventArray(events)) {
 		return err("events");
@@ -201,6 +218,10 @@ export const validateGameState = (
 			hp: enemy.hp,
 		})),
 		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
+		inventory: inventory.map((entry) => ({
+			kind: entry.kind,
+			quantity: entry.quantity,
+		})),
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },
 		status: "playing",

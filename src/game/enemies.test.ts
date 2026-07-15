@@ -103,6 +103,7 @@ describe("advanceEnemies", () => {
 			playerHp: 10,
 			enemies: [zombie(5, 1)],
 			items: [],
+			inventory: [],
 			floor: 1,
 			stairs: { x: 2, y: 1 },
 			events: [],

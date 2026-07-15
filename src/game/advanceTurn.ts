@@ -1,9 +1,16 @@
 import { PLAYER_MAX_HP, POTION_HEAL_AMOUNT } from "./balance.js";
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
+import type { ItemKind } from "./events.js";
 import { buildEventLog } from "./events.js";
 import { descendStairs } from "./floor.js";
-import type { Action, Direction, Enemy, GameState } from "./state.js";
+import type {
+	Action,
+	Direction,
+	Enemy,
+	GameState,
+	InventoryEntry,
+} from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
@@ -26,10 +33,32 @@ const findEnemyAt = (
 const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
 
+const addToInventory = (
+	inventory: readonly InventoryEntry[],
+	kind: ItemKind,
+): readonly InventoryEntry[] => {
+	const held = inventory.find((entry) => entry.kind === kind);
+	if (held === undefined) {
+		return [...inventory, { kind, quantity: 1 }];
+	}
+	return inventory.map((entry) =>
+		entry.kind === kind ? { ...entry, quantity: entry.quantity + 1 } : entry,
+	);
+};
+
+const removeFromInventory = (
+	inventory: readonly InventoryEntry[],
+	kind: ItemKind,
+): readonly InventoryEntry[] =>
+	inventory
+		.map((entry) =>
+			entry.kind === kind ? { ...entry, quantity: entry.quantity - 1 } : entry,
+		)
+		.filter((entry) => entry.quantity > 0);
+
 /**
- * Drinks the potion under the player's feet, if any: hp is restored up to
- * the cap, the item is consumed either way (stepping on it at full health
- * wastes it), and the event carries the hp actually gained.
+ * Picks up the item under the player's feet into inventory, if any — no
+ * longer used immediately (that's the "use-item" action's job).
  */
 const applyItemPickup = (state: GameState): GameState => {
 	const item = state.items.find(
@@ -39,13 +68,35 @@ const applyItemPickup = (state: GameState): GameState => {
 	if (item === undefined) {
 		return state;
 	}
+	return {
+		...state,
+		inventory: addToInventory(state.inventory, item.kind),
+		items: state.items.filter((candidate) => candidate !== item),
+		events: buildEventLog(state.events, [
+			{ type: "item-picked-up", payload: { kind: item.kind } },
+		]),
+	};
+};
+
+/**
+ * Drinks a potion from inventory: hp is restored up to the cap, the item is
+ * consumed either way (using it at full health wastes it), and the event
+ * carries the hp actually gained. Only "potion" exists so far — a second
+ * item kind would need this to branch on `kind`. Using a kind not held is a
+ * no-op (same reference, no turn spent).
+ */
+const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
+	const held = state.inventory.find((entry) => entry.kind === kind);
+	if (held === undefined) {
+		return state;
+	}
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
 		playerHp: state.playerHp + amount,
-		items: state.items.filter((candidate) => candidate !== item),
+		inventory: removeFromInventory(state.inventory, kind),
 		events: buildEventLog(state.events, [
-			{ type: "player-healed", payload: { by: item.kind, amount } },
+			{ type: "player-healed", payload: { by: kind, amount } },
 		]),
 	};
 };
@@ -53,7 +104,7 @@ const applyItemPickup = (state: GameState): GameState => {
 /**
  * A movement turn: bump attack when an enemy occupies the target tile
  * (even one standing on the staircase), descend when it is the staircase,
- * walk when it is open floor (drinking any potion lying there). Bumping a
+ * walk when it is open floor (picking up any item lying there). Bumping a
  * wall consumes no turn (returns the input state, same reference); the
  * other three all do.
  */
@@ -104,6 +155,16 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return state;
 			}
 			return advanceEnemies(state);
+		}
+		case "use-item": {
+			if (state.status !== "playing") {
+				return state;
+			}
+			const afterUse = applyUseItem(state, action.payload.kind);
+			if (afterUse === state) {
+				return state; /* nothing of that kind held — no turn spent */
+			}
+			return advanceEnemies(afterUse);
 		}
 		case "save": {
 			/* Only mark the intent — the shell performs the actual file write

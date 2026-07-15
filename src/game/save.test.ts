@@ -38,6 +38,7 @@ describe("save file shape guard", () => {
 				playerHp: "number",
 				enemies: [{ x: "number", y: "number", kind: "string", hp: "number" }],
 				items: [{ x: "number", y: "number", kind: "string" }],
+				inventory: [],
 				floor: "number",
 				stairs: { x: "number", y: "number" },
 				events: [],

@@ -138,6 +138,35 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "item-picked-up", payload: { kind: "sword" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed inventory and rejects a broken one", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			inventory: [{ kind: "potion", quantity: 3 }],
+		});
+		expect(accepted.ok).toBe(true);
+		if (accepted.ok) {
+			expect(accepted.value.inventory).toEqual([
+				{ kind: "potion", quantity: 3 },
+			]);
+		}
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "sword", quantity: 1 }] },
+			"inventory",
+		);
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "potion", quantity: 0 }] },
+			"inventory",
+		);
 	});
 
 	it("rejects a broken floor counter or misplaced stairs", () => {

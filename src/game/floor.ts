@@ -123,8 +123,9 @@ export const buildFloorLayout = (
 /**
  * The next floor down, generated from the state's own RNG so a whole
  * multi-floor run stays reproducible from (dimensions, seed) alone. HP, the
- * event log and the floor counter carry over; terrain, enemies, staircase
- * and the explored grid start fresh. Pure: deterministic in its argument.
+ * inventory, the event log and the floor counter carry over; terrain,
+ * enemies, staircase and the explored grid start fresh. Pure: deterministic
+ * in its argument.
  */
 export const descendStairs = (state: GameState): GameState => {
 	const rng = createRng(1).setState(state.rng);

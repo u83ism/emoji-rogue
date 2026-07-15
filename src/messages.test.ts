@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GameEvent } from "./game/events.js";
-import { formatEvent } from "./messages.js";
+import { formatEvent, formatInventoryEntry } from "./messages.js";
 
 describe("formatEvent", () => {
 	it("turns every event kind into a Japanese log line", () => {
@@ -34,9 +34,21 @@ describe("formatEvent", () => {
 				{ type: "player-healed", payload: { by: "potion", amount: 0 } },
 				"回復薬を飲んだが、HPは満タンだった",
 			],
+			[
+				{ type: "item-picked-up", payload: { kind: "potion" } },
+				"回復薬を拾った",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);
 		}
+	});
+});
+
+describe("formatInventoryEntry", () => {
+	it("formats a stack as name and quantity", () => {
+		expect(formatInventoryEntry({ kind: "potion", quantity: 2 })).toBe(
+			"回復薬 x2",
+		);
 	});
 });

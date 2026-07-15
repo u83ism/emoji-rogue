@@ -142,33 +142,90 @@ describe("advanceTurn", () => {
 		}
 	});
 
-	it("stepping onto a potion drinks it: capped heal, item consumed", () => {
+	it("stepping onto a potion picks it up into inventory (not used yet)", () => {
 		const potion = { x: 5, y: 1, kind: "potion" as const };
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
+			playerHp: 7,
 			items: [potion],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.playerHp).toBe(PLAYER_MAX_HP);
+		expect(next.playerHp).toBe(7); /* unchanged — picking up does not heal */
 		expect(next.items).toEqual([]);
+		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
+		expect(next.events).toEqual([
+			{ type: "item-picked-up", payload: { kind: "potion" } },
+		]);
+	});
+
+	it("picking up a second potion of the same kind stacks the quantity", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [{ x: 5, y: 1, kind: "potion" as const }],
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory).toEqual([{ kind: "potion", quantity: 2 }]);
+	});
+
+	it("using a held potion drinks it: capped heal, one consumed from inventory", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
+			inventory: [{ kind: "potion" as const, quantity: 2 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
+		expect(next.playerHp).toBe(PLAYER_MAX_HP);
+		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
 		expect(next.events).toEqual([
 			{ type: "player-healed", payload: { by: "potion", amount: 3 } },
 		]);
 	});
 
-	it("a potion picked up at full health is wasted (amount 0)", () => {
+	it("using the last potion at full health wastes it (amount 0) and empties the stack", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			items: [{ x: 5, y: 1, kind: "potion" as const }],
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
 		};
-		const next = advanceTurn(state, move("east"));
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
 		expect(next.playerHp).toBe(state.playerHp);
-		expect(next.items).toEqual([]);
+		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
 			{ type: "player-healed", payload: { by: "potion", amount: 0 } },
 		]);
+	});
+
+	it("using an item spends a turn: adjacent enemies still get to act", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			enemies: [zombie(5, 1)] /* adjacent to the player */,
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events.some((event) => event.type === "player-hit")).toBe(true);
+	});
+
+	it("using an item kind with none held is a no-op (same reference, no turn spent)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(5, 1)] /* adjacent — would hit if enemies acted */,
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "potion" },
+		});
+		expect(next).toBe(state);
 	});
 
 	it("moving onto the staircase descends to the next floor", () => {

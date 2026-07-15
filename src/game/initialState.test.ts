@@ -52,6 +52,10 @@ describe("buildDungeonGameState", () => {
 		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 	});
 
+	it("starts with an empty inventory — nothing has been picked up yet", () => {
+		expect(state.inventory).toEqual([]);
+	});
+
 	it("stores the post-generation rng state, not the seed's initial state", () => {
 		expect(state.rng).not.toEqual(seedToState(12345));
 	});

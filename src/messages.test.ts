@@ -90,6 +90,10 @@ describe("formatEvent", () => {
 				{ type: "floor-mapped", payload: {} },
 				"地図の巻物を読んだ。フロア全体が明らかになった!",
 			],
+			[
+				{ type: "potion-identified", payload: { kind: "poison" } },
+				"毒薬の正体を見破った!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);
@@ -144,6 +148,9 @@ describe("formatInventoryEntry", () => {
 		);
 		expect(formatInventoryEntry({ kind: "mapping", quantity: 1 }, [])).toBe(
 			"地図の巻物 x1",
+		);
+		expect(formatInventoryEntry({ kind: "identify", quantity: 1 }, [])).toBe(
+			"識別の巻物 x1",
 		);
 	});
 

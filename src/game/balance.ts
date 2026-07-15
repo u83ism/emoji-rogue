@@ -103,6 +103,9 @@ export const SCROLL_SPAWN_CHANCE_PERCENT = 30;
 /** Chance (out of 100), independently rolled per floor, that a magic mapping scroll spawns. */
 export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 30;
 
+/** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
+export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 30;
+
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;
 

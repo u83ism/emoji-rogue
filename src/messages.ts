@@ -20,6 +20,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	poison: "毒薬",
 	scroll: "巻物",
 	mapping: "地図の巻物",
+	identify: "識別の巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -132,5 +133,7 @@ export const formatEvent = (
 			return "巻物を読んだ。テレポートした!";
 		case "floor-mapped":
 			return "地図の巻物を読んだ。フロア全体が明らかになった!";
+		case "potion-identified":
+			return `${ITEM_NAMES[event.payload.kind]}の正体を見破った!`;
 	}
 };

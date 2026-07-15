@@ -58,6 +58,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "mapping").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.items.filter((item) => item.kind === "identify").length,
+			).toBeLessThanOrEqual(1);
 			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
@@ -234,6 +237,27 @@ describe("mapping scroll spawning", () => {
 				(item) => item.kind === "mapping",
 			).length;
 			expect(mappingCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("identify scroll spawning", () => {
+	it("spawns an identify scroll on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "identify",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one identify scroll on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const identifyCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "identify",
+			).length;
+			expect(identifyCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

@@ -39,6 +39,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	scroll: { glyph: "📜" },
 	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */
 	mapping: { glyph: "🧭" },
+	/* Magnifying glass: single-codepoint, Unicode 6.0. */
+	identify: { glyph: "🔍" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

@@ -394,7 +394,9 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`identify: 🔍`(単一コードポイント)を追加
 - [x] `src/messages.ts`: `ITEM_NAMES`に`identify: "識別の巻物"`、`potion-identified`の文言(「◯の正体を見破った!」——鑑定はその瞬間に正体を明かすイベントなので`player-healed`等と同様、常に実名で表示) + テスト
 - [x] `src/game/validateGameState.ts`: `isItemKind`に`"identify"`を追加。`potion-identified`イベントの検証ケース(`kind`が`isItemKind`)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] 実機スモークテスト: 識別の巻物の出現・拾う→使う→未鑑定だった薬が実名で表示されるようになることを確認
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): BFS経路探索で安全な経路を計算し(`node dist/main.mjs --seed=84`)、実際に識別の巻物を拾わせた。ログに「識別の巻物を拾った」と表示され、`i`キーの持ち物オーバーレイで「a) 識別の巻物 x1」と表示されること、選択して読むとログに「回復薬の正体を見破った!」と表示されること(`POTION_KINDS`の先頭=`"potion"`が決定的に選ばれた)を確認
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

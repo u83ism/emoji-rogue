@@ -503,6 +503,53 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("using a held identify scroll identifies the first unidentified potion kind", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "identify" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "identify" },
+		});
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["potion"]);
+		expect(next.events).toEqual([
+			{ type: "potion-identified", payload: { kind: "potion" } },
+		]);
+	});
+
+	it("identifying twice reveals both potion kinds, one per scroll", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "identify" as const, quantity: 2 }],
+		};
+		const afterFirst = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "identify" },
+		});
+		expect(afterFirst.identifiedPotionKinds).toEqual(["potion"]);
+
+		const afterSecond = advanceTurn(afterFirst, {
+			type: "use-item",
+			payload: { kind: "identify" },
+		});
+		expect(afterSecond.identifiedPotionKinds).toEqual(["potion", "poison"]);
+	});
+
+	it("is a no-op (same reference, no turn spent) once everything is already identified", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			identifiedPotionKinds: ["potion", "poison"] as const,
+			inventory: [{ kind: "identify" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "identify" },
+		});
+		expect(next).toBe(state);
+	});
+
 	it("every turn-consuming action ticks hunger down by one", () => {
 		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
 		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);

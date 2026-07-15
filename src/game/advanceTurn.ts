@@ -274,6 +274,23 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "identify") {
+		const target = POTION_KINDS.find(
+			(potionKind) => !state.identifiedPotionKinds.includes(potionKind),
+		);
+		if (target === undefined) {
+			return state; /* nothing left to identify — same as an unheld item */
+		}
+		return {
+			...state,
+			inventory,
+			identifiedPotionKinds: [...state.identifiedPotionKinds, target],
+			events: buildEventLog(state.events, [
+				{ type: "potion-identified", payload: { kind: target } },
+			]),
+		};
+	}
+
 	const identifiedPotionKinds = identifyPotionKind(
 		state.identifiedPotionKinds,
 		kind,

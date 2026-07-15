@@ -460,6 +460,28 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts an identify item kind and a potion-identified event, rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [],
+			inventory: [{ kind: "identify", quantity: 1 }],
+			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "identify", quantity: 0 }] },
+			"inventory",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "potion-identified", payload: { kind: "amulet" } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

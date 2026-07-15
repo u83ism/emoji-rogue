@@ -8,7 +8,8 @@ export type ItemKind =
 	| "food"
 	| "poison"
 	| "scroll"
-	| "mapping";
+	| "mapping"
+	| "identify";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -106,6 +107,10 @@ export type GameEvent =
 	| {
 			readonly type: "floor-mapped";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			readonly type: "potion-identified";
+			readonly payload: { readonly kind: ItemKind };
 	  };
 
 /**

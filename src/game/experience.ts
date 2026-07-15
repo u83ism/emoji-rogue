@@ -38,3 +38,22 @@ export const applyExperienceGain = (
 		events: buildEventLog(state.events, events),
 	};
 };
+
+/**
+ * An unconditional +1 level, bypassing LEVEL_EXPERIENCE_THRESHOLDS entirely —
+ * playerExperience is untouched, and (unlike applyExperienceGain) there is no
+ * level cap here, since this is what a potion of raise level is for: growth
+ * past what normal kill-based leveling can reach.
+ */
+export const applyLevelUp = (state: GameState): GameState => {
+	const playerLevel = state.playerLevel + 1;
+	return {
+		...state,
+		playerLevel,
+		playerMaxHp: state.playerMaxHp + PLAYER_LEVEL_UP_HP_BONUS,
+		playerHp: state.playerHp + PLAYER_LEVEL_UP_HP_BONUS,
+		events: buildEventLog(state.events, [
+			{ type: "player-leveled-up", payload: { level: playerLevel } },
+		]),
+	};
+};

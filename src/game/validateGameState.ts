@@ -123,7 +123,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "levitation" ||
 	value === "protect-armor" ||
 	value === "blindness" ||
-	value === "paralysis";
+	value === "paralysis" ||
+	value === "raise-level";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);

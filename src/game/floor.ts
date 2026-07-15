@@ -24,6 +24,7 @@ import {
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
+	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
@@ -275,6 +276,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < PARALYSIS_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "paralysis" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "raise-level" });
 	}
 	if (
 		remaining.length > 0 &&

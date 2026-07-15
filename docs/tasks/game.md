@@ -791,17 +791,20 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 マイルストーン45で経験値によるレベルアップを実装したが、原作Rogueにはもう一つ、敵を倒さずとも即座にレベルを1つ上げる**Potion of Raise Level**が存在する。この薬は「累積経験値が閾値を超える」という通常の成長ルートを迂回する特別な効果なので、`applyExperienceGain`(閾値判定・レベル上限10のキャップつき)とは別に、`experience.ts`へ`applyLevelUp(state)`という「`playerExperience`に一切触れず、`playerLevel`を無条件に+1し`playerMaxHp`/`playerHp`を恒久的に増やす」独立した純粋関数を新設する。無条件(上限なし)にする理由は、原作でもこの薬が終盤の伸びしろとして機能するため——`LEVEL_EXPERIENCE_THRESHOLDS`のレベル10キャップは「通常の狩りによる成長」だけに適用され、この薬による成長はそれを迂回してよい。`GameState`への新規フィールドは不要(既存の`playerLevel`/`playerMaxHp`/`playerHp`を直接書き換えるだけ)なので、構造変更なし・`SAVE_FORMAT_VERSION`据え置きで完結する初めての「未鑑定ポーション追加」マイルストーンになる。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"raise-level"`を追加し`POTION_KINDS`に加える(新規`GameEvent`は不要 — 既存の`player-leveled-up`をそのまま再利用)
-- [ ] `src/game/experience.ts`: `applyLevelUp(state): GameState`(`playerLevel`を無条件に+1、`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数、レベル上限なし・rng不使用) + テスト
-- [ ] `src/game/balance.ts`: `RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15`(他の未鑑定ポーションよりやや低め — 即時レベルアップは原作でも希少)を追加
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`raise-level`分岐(`applyLevelUp(state)`を呼び、`inventory`/`identifiedPotionKinds`を反映して返す)を追加 + テスト
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で上級の薬を1個抽選(見た目は回復薬と同一) + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"raise-level": 💊`(未鑑定のため回復薬等と同一)を追加
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`"raise-level": "レベルアップの薬"`を追加(飲んだ時のイベント文言は既存の`player-leveled-up`のものがそのまま出る) + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"raise-level"`を追加(新規フィールド・イベント検証は不要) + テスト
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、上級の薬を飲むと敵を倒さずに`playerLevel`が上がり`playerMaxHp`/`playerHp`が実際に増えることを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"raise-level"`を追加し`POTION_KINDS`に加える(新規`GameEvent`は不要 — 既存の`player-leveled-up`をそのまま再利用)
+- [x] `src/game/experience.ts`: `applyLevelUp(state): GameState`(`playerLevel`を無条件に+1、`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数、レベル上限なし・rng不使用) + テスト
+- [x] `src/game/balance.ts`: `RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15`(他の未鑑定ポーションよりやや低め — 即時レベルアップは原作でも希少)を追加
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`raise-level`分岐(`applyLevelUp(state)`を呼び、`inventory`/`identifiedPotionKinds`を反映して返す)を追加 + テスト
+- [x] `src/game/floor.ts`: スポーンプールから低確率で上級の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`"raise-level": 💊`(未鑑定のため回復薬等と同一)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`"raise-level": "レベルアップの薬"`を追加(飲んだ時のイベント文言は既存の`player-leveled-up`のものがそのまま出る) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"raise-level"`を追加(新規フィールド・イベント検証は不要) + テスト
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、上級の薬を飲むと敵を倒さずに`playerLevel`が上がり`playerMaxHp`/`playerHp`が実際に増えることを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`experience.ts`に`applyLevelUp(state)`を追加し、`applyExperienceGain`の閾値・レベル10キャップとは独立した「無条件+1レベル」経路を実現した。`GameState`への新規フィールドが不要だったため、このマイルストーンは初めて構造変更なし・`SAVE_FORMAT_VERSION`据え置きで完結した未鑑定ポーション追加になった。パイプライン確認では、上級の薬を飲むと敵を倒さずに`playerLevel`が1上がり`playerMaxHp`/`playerHp`が実際に増え、`playerExperience`は変化しないことを`dist/game/index.mjs`越しに確認した。テストは756件(前回750件から+6)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン48完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

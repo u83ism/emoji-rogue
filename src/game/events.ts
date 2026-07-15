@@ -21,7 +21,8 @@ export type ItemKind =
 	| "levitation"
 	| "protect-armor"
 	| "blindness"
-	| "paralysis";
+	| "paralysis"
+	| "raise-level";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -35,6 +36,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"levitation",
 	"blindness",
 	"paralysis",
+	"raise-level",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */

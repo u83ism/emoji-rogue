@@ -635,6 +635,27 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
+	it("using a held raise-level potion levels up without touching playerExperience", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "raise-level" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "raise-level" },
+		});
+		expect(next.playerLevel).toBe(2);
+		expect(next.playerExperience).toBe(state.playerExperience);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["raise-level"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-leveled-up" && event.payload.level === 2,
+			),
+		).toBe(true);
+	});
+
 	it("paralyzedTurnsRemaining reaches 0 and fires paralysis-faded", () => {
 		let current: GameState = {
 			...buildArenaGameState(9, 9, 1),
@@ -1140,6 +1161,7 @@ describe("advanceTurn", () => {
 				"levitation",
 				"blindness",
 				"paralysis",
+				"raise-level",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

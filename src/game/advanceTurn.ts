@@ -26,6 +26,7 @@ import { applyConfusionTick } from "./confusion.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
+import { applyLevelUp } from "./experience.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
 import { applyLevitationTick } from "./levitation.js";
@@ -601,6 +602,10 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 				},
 			]),
 		};
+	}
+
+	if (kind === "raise-level") {
+		return { ...applyLevelUp(state), inventory, identifiedPotionKinds };
 	}
 
 	const amount = Math.min(

@@ -428,6 +428,27 @@ describe("paralysis potion spawning", () => {
 	});
 });
 
+describe("raise-level potion spawning", () => {
+	it("spawns a raise-level potion on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "raise-level",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one raise-level potion on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const raiseLevelCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "raise-level",
+			).length;
+			expect(raiseLevelCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("thief spawning", () => {
 	it("spawns a thief on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

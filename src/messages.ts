@@ -38,6 +38,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"protect-armor": "防具保護の巻物",
 	blindness: "盲目の薬",
 	paralysis: "麻痺の薬",
+	"raise-level": "レベルアップの薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */

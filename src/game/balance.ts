@@ -321,3 +321,6 @@ export const BLIND_VIEW_RADIUS = 1;
 export const PARALYSIS_POTION_DURATION = 3;
 /** Chance (out of 100), independently rolled per floor, that a paralysis potion spawns. */
 export const PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 25;
+
+/** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
+export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15;

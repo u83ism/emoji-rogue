@@ -278,6 +278,11 @@ describe("formatInventoryEntry", () => {
 		expect(formatInventoryEntry({ kind: "identify", quantity: 1 }, [])).toBe(
 			"識別の巻物 x1",
 		);
+		expect(
+			formatInventoryEntry({ kind: "raise-level", quantity: 1 }, [
+				"raise-level",
+			]),
+		).toBe("レベルアップの薬 x1");
 	});
 
 	it("shows the generic unidentified name for an unidentified potion-family stack", () => {

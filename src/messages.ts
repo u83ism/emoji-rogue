@@ -10,6 +10,7 @@ import type { InventoryEntry } from "./game/state.js";
 const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
 	bat: "コウモリ",
+	thief: "盗賊",
 };
 
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
@@ -138,5 +139,9 @@ export const formatEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}の正体を見破った!`;
 		case "player-strengthened":
 			return `${ITEM_NAMES.strength}を飲んだ。攻撃力が${event.payload.bonus}上がった!`;
+		case "gold-stolen":
+			return event.payload.amount > 0
+				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
+				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 	}
 };

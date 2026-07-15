@@ -98,6 +98,14 @@ describe("formatEvent", () => {
 				{ type: "player-strengthened", payload: { bonus: 1 } },
 				"怪力の薬を飲んだ。攻撃力が1上がった!",
 			],
+			[
+				{ type: "gold-stolen", payload: { amount: 10 } },
+				"盗賊に10ゴールド盗まれた!",
+			],
+			[
+				{ type: "gold-stolen", payload: { amount: 0 } },
+				"盗賊に襲われたが、何も盗られなかった",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

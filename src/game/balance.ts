@@ -30,6 +30,16 @@ export const BAT_ATTACK_DAMAGE = 1;
 export const BAT_ACTIONS_PER_TURN = 2;
 export const BAT_COUNT_BASE = 2;
 
+// Never deals HP damage — it steals gold on contact and flees instead (see
+// advanceEnemies's kind-specific branch) and does not scale with depth like
+// zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an independent
+// per-floor roll like sword/shield.
+export const THIEF_MAX_HP = 2;
+export const THIEF_ATTACK_DAMAGE = 0;
+export const THIEF_ACTIONS_PER_TURN = 1;
+export const THIEF_STEAL_AMOUNT = 10;
+export const THIEF_SPAWN_CHANCE_PERCENT = 20;
+
 /**
  * Per-kind lookup tables so `advanceEnemies`/`floor.ts` stay kind-agnostic —
  * adding a third enemy kind means adding one entry here, not a new branch
@@ -38,10 +48,12 @@ export const BAT_COUNT_BASE = 2;
 export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_MAX_HP,
 	bat: BAT_MAX_HP,
+	thief: THIEF_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
 	bat: BAT_ATTACK_DAMAGE,
+	thief: THIEF_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -51,6 +63,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ACTIONS_PER_TURN,
 	bat: BAT_ACTIONS_PER_TURN,
+	thief: THIEF_ACTIONS_PER_TURN,
 };
 
 /** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */
@@ -60,9 +73,12 @@ export interface EnemyCountScaling {
 	readonly max: number;
 }
 
+/** The enemy kinds whose per-floor count scales with depth — thief spawns independently instead (see THIEF_SPAWN_CHANCE_PERCENT). */
+type ScaledEnemyKind = "zombie" | "bat";
+
 /** Bats grow faster (every 2 floors vs. every 3) — deeper floors skew towards the faster kind. */
 export const ENEMY_COUNT_SCALING: Readonly<
-	Record<EnemyKind, EnemyCountScaling>
+	Record<ScaledEnemyKind, EnemyCountScaling>
 > = {
 	zombie: { base: ZOMBIE_COUNT_BASE, growthInterval: 3, max: 8 },
 	bat: { base: BAT_COUNT_BASE, growthInterval: 2, max: 8 },
@@ -70,7 +86,7 @@ export const ENEMY_COUNT_SCALING: Readonly<
 
 /** How many of `kind` spawn on the given (1-based) floor. */
 export const calculateEnemyCountForFloor = (
-	kind: EnemyKind,
+	kind: ScaledEnemyKind,
 	floor: number,
 ): number => {
 	const scaling = ENEMY_COUNT_SCALING[kind];

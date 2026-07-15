@@ -4,6 +4,7 @@ import {
 	BAT_MAX_HP,
 	MIN_DAMAGE_TAKEN,
 	PLAYER_ATTACK_DAMAGE,
+	THIEF_MAX_HP,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
@@ -22,6 +23,13 @@ const bat = (x: number, y: number): Enemy => ({
 	y,
 	kind: "bat",
 	hp: BAT_MAX_HP,
+});
+
+const thief = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "thief",
+	hp: THIEF_MAX_HP,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -186,5 +194,59 @@ describe("advanceEnemies", () => {
 				payload: { by: "zombie", damage: MIN_DAMAGE_TAKEN },
 			},
 		]);
+	});
+
+	it("an adjacent thief steals gold and flees instead of dealing damage", () => {
+		const state = {
+			...buildCorridorState([thief(5, 1)]),
+			goldCollected: 50,
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([]); /* the thief is gone for good */
+		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
+		expect(next.goldCollected).toBe(40);
+		expect(next.events).toEqual([
+			{ type: "gold-stolen", payload: { amount: 10 } },
+		]);
+	});
+
+	it("a thief steals no more than the player's remaining gold", () => {
+		const state = {
+			...buildCorridorState([thief(5, 1)]),
+			goldCollected: 3,
+		};
+		const next = advanceEnemies(state);
+		expect(next.goldCollected).toBe(0);
+		expect(next.events).toEqual([
+			{ type: "gold-stolen", payload: { amount: 3 } },
+		]);
+	});
+
+	it("a thief still flees when the player has no gold, stealing nothing", () => {
+		const state = {
+			...buildCorridorState([thief(5, 1)]),
+			goldCollected: 0,
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([]);
+		expect(next.goldCollected).toBe(0);
+		expect(next.events).toEqual([
+			{ type: "gold-stolen", payload: { amount: 0 } },
+		]);
+	});
+
+	it("a fleeing thief does not affect other enemies acting the same turn", () => {
+		const state = {
+			...buildCorridorState([thief(3, 1), zombie(5, 1)]),
+			goldCollected: 50,
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([
+			zombie(5, 1),
+		]); /* the thief is gone, the zombie remains */
+		expect(next.playerHp).toBe(
+			state.playerHp - 1,
+		); /* the zombie still attacked */
+		expect(next.goldCollected).toBe(40);
 	});
 });

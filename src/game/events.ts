@@ -1,5 +1,5 @@
 /** Events carry it so the shell can name the attacker. */
-export type EnemyKind = "zombie" | "bat";
+export type EnemyKind = "zombie" | "bat" | "thief";
 
 export type ItemKind =
 	| "potion"
@@ -120,6 +120,11 @@ export type GameEvent =
 	| {
 			readonly type: "player-strengthened";
 			readonly payload: { readonly bonus: number };
+	  }
+	| {
+			/** amount is the actual gold stolen — 0 when the thief struck with nothing to take. */
+			readonly type: "gold-stolen";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

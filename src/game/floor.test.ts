@@ -64,6 +64,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "strength").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.enemies.filter((enemy) => enemy.kind === "thief").length,
+			).toBeLessThanOrEqual(1);
 			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
@@ -282,6 +285,38 @@ describe("strength potion spawning", () => {
 				(item) => item.kind === "strength",
 			).length;
 			expect(strengthCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("thief spawning", () => {
+	it("spawns a thief on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).enemies.some(
+				(enemy) => enemy.kind === "thief",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one thief on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const thiefCount = buildDungeonGameState(40, 20, seed).enemies.filter(
+				(enemy) => enemy.kind === "thief",
+			).length;
+			expect(thiefCount).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("does not scale with floor depth (unlike zombies and bats)", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= 7; floor++) {
+			state = descendStairs(state);
+			const thiefCount = state.enemies.filter(
+				(enemy) => enemy.kind === "thief",
+			).length;
+			expect(thiefCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

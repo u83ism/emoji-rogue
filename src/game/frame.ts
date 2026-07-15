@@ -21,6 +21,8 @@ const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
 const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	zombie: { glyph: "🧟" },
 	bat: { glyph: "🦇" },
+	/* Goblin mask: single-codepoint, Unicode 6.0. */
+	thief: { glyph: "👺" },
 };
 /* Down staircase (also single-codepoint, Unicode 6.0). */
 const STAIRS_CELL: Cell = { glyph: "🔽" };

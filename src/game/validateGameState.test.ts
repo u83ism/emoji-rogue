@@ -90,6 +90,19 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
+	it("accepts a thief as a valid enemy kind", () => {
+		const valid = buildValidState();
+		const enemies = valid.enemies;
+		if (!Array.isArray(enemies) || enemies.length === 0) {
+			throw new Error("unreachable: the dungeon state spawns enemies");
+		}
+		const result = validateGameState({
+			...valid,
+			enemies: [{ ...enemies[0], kind: "thief", hp: 2 }],
+		});
+		expect(result.ok).toBe(true);
+	});
+
 	it("rejects broken combat fields", () => {
 		expectRejected({ ...buildValidState(), playerHp: 0 }, "playerHp");
 		expectRejected({ ...buildValidState(), playerHp: 9999 }, "playerHp");
@@ -499,6 +512,22 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [{ type: "player-strengthened", payload: { bonus: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed gold-stolen event (including a zero-amount steal), rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			events: [{ type: "gold-stolen", payload: { amount: 0 } }],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "gold-stolen", payload: { amount: -1 } }],
 			},
 			"events",
 		);

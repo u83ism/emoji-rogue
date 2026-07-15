@@ -54,6 +54,13 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
 	});
 
+	it("draws thieves with their own glyph", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const thief = { kind: "thief", hp: 2 } as const;
+		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
+		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
+	});
+
 	it("draws the player as a skull once the run has ended in death", () => {
 		const dead = { ...state, status: "dead" as const };
 		expect(buildFrameGrid(dead)[state.player.y]?.[state.player.x]?.glyph).toBe(

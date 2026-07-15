@@ -6,6 +6,7 @@ import {
 	ENEMY_ACTIONS_PER_TURN,
 	ENEMY_ATTACK_DAMAGE,
 	MIN_DAMAGE_TAKEN,
+	THIEF_STEAL_AMOUNT,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
 import { buildEventLog, type GameEvent } from "./events.js";
@@ -113,10 +114,13 @@ const stepWandering = (
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
  * in place (damage from balance.ts by kind, reduced by state.playerDefense
- * but never below MIN_DAMAGE_TAKEN); otherwise chases via A* while inside
- * the player's field of view, or wanders using (and advancing) the state's
- * RNG. The player's HP reaching zero ends the run and cuts short any
- * remaining actions, this enemy's and the rest of the array's alike.
+ * but never below MIN_DAMAGE_TAKEN) — except a thief, which steals up to
+ * THIEF_STEAL_AMOUNT gold instead of dealing damage and then flees the board
+ * for good (never rejoins `nextEnemies`, killed or not). Non-adjacent
+ * enemies chase via A* while inside the player's field of view, or wander
+ * using (and advancing) the state's RNG. The player's HP reaching zero ends
+ * the run and cuts short any remaining actions, this enemy's and the rest of
+ * the array's alike.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -130,6 +134,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 
 	let rng = state.rng;
 	let playerHp = state.playerHp;
+	let goldCollected = state.goldCollected;
 	let died = false;
 	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
@@ -137,12 +142,20 @@ export const advanceEnemies = (state: GameState): GameState => {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let next: Position = enemy;
+		let fled = false;
 		for (
 			let action = 0;
-			action < ENEMY_ACTIONS_PER_TURN[enemy.kind] && !died;
+			action < ENEMY_ACTIONS_PER_TURN[enemy.kind] && !died && !fled;
 			action++
 		) {
 			if (isAdjacent(next, state.player)) {
+				if (enemy.kind === "thief") {
+					const stolen = Math.min(THIEF_STEAL_AMOUNT, goldCollected);
+					goldCollected -= stolen;
+					events.push({ type: "gold-stolen", payload: { amount: stolen } });
+					fled = true;
+					continue;
+				}
 				const damage = Math.max(
 					MIN_DAMAGE_TAKEN,
 					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense,
@@ -166,6 +179,9 @@ export const advanceEnemies = (state: GameState): GameState => {
 			}
 		}
 
+		if (fled) {
+			continue;
+		}
 		occupied.add(encodePointKey(next.x, next.y));
 		nextEnemies.push({ ...enemy, x: next.x, y: next.y });
 	}
@@ -173,6 +189,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 	return {
 		...state,
 		playerHp: Math.max(0, playerHp),
+		goldCollected,
 		enemies: nextEnemies,
 		events: buildEventLog(state.events, events),
 		rng,

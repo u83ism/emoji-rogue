@@ -368,6 +368,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン25 — 巻物第2号(地図の巻物)
+
+巻物カテゴリの2種類目として、フロア全体を一気に既踏破にする「地図の巻物」を導入する。`GameState.explored`(マイルストーン3で導入済み)をそのまま使い回せるため、新規の状態フィールドは一切不要——`frame.ts`の描画ロジックも無改造で済む、これまでで最も影響範囲の小さいアイテム追加になる。テレポートの巻物(マイルストーン24)と同じく未鑑定システムには乗せず、拾った時点で実名が分かる。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"mapping"`を追加。`GameEvent`に`floor-mapped`(payloadなし、`player-hungry`と同じ形)を追加
+- [x] `src/game/balance.ts`: `MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 30`(他の巻物・剣・盾と同じ独立判定の仕組み)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で地図の巻物を1個抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`mapping`分岐を追加——現在の地形と同じ寸法の全面`true`グリッドで`explored`を丸ごと差し替え、`floor-mapped`を記録 + テスト(壁マスも含め全域が既踏破になることを含む)
+- [x] `src/game/frame.ts`: 変更なし(`explored`を使う既存の3層描画ロジックがそのまま機能する)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`mapping: "地図の巻物"`、`floor-mapped`の文言(「地図の巻物を読んだ。フロア全体が明らかになった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"mapping"`を追加。`floor-mapped`イベントの検証ケース(`player-hungry`と同じくpayloadの中身は見ない)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] 実機スモークテスト: 地図の巻物の出現・拾う→使う→マップ全体が(未踏破のシルエット層として)一気に見えるようになることを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

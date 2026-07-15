@@ -533,6 +533,21 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン34完了(2026-07-15)。**
 
+## マイルストーン35 — ニンフ(アイテムを盗んで消える敵)
+
+盗賊(マイルストーン28、金貨を盗んで消える)と対になる、原作Rogueのニンフ(nymph)に着想を得た敵を追加する。盗賊が`goldCollected`を狙うのに対し、ニンフは`inventory`から持ち物を1つランダムに盗んで消える——「ダメージを与えず、隣接した瞬間に何かを奪って盤面から消える」という行動原理そのものは盗賊と同一なので、`advanceEnemies`の実装は盗賊分岐のすぐ隣に追加するだけで済む。持ち物が空でも隣接すれば必ず逃げる(盗賊の「所持金0でも逃げる」と同じ割り切り)ため、`item-stolen`イベントは「盗んだ種類」を`ItemKind | undefined`(何も持っていなかった場合)で表現する——`GameState.amulet`で確立済みの「undefinedはJSON上ではキー自体が消える」という扱いをイベントpayloadにも初めて適用する形になる。盗む対象の抽選(在庫が複数種類あるときどれを盗むか)は初めて`advanceEnemies`内でrngを消費する非決定的な選択になるため、`stepUniform`(徘徊と同じ関数)を使う。
+
+- [ ] `src/game/events.ts`: `EnemyKind`に`"nymph"`を追加。`GameEvent`に`item-stolen`(payload: `kind: ItemKind | undefined`)を追加
+- [ ] `src/game/balance.ts`: `NYMPH_MAX_HP = 1`・`NYMPH_ATTACK_DAMAGE = 0`(隣接時は攻撃ではなく窃盗のため未使用だが`Record<EnemyKind, number>`網羅のため必要、盗賊と同じ扱い)・`NYMPH_ACTIONS_PER_TURN = 1`・`NYMPH_SPAWN_CHANCE_PERCENT = 20`(盗賊と同じ独立per-floor判定)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`に`nymph`のエントリを追加
+- [ ] `src/game/enemies.ts`: `advanceEnemies`に`inventory`のローカルアキュムレータ(`goldCollected`と同じパターン)を追加。隣接時分岐に`nymph`ケースを追加——`inventory`が空でなければ`stepUniform(rng)`でどのスタックを盗むか一様に選び、1個減算(0になったらスタックごと除去)して`item-stolen`(盗んだ`kind`)を記録、空なら`item-stolen`(`kind: undefined`)を記録するだけ。どちらも盗賊と同じく`fled = true`で盤面から除去 + テスト(単一スタック・複数スタックからの抽選・在庫空・他の敵の行動に影響しないことを含む)
+- [ ] `src/game/floor.ts`: スポーンプールから低確率でニンフを1体抽選(盗賊と同じ独立per-floor判定、深さスケーリングなし) + テスト
+- [ ] `src/game/frame.ts`: `ENEMY_GLYPHS`に`nymph: 🧚`(単一コードポイント、Unicode 6.0)を追加
+- [ ] `src/messages.ts`: `ENEMY_NAMES`に`nymph: "ニンフ"`を追加。`item-stolen`の文言(盗まれたものがあれば`resolveItemDisplayName`で名前を出して「ニンフに◯を盗まれた!」、何もなければ「ニンフに襲われたが、何も盗られなかった」——盗賊の`gold-stolen`文言分岐と対称) + テスト
+- [ ] `src/game/validateGameState.ts`: `isEnemyKind`に`"nymph"`を追加。`item-stolen`イベントの検証ケース(`payload.kind`が`undefined`または`isItemKind`)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、複数種類のアイテムを持った状態でニンフに隣接させ、`inventory`から1種類が減っていること・`item-stolen`イベントに盗まれた種類が記録されること・ニンフが盤面から消えることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -681,6 +681,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **マイルストーン42完了(2026-07-15)。**
 
+## マイルストーン43 — 防具保護の巻物(アクエーターの錆び対策)
+
+原作Rogueの"scroll of protect armor"を導入する。アクエーター(マイルストーン38)が持ち込んだ「防御力がじわじわ錆びる」という圧力に対する、初めての直接的な対抗策。原作は特定の防具1着を恒久的に錆び付かなくするが、本実装には個体別の防具という概念がないため、`GameState.armorProtected`という恒久フラグに簡略化する——一度読めば、以後アクエーターの錆び判定そのものが二度と発生しない。他の巻物(武器/防具強化)と同じく無条件・rng不使用で確定効果。
+
+- [ ] `src/game/events.ts`: `ItemKind`に`"protect-armor"`を追加。`GameEvent`に`armor-protected`(payloadなし)を追加
+- [ ] `src/game/state.ts`: `GameState`に`armorProtected: boolean`(構造変更)を追加
+- [ ] `src/game/balance.ts`: `PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20`(他の巻物と同じ独立per-floor判定)を追加
+- [ ] `src/game/floor.ts`: スポーンプールから低確率で防具保護の巻物を1個抽選 + テスト
+- [ ] `src/game/enemies.ts`: `advanceEnemies`のアクエーター錆び判定の先頭に`state.armorProtected`なら判定自体をスキップする早期returnを追加(rngも消費しない——判定する必要すらないため) + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`protect-armor`分岐(`armorProtected`を`true`にし`armor-protected`を記録。指輪と同じく既に保護済みでも消費されるだけで効果に変化はない) + テスト
+- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"protect-armor": 🔰`(単一コードポイント、Unicode 6.0)を追加
+- [ ] `src/messages.ts`: `ITEM_NAMES`に`"protect-armor": "防具保護の巻物"`、`armor-protected`の文言(「防具保護の巻物を読んだ。防具が錆びなくなった!」) + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"protect-armor"`を追加。`armorProtected`(真偽値)の検証、`armor-protected`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を18に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`armorProtected: "boolean"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、防具保護の巻物を読んだ状態でアクエーターに複数ターン隣接させ続け、`playerDefense`が一切下がらない(`armor-rusted`イベントが一度も発生しない)ことを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

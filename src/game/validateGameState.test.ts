@@ -410,6 +410,14 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects a non-boolean hasAttacked or hasEaten", () => {
+		expectRejected(
+			{ ...buildValidState(), hasAttacked: "true" },
+			"hasAttacked",
+		);
+		expectRejected({ ...buildValidState(), hasEaten: "true" }, "hasEaten");
+	});
+
 	it("rejects a non-integer or negative levitationTurnsRemaining", () => {
 		expectRejected(
 			{ ...buildValidState(), levitationTurnsRemaining: -1 },

@@ -46,6 +46,7 @@ export const applyPlayerAttack = (
 	const next: GameState = {
 		...state,
 		enemies,
+		hasAttacked: true,
 		events: buildEventLog(state.events, events),
 	};
 	return remainingHp <= 0
@@ -82,6 +83,7 @@ export const applyWandStrike = (state: GameState, target: Enemy): GameState => {
 	const next: GameState = {
 		...state,
 		enemies,
+		hasAttacked: true,
 		events: buildEventLog(state.events, events),
 	};
 	return remainingHp <= 0

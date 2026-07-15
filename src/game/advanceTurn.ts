@@ -421,6 +421,7 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		return {
 			...state,
 			playerFood: state.playerFood + restored,
+			hasEaten: true,
 			inventory,
 			events: buildEventLog(state.events, [
 				{ type: "player-ate", payload: { amount: restored } },

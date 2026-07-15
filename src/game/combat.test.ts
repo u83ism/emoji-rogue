@@ -119,6 +119,12 @@ describe("applyPlayerAttack", () => {
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.playerExperience).toBe(state.playerExperience);
 	});
+
+	it("sets hasAttacked — the pacifist conduct is broken by any landed attack", () => {
+		const target = zombie(5, 4);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.hasAttacked).toBe(true);
+	});
 });
 
 describe("applyWandStrike", () => {
@@ -177,5 +183,11 @@ describe("applyWandStrike", () => {
 		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
 		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.zombie);
+	});
+
+	it("sets hasAttacked — the pacifist conduct is broken by a wand strike too", () => {
+		const target = zombie(5, 4);
+		const next = applyWandStrike({ ...state, enemies: [target] }, target);
+		expect(next.hasAttacked).toBe(true);
 	});
 });

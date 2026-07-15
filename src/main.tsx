@@ -16,6 +16,7 @@ import { calculateScore } from "./game/score.js";
 import type { Action, GameState } from "./game/state.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
+	formatConducts,
 	formatEvent,
 	formatInventoryEntry,
 	formatScoreSummary,
@@ -197,15 +198,22 @@ const App = () => {
 				</Text>
 			))}
 			{(state.status === "dead" || state.status === "won") && (
-				<Text bold color="yellow">
-					{formatScoreSummary(
-						calculateScore(state),
-						state.floor,
-						state.playerLevel,
-						state.goldCollected,
-						state.hasAmulet,
+				<>
+					<Text bold color="yellow">
+						{formatScoreSummary(
+							calculateScore(state),
+							state.floor,
+							state.playerLevel,
+							state.goldCollected,
+							state.hasAmulet,
+						)}
+					</Text>
+					{formatConducts(state.hasAttacked, state.hasEaten) !== "" && (
+						<Text color="cyan">
+							称号: {formatConducts(state.hasAttacked, state.hasEaten)}
+						</Text>
 					)}
-				</Text>
+				</>
 			)}
 			{/* System notices (app/session concerns — never game events, never
 			 * saved), kept visually apart from the log by a blank line. */}

@@ -107,6 +107,18 @@ export const formatScoreSummary = (
 	})`;
 
 /**
+ * Conducts upheld for the whole run (NetHack-style self-imposed challenge
+ * record) — "・"-joined, or "" if none were upheld. See calculateScore.
+ */
+export const formatConducts = (
+	hasAttacked: boolean,
+	hasEaten: boolean,
+): string =>
+	[hasAttacked ? undefined : "非殺生", hasEaten ? undefined : "不食"]
+		.filter((label): label is string => label !== undefined)
+		.join("・");
+
+/**
  * The single place where game events become human-readable text (Japanese
  * for now). The core (src/game/) never produces strings, so swapping locale
  * means swapping this module only — the i18n discipline in docs/tasks/game.md.

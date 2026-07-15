@@ -1039,6 +1039,7 @@ describe("advanceTurn", () => {
 		expect(next.events).toEqual([
 			{ type: "player-ate", payload: { amount: 30 } },
 		]);
+		expect(next.hasEaten).toBe(true);
 	});
 
 	it("using the last food ration at full satiety wastes it (amount 0) and empties the stack", () => {
@@ -1056,6 +1057,9 @@ describe("advanceTurn", () => {
 		expect(next.events).toEqual([
 			{ type: "player-ate", payload: { amount: 0 } },
 		]);
+		expect(next.hasEaten).toBe(
+			true,
+		); /* still counts, even at 0 nutrition gained */
 	});
 
 	it("using a held poison potion damages the player and identifies that kind", () => {

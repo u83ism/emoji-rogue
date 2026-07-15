@@ -349,3 +349,8 @@ export const WINDS_OF_KRON_EVICTION_TURNS = 200;
 export const MONSTER_HOUSE_SPAWN_CHANCE_PERCENT = 15;
 /** Extra enemies dumped into a monster house room, all pre-awake. */
 export const MONSTER_HOUSE_ENEMY_COUNT = 4;
+
+/** Score bonus for finishing a run having never landed an attack — see calculateScore. */
+export const SCORE_PACIFIST_BONUS = 300;
+/** Score bonus for finishing a run having never eaten — see calculateScore. */
+export const SCORE_FOODLESS_BONUS = 300;

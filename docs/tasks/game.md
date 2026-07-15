@@ -153,6 +153,17 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン11 — フロアスケーリング(深さに応じて敵を強く/多くする)
+
+無限降下の骨格(マイルストーン7)はあるのに、これまで毎フロア🧟3体+🦇2体で頭打ちだったため「降りる」ことに意味がなかった。深さに応じて出現数を増やし、コウモリの比率も相対的に上げる。HP・攻撃力自体はまだ据え置き(出現数だけのスケーリング) — 変えるパラメータを一度に増やしすぎない方針。マイルストーン10のインベントリにより「深い階に備えて回復薬を温存するか」という判断が初めて意味を持つので、このタイミングで導入する。
+
+- [x] `src/game/balance.ts`: `ZOMBIE_COUNT_PER_FLOOR`/`BAT_COUNT_PER_FLOOR`を`ZOMBIE_COUNT_BASE`/`BAT_COUNT_BASE`に改称し、各種の成長間隔(`growthInterval`: 何フロアごとに+1体か)と上限(`max`)を種類ごとの参照テーブル`ENEMY_COUNT_SCALING: Readonly<Record<EnemyKind, {base, growthInterval, max}>>`にまとめた。ゾンビは3体始まり・3階ごとに+1・上限8体、コウモリは2体始まり・2階ごとに+1・上限8体(コウモリの方が早く増える=深いほど速い敵の比率が増える)。`calculateEnemyCountForFloor(kind, floor)`という純粋関数をここに追加 + テスト
+- [x] `src/game/floor.ts`: `buildFloorLayout`が`floor`引数を受け取るようになり、固定回数ループを`calculateEnemyCountForFloor`の戻り値に置き換え。`descendStairs`は`nextFloor`を渡す + テスト(floor1・floor2は従来どおり3体+2体のまま = 既存テストは無変更で通ることを確認。成長が効き始めるfloor4以降の出現数を新規テストで検証)
+- [x] `src/game/initialState.ts`: `buildDungeonGameState`から`buildFloorLayout`を呼ぶ際に`floor: 1`を明示的に渡すよう更新(シグネチャ変更への追従のみ)
+- [ ] 実機スモークテスト: 深い階に潜って敵の増加・コウモリ比率の上昇を体感で確認(このセッションはリモート環境のため未実施)
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)

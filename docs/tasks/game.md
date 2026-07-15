@@ -440,6 +440,22 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
+## マイルストーン30 — 眠っている敵と奇襲(スニークアタック)
+
+オリジナルRogueの「モンスターは最初眠っていて、隣接するか視界に入ると目覚める。眠っている相手への攻撃は大ダメージの奇襲になる」を導入する。現行の`advanceEnemies`は「隣接なら攻撃、プレイヤーの視界内ならA*で追跡、それ以外は徘徊」という3分岐だったが、ここに「眠っている間は一切行動しない(徘徊もしない)」という第0分岐を追加する形で実装する。
+
+- [ ] `src/game/state.ts`: `Enemy`に`awake: boolean`を追加(構造変更)
+- [ ] `src/game/balance.ts`: `SNEAK_ATTACK_MULTIPLIER = 3`(原作Rogueの奇襲倍率に準拠)を追加
+- [ ] `src/game/floor.ts`: スポーン時の敵(ゾンビ・コウモリ・盗賊)は全て`awake: false`で生成
+- [ ] `src/game/enemies.ts`: `advanceEnemies`の各敵の行動判定の先頭に「隣接 or プレイヤーの視界内(既存の`visiblePoints`をそのまま流用——追跡可否の判定と同じ近似)なら目覚める、既に起きていなければ何もせず終了」という分岐を追加。一度起きたら`awake: true`のまま(二度と眠らない)。目覚めた同じターン中に隣接していれば即座に攻撃/追跡に移る(既存の「隣接する敵はプレイヤーの行動後に必ず行動する」という前提をそのまま踏襲し、特別扱いはしない)
+- [ ] `src/game/events.ts`: `GameEvent`に`sneak-attack`(payload: `target: EnemyKind`・実ダメージ`damage`)を追加。`enemy-hit`と同形だが、奇襲時は`enemy-hit`の代わりにこちらを発火する新規イベント種別として独立させる(列挙値追加のみ)
+- [ ] `src/game/combat.ts`: `applyPlayerAttack`で`target.awake === false`なら`state.playerAttackDamage * SNEAK_ATTACK_MULTIPLIER`のダメージで`sneak-attack`を発火。命中対象が生き残った場合は`awake: true`に更新(奇襲を受けた敵はその場で目を覚ます)
+- [ ] `src/messages.ts`: `sneak-attack`の文言(例:「◯に不意打ち!◯のダメージを与えた!」) + テスト
+- [ ] `src/game/validateGameState.ts`: `enemies`の各要素に`awake`(真偽値)の検証を追加。`sneak-attack`イベントの検証ケース(`enemy-hit`と同じ形)を追加。`Enemy`の構造変更のため**`SAVE_FORMAT_VERSION`を11に**
+- [ ] `src/game/save.test.ts`: shape guardの`enemies`要素に`awake: "boolean"`を追記
+- [ ] 既存テスト(`advanceTurn.test.ts`・`combat.test.ts`・`enemies.test.ts`・`frame.test.ts`・`validateGameState.test.ts`)のEnemyフィクスチャに`awake`を追記(既存の追跡・徘徊・隣接攻撃のテストは`awake: true`で「既に起きている」状態から検証を継続し、眠り・奇襲そのものは新規テストで担当)
+- [ ] 実機スモークテスト: 敵が視界に入るまで徘徊も追跡もしないこと、隣接して初手攻撃すると通常より大きいダメージが入り「不意打ち」表示になること、2回目以降の攻撃では通常ダメージに戻ることを確認
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

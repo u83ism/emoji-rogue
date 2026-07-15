@@ -254,13 +254,27 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。
 
+## マイルストーン18 — リプレイ(初期状態+アクションログの再生)
+
+マイルストーン1以来「`RngState`を`GameState`に含めておけばセーブ・リプレイ・シード共有がほぼ無料になる」という前提で設計してきた投資を回収する。**リプレイ=(width, height, seed) + そのセッションで実際に発行された`Action`列**。セーブ(スナップショット1個)とは別物で、`GameState.events`のような20件キャップは適用しない(リプレイの全体が要点なので切り詰めると意味がなくなる)。セーブからの再開セッションは「本当の初期状態」を持たないため、今回はリプレイ記録の対象外とする(素直な割り切り)。実機での「再生を眺めるビューア」は作らない — 決定性そのものは自動テストで検証できるので、まずは記録+再構築の核だけを実装する。
+
+- [x] `src/game/replay.ts`(新規): `Replay`型(`{width, height, seed, actions: readonly Action[]}`)と`buildReplayGameState(replay): GameState`(初期状態を`buildDungeonGameState`で作り、`actions`を順に`advanceTurn`で畳み込むだけの純粋関数) + テスト(決定性・空アクション列は初期状態と一致・フロア降下やアイテム使用を含む長めのアクション列を実際に畳み込んで整合性を検証)
+- [x] `src/game/validateGameState.ts`: `isItemKind`・`isEnemyKind`・`isPositiveInteger`・`isFiniteNumber`を`export`に変更(新設の`validateReplay.ts`と共有するため。列挙値の網羅性を1箇所に保つ)
+- [x] `src/game/validateReplay.ts`(新規): `validateReplay(value): Result<Replay, string>`。`Action`判別可能unionの形状検証(`isAction`)を含む + テスト
+- [x] `src/game/replayFile.ts`(新規、core側): `buildReplayFileContent`/`parseReplayFileContent`(`REPLAY_FORMAT_VERSION = 1`から開始。セーブ形式とは独立の版数)+ テスト
+- [x] `src/replayFile.ts`(新規、シェル層・fs効果): `saveReplay(replay)`(上書き型・1スロット)/`loadReplay()`(セーブと違い**読んでも消費しない** — 記録の閲覧であって「再開」ではないため)+ テスト
+- [x] `src/main.tsx`: 起動時にセーブから再開した場合はリプレイ記録なし(`undefined`)、新規ダンジョンの場合は`{width, height, seed, actions: []}`で開始。以降ディスパッチした`Action`を全て追記し、実行が`playing`でなくなったタイミング(死亡・勝利・終了・中断セーブ)で`saveReplay`を呼ぶ
+- [x] `src/game/index.ts`: `Replay`型・`buildReplayGameState`・`parseReplayFileContent`を再エクスポート(検証スクリプトから使えるように)
+- [x] `scripts/replay-verify.mjs`(新規): `~/.emoji-rogue/replay.json`を読み込み`buildReplayGameState`で再構築し、アクション数・到達フロア・最終HP・ステータスを表示するだけの手動確認用スクリプト(`scripts/demo-renderer.mjs`と同じ位置づけ)。`npm run build && node scripts/replay-verify.mjs`
+- [ ] 実機確認: 実際にCLIで少し遊んでから終了し、`replay.json`が書き出されること・`replay-verify.mjs`が実プレイと矛盾しない結果を表示することを確認(このセッションはリモート環境のため未実施 — リプレイの核はテストで決定性を検証済み)
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。実機確認のみ保留のため、完了扱いはそれを確認してから。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照
-- セーブ/ロード(GameStateのシリアライズ)
-- リプレイ(初期状態+アクションログの再生)
 - 絵文字セット(100種程度)の選定(`docs/design.md` の未解決項目)
 - 視界方式の再検討: 現行はshadowcasting(放射状・半径8)。オリジナルRogue/不思議のダンジョン式「部屋に入ったら部屋全体が見える+通路は周囲1マス」に変える場合は、部屋矩形をGameStateに保存する必要がある(diggerの`getRooms()`は生成時に捨てているため)。プレイフィールを見て判断
 - リリース運用(正式リリースを始めるとき、2026-07-14の議論): ①アプリはsemver、セーブ形式は単調増加の整数、**両者は独立の軸**でCHANGELOGに対照表(アプリver↔形式ver)を記録 ②コードの互換判定は`formatVersion`のみ(アプリverをパースして判定に使わない) ③セーブに`appVersion`を参考情報として併記(サポート用、判定不使用) ④旧形式の切り捨てをやめる時期になったら`parseSaveFileContent`の`unsupported-version`分岐がマイグレーションの差し込み口 ⑤既製のsemverスキルはConventional Commits前提でGitmoji規約と不適合 — 必要になったら自作`/release`スキル(バンプ→CHANGELOG→タグ→push)を書く

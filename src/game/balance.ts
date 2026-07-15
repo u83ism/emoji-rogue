@@ -339,3 +339,8 @@ export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 25;
 export const LIFE_POTION_MAX_HP_BONUS = 5;
 /** Chance (out of 100), independently rolled per floor, that a potion of life spawns — rare, like raise-level. */
 export const LIFE_POTION_SPAWN_CHANCE_PERCENT = 15;
+
+/** Turns spent on one floor before a winds-of-kron-warning fires — see applyWindsOfKronTick. */
+export const WINDS_OF_KRON_WARNING_TURNS = 150;
+/** Turns spent on one floor before the player is forcibly evicted to the next floor down. */
+export const WINDS_OF_KRON_EVICTION_TURNS = 200;

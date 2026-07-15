@@ -48,6 +48,7 @@ import {
 	deriveExploredState,
 	resolveViewRadius,
 } from "./vision.js";
+import { applyWindsOfKronTick } from "./windsOfKron.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>
@@ -715,15 +716,18 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 /**
  * Every status-tick that runs at the end of a turn-consuming action, in a
  * fixed order (hunger, regeneration, confusion, levitation, blindness,
- * paralysis, detect monsters). Each tick is independently a no-op unless its
- * own field is active, so the order among them does not affect the result.
+ * paralysis, detect monsters, winds of Kron). Each tick is independently a
+ * no-op unless its own field/condition is active, so the order among them
+ * does not affect the result.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
-	applyDetectMonstersTick(
-		applyParalysisTick(
-			applyBlindnessTick(
-				applyLevitationTick(
-					applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+	applyWindsOfKronTick(
+		applyDetectMonstersTick(
+			applyParalysisTick(
+				applyBlindnessTick(
+					applyLevitationTick(
+						applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+					),
 				),
 			),
 		),

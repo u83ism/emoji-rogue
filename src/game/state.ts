@@ -150,6 +150,8 @@ export interface GameState {
 	readonly traps: readonly Trap[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
+	/** Turns spent on the current floor since arriving — see applyWindsOfKronTick. Resets to 0 on every floor transition. */
+	readonly turnsOnCurrentFloor: number;
 	/**
 	 * The staircase. An entity on top of the (still binary floor/wall)
 	 * terrain, like enemies — not a third terrain value, which would ripple

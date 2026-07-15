@@ -423,6 +423,7 @@ const buildFloorTransition = (
 		events: buildEventLog(state.events, [event]),
 		rng: rng.getState(),
 		floor: nextFloor,
+		turnsOnCurrentFloor: 0,
 	});
 };
 
@@ -451,11 +452,12 @@ export const ascendStairs = (state: GameState): GameState => {
 	const nextFloor = state.floor - 1;
 	if (nextFloor <= 1) {
 		if (!state.hasAmulet) {
-			return { ...state, floor: 1, status: "exited" };
+			return { ...state, floor: 1, turnsOnCurrentFloor: 0, status: "exited" };
 		}
 		return {
 			...state,
 			floor: 1,
+			turnsOnCurrentFloor: 0,
 			events: buildEventLog(state.events, [{ type: "game-won", payload: {} }]),
 			status: "won",
 		};

@@ -274,6 +274,10 @@ const isGameEvent = (value: unknown): boolean => {
 			return true;
 		case "player-revitalized":
 			return isPositiveInteger(payload.maxHpBonus);
+		case "winds-of-kron-warning":
+			return true;
+		case "winds-of-kron-eviction":
+			return true;
 		default:
 			return false;
 	}
@@ -391,6 +395,10 @@ export const validateGameState = (
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
 	}
+	const turnsOnCurrentFloor = value.turnsOnCurrentFloor;
+	if (!isNonNegativeInteger(turnsOnCurrentFloor)) {
+		return err("turnsOnCurrentFloor");
+	}
 	const stairs = value.stairs;
 	if (
 		!isRecord(stairs) ||
@@ -481,6 +489,7 @@ export const validateGameState = (
 		paralyzedTurnsRemaining,
 		detectMonstersTurnsRemaining,
 		floor,
+		turnsOnCurrentFloor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,
 		hasAmulet,

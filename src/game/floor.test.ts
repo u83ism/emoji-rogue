@@ -28,6 +28,11 @@ describe("descendStairs", () => {
 		expect(below.status).toBe("playing");
 	});
 
+	it("resets turnsOnCurrentFloor to 0", () => {
+		const loitered = descendStairs({ ...start, turnsOnCurrentFloor: 150 });
+		expect(loitered.turnsOnCurrentFloor).toBe(0);
+	});
+
 	it("spawns both zombies and bats", () => {
 		for (const state of [start, below]) {
 			const kinds = state.enemies.map((enemy) => enemy.kind);
@@ -595,6 +600,15 @@ describe("ascendStairs", () => {
 		const back = ascendStairs({ ...deep, playerHp: 5 });
 		expect(back.floor).toBe(1);
 		expect(back.status).toBe("exited"); /* no amulet — see below */
+	});
+
+	it("resets turnsOnCurrentFloor to 0 on a mid-retrace ascent", () => {
+		/* floor 3, so ascending lands on floor 2 — buildFloorTransition's path,
+		 * not the floor-1 early return */
+		const deep = descendStairs(descendStairs(buildDungeonGameState(40, 20, 7)));
+		const back = ascendStairs({ ...deep, turnsOnCurrentFloor: 80 });
+		expect(back.floor).toBe(2);
+		expect(back.turnsOnCurrentFloor).toBe(0);
 	});
 
 	it("generating a floor mid-retrace always gets an up staircase", () => {

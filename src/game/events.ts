@@ -266,6 +266,16 @@ export type GameEvent =
 			/** Drinking a potion of life — permanently raises playerMaxHp and fully heals. */
 			readonly type: "player-revitalized";
 			readonly payload: { readonly maxHpBonus: number };
+	  }
+	| {
+			/** Fired once turnsOnCurrentFloor reaches WINDS_OF_KRON_WARNING_TURNS — see applyWindsOfKronTick. */
+			readonly type: "winds-of-kron-warning";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Fired the turn turnsOnCurrentFloor reaches WINDS_OF_KRON_EVICTION_TURNS — see applyWindsOfKronTick. */
+			readonly type: "winds-of-kron-eviction";
+			readonly payload: Record<string, never>;
 	  };
 
 /**

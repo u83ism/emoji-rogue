@@ -219,6 +219,14 @@ describe("formatEvent", () => {
 				{ type: "player-revitalized", payload: { maxHpBonus: 5 } },
 				"生命の薬を飲んだ。最大HPが5上がり、体力が全回復した!",
 			],
+			[
+				{ type: "winds-of-kron-warning", payload: {} },
+				"不気味な風を感じる。長居は禁物のようだ…",
+			],
+			[
+				{ type: "winds-of-kron-eviction", payload: {} },
+				"クロンの風に吹き飛ばされた!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

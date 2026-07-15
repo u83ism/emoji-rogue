@@ -106,6 +106,11 @@ export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 30;
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
 export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 30;
 
+/** Permanent boost to playerAttackDamage per strength potion drunk. Same magnitude as a sword. */
+export const STRENGTH_POTION_ATTACK_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
+export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 30;
+
 /** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
 export const GOAL_FLOOR = 10;
 

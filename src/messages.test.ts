@@ -94,6 +94,10 @@ describe("formatEvent", () => {
 				{ type: "potion-identified", payload: { kind: "poison" } },
 				"毒薬の正体を見破った!",
 			],
+			[
+				{ type: "player-strengthened", payload: { bonus: 1 } },
+				"怪力の薬を飲んだ。攻撃力が1上がった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);
@@ -161,11 +165,17 @@ describe("formatInventoryEntry", () => {
 		expect(formatInventoryEntry({ kind: "poison", quantity: 1 }, [])).toBe(
 			"未鑑定の薬 x1",
 		);
+		expect(formatInventoryEntry({ kind: "strength", quantity: 1 }, [])).toBe(
+			"未鑑定の薬 x1",
+		);
 	});
 
 	it("reveals the real name once that potion kind is identified", () => {
 		expect(
 			formatInventoryEntry({ kind: "poison", quantity: 1 }, ["poison"]),
 		).toBe("毒薬 x1");
+		expect(
+			formatInventoryEntry({ kind: "strength", quantity: 1 }, ["strength"]),
+		).toBe("怪力の薬 x1");
 	});
 });

@@ -17,6 +17,7 @@ import {
 	POTION_COUNT_PER_FLOOR,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SHIELD_SPAWN_CHANCE_PERCENT,
+	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 } from "./balance.js";
@@ -163,6 +164,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < POISON_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "poison" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < STRENGTH_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "strength" });
 	}
 	if (
 		remaining.length > 0 &&

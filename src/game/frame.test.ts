@@ -135,6 +135,18 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
+	it("draws poison and strength potions with the same glyph as a real potion (unidentified)", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const poison = { x: 12, y: 2, kind: "poison" as const };
+		const strength = { x: 12, y: 2, kind: "strength" as const };
+		expect(buildFrameGrid({ ...wide, items: [poison] })[2]?.[12]?.glyph).toBe(
+			"💊",
+		);
+		expect(buildFrameGrid({ ...wide, items: [strength] })[2]?.[12]?.glyph).toBe(
+			"💊",
+		);
+	});
+
 	it("draws visible potions, with enemies taking precedence", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const potion = { x: 12, y: 2, kind: "potion" as const }; /* distance 3 */

@@ -94,7 +94,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "poison" ||
 	value === "scroll" ||
 	value === "mapping" ||
-	value === "identify";
+	value === "identify" ||
+	value === "strength";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -186,6 +187,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return true;
 		case "potion-identified":
 			return isItemKind(payload.kind);
+		case "player-strengthened":
+			return isPositiveInteger(payload.bonus);
 		default:
 			return false;
 	}

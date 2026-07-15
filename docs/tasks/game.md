@@ -409,7 +409,9 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`strength: 💊`(回復薬・毒薬と同一の絵文字)を追加
 - [x] `src/messages.ts`: `ITEM_NAMES`に`strength: "怪力の薬"`、`player-strengthened`の文言(「怪力の薬を飲んだ。攻撃力が◯上がった!」) + テスト
 - [x] `src/game/validateGameState.ts`: `isItemKind`に`"strength"`を追加。`player-strengthened`イベントの検証ケースを追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] 実機スモークテスト: 怪力の薬が回復薬・毒薬と見分けがつかないこと・飲んだ時の攻撃力上昇とログ・鑑定後は実名で表示されることを確認
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): BFS経路探索で安全な経路を計算し(`node dist/main.mjs --seed=24`)、実際に怪力の薬(未鑑定)を拾わせた。ログ・持ち物オーバーレイの両方で「未鑑定の薬」と表示され回復薬・毒薬と見分けがつかないこと、飲むとログに「怪力の薬を飲んだ。攻撃力が1上がった!」と実名+効果が表示されることを確認
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

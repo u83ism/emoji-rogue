@@ -21,6 +21,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	scroll: "巻物",
 	mapping: "地図の巻物",
 	identify: "識別の巻物",
+	strength: "怪力の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -135,5 +136,7 @@ export const formatEvent = (
 			return "地図の巻物を読んだ。フロア全体が明らかになった!";
 		case "potion-identified":
 			return `${ITEM_NAMES[event.payload.kind]}の正体を見破った!`;
+		case "player-strengthened":
+			return `${ITEM_NAMES.strength}を飲んだ。攻撃力が${event.payload.bonus}上がった!`;
 	}
 };

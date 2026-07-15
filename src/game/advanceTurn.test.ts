@@ -421,6 +421,23 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held strength potion permanently raises playerAttackDamage and identifies that kind", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "strength" as const, quantity: 2 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "strength" },
+		});
+		expect(next.playerAttackDamage).toBe(state.playerAttackDamage + 1);
+		expect(next.inventory).toEqual([{ kind: "strength", quantity: 1 }]);
+		expect(next.identifiedPotionKinds).toEqual(["strength"]);
+		expect(next.events).toEqual([
+			{ type: "player-strengthened", payload: { bonus: 1 } },
+		]);
+	});
+
 	it("drinking either potion kind only identifies that kind, not the other", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -519,10 +536,10 @@ describe("advanceTurn", () => {
 		]);
 	});
 
-	it("identifying twice reveals both potion kinds, one per scroll", () => {
+	it("identifying repeatedly reveals one potion kind per scroll, in order", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "identify" as const, quantity: 2 }],
+			inventory: [{ kind: "identify" as const, quantity: 3 }],
 		};
 		const afterFirst = advanceTurn(state, {
 			type: "use-item",
@@ -535,12 +552,22 @@ describe("advanceTurn", () => {
 			payload: { kind: "identify" },
 		});
 		expect(afterSecond.identifiedPotionKinds).toEqual(["potion", "poison"]);
+
+		const afterThird = advanceTurn(afterSecond, {
+			type: "use-item",
+			payload: { kind: "identify" },
+		});
+		expect(afterThird.identifiedPotionKinds).toEqual([
+			"potion",
+			"poison",
+			"strength",
+		]);
 	});
 
 	it("is a no-op (same reference, no turn spent) once everything is already identified", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			identifiedPotionKinds: ["potion", "poison"] as const,
+			identifiedPotionKinds: ["potion", "poison", "strength"] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {

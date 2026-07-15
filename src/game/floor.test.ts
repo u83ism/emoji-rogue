@@ -61,6 +61,9 @@ describe("descendStairs", () => {
 			expect(
 				state.items.filter((item) => item.kind === "identify").length,
 			).toBeLessThanOrEqual(1);
+			expect(
+				state.items.filter((item) => item.kind === "strength").length,
+			).toBeLessThanOrEqual(1);
 			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
 				expect(pile.amount).toBeGreaterThanOrEqual(2);
@@ -258,6 +261,27 @@ describe("identify scroll spawning", () => {
 				(item) => item.kind === "identify",
 			).length;
 			expect(identifyCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe("strength potion spawning", () => {
+	it("spawns a strength potion on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "strength",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one strength potion on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const strengthCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "strength",
+			).length;
+			expect(strengthCount).toBeLessThanOrEqual(1);
 		}
 	});
 });

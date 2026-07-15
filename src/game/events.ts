@@ -9,13 +9,18 @@ export type ItemKind =
 	| "poison"
 	| "scroll"
 	| "mapping"
-	| "identify";
+	| "identify"
+	| "strength";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
  * name) until identified. See GameState.identifiedPotionKinds.
  */
-export const POTION_KINDS: readonly ItemKind[] = ["potion", "poison"];
+export const POTION_KINDS: readonly ItemKind[] = [
+	"potion",
+	"poison",
+	"strength",
+];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
 export type TrapKind = "dart";
@@ -111,6 +116,10 @@ export type GameEvent =
 	| {
 			readonly type: "potion-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			readonly type: "player-strengthened";
+			readonly payload: { readonly bonus: number };
 	  };
 
 /**

@@ -35,6 +35,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	food: { glyph: "🍖" },
 	/* Same glyph as potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },
+	/* Also the same glyph — strength is unidentified until drunk too. */
+	strength: { glyph: "💊" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
 	scroll: { glyph: "📜" },
 	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */

@@ -7,6 +7,7 @@ import {
 	POISON_DAMAGE,
 	POTION_HEAL_AMOUNT,
 	SHIELD_DEFENSE_BONUS,
+	STRENGTH_POTION_ATTACK_BONUS,
 	SWORD_ATTACK_BONUS,
 	TRAP_DAMAGE,
 } from "./balance.js";
@@ -311,6 +312,22 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 			identifiedPotionKinds,
 			status: playerHp <= 0 ? "dead" : state.status,
 			events: buildEventLog(state.events, events),
+		};
+	}
+
+	if (kind === "strength") {
+		return {
+			...state,
+			playerAttackDamage:
+				state.playerAttackDamage + STRENGTH_POTION_ATTACK_BONUS,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-strengthened",
+					payload: { bonus: STRENGTH_POTION_ATTACK_BONUS },
+				},
+			]),
 		};
 	}
 

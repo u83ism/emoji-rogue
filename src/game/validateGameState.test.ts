@@ -482,6 +482,28 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a strength item kind and a player-strengthened event, rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [],
+			inventory: [{ kind: "strength", quantity: 1 }],
+			events: [{ type: "player-strengthened", payload: { bonus: 1 } }],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "strength", quantity: 0 }] },
+			"inventory",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-strengthened", payload: { bonus: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

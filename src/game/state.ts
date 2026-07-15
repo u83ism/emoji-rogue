@@ -136,6 +136,8 @@ export interface GameState {
 	readonly blindTurnsRemaining: number;
 	/** Turns left of being unable to act at all — see applyParalysisTick and advanceTurn. */
 	readonly paralyzedTurnsRemaining: number;
+	/** Turns left of seeing every enemy regardless of FOV — see applyDetectMonstersTick and frame.ts. */
+	readonly detectMonstersTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */

@@ -124,7 +124,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "protect-armor" ||
 	value === "blindness" ||
 	value === "paralysis" ||
-	value === "raise-level";
+	value === "raise-level" ||
+	value === "detect-monster";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -266,6 +267,10 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.turns);
 		case "paralysis-faded":
 			return true;
+		case "player-detected-monsters":
+			return isPositiveInteger(payload.turns);
+		case "detect-monsters-faded":
+			return true;
 		default:
 			return false;
 	}
@@ -375,6 +380,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(paralyzedTurnsRemaining)) {
 		return err("paralyzedTurnsRemaining");
 	}
+	const detectMonstersTurnsRemaining = value.detectMonstersTurnsRemaining;
+	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
+		return err("detectMonstersTurnsRemaining");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -467,6 +476,7 @@ export const validateGameState = (
 		armorProtected,
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
+		detectMonstersTurnsRemaining,
 		floor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,

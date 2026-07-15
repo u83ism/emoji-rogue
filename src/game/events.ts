@@ -22,7 +22,8 @@ export type ItemKind =
 	| "protect-armor"
 	| "blindness"
 	| "paralysis"
-	| "raise-level";
+	| "raise-level"
+	| "detect-monster";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -37,6 +38,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"blindness",
 	"paralysis",
 	"raise-level",
+	"detect-monster",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -246,6 +248,16 @@ export type GameEvent =
 	| {
 			/** Fired the turn paralyzedTurnsRemaining reaches 0 — see applyParalysisTick. */
 			readonly type: "paralysis-faded";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Drinking a detect monster potion — see applyDetectMonstersTick. */
+			readonly type: "player-detected-monsters";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn detectMonstersTurnsRemaining reaches 0 — see applyDetectMonstersTick. */
+			readonly type: "detect-monsters-faded";
 			readonly payload: Record<string, never>;
 	  };
 

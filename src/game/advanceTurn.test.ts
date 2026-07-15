@@ -5,6 +5,7 @@ import { advanceTurn } from "./advanceTurn.js";
 import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
+	DETECT_MONSTER_POTION_DURATION,
 	GOAL_FLOOR,
 	LEVITATION_POTION_DURATION,
 	PARALYSIS_POTION_DURATION,
@@ -656,6 +657,42 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
+	it("using a held detect-monster potion sets detectMonstersTurnsRemaining and logs player-detected-monsters", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "detect-monster" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "detect-monster" },
+		});
+		/* applyDetectMonstersTick runs as part of the same turn-consuming action */
+		expect(next.detectMonstersTurnsRemaining).toBe(
+			DETECT_MONSTER_POTION_DURATION - 1,
+		);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["detect-monster"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-detected-monsters" &&
+					event.payload.turns === DETECT_MONSTER_POTION_DURATION,
+			),
+		).toBe(true);
+	});
+
+	it("detectMonstersTurnsRemaining reaches 0 and fires detect-monsters-faded", () => {
+		let current: GameState = {
+			...buildArenaGameState(9, 9, 1),
+			detectMonstersTurnsRemaining: 1,
+		};
+		current = advanceTurn(current, { type: "wait" });
+		expect(current.detectMonstersTurnsRemaining).toBe(0);
+		expect(
+			current.events.some((event) => event.type === "detect-monsters-faded"),
+		).toBe(true);
+	});
+
 	it("paralyzedTurnsRemaining reaches 0 and fires paralysis-faded", () => {
 		let current: GameState = {
 			...buildArenaGameState(9, 9, 1),
@@ -1162,6 +1199,7 @@ describe("advanceTurn", () => {
 				"blindness",
 				"paralysis",
 				"raise-level",
+				"detect-monster",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

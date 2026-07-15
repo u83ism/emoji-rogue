@@ -52,6 +52,22 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
 	});
 
+	it("draws enemies outside FOV too while detectMonstersTurnsRemaining is active", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+		} as const;
+		const detecting = {
+			...wide,
+			detectMonstersTurnsRemaining: 5,
+			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12, normally hidden */,
+		};
+		expect(buildFrameGrid(detecting)[2]?.[27]?.glyph).toBe("🧟");
+	});
+
 	it("draws bats with their own glyph, distinct from zombies", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const bat = {

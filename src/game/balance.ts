@@ -329,3 +329,8 @@ export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15;
 export const SCORE_PER_FLOOR = 100;
 export const SCORE_PER_LEVEL = 50;
 export const SCORE_AMULET_BONUS = 500;
+
+/** How many turns a detect monster potion reveals every enemy through, regardless of FOV. */
+export const DETECT_MONSTER_POTION_DURATION = 20;
+/** Chance (out of 100), independently rolled per floor, that a detect monster potion spawns. */
+export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 25;

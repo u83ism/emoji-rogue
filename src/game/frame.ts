@@ -60,6 +60,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	paralysis: { glyph: "💊" },
 	/* Same glyph again — raise-level is unidentified until drunk too. */
 	"raise-level": { glyph: "💊" },
+	/* Same glyph again — detect-monster is unidentified until drunk too. */
+	"detect-monster": { glyph: "💊" },
 	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
 	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
@@ -188,9 +190,13 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 	}
 
-	/* enemies are only drawn while the player can actually see them */
+	/* enemies are drawn while visible, or unconditionally while detected */
+	const detectingMonsters = state.detectMonstersTurnsRemaining > 0;
 	for (const enemy of state.enemies) {
-		if (!visiblePoints.has(encodePointKey(enemy.x, enemy.y))) {
+		if (
+			!detectingMonsters &&
+			!visiblePoints.has(encodePointKey(enemy.x, enemy.y))
+		) {
 			continue;
 		}
 		const enemyRow = grid[enemy.y];

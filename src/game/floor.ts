@@ -8,6 +8,7 @@ import {
 	BLIND_POTION_SPAWN_CHANCE_PERCENT,
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
 	calculateEnemyCountForFloor,
+	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENEMY_MAX_HP,
@@ -282,6 +283,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "raise-level" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "detect-monster" });
 	}
 	if (
 		remaining.length > 0 &&

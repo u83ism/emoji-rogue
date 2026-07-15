@@ -39,6 +39,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	blindness: "盲目の薬",
 	paralysis: "麻痺の薬",
 	"raise-level": "レベルアップの薬",
+	"detect-monster": "索敵の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -231,5 +232,9 @@ export const formatEvent = (
 			return `${ITEM_NAMES.paralysis}を飲んだ。体が動かなくなった!`;
 		case "paralysis-faded":
 			return "体が動くようになった";
+		case "player-detected-monsters":
+			return `${ITEM_NAMES["detect-monster"]}を飲んだ。敵の気配を感じ取れるようになった!`;
+		case "detect-monsters-faded":
+			return "敵の気配を感じられなくなった";
 	}
 };

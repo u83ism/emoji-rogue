@@ -3,6 +3,7 @@ import { createRng, type RngState, stepUniform } from "../rng.js";
 import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
+	DETECT_MONSTER_POTION_DURATION,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
@@ -23,6 +24,7 @@ import {
 import { applyBlindnessTick } from "./blindness.js";
 import { applyPlayerAttack, applyWandStrike } from "./combat.js";
 import { applyConfusionTick } from "./confusion.js";
+import { applyDetectMonstersTick } from "./detectMonsters.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
@@ -608,6 +610,21 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		return { ...applyLevelUp(state), inventory, identifiedPotionKinds };
 	}
 
+	if (kind === "detect-monster") {
+		return {
+			...state,
+			detectMonstersTurnsRemaining: DETECT_MONSTER_POTION_DURATION,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-detected-monsters",
+					payload: { turns: DETECT_MONSTER_POTION_DURATION },
+				},
+			]),
+		};
+	}
+
 	const amount = Math.min(
 		POTION_HEAL_AMOUNT,
 		state.playerMaxHp - state.playerHp,
@@ -680,14 +697,16 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 /**
  * Every status-tick that runs at the end of a turn-consuming action, in a
  * fixed order (hunger, regeneration, confusion, levitation, blindness,
- * paralysis). Each tick is independently a no-op unless its own field is
- * active, so the order among them does not affect the result.
+ * paralysis, detect monsters). Each tick is independently a no-op unless its
+ * own field is active, so the order among them does not affect the result.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
-	applyParalysisTick(
-		applyBlindnessTick(
-			applyLevitationTick(
-				applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+	applyDetectMonstersTick(
+		applyParalysisTick(
+			applyBlindnessTick(
+				applyLevitationTick(
+					applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+				),
 			),
 		),
 	);

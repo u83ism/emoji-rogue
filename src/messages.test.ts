@@ -207,6 +207,14 @@ describe("formatEvent", () => {
 				"麻痺の薬を飲んだ。体が動かなくなった!",
 			],
 			[{ type: "paralysis-faded", payload: {} }, "体が動くようになった"],
+			[
+				{ type: "player-detected-monsters", payload: { turns: 20 } },
+				"索敵の薬を飲んだ。敵の気配を感じ取れるようになった!",
+			],
+			[
+				{ type: "detect-monsters-faded", payload: {} },
+				"敵の気配を感じられなくなった",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

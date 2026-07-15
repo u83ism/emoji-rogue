@@ -476,6 +476,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("rejects a non-integer or negative detectMonstersTurnsRemaining", () => {
+		expectRejected(
+			{ ...buildValidState(), detectMonstersTurnsRemaining: -1 },
+			"detectMonstersTurnsRemaining",
+		);
+		expectRejected(
+			{ ...buildValidState(), detectMonstersTurnsRemaining: 1.5 },
+			"detectMonstersTurnsRemaining",
+		);
+	});
+
+	it("accepts well-formed player-detected-monsters and detect-monsters-faded events and rejects a broken one", () => {
+		const detected = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-detected-monsters", payload: { turns: 20 } }],
+		});
+		expect(detected.ok).toBe(true);
+
+		const faded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "detect-monsters-faded", payload: {} }],
+		});
+		expect(faded.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-detected-monsters", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts well-formed player-blinded and blindness-faded events and rejects a broken one", () => {
 		const blinded = validateGameState({
 			...buildValidState(),

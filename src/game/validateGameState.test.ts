@@ -236,6 +236,29 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed weapon-enchanted event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "weapon-enchanted", payload: { bonus: 1 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "weapon-enchanted", payload: { bonus: 0 } }],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "weapon-enchanted", payload: { bonus: -1 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed armor-equipped event and rejects a broken one", () => {
 		const result = validateGameState({
 			...buildValidState(),

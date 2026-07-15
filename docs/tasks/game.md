@@ -554,16 +554,18 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 オリジナルRogueの"scroll of enchant weapon"を導入する。剣(マイルストーン13)は拾って使うと`playerAttackDamage`が恒久的に上がるが、呪われた剣(マイルストーン29)により使用時に20%の確率で逆効果になるリスクを背負っている。武器強化の巻物は同じ`playerAttackDamage`加算効果を持ちながら**呪いを一切判定しない**——巻物カテゴリ(テレポート・地図・識別)は原作でもそもそも呪われた巻物という概念自体を今回は導入していないため、この特性は自然に手に入る。「リスクのある拾い物(剣)」と「安全だが巻物なので他の巻物同様レアな(強化の巻物)」という2つの成長ルートが並立することになる。イベントは`weapon-equipped`を再利用せず(装備の「呪いで下がることもある」文脈と混ざるのを避けるため)、常に正の加算だけを表す新規`weapon-enchanted`を新設する。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"enchant-weapon"`を追加。`GameEvent`に`weapon-enchanted`(payload: 実加算量`bonus`)を追加(列挙値追加のみ)
-- [ ] `src/game/balance.ts`: `ENCHANT_WEAPON_BONUS = 1`(剣と同じ量)・`ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20`(他の巻物と同じ独立per-floor判定)を追加
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で武器強化の巻物を1個抽選 + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`に`enchant-weapon`分岐(呪い判定なしで`playerAttackDamage`に`ENCHANT_WEAPON_BONUS`を無条件加算・`weapon-enchanted`を記録。rng不使用、決定的) + テスト
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"enchant-weapon": ⚡`(単一コードポイント、他の巻物系アイテムと絵柄がかぶらない独自glyph)を追加
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`"enchant-weapon": "武器強化の巻物"`、`weapon-enchanted`の文言(「武器強化の巻物を読んだ。攻撃力が◯上がった!」) + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"enchant-weapon"`を追加。`weapon-enchanted`イベントの検証ケース(`bonus`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、武器強化の巻物を持った状態で`use-item`アクションを実行し、`playerAttackDamage`が加算され`weapon-enchanted`イベントが記録されること(呪いによる減算が絶対に起きないこと)を確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"enchant-weapon"`を追加。`GameEvent`に`weapon-enchanted`(payload: 実加算量`bonus`)を追加(列挙値追加のみ)
+- [x] `src/game/balance.ts`: `ENCHANT_WEAPON_BONUS = 1`(剣と同じ量)・`ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20`(他の巻物と同じ独立per-floor判定)を追加
+- [x] `src/game/floor.ts`: スポーンプールから低確率で武器強化の巻物を1個抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`enchant-weapon`分岐(呪い判定なしで`playerAttackDamage`に`ENCHANT_WEAPON_BONUS`を無条件加算・`weapon-enchanted`を記録。rng不使用、決定的) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`"enchant-weapon": ⚡`(単一コードポイント、他の巻物系アイテムと絵柄がかぶらない独自glyph)を追加
+- [x] `src/messages.ts`: `ITEM_NAMES`に`"enchant-weapon": "武器強化の巻物"`、`weapon-enchanted`の文言(「武器強化の巻物を読んだ。攻撃力が◯上がった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"enchant-weapon"`を追加。`weapon-enchanted`イベントの検証ケース(`bonus`が正の整数)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、武器強化の巻物を持った状態で`use-item`アクションを実行し、`playerAttackDamage`が加算され`weapon-enchanted`イベントが記録されること(呪いによる減算が絶対に起きないこと)を確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、剣の呪い判定を確実に引くseed 1で武器強化の巻物を3回連続使用し、`playerAttackDamage`が+3・rngが一切変化しない(呪い判定が起きない)・3件の`weapon-enchanted`イベントが記録されることを確認。
+
+**マイルストーン36完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

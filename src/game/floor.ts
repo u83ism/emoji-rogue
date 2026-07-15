@@ -5,6 +5,7 @@ import { encodePointKey } from "../pointkey.js";
 import { createRng, type Rng } from "../rng.js";
 import {
 	calculateEnemyCountForFloor,
+	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENEMY_MAX_HP,
 	FOOD_COUNT_PER_FLOOR,
 	GOAL_FLOOR,
@@ -194,6 +195,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < SWORD_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "sword" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "enchant-weapon" });
 	}
 	if (
 		remaining.length > 0 &&

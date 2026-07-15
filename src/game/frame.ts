@@ -58,6 +58,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	ring: { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
 	sustenance: { glyph: "💍" },
+	/* High voltage: single-codepoint, stable since Unicode 4.0. */
+	"enchant-weapon": { glyph: "⚡" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

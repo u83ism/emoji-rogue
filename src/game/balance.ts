@@ -219,3 +219,12 @@ export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 15;
  * idiom as RING_REGEN_CHANCE_PERCENT.
  */
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
+
+/**
+ * Permanent boost to playerAttackDamage per scroll read — same magnitude as
+ * a sword, but unlike a found sword this is never cursed (scrolls have no
+ * curse mechanic in this game, see docs/tasks/game.md milestone 36).
+ */
+export const ENCHANT_WEAPON_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
+export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20;

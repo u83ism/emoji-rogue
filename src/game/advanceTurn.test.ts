@@ -364,6 +364,25 @@ describe("advanceTurn", () => {
 		]);
 	});
 
+	it("using a held enchant weapon scroll always raises playerAttackDamage, never cursed", () => {
+		/* seed 1 is the one that curses a sword above — an enchant scroll must
+		 * still succeed unconditionally from the same rng state */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "enchant-weapon" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "enchant-weapon" },
+		});
+		expect(next.playerAttackDamage).toBe(state.playerAttackDamage + 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.rng).toEqual(state.rng); /* deterministic, no curse roll */
+		expect(next.events).toEqual([
+			{ type: "weapon-enchanted", payload: { bonus: 1 } },
+		]);
+	});
+
 	it("using a held shield permanently raises playerDefense when blessed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),

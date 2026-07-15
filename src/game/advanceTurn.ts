@@ -1,6 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng, type RngState } from "../rng.js";
 import {
+	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
 	MIN_PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_FOOD,
@@ -275,6 +276,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 						bonus: playerAttackDamage - state.playerAttackDamage,
 					},
 				},
+			]),
+		};
+	}
+
+	if (kind === "enchant-weapon") {
+		return {
+			...state,
+			playerAttackDamage: state.playerAttackDamage + ENCHANT_WEAPON_BONUS,
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "weapon-enchanted", payload: { bonus: ENCHANT_WEAPON_BONUS } },
 			]),
 		};
 	}

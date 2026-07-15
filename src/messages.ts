@@ -27,6 +27,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	ring: "指輪",
 	/* Same generic name as ring — which effect it grants only shows once worn. */
 	sustenance: "指輪",
+	"enchant-weapon": "武器強化の巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -176,5 +177,7 @@ export const formatEvent = (
 				: `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
+		case "weapon-enchanted":
+			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。攻撃力が${event.payload.bonus}上がった!`;
 	}
 };

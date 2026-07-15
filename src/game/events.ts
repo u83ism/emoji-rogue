@@ -12,7 +12,8 @@ export type ItemKind =
 	| "identify"
 	| "strength"
 	| "ring"
-	| "sustenance";
+	| "sustenance"
+	| "enchant-weapon";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -157,6 +158,11 @@ export type GameEvent =
 			/** kind is undefined when the inventory was empty — see advanceEnemies. */
 			readonly type: "item-stolen";
 			readonly payload: { readonly kind: ItemKind | undefined };
+	  }
+	| {
+			/** Always a positive bonus — enchant-weapon is never cursed, unlike a found sword. */
+			readonly type: "weapon-enchanted";
+			readonly payload: { readonly bonus: number };
 	  };
 
 /**

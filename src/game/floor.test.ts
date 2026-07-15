@@ -155,6 +155,27 @@ describe("sword spawning", () => {
 	});
 });
 
+describe("enchant weapon scroll spawning", () => {
+	it("spawns an enchant weapon scroll on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "enchant-weapon",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one enchant weapon scroll on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const enchantCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "enchant-weapon",
+			).length;
+			expect(enchantCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("shield spawning", () => {
 	it("spawns a shield on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

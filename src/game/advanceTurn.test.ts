@@ -481,6 +481,28 @@ describe("advanceTurn", () => {
 		}
 	});
 
+	it("using a held mapping scroll reveals the entire floor as explored", () => {
+		const state = buildDungeonGameState(40, 20, 7);
+		const withScroll = {
+			...state,
+			inventory: [{ kind: "mapping" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(withScroll, {
+			type: "use-item",
+			payload: { kind: "mapping" },
+		});
+		expect(next.inventory).toEqual([]);
+		expect(next.player).toEqual(
+			state.player,
+		); /* mapping does not move the player */
+		expect(next.events).toEqual([{ type: "floor-mapped", payload: {} }]);
+		for (let x = 0; x < next.width; x++) {
+			for (let y = 0; y < next.height; y++) {
+				expect(next.explored[x]?.[y]).toBe(true);
+			}
+		}
+	});
+
 	it("every turn-consuming action ticks hunger down by one", () => {
 		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
 		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);

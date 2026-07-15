@@ -92,7 +92,8 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 	value === "shield" ||
 	value === "food" ||
 	value === "poison" ||
-	value === "scroll";
+	value === "scroll" ||
+	value === "mapping";
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -180,6 +181,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.damage);
 		case "player-teleported":
 			return isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y);
+		case "floor-mapped":
+			return true;
 		default:
 			return false;
 	}

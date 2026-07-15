@@ -37,6 +37,8 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	poison: { glyph: "💊" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
 	scroll: { glyph: "📜" },
+	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */
+	mapping: { glyph: "🧭" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

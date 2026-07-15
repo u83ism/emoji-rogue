@@ -263,6 +263,17 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		});
 	}
 
+	if (kind === "mapping") {
+		return {
+			...state,
+			explored: state.terrain.map((column) => column.map(() => true)),
+			inventory,
+			events: buildEventLog(state.events, [
+				{ type: "floor-mapped", payload: {} },
+			]),
+		};
+	}
+
 	const identifiedPotionKinds = identifyPotionKind(
 		state.identifiedPotionKinds,
 		kind,

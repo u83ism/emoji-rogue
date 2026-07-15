@@ -445,6 +445,21 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a mapping item kind and a floor-mapped event", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [],
+			inventory: [{ kind: "mapping", quantity: 1 }],
+			events: [{ type: "floor-mapped", payload: {} }],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), inventory: [{ kind: "mapping", quantity: 0 }] },
+			"inventory",
+		);
+	});
+
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");

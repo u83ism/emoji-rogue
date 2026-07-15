@@ -86,6 +86,10 @@ describe("formatEvent", () => {
 				"巻物を読んだ。テレポートした!",
 			],
 			[{ type: "item-picked-up", payload: { kind: "scroll" } }, "巻物を拾った"],
+			[
+				{ type: "floor-mapped", payload: {} },
+				"地図の巻物を読んだ。フロア全体が明らかになった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);
@@ -137,6 +141,9 @@ describe("formatInventoryEntry", () => {
 		);
 		expect(formatInventoryEntry({ kind: "scroll", quantity: 1 }, [])).toBe(
 			"巻物 x1",
+		);
+		expect(formatInventoryEntry({ kind: "mapping", quantity: 1 }, [])).toBe(
+			"地図の巻物 x1",
 		);
 	});
 

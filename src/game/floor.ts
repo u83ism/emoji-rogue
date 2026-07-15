@@ -11,6 +11,7 @@ import {
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
+	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	SCROLL_SPAWN_CHANCE_PERCENT,
@@ -93,9 +94,9 @@ const collectSpawnPool = (
  * food rations, GOLD_PILES_PER_FLOOR gold piles (random amount each),
  * TRAP_COUNT_PER_FLOOR hidden traps and — independently, each with its own
  * spawn chance — a sword, a shield, a poison potion (visually identical to a
- * real potion until identified) and a teleport scroll, all drawn from the
- * spawn pool. Nothing shares a tile with anything else unless the pool ran
- * dry (tiny fully-visible maps).
+ * real potion until identified), a teleport scroll and a magic mapping
+ * scroll, all drawn from the spawn pool. Nothing shares a tile with anything
+ * else unless the pool ran dry (tiny fully-visible maps).
  */
 export const buildFloorLayout = (
 	width: number,
@@ -167,6 +168,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < SCROLL_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "scroll" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < MAPPING_SCROLL_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "mapping" });
 	}
 
 	const goldPiles: GoldPile[] = [];

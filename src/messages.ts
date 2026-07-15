@@ -19,6 +19,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	food: "食料",
 	poison: "毒薬",
 	scroll: "巻物",
+	mapping: "地図の巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -129,5 +130,7 @@ export const formatEvent = (
 			return `毒薬を飲んでしまった。${event.payload.damage}のダメージを受けた`;
 		case "player-teleported":
 			return "巻物を読んだ。テレポートした!";
+		case "floor-mapped":
+			return "地図の巻物を読んだ。フロア全体が明らかになった!";
 	}
 };

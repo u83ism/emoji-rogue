@@ -376,10 +376,12 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/game/balance.ts`: `MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 30`(他の巻物・剣・盾と同じ独立判定の仕組み)を追加
 - [x] `src/game/floor.ts`: スポーンプールから低確率で地図の巻物を1個抽選 + テスト
 - [x] `src/game/advanceTurn.ts`: `applyUseItem`に`mapping`分岐を追加——現在の地形と同じ寸法の全面`true`グリッドで`explored`を丸ごと差し替え、`floor-mapped`を記録 + テスト(壁マスも含め全域が既踏破になることを含む)
-- [x] `src/game/frame.ts`: 変更なし(`explored`を使う既存の3層描画ロジックがそのまま機能する)
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`mapping: 🧭`(単一コードポイント。`ItemKind`網羅の`Record`型のため追加は必須だが、`explored`を使う3層描画ロジック自体は無改造)を追加
 - [x] `src/messages.ts`: `ITEM_NAMES`に`mapping: "地図の巻物"`、`floor-mapped`の文言(「地図の巻物を読んだ。フロア全体が明らかになった!」) + テスト
 - [x] `src/game/validateGameState.ts`: `isItemKind`に`"mapping"`を追加。`floor-mapped`イベントの検証ケース(`player-hungry`と同じくpayloadの中身は見ない)を追加。列挙値追加のみのため**`SAVE_FORMAT_VERSION`は据え置き**
-- [ ] 実機スモークテスト: 地図の巻物の出現・拾う→使う→マップ全体が(未踏破のシルエット層として)一気に見えるようになることを確認
+- [x] tmux-PTY実機確認(2026-07-15、このセッション内で実施): BFS経路探索で安全な経路を計算し(`node dist/main.mjs --seed=75`)、実際に地図の巻物を拾わせた。ログに「地図の巻物を拾った」と実名で表示され、`i`キーの持ち物オーバーレイで「a) 地図の巻物 x1」と表示されること、選択して読むとログに「地図の巻物を読んだ。フロア全体が明らかになった!」と表示されることを確認。`capture-pane -e`でANSIエスケープシーケンスごと取得して比較したところ、視界半径の外側にあるはずの遠方のマスまで含めてフロア全体に既踏破シルエット色(壁#666666・床#262626相当の256色近似)が付与されていることを確認でき、`explored`グリッドが実際に全面`true`へ差し替わったことを視覚的に裏付けられた
+
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

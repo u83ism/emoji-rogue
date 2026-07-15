@@ -281,6 +281,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。
 
+## マイルストーン20 — 空腹度(食料)システム
+
+オリジナルRogueの根幹要素の一つである「空腹度」を導入する。ここからはユーザーからの明示的な指示(2026-07-15、`/goal`)に基づき、ネット対応・シレン風NPC・仲間システムは対象外としたまま、オリジナルRogueが持つ機能を一つずつ再現していく自律運用フェーズに入る。空腹度は「時間経過(ターン経過)そのものがプレイヤーを追い詰める」という、これまでのマイルストーンにない新しい種類の圧力で、無限に安全地帯に留まるプレイを牽制する。腐乱肉のような複雑な状態異常はまだ入れず、素直な「減る→食べ物で回復→尽きると餓死」のループに留める。
+
+- [x] `src/game/balance.ts`: `PLAYER_MAX_FOOD = 100`・`PLAYER_HUNGER_WARNING_THRESHOLD = 30`・`STARVATION_DAMAGE_PER_TURN = 1`・`FOOD_RATION_RESTORE_AMOUNT = 50`・`FOOD_COUNT_PER_FLOOR = 1`を追加
+- [x] `src/game/state.ts`: `GameState`に`playerFood: number`を追加
+- [x] `src/game/events.ts`: `ItemKind`に`"food"`を追加。`DeathCause = EnemyKind | "hunger"`を新設し、`player-died`のpayloadを`{by: EnemyKind}`から`{by: DeathCause}`に拡張。`GameEvent`に`player-hungry`(空腹警告に入った瞬間、1回だけ)・`player-starved`(食料0で毎ターンHPが削れる)・`player-ate`(payload: `amount`実回復量)を追加
+- [x] `src/game/hunger.ts`(新規): `applyHungerTick(state): GameState` — 毎ターン`playerFood`を1減らし、警告閾値を跨いだ瞬間だけ`player-hungry`を記録、0の間は`STARVATION_DAMAGE_PER_TURN`だけ`playerHp`を削り`player-starved`を記録、HPが0以下になったら`player-died(by: "hunger")`+`status: "dead"`にする純粋関数 + テスト(閾値跨ぎの1回性・餓死・満腹時は何も起きないことを含む)
+- [x] `src/game/advanceTurn.ts`: ターン消費が実際に発生する4箇所(移動成功・階段降下・待機・アイテム使用成功)全てで`applyHungerTick`を呼ぶ。`applyUseItem`に`food`分岐を追加(`playerFood`を上限クリップで回復+在庫から1個消費+`player-ate`記録) + テスト
+- [x] `src/game/floor.ts`: スポーンプールから食料を`FOOD_COUNT_PER_FLOOR`個抽選(回復薬と同じ「フロアごとに保証で湧く」枠) + テスト
+- [x] `src/game/initialState.ts`: 両ビルダーの初期状態に`playerFood: PLAYER_MAX_FOOD`を追加
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`food: 🍖`を追加(単一コードポイント)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`food: "食料"`、`player-hungry`/`player-starved`/`player-ate`の文言、`player-died`の文言を`DeathCause`で分岐(敵に倒された場合は従来どおり、餓死の場合は専用文言)するよう更新
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"food"`を追加。`playerFood`フィールドの検証(0以上`PLAYER_MAX_FOOD`以下の整数)を追加。`isGameEvent`に新規3イベントの検証ケースを追加し、`player-died`の`by`は`EnemyKind | "hunger"`を受理するよう拡張。構造変更のため**`SAVE_FORMAT_VERSION`を7に**
+- [x] `src/main.tsx`: ステータスバーに空腹度表示を追加(警告閾値以下は黄色)
+- [ ] 実機スモークテスト: 食料の湧き・拾う→インベントリで確認→食べる、空腹度の減少・警告表示・餓死(専用死因表示含む)を確認(このセッションはリモート環境のためtmux-PTY経由で可能な範囲のみ確認する)
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)

@@ -156,7 +156,12 @@ export const STRENGTH_POTION_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 30;
 
-/** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
+/**
+ * The deepest floor — where the Amulet of Yendor lies. It has no down
+ * staircase (nothing lower); reaching it and climbing all the way back to
+ * the surface with the amulet is what actually wins the run. See
+ * floor.ts's descendStairs/ascendStairs.
+ */
 export const GOAL_FLOOR = 10;
 
 export const PLAYER_MAX_FOOD = 100;

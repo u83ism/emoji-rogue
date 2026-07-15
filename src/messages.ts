@@ -108,6 +108,10 @@ export const formatEvent = (
 			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
 		case "floor-descended":
 			return `${event.payload.floor}階に降りた`;
+		case "floor-ascended":
+			return `${event.payload.floor}階に上がった`;
+		case "amulet-obtained":
+			return "イェンダーの魔除けを手に入れた!";
 		case "player-healed":
 			return event.payload.amount > 0
 				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
@@ -115,7 +119,7 @@ export const formatEvent = (
 		case "item-picked-up":
 			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を拾った`;
 		case "game-won":
-			return `${event.payload.floor}階に到達し、生還に成功した!`;
+			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":
 			if (event.payload.bonus > 0) {
 				return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;

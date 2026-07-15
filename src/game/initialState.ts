@@ -8,28 +8,29 @@ import {
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildFloorLayout } from "./floor.js";
-import type { GameState, Position } from "./state.js";
+import type { GameState, Position, Stairs } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 /**
  * The bottom-right-most floor tile that is not the player's own — a fixed,
  * deterministic staircase spot for the arena fixture. Falls back to the
  * player's tile on a one-tile arena (standing on stairs triggers nothing;
- * only moving onto them does).
+ * only moving onto them does). Always a "down" staircase — the arena is a
+ * test fixture, not a real dungeon run with an amulet to retrieve.
  */
 const pickArenaStairs = (
 	terrain: readonly (readonly number[])[],
 	player: Position,
-): Position => {
+): Stairs => {
 	for (let x = terrain.length - 1; x >= 0; x--) {
 		const column = terrain[x] ?? [];
 		for (let y = column.length - 1; y >= 0; y--) {
 			if (column[y] === 0 && !(x === player.x && y === player.y)) {
-				return { x, y };
+				return { x, y, direction: "down" };
 			}
 		}
 	}
-	return player;
+	return { ...player, direction: "down" };
 };
 
 /**
@@ -77,6 +78,8 @@ export function buildArenaGameState(
 		traps: [],
 		floor: 1,
 		stairs: pickArenaStairs(columns, player),
+		amulet: undefined,
+		hasAmulet: false,
 		events: [],
 		rng: seedToState(seed),
 		status: "playing",
@@ -96,7 +99,7 @@ export function buildDungeonGameState(
 	seed: number,
 ): GameState {
 	const rng = createRng(seed);
-	const layout = buildFloorLayout(width, height, rng, 1);
+	const layout = buildFloorLayout(width, height, rng, 1, "down");
 
 	return deriveExploredState({
 		width,
@@ -118,6 +121,8 @@ export function buildDungeonGameState(
 		traps: layout.traps,
 		floor: 1,
 		stairs: layout.stairs,
+		amulet: layout.amulet,
+		hasAmulet: false,
 		events: [],
 		rng: rng.getState(),
 		status: "playing",

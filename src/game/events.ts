@@ -64,6 +64,11 @@ export type GameEvent =
 			readonly payload: { readonly floor: number };
 	  }
 	| {
+			/** Climbing back toward the surface — see ascendStairs. */
+			readonly type: "floor-ascended";
+			readonly payload: { readonly floor: number };
+	  }
+	| {
 			/** amount is the actual hp gained — 0 when drunk at full health. */
 			readonly type: "player-healed";
 			readonly payload: { readonly by: ItemKind; readonly amount: number };
@@ -73,8 +78,14 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
+			/** Winning always means the same thing now: surfacing with the amulet. */
 			readonly type: "game-won";
-			readonly payload: { readonly floor: number };
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Auto-pickup on GOAL_FLOOR, same shape as floor-mapped — see applyAmuletPickup. */
+			readonly type: "amulet-obtained";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			readonly type: "weapon-equipped";

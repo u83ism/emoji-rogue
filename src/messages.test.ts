@@ -45,8 +45,13 @@ describe("formatEvent", () => {
 			],
 			[{ type: "item-picked-up", payload: { kind: "sword" } }, "剣を拾った"],
 			[
-				{ type: "game-won", payload: { floor: 10 } },
-				"10階に到達し、生還に成功した!",
+				{ type: "game-won", payload: {} },
+				"イェンダーの魔除けを手に地上に帰還した!",
+			],
+			[{ type: "floor-ascended", payload: { floor: 3 } }, "3階に上がった"],
+			[
+				{ type: "amulet-obtained", payload: {} },
+				"イェンダーの魔除けを手に入れた!",
 			],
 			[
 				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },

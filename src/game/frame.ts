@@ -15,7 +15,7 @@ const PLAYER_CELL: Cell = { glyph: "🧑" };
 /* Single-codepoint, Unicode 6.0 — inside the "technically stable" emoji
  * category docs/design.md restricts tiles to. */
 const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
-/* Also single-codepoint, Unicode 6.0 — shown once the player reaches GOAL_FLOOR. */
+/* Also single-codepoint, Unicode 6.0 — shown once the player surfaces with the amulet. */
 const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
 /* Bat, also single-codepoint. Per-kind so a third enemy kind is one entry. */
 const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
@@ -24,8 +24,13 @@ const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	/* Goblin mask: single-codepoint, Unicode 6.0. */
 	thief: { glyph: "👺" },
 };
-/* Down staircase (also single-codepoint, Unicode 6.0). */
-const STAIRS_CELL: Cell = { glyph: "🔽" };
+/* Staircase, by direction (both single-codepoint, Unicode 6.0). */
+const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
+	down: { glyph: "🔽" },
+	up: { glyph: "🔼" },
+};
+/* Amulet of Yendor: single-codepoint, Unicode 6.0 — GOAL_FLOOR only. */
+const AMULET_CELL: Cell = { glyph: "💎" };
 /* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require
  * one — see docs/design.md's "avoid combining sequences" rule. Shield uses a
@@ -112,7 +117,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		grid.push(row);
 	}
 
-	/* overlay order = precedence, lowest first: gold < items < stairs < enemies < player */
+	/* overlay order = precedence, lowest first: gold < items < amulet < stairs < enemies < player */
 	for (const pile of state.goldPiles) {
 		if (!visiblePoints.has(encodePointKey(pile.x, pile.y))) {
 			continue;
@@ -133,11 +138,21 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 	}
 
+	if (
+		state.amulet !== undefined &&
+		visiblePoints.has(encodePointKey(state.amulet.x, state.amulet.y))
+	) {
+		const amuletRow = grid[state.amulet.y];
+		if (amuletRow !== undefined) {
+			amuletRow[state.amulet.x] = AMULET_CELL;
+		}
+	}
+
 	/* the staircase shows while visible; enemies and the player draw over it */
 	if (visiblePoints.has(encodePointKey(state.stairs.x, state.stairs.y))) {
 		const stairsRow = grid[state.stairs.y];
 		if (stairsRow !== undefined) {
-			stairsRow[state.stairs.x] = STAIRS_CELL;
+			stairsRow[state.stairs.x] = STAIRS_GLYPHS[state.stairs.direction];
 		}
 	}
 

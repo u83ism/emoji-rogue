@@ -184,19 +184,12 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
-		expectRejected(
-			{
-				...buildValidState(),
-				events: [{ type: "game-won", payload: { floor: 0 } }],
-			},
-			"events",
-		);
 	});
 
 	it("accepts a well-formed game-won event", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "game-won", payload: { floor: 10 } }],
+			events: [{ type: "game-won", payload: {} }],
 		});
 		expect(result.ok).toBe(true);
 	});
@@ -391,7 +384,8 @@ describe("validateGameState", () => {
 
 	it("accepts well-formed gold piles and a gold-collected event, rejects broken ones", () => {
 		/* the staircase tile is always floor, wherever this dungeon put it */
-		const floorSpot = buildDungeonGameState(20, 12, 42).stairs;
+		const { x, y } = buildDungeonGameState(20, 12, 42).stairs;
+		const floorSpot = { x, y };
 
 		const accepted = validateGameState({
 			...buildValidState(),
@@ -430,7 +424,8 @@ describe("validateGameState", () => {
 	});
 
 	it("accepts well-formed hidden traps and a trap-triggered event, rejects broken ones", () => {
-		const floorSpot = buildDungeonGameState(20, 12, 42).stairs;
+		const { x, y } = buildDungeonGameState(20, 12, 42).stairs;
+		const floorSpot = { x, y };
 
 		const accepted = validateGameState({
 			...buildValidState(),

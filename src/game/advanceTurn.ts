@@ -18,7 +18,7 @@ import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
 import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
-import { descendStairs } from "./floor.js";
+import { ascendStairs, descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
 import { applyRegenerationTick } from "./regeneration.js";
 import type {
@@ -120,6 +120,30 @@ const applyItemPickup = (state: GameState): GameState => {
 		items: state.items.filter((candidate) => candidate !== item),
 		events: buildEventLog(state.events, [
 			{ type: "item-picked-up", payload: { kind: item.kind } },
+		]),
+	};
+};
+
+/**
+ * Picks up the Amulet of Yendor if it is lying under the player's feet
+ * (only possible on GOAL_FLOOR, before it has been taken). Unconditional and
+ * immediate, like gold — there is no "use" step, and hasAmulet never turns
+ * back off once set.
+ */
+const applyAmuletPickup = (state: GameState): GameState => {
+	if (
+		state.amulet === undefined ||
+		state.amulet.x !== state.player.x ||
+		state.amulet.y !== state.player.y
+	) {
+		return state;
+	}
+	return {
+		...state,
+		amulet: undefined,
+		hasAmulet: true,
+		events: buildEventLog(state.events, [
+			{ type: "amulet-obtained", payload: {} },
 		]),
 	};
 };
@@ -389,8 +413,9 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 
 /**
  * A movement turn: bump attack when an enemy occupies the target tile
- * (even one standing on the staircase), descend when it is the staircase,
- * walk when it is open floor (picking up any item lying there). Bumping a
+ * (even one standing on the staircase), transition floors when it is the
+ * staircase (direction decides descend vs ascend), walk when it is open
+ * floor (picking up any item, gold or the amulet lying there). Bumping a
  * wall consumes no turn (returns the input state, same reference); the
  * other three all do.
  */
@@ -408,11 +433,15 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 	}
 	if (x === state.stairs.x && y === state.stairs.y) {
 		/* the whole floor is replaced, so this floor's enemies never act */
-		return descendStairs(state);
+		return state.stairs.direction === "up"
+			? ascendStairs(state)
+			: descendStairs(state);
 	}
 	return applyTrapTrigger(
 		applyGoldPickup(
-			applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+			applyAmuletPickup(
+				applyItemPickup(deriveExploredState({ ...state, player: { x, y } })),
+			),
 		),
 	);
 };

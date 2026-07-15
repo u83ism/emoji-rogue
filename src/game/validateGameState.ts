@@ -14,6 +14,8 @@ import type {
 	GoldPile,
 	InventoryEntry,
 	Item,
+	Position,
+	Stairs,
 	Trap,
 } from "./state.js";
 
@@ -69,6 +71,9 @@ const standsOnFloor = (
 	}
 	return terrain[x]?.[y] === 0;
 };
+
+const isStairsDirection = (value: unknown): value is Stairs["direction"] =>
+	value === "up" || value === "down";
 
 export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	value === "zombie" || value === "bat" || value === "thief";
@@ -169,12 +174,16 @@ const isGameEvent = (value: unknown): boolean => {
 			return isDeathCause(payload.by);
 		case "floor-descended":
 			return isPositiveInteger(payload.floor);
+		case "floor-ascended":
+			return isPositiveInteger(payload.floor);
+		case "amulet-obtained":
+			return true;
 		case "player-healed":
 			return isItemKind(payload.by) && isNonNegativeInteger(payload.amount);
 		case "item-picked-up":
 			return isItemKind(payload.kind);
 		case "game-won":
-			return isPositiveInteger(payload.floor);
+			return true;
 		case "weapon-equipped":
 			return isItemKind(payload.kind) && isInteger(payload.bonus);
 		case "armor-equipped":
@@ -287,9 +296,28 @@ export const validateGameState = (
 		!isRecord(stairs) ||
 		!standsOnFloor(stairs, terrain) ||
 		!isFiniteNumber(stairs.x) ||
-		!isFiniteNumber(stairs.y)
+		!isFiniteNumber(stairs.y) ||
+		!isStairsDirection(stairs.direction)
 	) {
 		return err("stairs");
+	}
+	const rawAmulet = value.amulet;
+	let amulet: Position | undefined;
+	if (rawAmulet === undefined) {
+		amulet = undefined;
+	} else if (
+		isRecord(rawAmulet) &&
+		standsOnFloor(rawAmulet, terrain) &&
+		isFiniteNumber(rawAmulet.x) &&
+		isFiniteNumber(rawAmulet.y)
+	) {
+		amulet = { x: rawAmulet.x, y: rawAmulet.y };
+	} else {
+		return err("amulet");
+	}
+	const hasAmulet = value.hasAmulet;
+	if (!isBooleanValue(hasAmulet)) {
+		return err("hasAmulet");
 	}
 	const enemies = value.enemies;
 	if (!isEnemyArray(enemies, terrain)) {
@@ -343,7 +371,9 @@ export const validateGameState = (
 		playerFood,
 		hasRingOfRegeneration,
 		floor,
-		stairs: { x: stairs.x, y: stairs.y },
+		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
+		amulet,
+		hasAmulet,
 		enemies: enemies.map((enemy) => ({
 			x: enemy.x,
 			y: enemy.y,

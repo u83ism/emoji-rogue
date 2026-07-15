@@ -57,6 +57,17 @@ export type GoldPile = Position & {
 };
 
 /**
+ * The floor's single staircase. Its direction decides what stepping on it
+ * does (see advanceTurn's applyMove): "down" descends deeper, "up" climbs
+ * back toward the surface. Every floor but GOAL_FLOOR starts with a "down"
+ * staircase; GOAL_FLOOR always has an "up" one (there is nothing deeper),
+ * and every floor generated while retracing with the amulet also gets "up".
+ */
+export type Stairs = Position & {
+	readonly direction: "up" | "down";
+};
+
+/**
  * A hidden trap, sprung once stepped on and then removed — never drawn, even
  * after triggering (no discovery/marking mechanic; see docs/tasks/game.md
  * milestone 22).
@@ -118,11 +129,15 @@ export interface GameState {
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
 	/**
-	 * The down staircase. An entity on top of the (still binary floor/wall)
+	 * The staircase. An entity on top of the (still binary floor/wall)
 	 * terrain, like enemies — not a third terrain value, which would ripple
 	 * through every passability/visibility/rendering `=== 0` check.
 	 */
-	readonly stairs: Position;
+	readonly stairs: Stairs;
+	/** The Amulet of Yendor, present only on GOAL_FLOOR until picked up. */
+	readonly amulet: Position | undefined;
+	/** Set for good once the amulet is picked up — see applyAmuletPickup. */
+	readonly hasAmulet: boolean;
 	/**
 	 * Recent combat events, newest last, capped at EVENT_LOG_LIMIT. Pure data
 	 * (no strings) — the shell turns these into log lines. Part of the state

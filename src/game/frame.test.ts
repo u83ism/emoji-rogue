@@ -194,7 +194,10 @@ describe("buildFrameGrid", () => {
 
 	it("draws the staircase while visible, enemies take precedence on it", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const seen = { ...wide, stairs: { x: 18, y: 2 } }; /* distance 3 */
+		const seen = {
+			...wide,
+			stairs: { x: 18, y: 2, direction: "down" as const },
+		}; /* distance 3 */
 		expect(buildFrameGrid(seen)[2]?.[18]?.glyph).toBe("🔽");
 
 		const covered = {
@@ -208,7 +211,10 @@ describe("buildFrameGrid", () => {
 		/* stairs at (23,2): inside view from the start (15,2), out of view
 		 * after moving west twice — like the layered test above */
 		const wide = buildArenaGameState(30, 5, 1);
-		const withStairs = { ...wide, stairs: { x: 23, y: 2 } };
+		const withStairs = {
+			...wide,
+			stairs: { x: 23, y: 2, direction: "down" as const },
+		};
 		const west = { type: "move", payload: { direction: "west" } } as const;
 		const moved = advanceTurn(advanceTurn(withStairs, west), west);
 		const layered = buildFrameGrid(moved);
@@ -216,7 +222,7 @@ describe("buildFrameGrid", () => {
 		/* an unexplored staircase gives nothing away */
 		const unseen = {
 			...moved,
-			stairs: { x: 28, y: 3 },
+			stairs: { x: 28, y: 3, direction: "down" as const },
 			explored: wide.explored,
 		};
 		expect(

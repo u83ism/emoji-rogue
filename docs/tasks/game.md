@@ -882,6 +882,16 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 `applyWindsOfKronTick`は`descendStairs`をそのまま呼ぶだけで完結し、フロア遷移・敵/アイテム再配置・`turnsOnCurrentFloor`のリセットまで既存ロジックに委譲できた。パイプライン確認では、ダミーの`turnsOnCurrentFloor`を閾値直前に設定した状態から`wait`を1回送ると、警告閾値では現在フロアのまま`winds-of-kron-warning`のみ記録され、排出閾値では実際にフロアが1つ進み`turnsOnCurrentFloor`が0にリセットされ`winds-of-kron-eviction`が記録されることを`dist/game/index.mjs`越しに確認した(素朴に200ターン`wait`し続けるスクリプトは空腹で先に餓死してしまうことが判明したため、直接閾値付近の状態を組み立てる方式に変更した)。テストは787件(前回776件から+11)すべて通過、型検査・lint・knip・buildも全てクリーン。`docs/idea-memo.md`の有力候補から2件目の採用が完了した。
 **マイルストーン52完了(2026-07-15)。**
 
+## マイルストーン53 — モンスターハウス(不思議のダンジョンシリーズの高リスク・高リターンな部屋)
+
+`docs/idea-memo.md`で有力候補とした「不思議のダンジョンシリーズのモンスターハウス」(特定の部屋に足を踏み入れると大量の敵が一斉に湧く部屋)を採用する。ダンジョン生成時点の`dungeon.getRooms()`(`floor.ts`の`buildFloorLayout`がプレイヤー開始地点の決定にすでに使っている)から、プレイヤーの開始部屋以外を1つランダムに選び、通常の敵抽選プールとは独立にその部屋の内側だけへ追加の敵を`awake: true`(不意打ちではなく開始時から警戒済み)で配置する。新規`GameEvent`やGameStateの構造変更は不要——`Enemy.awake`は既存フィールドであり、生成物が増えるだけの純粋なダンジョン生成側の変更で完結する。
+
+- [ ] `src/game/balance.ts`: `MONSTER_HOUSE_SPAWN_CHANCE_PERCENT = 15`(独立per-floor抽選、floor 1でも部屋が2つ以上あれば対象)・`MONSTER_HOUSE_ENEMY_COUNT = 4`(部屋に追加で湧く敵の数)を追加
+- [ ] `src/game/floor.ts`: `buildFloorLayout`内で`dungeon.getRooms()`からプレイヤー開始部屋(`firstRoom`)を除いた部屋が1つ以上あり、`MONSTER_HOUSE_SPAWN_CHANCE_PERCENT`の抽選に当たったら、その中から1部屋をランダムに選ぶ。新規ヘルパー`drawSpawnTileInRoom(pool, room, rng)`(`pool`のうち部屋の内側`room.x1〜x2, room.y1〜y2`(inclusive、壁は1マス外側)に収まるタイルだけを対象に既存の`drawSpawnTile`と同じ「ランダムに1つ選んで`pool`から取り除く」動作をする)を使い、zombie/batを交互に`MONSTER_HOUSE_ENEMY_COUNT`体まで`awake: true`で配置する(通常の敵は`awake: false`で配置され初回接近時に起きるが、モンスターハウスの敵は入室した瞬間から警戒済みという原作の再現) + テスト
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、複数シードのダンジョンを生成し、いずれかのフロアでプレイヤー開始部屋の外に`awake: true`の敵が固まって配置されるケースが実際に出現することを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

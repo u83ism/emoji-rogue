@@ -198,6 +198,24 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
 
+## マイルストーン14 — 3種類目のアイテム(盾・恒久防御力強化)
+
+剣(マイルストーン13)と対称に、被ダメージを軽減する盾🦺を追加する。恒久強化アイテムが2種類になったことで「レリック的な永続強化」という枠組み自体が確立される。素直に「被ダメージ - playerDefense」にすると、現状ゾンビ・コウモリの攻撃力が固定1のため盾を1つ装備した瞬間に両方とも0ダメージ=事実上無敵になってしまう。それを避けるため**被ダメージは`MIN_DAMAGE_TAKEN`(=1)を下限にクリップ**する(どれだけ防御力を積んでも最低1は必ず通る)。
+
+- [x] `src/game/state.ts`: `GameState`に`playerDefense: number`を追加(初期値0。`playerAttackDamage`と対称の状態化)
+- [x] `src/game/events.ts`: `ItemKind`に`"shield"`を追加。`GameEvent`に`armor-equipped`(payload: `kind`・`bonus`。`weapon-equipped`と対称)を追加
+- [x] `src/game/balance.ts`: `SHIELD_DEFENSE_BONUS = 1`・`SHIELD_SPAWN_CHANCE_PERCENT = 30`・`MIN_DAMAGE_TAKEN = 1`を追加
+- [x] `src/game/enemies.ts`: 敵の被ダメージ計算を`ENEMY_ATTACK_DAMAGE[kind]`固定から`Math.max(MIN_DAMAGE_TAKEN, ENEMY_ATTACK_DAMAGE[kind] - state.playerDefense)`に変更 + テスト(下限クリップの検証を含む)
+- [x] `src/game/initialState.ts`: 初期状態の`playerDefense`を0で初期化
+- [x] `src/game/floor.ts`: スポーンプールから低確率(剣と同じ仕組み・独立判定)で盾を1つ抽選 + テスト
+- [x] `src/game/advanceTurn.ts`: `applyUseItem`に`shield`分岐を追加(`playerDefense`加算+在庫から1個消費+`armor-equipped`記録) + テスト
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`shield: 🦺`を追加(単一コードポイント。🛡️は要バリエーションセレクタのため回避 — 剣で🗡️/⚔️を避けたのと同じ理由) + テスト
+- [x] `src/messages.ts`: `ITEM_NAMES`に`shield: "盾"`、`armor-equipped`の文言(「盾を装備した。防御力が1上がった!」) + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"shield"`を追加。`playerDefense`フィールドの検証(0以上の整数)を追加。構造変更のため**`SAVE_FORMAT_VERSION`を6に** + テスト
+- [ ] 実機スモークテスト: 盾の出現・装備・被ダメージ軽減(下限1を含む)の手応え変化を確認(このセッションはリモート環境のため未実施)
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)

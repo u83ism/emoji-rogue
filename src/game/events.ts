@@ -1,5 +1,5 @@
 /** Events carry it so the shell can name the attacker. */
-export type EnemyKind = "zombie" | "bat" | "thief";
+export type EnemyKind = "zombie" | "bat" | "thief" | "nymph";
 
 export type ItemKind =
 	| "potion"
@@ -152,6 +152,11 @@ export type GameEvent =
 			/** Fired only when the roll succeeds — see applyRegenerationTick. */
 			readonly type: "player-regenerated";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** kind is undefined when the inventory was empty — see advanceEnemies. */
+			readonly type: "item-stolen";
+			readonly payload: { readonly kind: ItemKind | undefined };
 	  };
 
 /**

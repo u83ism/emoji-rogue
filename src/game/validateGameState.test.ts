@@ -103,6 +103,19 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
+	it("accepts a nymph as a valid enemy kind", () => {
+		const valid = buildValidState();
+		const enemies = valid.enemies;
+		if (!Array.isArray(enemies) || enemies.length === 0) {
+			throw new Error("unreachable: the dungeon state spawns enemies");
+		}
+		const result = validateGameState({
+			...valid,
+			enemies: [{ ...enemies[0], kind: "nymph", hp: 1 }],
+		});
+		expect(result.ok).toBe(true);
+	});
+
 	it("rejects broken combat fields", () => {
 		expectRejected({ ...buildValidState(), playerHp: 0 }, "playerHp");
 		expectRejected({ ...buildValidState(), playerHp: 9999 }, "playerHp");
@@ -619,6 +632,28 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [{ type: "gold-stolen", payload: { amount: -1 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed item-stolen event (including an empty-inventory steal), rejects a broken one", () => {
+		const stolenSomething = validateGameState({
+			...buildValidState(),
+			events: [{ type: "item-stolen", payload: { kind: "sword" } }],
+		});
+		expect(stolenSomething.ok).toBe(true);
+
+		const stolenNothing = validateGameState({
+			...buildValidState(),
+			events: [{ type: "item-stolen", payload: { kind: undefined } }],
+		});
+		expect(stolenNothing.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "item-stolen", payload: { kind: "bow" } }],
 			},
 			"events",
 		);

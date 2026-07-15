@@ -11,7 +11,7 @@ import {
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import type { Enemy, GameState, Position } from "./state.js";
+import type { Enemy, GameState, InventoryEntry, Position } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
 /** Enemies move like the player: 4 directions, floor only. */
@@ -75,6 +75,17 @@ const stepTowardPlayer = (
 	return undefined;
 };
 
+/** Decrements the stack at `index` by one, dropping it entirely once it hits zero. */
+const removeOneFromInventory = (
+	inventory: readonly InventoryEntry[],
+	index: number,
+): readonly InventoryEntry[] =>
+	inventory
+		.map((entry, entryIndex) =>
+			entryIndex === index ? { ...entry, quantity: entry.quantity - 1 } : entry,
+		)
+		.filter((entry) => entry.quantity > 0);
+
 interface WanderStep {
 	readonly position: Position;
 	readonly rng: RngState;
@@ -123,8 +134,11 @@ const stepWandering = (
  * attacks or two steps for the player's one): adjacent to the player attacks
  * in place (damage from balance.ts by kind, reduced by state.playerDefense
  * but never below MIN_DAMAGE_TAKEN) — except a thief, which steals up to
- * THIEF_STEAL_AMOUNT gold instead of dealing damage and then flees the board
- * for good (never rejoins `nextEnemies`, killed or not). Non-adjacent
+ * THIEF_STEAL_AMOUNT gold instead of dealing damage, and a nymph, which
+ * steals one random held item stack instead (rng-picked when more than one
+ * kind is held; item-stolen fires with kind: undefined if the inventory was
+ * empty). Both flee the board for good afterward (never rejoin
+ * `nextEnemies`, killed or not). Non-adjacent
  * enemies chase via A* while inside the player's field of view, or wander
  * using (and advancing) the state's RNG. The player's HP reaching zero ends
  * the run and cuts short any remaining actions, this enemy's and the rest of
@@ -143,6 +157,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 	let rng = state.rng;
 	let playerHp = state.playerHp;
 	let goldCollected = state.goldCollected;
+	let inventory = state.inventory;
 	let died = false;
 	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
@@ -180,6 +195,23 @@ export const advanceEnemies = (state: GameState): GameState => {
 					fled = true;
 					continue;
 				}
+				if (enemy.kind === "nymph") {
+					if (inventory.length === 0) {
+						events.push({ type: "item-stolen", payload: { kind: undefined } });
+					} else {
+						const pick = stepUniform(rng);
+						rng = pick.state;
+						const index = Math.floor(pick.value * inventory.length);
+						const entry = inventory[index];
+						if (entry === undefined) {
+							throw new Error("unreachable: index is within inventory bounds");
+						}
+						inventory = removeOneFromInventory(inventory, index);
+						events.push({ type: "item-stolen", payload: { kind: entry.kind } });
+					}
+					fled = true;
+					continue;
+				}
 				const damage = Math.max(
 					MIN_DAMAGE_TAKEN,
 					ENEMY_ATTACK_DAMAGE[enemy.kind] - state.playerDefense,
@@ -214,6 +246,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		...state,
 		playerHp: Math.max(0, playerHp),
 		goldCollected,
+		inventory,
 		enemies: nextEnemies,
 		events: buildEventLog(state.events, events),
 		rng,

@@ -3,6 +3,7 @@ import { seedToState } from "../rng.js";
 import {
 	BAT_MAX_HP,
 	MIN_DAMAGE_TAKEN,
+	NYMPH_MAX_HP,
 	PLAYER_ATTACK_DAMAGE,
 	THIEF_MAX_HP,
 	ZOMBIE_MAX_HP,
@@ -32,6 +33,14 @@ const thief = (x: number, y: number, awake = true): Enemy => ({
 	y,
 	kind: "thief",
 	hp: THIEF_MAX_HP,
+	awake,
+});
+
+const nymph = (x: number, y: number, awake = true): Enemy => ({
+	x,
+	y,
+	kind: "nymph",
+	hp: NYMPH_MAX_HP,
 	awake,
 });
 
@@ -255,6 +264,80 @@ describe("advanceEnemies", () => {
 			state.playerHp - 1,
 		); /* the zombie still attacked */
 		expect(next.goldCollected).toBe(40);
+	});
+
+	it("an adjacent nymph steals the only held item stack (removed entirely) and flees", () => {
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([]); /* the nymph is gone for good */
+		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "item-stolen", payload: { kind: "potion" } },
+		]);
+	});
+
+	it("an adjacent nymph decrements a multi-quantity stack instead of removing it", () => {
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [{ kind: "food" as const, quantity: 3 }],
+		};
+		const next = advanceEnemies(state);
+		expect(next.inventory).toEqual([{ kind: "food", quantity: 2 }]);
+		expect(next.events).toEqual([
+			{ type: "item-stolen", payload: { kind: "food" } },
+		]);
+	});
+
+	it("an adjacent nymph steals exactly one unit total when several kinds are held", () => {
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [
+				{ kind: "potion" as const, quantity: 1 },
+				{ kind: "sword" as const, quantity: 1 },
+			],
+		};
+		const next = advanceEnemies(state);
+		expect(next.inventory.length).toBe(1); /* one stack fully consumed */
+		const stolenEvent = next.events.at(-1);
+		if (stolenEvent === undefined || stolenEvent.type !== "item-stolen") {
+			throw new Error("unreachable: expected an item-stolen event");
+		}
+		expect(["potion", "sword"]).toContain(stolenEvent.payload.kind);
+		expect(
+			next.inventory.some((entry) => entry.kind === stolenEvent.payload.kind),
+		).toBe(false);
+	});
+
+	it("an adjacent nymph still flees with an empty inventory, stealing nothing", () => {
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([]);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "item-stolen", payload: { kind: undefined } },
+		]);
+	});
+
+	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
+		const state = {
+			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
+			inventory: [{ kind: "potion" as const, quantity: 1 }],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([
+			zombie(5, 1),
+		]); /* the nymph is gone, the zombie remains */
+		expect(next.playerHp).toBe(
+			state.playerHp - 1,
+		); /* the zombie still attacked */
+		expect(next.inventory).toEqual([]);
 	});
 
 	it("a sleeping enemy outside the player's view takes no action at all", () => {

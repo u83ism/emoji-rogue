@@ -313,6 +313,38 @@ describe("thief spawning", () => {
 	});
 });
 
+describe("nymph spawning", () => {
+	it("spawns a nymph on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).enemies.some(
+				(enemy) => enemy.kind === "nymph",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one nymph on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const nymphCount = buildDungeonGameState(40, 20, seed).enemies.filter(
+				(enemy) => enemy.kind === "nymph",
+			).length;
+			expect(nymphCount).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("does not scale with floor depth (unlike zombies and bats)", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= 7; floor++) {
+			state = descendStairs(state);
+			const nymphCount = state.enemies.filter(
+				(enemy) => enemy.kind === "nymph",
+			).length;
+			expect(nymphCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("ascendStairs", () => {
 	it("is the mirror of descendStairs: decrements the floor and regenerates it with an up staircase", () => {
 		const deep = descendStairs(buildDungeonGameState(40, 20, 7));

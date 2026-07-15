@@ -23,6 +23,10 @@ const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	bat: { glyph: "🦇" },
 	/* Goblin mask: single-codepoint, Unicode 6.0. */
 	thief: { glyph: "👺" },
+	/* Ghost: single-codepoint, Unicode 6.0 — fits "appears, steals, vanishes"
+	 * better than the newer (Unicode 10) fairy emoji, which this project's
+	 * stability rule (docs/design.md) avoids. */
+	nymph: { glyph: "👻" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

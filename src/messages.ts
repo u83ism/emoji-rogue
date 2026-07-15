@@ -11,6 +11,7 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	zombie: "ゾンビ",
 	bat: "コウモリ",
 	thief: "盗賊",
+	nymph: "ニンフ",
 };
 
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
@@ -165,6 +166,10 @@ export const formatEvent = (
 			return event.payload.amount > 0
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
+		case "item-stolen":
+			return event.payload.kind !== undefined
+				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を盗まれた!`
+				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
 		case "ring-equipped":
 			return event.payload.kind === "sustenance"
 				? `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`

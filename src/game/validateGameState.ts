@@ -76,7 +76,10 @@ const isStairsDirection = (value: unknown): value is Stairs["direction"] =>
 	value === "up" || value === "down";
 
 export const isEnemyKind = (value: unknown): value is EnemyKind =>
-	value === "zombie" || value === "bat" || value === "thief";
+	value === "zombie" ||
+	value === "bat" ||
+	value === "thief" ||
+	value === "nymph";
 
 const isDeathCause = (value: unknown): value is DeathCause =>
 	isEnemyKind(value) ||
@@ -215,6 +218,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.bonus);
 		case "gold-stolen":
 			return isNonNegativeInteger(payload.amount);
+		case "item-stolen":
+			return payload.kind === undefined || isItemKind(payload.kind);
 		case "ring-equipped":
 			return isItemKind(payload.kind);
 		case "player-regenerated":

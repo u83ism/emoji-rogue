@@ -132,6 +132,14 @@ describe("formatEvent", () => {
 				"盗賊に襲われたが、何も盗られなかった",
 			],
 			[
+				{ type: "item-stolen", payload: { kind: "sword" } },
+				"ニンフに剣を盗まれた!",
+			],
+			[
+				{ type: "item-stolen", payload: { kind: undefined } },
+				"ニンフに襲われたが、何も盗られなかった",
+			],
+			[
 				{ type: "ring-equipped", payload: { kind: "ring" } },
 				"指輪を身につけた。じわじわとHPが回復するようになった!",
 			],
@@ -175,6 +183,17 @@ describe("formatEvent", () => {
 				"potion",
 			]),
 		).toBe("未鑑定の薬を拾った");
+	});
+
+	it("respects identification state for a stolen potion-family item too", () => {
+		expect(
+			formatEvent({ type: "item-stolen", payload: { kind: "poison" } }, []),
+		).toBe("ニンフに未鑑定の薬を盗まれた!");
+		expect(
+			formatEvent({ type: "item-stolen", payload: { kind: "poison" } }, [
+				"poison",
+			]),
+		).toBe("ニンフに毒薬を盗まれた!");
 	});
 });
 

@@ -40,6 +40,14 @@ export const THIEF_ACTIONS_PER_TURN = 1;
 export const THIEF_STEAL_AMOUNT = 10;
 export const THIEF_SPAWN_CHANCE_PERCENT = 20;
 
+// The item-stealing counterpart to the thief: never deals damage, steals one
+// random held item stack (instead of gold) on contact and flees. Same
+// independent-per-floor spawn pattern, no depth scaling.
+export const NYMPH_MAX_HP = 1;
+export const NYMPH_ATTACK_DAMAGE = 0;
+export const NYMPH_ACTIONS_PER_TURN = 1;
+export const NYMPH_SPAWN_CHANCE_PERCENT = 20;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -67,11 +75,13 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_MAX_HP,
 	bat: BAT_MAX_HP,
 	thief: THIEF_MAX_HP,
+	nymph: NYMPH_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
 	bat: BAT_ATTACK_DAMAGE,
 	thief: THIEF_ATTACK_DAMAGE,
+	nymph: NYMPH_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -82,6 +92,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ACTIONS_PER_TURN,
 	bat: BAT_ACTIONS_PER_TURN,
 	thief: THIEF_ACTIONS_PER_TURN,
+	nymph: NYMPH_ACTIONS_PER_TURN,
 };
 
 /** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */

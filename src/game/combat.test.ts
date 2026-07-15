@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { WAND_STRIKE_DAMAGE, ZOMBIE_MAX_HP } from "./balance.js";
+import {
+	ENEMY_EXPERIENCE_REWARD,
+	WAND_STRIKE_DAMAGE,
+	ZOMBIE_MAX_HP,
+} from "./balance.js";
 import { applyPlayerAttack, applyWandStrike, isAdjacent } from "./combat.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy } from "./state.js";
@@ -103,6 +107,18 @@ describe("applyPlayerAttack", () => {
 			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
 		]);
 	});
+
+	it("a kill awards experience for the target's kind", () => {
+		const target = zombie(5, 4, 1);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.zombie);
+	});
+
+	it("a non-lethal hit awards no experience", () => {
+		const target = zombie(5, 4);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.playerExperience).toBe(state.playerExperience);
+	});
 });
 
 describe("applyWandStrike", () => {
@@ -155,5 +171,11 @@ describe("applyWandStrike", () => {
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
 		expect(next.player).toEqual(state.player);
 		expect(next.terrain).toBe(state.terrain);
+	});
+
+	it("a kill awards experience for the target's kind", () => {
+		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
+		const next = applyWandStrike({ ...state, enemies: [target] }, target);
+		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.zombie);
 	});
 });

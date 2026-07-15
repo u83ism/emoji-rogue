@@ -1,5 +1,5 @@
 import { createRng } from "../rng.js";
-import { PLAYER_MAX_HP, RING_REGEN_CHANCE_PERCENT } from "./balance.js";
+import { RING_REGEN_CHANCE_PERCENT } from "./balance.js";
 import { buildEventLog } from "./events.js";
 import type { GameState } from "./state.js";
 
@@ -16,7 +16,7 @@ export const applyRegenerationTick = (state: GameState): GameState => {
 	if (
 		state.status !== "playing" ||
 		!state.hasRingOfRegeneration ||
-		state.playerHp >= PLAYER_MAX_HP
+		state.playerHp >= state.playerMaxHp
 	) {
 		return state;
 	}

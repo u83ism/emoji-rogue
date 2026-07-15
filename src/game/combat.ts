@@ -1,5 +1,10 @@
-import { SNEAK_ATTACK_MULTIPLIER, WAND_STRIKE_DAMAGE } from "./balance.js";
+import {
+	ENEMY_EXPERIENCE_REWARD,
+	SNEAK_ATTACK_MULTIPLIER,
+	WAND_STRIKE_DAMAGE,
+} from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
+import { applyExperienceGain } from "./experience.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
 /** Orthogonal adjacency — the melee reach, matching 4-direction movement. */
@@ -38,7 +43,14 @@ export const applyPlayerAttack = (
 			: state.enemies.map((enemy) =>
 					enemy === target ? { ...enemy, hp: remainingHp, awake: true } : enemy,
 				);
-	return { ...state, enemies, events: buildEventLog(state.events, events) };
+	const next: GameState = {
+		...state,
+		enemies,
+		events: buildEventLog(state.events, events),
+	};
+	return remainingHp <= 0
+		? applyExperienceGain(next, ENEMY_EXPERIENCE_REWARD[target.kind])
+		: next;
 };
 
 /**
@@ -67,5 +79,12 @@ export const applyWandStrike = (state: GameState, target: Enemy): GameState => {
 			: state.enemies.map((enemy) =>
 					enemy === target ? { ...enemy, hp: remainingHp, awake: true } : enemy,
 				);
-	return { ...state, enemies, events: buildEventLog(state.events, events) };
+	const next: GameState = {
+		...state,
+		enemies,
+		events: buildEventLog(state.events, events),
+	};
+	return remainingHp <= 0
+		? applyExperienceGain(next, ENEMY_EXPERIENCE_REWARD[target.kind])
+		: next;
 };

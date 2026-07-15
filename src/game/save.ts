@@ -2,8 +2,8 @@ import { err, ok, type Result } from "../result.js";
 import type { GameState } from "./state.js";
 import { isRecord, validateGameState } from "./validateGameState.js";
 
-/** Bump on any breaking change to the GameState shape. 2: floor + stairs. 3: items. 4: inventory. 5: playerAttackDamage. 6: playerDefense. 7: playerFood. 8: goldPiles + goldCollected. 9: traps. 10: identifiedPotionKinds. 11: enemies[].awake. 12: hasRingOfRegeneration. 13: stairs.direction + amulet + hasAmulet. 14: hasRingOfSustenance. 15: confusedTurnsRemaining. 16: enemies[].slowedTurnsRemaining. 17: levitationTurnsRemaining. 18: armorProtected. 19: blindTurnsRemaining. */
-export const SAVE_FORMAT_VERSION = 19;
+/** Bump on any breaking change to the GameState shape. 2: floor + stairs. 3: items. 4: inventory. 5: playerAttackDamage. 6: playerDefense. 7: playerFood. 8: goldPiles + goldCollected. 9: traps. 10: identifiedPotionKinds. 11: enemies[].awake. 12: hasRingOfRegeneration. 13: stairs.direction + amulet + hasAmulet. 14: hasRingOfSustenance. 15: confusedTurnsRemaining. 16: enemies[].slowedTurnsRemaining. 17: levitationTurnsRemaining. 18: armorProtected. 19: blindTurnsRemaining. 20: playerMaxHp + playerLevel + playerExperience. */
+export const SAVE_FORMAT_VERSION = 20;
 
 export type SaveFileError =
 	| { readonly kind: "malformed-json" }

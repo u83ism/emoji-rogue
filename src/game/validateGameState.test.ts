@@ -132,6 +132,18 @@ describe("validateGameState", () => {
 	it("rejects broken combat fields", () => {
 		expectRejected({ ...buildValidState(), playerHp: 0 }, "playerHp");
 		expectRejected({ ...buildValidState(), playerHp: 9999 }, "playerHp");
+		expectRejected({ ...buildValidState(), playerMaxHp: 0 }, "playerMaxHp");
+		expectRejected({ ...buildValidState(), playerMaxHp: "10" }, "playerMaxHp");
+		expectRejected({ ...buildValidState(), playerLevel: 0 }, "playerLevel");
+		expectRejected({ ...buildValidState(), playerLevel: 1.5 }, "playerLevel");
+		expectRejected(
+			{ ...buildValidState(), playerExperience: -1 },
+			"playerExperience",
+		);
+		expectRejected(
+			{ ...buildValidState(), playerExperience: "0" },
+			"playerExperience",
+		);
 		expectRejected(
 			{ ...buildValidState(), playerAttackDamage: 0 },
 			"playerAttackDamage",
@@ -448,6 +460,22 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [{ type: "player-blinded", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed player-leveled-up event and rejects a broken one", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-leveled-up", payload: { level: 2 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-leveled-up", payload: { level: 0 } }],
 			},
 			"events",
 		);

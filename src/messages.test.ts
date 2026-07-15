@@ -190,6 +190,10 @@ describe("formatEvent", () => {
 				"盲目の薬を飲んだ。目の前が真っ暗になった!",
 			],
 			[{ type: "blindness-faded", payload: {} }, "目が見えるようになった"],
+			[
+				{ type: "player-leveled-up", payload: { level: 2 } },
+				"レベルが上がった!(Lv.2)",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

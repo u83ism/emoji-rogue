@@ -72,6 +72,7 @@ describe("advanceTurn", () => {
 			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
 			{ type: "enemy-defeated", payload: { target: "zombie" } },
 		]);
+		expect(next.playerExperience).toBeGreaterThan(state.playerExperience);
 	});
 
 	it("ignores moves once the run is over", () => {

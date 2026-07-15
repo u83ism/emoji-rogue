@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
 import { seedToState } from "../rng.js";
-import { BLIND_VIEW_RADIUS, PLAYER_ATTACK_DAMAGE } from "./balance.js";
+import {
+	BLIND_VIEW_RADIUS,
+	PLAYER_ATTACK_DAMAGE,
+	PLAYER_MAX_HP,
+} from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { GameState } from "./state.js";
 import {
@@ -96,6 +100,9 @@ describe("deriveExploredState", () => {
 			explored,
 			player: { x: 1, y: 1 },
 			playerHp: 10,
+			playerMaxHp: PLAYER_MAX_HP,
+			playerLevel: 1,
+			playerExperience: 0,
 			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 			playerDefense: 0,
 			playerFood: 100,
@@ -137,6 +144,9 @@ describe("deriveExploredState", () => {
 			explored,
 			player: { x: 1, y: 1 },
 			playerHp: 10,
+			playerMaxHp: PLAYER_MAX_HP,
+			playerLevel: 1,
+			playerExperience: 0,
 			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 			playerDefense: 0,
 			playerFood: 100,

@@ -210,5 +210,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES.blindness}を飲んだ。目の前が真っ暗になった!`;
 		case "blindness-faded":
 			return "目が見えるようになった";
+		case "player-leveled-up":
+			return `レベルが上がった!(Lv.${event.payload.level})`;
 	}
 };

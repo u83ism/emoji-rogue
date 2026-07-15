@@ -228,6 +228,11 @@ export type GameEvent =
 			/** Fired the turn blindTurnsRemaining reaches 0 — see applyBlindnessTick. */
 			readonly type: "blindness-faded";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Fired each level gained — see applyExperienceGain. */
+			readonly type: "player-leveled-up";
+			readonly payload: { readonly level: number };
 	  };
 
 /**

@@ -106,6 +106,12 @@ export interface GameState {
 	readonly explored: readonly (readonly boolean[])[];
 	readonly player: Position;
 	readonly playerHp: number;
+	/** Current ceiling on playerHp — grows on level-up. See applyExperienceGain. */
+	readonly playerMaxHp: number;
+	/** Starts at 1. See applyExperienceGain. */
+	readonly playerLevel: number;
+	/** Cumulative kills-based experience. See applyExperienceGain and LEVEL_EXPERIENCE_THRESHOLDS. */
+	readonly playerExperience: number;
 	/** Base damage plus any permanent bonus from swords used so far. */
 	readonly playerAttackDamage: number;
 	/**

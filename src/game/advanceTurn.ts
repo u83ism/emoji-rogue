@@ -9,7 +9,6 @@ import {
 	LEVITATION_POTION_DURATION,
 	MIN_PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_FOOD,
-	PLAYER_MAX_HP,
 	POISON_DAMAGE,
 	POTION_HEAL_AMOUNT,
 	SHIELD_CURSE_CHANCE_PERCENT,
@@ -572,7 +571,10 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
-	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
+	const amount = Math.min(
+		POTION_HEAL_AMOUNT,
+		state.playerMaxHp - state.playerHp,
+	);
 	return {
 		...state,
 		playerHp: state.playerHp + amount,

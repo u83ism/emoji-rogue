@@ -1,6 +1,6 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
-import { PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
+import { PLAYER_MAX_FOOD } from "./balance.js";
 import type {
 	DeathCause,
 	EnemyKind,
@@ -258,6 +258,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isPositiveInteger(payload.turns);
 		case "blindness-faded":
 			return true;
+		case "player-leveled-up":
+			return isPositiveInteger(payload.level);
 		default:
 			return false;
 	}
@@ -311,9 +313,21 @@ export const validateGameState = (
 	) {
 		return err("player");
 	}
+	const playerMaxHp = value.playerMaxHp;
+	if (!isPositiveInteger(playerMaxHp)) {
+		return err("playerMaxHp");
+	}
 	const playerHp = value.playerHp;
-	if (!isPositiveInteger(playerHp) || playerHp > PLAYER_MAX_HP) {
+	if (!isPositiveInteger(playerHp) || playerHp > playerMaxHp) {
 		return err("playerHp");
+	}
+	const playerLevel = value.playerLevel;
+	if (!isPositiveInteger(playerLevel)) {
+		return err("playerLevel");
+	}
+	const playerExperience = value.playerExperience;
+	if (!isNonNegativeInteger(playerExperience)) {
+		return err("playerExperience");
 	}
 	const playerAttackDamage = value.playerAttackDamage;
 	if (!isPositiveInteger(playerAttackDamage)) {
@@ -430,6 +444,9 @@ export const validateGameState = (
 		explored,
 		player: { x: player.x, y: player.y },
 		playerHp,
+		playerMaxHp,
+		playerLevel,
+		playerExperience,
 		playerAttackDamage,
 		playerDefense,
 		playerFood,

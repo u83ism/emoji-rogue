@@ -5,7 +5,6 @@ import { advanceTurn } from "./game/advanceTurn.js";
 import {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
-	PLAYER_MAX_HP,
 } from "./game/balance.js";
 import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
@@ -147,8 +146,9 @@ const App = () => {
 			<GameScreen grid={buildFrameGrid(state)} />
 			<Box>
 				<Text>{state.floor}F </Text>
+				<Text color="blueBright">Lv.{state.playerLevel} </Text>
 				<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
-					HP {state.playerHp}/{PLAYER_MAX_HP}
+					HP {state.playerHp}/{state.playerMaxHp}
 				</Text>
 				<Text> </Text>
 				<Text {...resolveFoodTextStyle(state.playerFood)}>

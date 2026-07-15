@@ -729,20 +729,23 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 これまでの44マイルストーンで敵・アイテム・わな・一時状態異常など多くの要素を再現してきたが、原作Rogueの根幹システムの一つである**経験値によるレベルアップ**がまだ存在しない——`playerHp`の上限は`PLAYER_MAX_HP`というモジュール内定数のまま、敵を倒しても数値的な見返りは一切ない。本マイルストーンでは`GameState`に`playerLevel`・`playerExperience`・`playerMaxHp`(構造変更)を追加し、敵を倒す(`enemy-defeated`)たびに種別ごとの固定経験値を獲得、累積が閾値を超えるとレベルが上がって最大HPが恒久的に増える(現在HPも同量回復)という原作の骨格をシンプルな形で再現する。装備や乱数要素は絡めず、決定的な固定値のみで完結させる——`combat.ts`の「ダメージは固定値、乱数なし」という既存方針(マイルストーン15)と同じ考え方。
 
-- [ ] `src/game/events.ts`: `GameEvent`に`player-leveled-up`(payload: 到達レベル`level`)を追加
-- [ ] `src/game/state.ts`: `GameState`に`playerLevel: number`・`playerExperience: number`・`playerMaxHp: number`(すべて構造変更)を追加。`playerHp`の意味は変わらない(現在値)が、上限は今後`state.playerMaxHp`を参照する
-- [ ] `src/game/balance.ts`: `PLAYER_LEVEL_UP_HP_BONUS = 3`(レベルアップ1回あたりの最大HP増加量)・`LEVEL_EXPERIENCE_THRESHOLDS`(レベル2〜10到達に必要な累積経験値の配列、原作同様おおよそ倍々で増加させる)・`ENEMY_EXPERIENCE_REWARD`(`ENEMY_MAX_HP`と同じ idiom の`EnemyKind`別ルックアップ表、HPが高い敵ほど多め)を追加
-- [ ] `src/game/experience.ts`(新規): `applyExperienceGain(state, amount): GameState` — `playerExperience`に加算し、`LEVEL_EXPERIENCE_THRESHOLDS`を超えるたびに`playerLevel`を1つずつ上げ`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数(乱数不使用、複数レベル同時到達にも対応するループ) + テスト
-- [ ] `src/game/combat.ts`: `applyPlayerAttack`・`applyWandStrike`の両方で、撃破(`remainingHp <= 0`)時に`applyExperienceGain(nextState, ENEMY_EXPERIENCE_REWARD[target.kind])`を経由してから返すよう変更 + テスト
-- [ ] `PLAYER_MAX_HP`(モジュール内定数)への依存を`state.playerMaxHp`に置き換える箇所: `src/game/regeneration.ts`(上限判定)・`src/game/advanceTurn.ts`(回復薬の回復量クランプ)・`src/game/validateGameState.ts`(`playerHp`の上限検証を`playerMaxHp`との比較に変更しつつ`playerMaxHp`自体の検証も追加)・`src/main.tsx`(ステータスバーのHP表示)
-- [ ] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方に`playerLevel: 1`・`playerExperience: 0`・`playerMaxHp: PLAYER_MAX_HP`(初期値)を追加
-- [ ] `src/main.tsx`: ステータスバーにレベル表示を追加(例: `Lv.1`)
-- [ ] `src/messages.ts`: `player-leveled-up`の文言(例:「レベルが上がった!(Lv.◯)」) + テスト
-- [ ] `src/game/validateGameState.ts`: `playerLevel`(1以上の整数)・`playerExperience`(0以上の整数)・`playerMaxHp`(正の整数、`playerHp`以上)の検証、`player-leveled-up`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を20に** + テスト
-- [ ] `src/game/save.test.ts`: shape guardに`playerLevel`・`playerExperience`・`playerMaxHp`(いずれも`"number"`)を追記
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、敵を複数体倒して経験値が累積しレベルアップ時に`playerMaxHp`/`playerHp`が実際に増えることを確認する
+- [x] `src/game/events.ts`: `GameEvent`に`player-leveled-up`(payload: 到達レベル`level`)を追加
+- [x] `src/game/state.ts`: `GameState`に`playerLevel: number`・`playerExperience: number`・`playerMaxHp: number`(すべて構造変更)を追加。`playerHp`の意味は変わらない(現在値)が、上限は今後`state.playerMaxHp`を参照する
+- [x] `src/game/balance.ts`: `PLAYER_LEVEL_UP_HP_BONUS = 3`(レベルアップ1回あたりの最大HP増加量)・`LEVEL_EXPERIENCE_THRESHOLDS`(レベル2〜10到達に必要な累積経験値の配列、原作同様おおよそ倍々で増加させる)・`ENEMY_EXPERIENCE_REWARD`(`ENEMY_MAX_HP`と同じ idiom の`EnemyKind`別ルックアップ表、HPが高い敵ほど多め)を追加
+- [x] `src/game/experience.ts`(新規): `applyExperienceGain(state, amount): GameState` — `playerExperience`に加算し、`LEVEL_EXPERIENCE_THRESHOLDS`を超えるたびに`playerLevel`を1つずつ上げ`playerMaxHp`/`playerHp`を`PLAYER_LEVEL_UP_HP_BONUS`だけ増やし`player-leveled-up`を記録する純粋関数(乱数不使用、複数レベル同時到達にも対応するループ) + テスト
+- [x] `src/game/combat.ts`: `applyPlayerAttack`・`applyWandStrike`の両方で、撃破(`remainingHp <= 0`)時に`applyExperienceGain(nextState, ENEMY_EXPERIENCE_REWARD[target.kind])`を経由してから返すよう変更 + テスト
+- [x] `PLAYER_MAX_HP`(モジュール内定数)への依存を`state.playerMaxHp`に置き換える箇所: `src/game/regeneration.ts`(上限判定)・`src/game/advanceTurn.ts`(回復薬の回復量クランプ)・`src/game/validateGameState.ts`(`playerHp`の上限検証を`playerMaxHp`との比較に変更しつつ`playerMaxHp`自体の検証も追加)・`src/main.tsx`(ステータスバーのHP表示)
+- [x] `src/game/initialState.ts`: `buildArenaGameState`・`buildDungeonGameState`の両方に`playerLevel: 1`・`playerExperience: 0`・`playerMaxHp: PLAYER_MAX_HP`(初期値)を追加
+- [x] `src/main.tsx`: ステータスバーにレベル表示を追加(例: `Lv.1`)
+- [x] `src/messages.ts`: `player-leveled-up`の文言(例:「レベルが上がった!(Lv.◯)」) + テスト
+- [x] `src/game/validateGameState.ts`: `playerLevel`(1以上の整数)・`playerExperience`(0以上の整数)・`playerMaxHp`(正の整数、`playerHp`以上)の検証、`player-leveled-up`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を20に** + テスト
+- [x] `src/game/save.test.ts`: shape guardに`playerLevel`・`playerExperience`・`playerMaxHp`(いずれも`"number"`)を追記
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、敵を複数体倒して経験値が累積しレベルアップ時に`playerMaxHp`/`playerHp`が実際に増えることを確認する
 
 自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
+`GameState`に`playerLevel`/`playerExperience`/`playerMaxHp`を追加し、`src/game/experience.ts`の`applyExperienceGain`が閾値超過を1レベルずつ処理する(1回の大きな経験値獲得で複数レベル同時到達にも対応)純粋関数として実装された。`combat.ts`の`applyPlayerAttack`/`applyWandStrike`はどちらも撃破時に`ENEMY_EXPERIENCE_REWARD[target.kind]`を渡して`applyExperienceGain`を経由するようになり、`playerHp`の上限としてモジュール内定数`PLAYER_MAX_HP`を直接参照していた4箇所(`regeneration.ts`・`advanceTurn.ts`の回復薬クランプ・`validateGameState.ts`・`main.tsx`)はすべて`state.playerMaxHp`経由に置き換わった(`PLAYER_MAX_HP`は初期値としてのみ`initialState.ts`から参照される)。パイプライン確認では、アリーナで隣接ゾンビを連続撃破し経験値蓄積→レベルアップ→`playerMaxHp`/`playerHp`の実際の増加→`player-leveled-up`イベント発火までを`dist/game/index.mjs`越しに確認した。テストは731件(前回722件から+9)すべて通過、型検査・lint・knip・buildも全てクリーン。
+**マイルストーン45完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

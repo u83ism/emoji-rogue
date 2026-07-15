@@ -107,6 +107,25 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	nymph: NYMPH_ACTIONS_PER_TURN,
 	aquator: AQUATOR_ACTIONS_PER_TURN,
 };
+/** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
+export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
+	zombie: 2,
+	bat: 1,
+	thief: 2,
+	nymph: 1,
+	aquator: 3,
+};
+
+/** Max HP gained each time the player levels up — see applyExperienceGain. */
+export const PLAYER_LEVEL_UP_HP_BONUS = 3;
+/**
+ * Cumulative experience needed to reach level 2, 3, ... 10 (index 0 = level
+ * 2's threshold), roughly doubling each step like original Rogue. Level 10
+ * is the cap — no further growth once playerExperience exceeds the last entry.
+ */
+export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
+	10, 20, 40, 80, 160, 320, 640, 1280, 2560,
+];
 
 /** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */
 export interface EnemyCountScaling {

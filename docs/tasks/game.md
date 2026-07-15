@@ -266,7 +266,8 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [x] `src/main.tsx`: 起動時にセーブから再開した場合はリプレイ記録なし(`undefined`)、新規ダンジョンの場合は`{width, height, seed, actions: []}`で開始。以降ディスパッチした`Action`を全て追記し、実行が`playing`でなくなったタイミング(死亡・勝利・終了・中断セーブ)で`saveReplay`を呼ぶ
 - [x] `src/game/index.ts`: `Replay`型・`buildReplayGameState`・`parseReplayFileContent`を再エクスポート(検証スクリプトから使えるように)
 - [x] `scripts/replay-verify.mjs`(新規): `~/.emoji-rogue/replay.json`を読み込み`buildReplayGameState`で再構築し、アクション数・到達フロア・最終HP・ステータスを表示するだけの手動確認用スクリプト(`scripts/demo-renderer.mjs`と同じ位置づけ)。`npm run build && node scripts/replay-verify.mjs`
-- [ ] 実機確認: 実際にCLIで少し遊んでから終了し、`replay.json`が書き出されること・`replay-verify.mjs`が実プレイと矛盾しない結果を表示することを確認(このセッションはリモート環境のため未実施 — リプレイの核はテストで決定性を検証済み)
+- [x] パイプライン確認(このセッション内で実施): `npm run build`後、手作業で組んだ`replay.json`(`buildReplayFileContent`と同じ形式)を`~/.emoji-rogue/`に置き、`node scripts/replay-verify.mjs`が`dist/game/index.mjs`経由で正しく読み込み・再構築し、期待どおりの到達フロア/HP/ステータスを表示することを確認
+- [ ] 実機確認: 実際にCLIを対話操作して遊んでから終了し、`main.tsx`が`replay.json`を書き出すこと自体を確認(Inkはraw-mode TTYが必須でこのリモート環境では対話操作そのものができないため未実施。再構築ロジック自体はテスト+上記パイプライン確認で検証済み)
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機確認のみ保留のため、完了扱いはそれを確認してから。
 

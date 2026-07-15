@@ -38,6 +38,10 @@ describe("formatEvent", () => {
 				{ type: "item-picked-up", payload: { kind: "potion" } },
 				"回復薬を拾った",
 			],
+			[
+				{ type: "game-won", payload: { floor: 10 } },
+				"10階に到達し、生還に成功した!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event)).toBe(expected);

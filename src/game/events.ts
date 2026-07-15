@@ -41,6 +41,10 @@ export type GameEvent =
 	| {
 			readonly type: "item-picked-up";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			readonly type: "game-won";
+			readonly payload: { readonly floor: number };
 	  };
 
 /**

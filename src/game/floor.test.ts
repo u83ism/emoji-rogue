@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
-import { calculateEnemyCountForFloor } from "./balance.js";
+import { calculateEnemyCountForFloor, GOAL_FLOOR } from "./balance.js";
 import { descendStairs } from "./floor.js";
 import { buildDungeonGameState } from "./initialState.js";
 
@@ -52,14 +52,38 @@ describe("descendStairs", () => {
 		}
 	});
 
-	it("keeps descending: 10 floors without breaking invariants", () => {
+	it("keeps descending: several floors without breaking invariants", () => {
+		/* stays comfortably below GOAL_FLOOR — reaching it is covered separately */
 		let state = buildDungeonGameState(40, 20, 7);
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 5; i++) {
 			state = descendStairs(state);
 			expect(state.floor).toBe(i + 2);
 			expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 			expect(state.terrain[state.stairs.x]?.[state.stairs.y]).toBe(0);
 		}
+	});
+
+	it("reaching GOAL_FLOOR ends the run in victory instead of generating a new floor", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+			state = descendStairs(state);
+		}
+		expect(state.floor).toBe(GOAL_FLOOR);
+		expect(state.status).toBe("won");
+		expect(state.events.at(-1)).toEqual({
+			type: "game-won",
+			payload: { floor: GOAL_FLOOR },
+		});
+	});
+
+	it("calling descendStairs again past victory stays won (defensive clamp)", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+			state = descendStairs(state);
+		}
+		const again = descendStairs(state);
+		expect(again.floor).toBe(GOAL_FLOOR);
+		expect(again.status).toBe("won");
 	});
 
 	it("spawns more enemies on deeper floors, matching the scaling formula", () => {

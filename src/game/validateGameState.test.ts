@@ -145,6 +145,21 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "game-won", payload: { floor: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed game-won event", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "game-won", payload: { floor: 10 } }],
+		});
+		expect(result.ok).toBe(true);
 	});
 
 	it("accepts a well-formed inventory and rejects a broken one", () => {

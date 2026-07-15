@@ -24,7 +24,7 @@ export type Action =
  * "suspended" is the request to suspend-save: the reducer only marks it, and
  * the shell reacts by writing the save file and exiting (no I/O in the core).
  */
-export type GameStatus = "playing" | "dead" | "exited" | "suspended";
+export type GameStatus = "playing" | "dead" | "exited" | "suspended" | "won";
 
 export interface Position {
 	readonly x: number;

@@ -72,3 +72,6 @@ export const calculateEnemyCountForFloor = (
 
 export const POTION_COUNT_PER_FLOOR = 2;
 export const POTION_HEAL_AMOUNT = 5;
+
+/** Reaching this floor ends the run in victory — see floor.ts's descendStairs. */
+export const GOAL_FLOOR = 10;

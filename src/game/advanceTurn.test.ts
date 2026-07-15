@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
-import { PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
+import { GOAL_FLOOR, PLAYER_MAX_HP, ZOMBIE_MAX_HP } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
@@ -244,6 +244,26 @@ describe("advanceTurn", () => {
 			{ type: "floor-descended", payload: { floor: 2 } },
 		]);
 		expect(next.terrain).not.toEqual(state.terrain);
+	});
+
+	it("reaching GOAL_FLOOR through the stairs ends the run in victory", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			floor: GOAL_FLOOR - 1,
+			stairs: { x: start.player.x + 1, y: start.player.y },
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.status).toBe("won");
+		expect(next.floor).toBe(GOAL_FLOOR);
+		expect(next.events).toEqual([
+			{ type: "game-won", payload: { floor: GOAL_FLOOR } },
+		]);
+	});
+
+	it("ignores moves once the run has been won", () => {
+		const state = { ...buildArenaGameState(5, 5, 1), status: "won" as const };
+		expect(advanceTurn(state, move("east"))).toBe(state);
 	});
 
 	it("an enemy standing on the staircase gets bump-attacked, not skipped past", () => {

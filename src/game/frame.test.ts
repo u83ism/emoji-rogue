@@ -67,6 +67,13 @@ describe("buildFrameGrid", () => {
 		).toBe("🧑");
 	});
 
+	it("draws the player celebrating once the run has ended in victory", () => {
+		const won = { ...state, status: "won" as const };
+		expect(buildFrameGrid(won)[state.player.y]?.[state.player.x]?.glyph).toBe(
+			"🎉",
+		);
+	});
+
 	it("renders the three vision layers", () => {
 		/* 30x5 arena: player starts at (15,2); view radius is 8 */
 		const wide = buildArenaGameState(30, 5, 1);

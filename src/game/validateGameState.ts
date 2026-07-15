@@ -108,6 +108,8 @@ const isGameEvent = (value: unknown): boolean => {
 			return isItemKind(payload.by) && isNonNegativeInteger(payload.amount);
 		case "item-picked-up":
 			return isItemKind(payload.kind);
+		case "game-won":
+			return isPositiveInteger(payload.floor);
 		default:
 			return false;
 	}

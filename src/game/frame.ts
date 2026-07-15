@@ -1,7 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell, TileGlyphs } from "../renderer/index.js";
 import type { EnemyKind } from "./events.js";
-import type { GameState } from "./state.js";
+import type { GameState, GameStatus } from "./state.js";
 import { computeVisiblePoints } from "./vision.js";
 
 // Tile set limited to emoji already verified stable on a real terminal
@@ -15,6 +15,8 @@ const PLAYER_CELL: Cell = { glyph: "🧑" };
 /* Single-codepoint, Unicode 6.0 — inside the "technically stable" emoji
  * category docs/design.md restricts tiles to. */
 const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
+/* Also single-codepoint, Unicode 6.0 — shown once the player reaches GOAL_FLOOR. */
+const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
 /* Bat, also single-codepoint. Per-kind so a third enemy kind is one entry. */
 const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	zombie: { glyph: "🧟" },
@@ -55,6 +57,17 @@ const toCell = (
 		return value === 1 ? REMEMBERED_WALL_CELL : REMEMBERED_FLOOR_CELL;
 	}
 	return UNEXPLORED_CELL;
+};
+
+/** Which glyph stands on the player's own tile, by run outcome. */
+const resolvePlayerCell = (status: GameStatus): Cell => {
+	if (status === "dead") {
+		return DEAD_PLAYER_CELL;
+	}
+	if (status === "won") {
+		return WON_PLAYER_CELL;
+	}
+	return PLAYER_CELL;
 };
 
 /**
@@ -109,7 +122,6 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	if (playerRow === undefined) {
 		throw new Error("unreachable: player is always inside the terrain grid");
 	}
-	playerRow[state.player.x] =
-		state.status === "dead" ? DEAD_PLAYER_CELL : PLAYER_CELL;
+	playerRow[state.player.x] = resolvePlayerCell(state.status);
 	return grid;
 };

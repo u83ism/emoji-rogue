@@ -2,6 +2,7 @@ import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { advanceTurn } from "./game/advanceTurn.js";
 import { PLAYER_MAX_HP } from "./game/balance.js";
+import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { toInventoryLetter, toUseItemAction } from "./game/inventoryKeymap.js";
@@ -25,6 +26,19 @@ const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
 const LOG_LINE_COUNT = 3;
 const LOW_HP_THRESHOLD = 3;
+
+/** Death and victory get their own color to stand out from ordinary log lines. */
+const resolveLogLineStyle = (
+	event: GameEvent,
+): { readonly color?: string; readonly bold?: boolean } => {
+	if (event.type === "player-died") {
+		return { color: "red", bold: true };
+	}
+	if (event.type === "game-won") {
+		return { color: "green", bold: true };
+	}
+	return {};
+};
 
 const App = () => {
 	const { exit } = useApp();
@@ -94,12 +108,7 @@ const App = () => {
 				</Text>
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
-				<Text
-					key={eventIndex}
-					{...(event.type === "player-died"
-						? { color: "red", bold: true }
-						: {})}
-				>
+				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
 					{formatEvent(event)}
 				</Text>
 			))}

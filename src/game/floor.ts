@@ -6,6 +6,7 @@ import { createRng, type Rng } from "../rng.js";
 import {
 	calculateEnemyCountForFloor,
 	ENEMY_MAX_HP,
+	GOAL_FLOOR,
 	POTION_COUNT_PER_FLOOR,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
@@ -127,11 +128,23 @@ export const buildFloorLayout = (
  * multi-floor run stays reproducible from (dimensions, seed) alone. HP, the
  * inventory, the event log and the floor counter carry over; terrain,
  * enemies, staircase and the explored grid start fresh. Pure: deterministic
- * in its argument.
+ * in its argument. Reaching GOAL_FLOOR ends the run in victory instead —
+ * no new floor is generated, the RNG is left untouched.
  */
 export const descendStairs = (state: GameState): GameState => {
-	const rng = createRng(1).setState(state.rng);
 	const nextFloor = state.floor + 1;
+	if (nextFloor >= GOAL_FLOOR) {
+		return {
+			...state,
+			floor: GOAL_FLOOR,
+			events: buildEventLog(state.events, [
+				{ type: "game-won", payload: { floor: GOAL_FLOOR } },
+			]),
+			status: "won",
+		};
+	}
+
+	const rng = createRng(1).setState(state.rng);
 	const layout = buildFloorLayout(state.width, state.height, rng, nextFloor);
 	return deriveExploredState({
 		...state,

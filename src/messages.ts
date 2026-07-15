@@ -54,5 +54,7 @@ export const formatEvent = (event: GameEvent): string => {
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 		case "item-picked-up":
 			return `${ITEM_NAMES[event.payload.kind]}を拾った`;
+		case "game-won":
+			return `${event.payload.floor}階に到達し、生還に成功した!`;
 	}
 };

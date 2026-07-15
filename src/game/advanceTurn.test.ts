@@ -36,22 +36,16 @@ describe("advanceTurn", () => {
 	});
 
 	it("moving into an enemy is a bump attack: damage, no movement, turn spent", () => {
-		/* generous hp so the enemy survives the hit regardless of the roll */
-		const state = {
-			...buildArenaGameState(5, 5, 1),
-			enemies: [{ ...zombie(3, 2), hp: 20 }],
-		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [zombie(3, 2)] };
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual(state.player);
-		const [hitEvent, counterEvent] = next.events;
-		if (hitEvent?.type !== "enemy-hit" || counterEvent?.type !== "player-hit") {
-			throw new Error("unreachable: bumping an enemy always trades hits");
-		}
-		expect(next.enemies).toEqual([
-			{ ...zombie(3, 2), hp: 20 - hitEvent.payload.damage },
-		]);
+		expect(next.enemies).toEqual([{ ...zombie(3, 2), hp: ZOMBIE_MAX_HP - 1 }]);
 		/* the turn was spent, so the surviving adjacent enemy hits back */
-		expect(next.playerHp).toBe(state.playerHp - counterEvent.payload.damage);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
 	});
 
 	it("a killing blow removes the enemy", () => {
@@ -62,14 +56,10 @@ describe("advanceTurn", () => {
 		const next = advanceTurn(state, move("east"));
 		expect(next.enemies).toEqual([]);
 		expect(next.playerHp).toBe(state.playerHp);
-		expect(next.events[0]).toMatchObject({
-			type: "enemy-hit",
-			payload: { target: "zombie" },
-		});
-		expect(next.events[1]).toEqual({
-			type: "enemy-defeated",
-			payload: { target: "zombie" },
-		});
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
 	});
 
 	it("ignores moves once the run is over", () => {
@@ -88,7 +78,7 @@ describe("advanceTurn", () => {
 		};
 		const next = advanceTurn(state, { type: "wait" });
 		expect(next.player).toEqual(state.player);
-		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.playerHp).toBe(state.playerHp - 1);
 
 		/* waiting next to an enemy for the whole hp pool ends the run */
 		let current: GameState = state;
@@ -222,7 +212,7 @@ describe("advanceTurn", () => {
 			type: "use-item",
 			payload: { kind: "potion" },
 		});
-		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.playerHp).toBe(state.playerHp - 1);
 		expect(next.events.some((event) => event.type === "player-hit")).toBe(true);
 	});
 
@@ -339,15 +329,14 @@ describe("advanceTurn", () => {
 	it("an enemy standing on the staircase gets bump-attacked, not skipped past", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
 		const stairs = { x: start.player.x + 1, y: start.player.y };
-		/* generous hp so the enemy survives the hit regardless of the roll */
 		const state = {
 			...start,
 			stairs,
-			enemies: [{ ...stairs, kind: "zombie" as const, hp: 20 }],
+			enemies: [{ ...stairs, kind: "zombie" as const, hp: ZOMBIE_MAX_HP }],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(1);
-		expect(next.enemies[0]?.hp).toBeLessThan(20);
+		expect(next.enemies[0]?.hp).toBe(ZOMBIE_MAX_HP - 1);
 	});
 
 	it("quit marks the game as exited without touching the rest", () => {

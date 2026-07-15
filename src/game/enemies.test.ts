@@ -51,12 +51,10 @@ describe("advanceEnemies", () => {
 		const state = buildCorridorState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(5, 1)]);
-		const [hitEvent] = next.events;
-		if (hitEvent?.type !== "player-hit") {
-			throw new Error("unreachable: the adjacent zombie always attacks");
-		}
-		expect(hitEvent.payload.by).toBe("zombie");
-		expect(next.playerHp).toBe(state.playerHp - hitEvent.payload.damage);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
 		expect(next.status).toBe("playing");
 	});
 
@@ -65,14 +63,10 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
-		expect(next.events[0]).toMatchObject({
-			type: "player-hit",
-			payload: { by: "zombie" },
-		});
-		expect(next.events[1]).toEqual({
-			type: "player-died",
-			payload: { by: "zombie" },
-		});
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+			{ type: "player-died", payload: { by: "zombie" } },
+		]);
 	});
 
 	it("enemies stop acting once the run has ended this turn", () => {
@@ -144,14 +138,11 @@ describe("advanceEnemies", () => {
 		const state = buildCorridorState([bat(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([bat(5, 1)]);
-		const hits = next.events.filter((event) => event.type === "player-hit");
-		expect(hits.length).toBe(2);
-		const totalDamage = hits.reduce(
-			(sum, event) =>
-				sum + (event.type === "player-hit" ? event.payload.damage : 0),
-			0,
-		);
-		expect(next.playerHp).toBe(state.playerHp - totalDamage);
+		expect(next.playerHp).toBe(state.playerHp - 2);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+		]);
 	});
 
 	it("a bat's second attack is skipped once it already ended the run", () => {
@@ -159,37 +150,21 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
-		/* only the first attack happens — the run ended before the second */
-		const hits = next.events.filter((event) => event.type === "player-hit");
-		expect(hits.length).toBe(1);
-		expect(next.events[0]).toMatchObject({
-			type: "player-hit",
-			payload: { by: "bat" },
-		});
-		expect(next.events[1]).toEqual({
-			type: "player-died",
-			payload: { by: "bat" },
-		});
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
+			{ type: "player-died", payload: { by: "bat" } },
+		]);
 	});
 
-	it("playerDefense pulls the damage roll's mean down towards MIN_DAMAGE_TAKEN", () => {
-		/* zombie's mean damage (1) minus defense (1) is 0 — the floor should win
-		 * on (almost) every roll; checked across many seeds instead of trusting
-		 * a single one, since a single very-unlucky roll could round above it */
-		for (let seed = 1; seed <= 30; seed++) {
-			const state = {
-				...buildCorridorState([zombie(5, 1)]),
-				playerDefense: 1,
-				playerHp: 5,
-				rng: seedToState(seed),
-			};
-			const next = advanceEnemies(state);
-			const hitEvent = next.events.find((event) => event.type === "player-hit");
-			if (hitEvent?.type !== "player-hit") {
-				throw new Error("unreachable: the adjacent zombie always attacks");
-			}
-			expect(hitEvent.payload.damage).toBeGreaterThanOrEqual(MIN_DAMAGE_TAKEN);
-		}
+	it("playerDefense reduces incoming damage", () => {
+		const state = {
+			...buildCorridorState([zombie(5, 1)]),
+			playerDefense: 1,
+			playerHp: 5,
+		};
+		const next = advanceEnemies(state);
+		/* zombie deals 1; defense would reduce it to 0, but the floor wins */
+		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
 	});
 
 	it("however high playerDefense climbs, damage never drops below MIN_DAMAGE_TAKEN", () => {

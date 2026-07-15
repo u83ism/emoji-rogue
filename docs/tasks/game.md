@@ -216,23 +216,26 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
 
-## マイルストーン15 — ダメージに正規分布の乱数幅を持たせる
+## マイルストーン15 — ダメージの正規分布乱数幅を検討 → 撤回(ユーティリティは温存)
 
 戦闘を固定値からダイス制にする(バックログ長期保留項目)。**一様乱数ではなく正規分布**を使う方針(2026-07-15決定): 一様乱数の「最大値も最小値も同じ確率」という性質はゲームの手触りとして極端な当たり外れを生みやすく、平均値付近に集まる正規分布の方が「基本は安定・稀に上振れ下振れ」という納得感のある結果になる。`src/rng.ts`の`Rng.getNormal(mean, stddev)`は元々rot.js由来のBox-Muller実装(本物の正規分布)がそのまま残っていたので、これを**変更せず**そのまま使う。
 
 正規分布のサンプリングは棄却法(do-whileで`r`が範囲に収まるまでuniformを引き直す)のため、消費するuniform乱数の回数が可変で、他の乱数消費箇所で使っている`stepUniform(state) => {value, state}`という純粋ステップ関数の形に馴染まない。そこで`floor.ts`の`descendStairs`が既にやっている「`createRng(1).setState(rng)`で`RngState`を一時的にステートフルな`Rng`に包み、使い終わったら`.getState()`で取り出す」という既存パターンを踏襲した新規モジュール`src/game/damage.ts`の`rollDamage(rng, mean, minimum)`に切り出す。
 
 - [x] `src/game/damage.ts`(新規): `rollDamage(rng: RngState, mean: number, minimum: number): {damage: number, rng: RngState}`。`getNormal(mean, DAMAGE_VARIANCE_STDDEV)`を四捨五入し、`minimum`を下限にクリップ + テスト(決定性・下限クリップ・複数シードでの分布の広がりを確認)
-- [x] `src/game/balance.ts`: `DAMAGE_VARIANCE_STDDEV = 0.5`を追加。冒頭コメントの「ダメージは固定値」という記述を撤回
-- [x] `src/game/combat.ts`: `applyPlayerAttack`が`state.playerAttackDamage`をそのまま使うのをやめ、`rollDamage(state.rng, state.playerAttackDamage, 1)`の結果を使うように変更(`rng`を戻り値のstateに反映) + テスト
-- [x] `src/game/enemies.ts`: 隣接攻撃のダメージ計算を`rollDamage(rng, ENEMY_ATTACK_DAMAGE[kind] - state.playerDefense, MIN_DAMAGE_TAKEN)`に変更(ループ内で既に引き回している`rng`をそのまま使う) + テスト
-- [x] 既存テストの改修: `combat.test.ts`・`enemies.test.ts`・`advanceTurn.test.ts`のダメージ固定値前提のアサーション(`damage: 1`等のハードコード)を、実際に発生したイベントのダメージ値を読んでそこから期待値を導出する形、または範囲チェックに変更。「防御力100でもMIN_DAMAGE_TAKEN未満にはならない」テストは、平均が大きく負に振れてもクリップが勝つため変更不要だった
-- [ ] 実機スモークテスト: 戦闘のダメージにばらつきが出ること・極端な値に振れないこと・ログ表示の見え方を確認(このセッションはリモート環境のため未実施)
+- [x] `src/game/balance.ts`: `DAMAGE_VARIANCE_STDDEV = 0.5`を追加
+- [x] `src/game/combat.ts`・`src/game/enemies.ts`: 戦闘のダメージ計算を`rollDamage`経由に変更 → **撤回(2026-07-15)**。詳細は下記
+- [ ] 実機スモークテスト: 保留のまま撤回により対象外
 
-自動テスト(型検査・lint・Vitest・knip)は通過済み。実機スモークテストのみ保留のため、完了扱いはそれを確認してから。
+**撤回の経緯**: `applyPlayerAttack`・`advanceEnemies`の隣接攻撃を`rollDamage`経由に変更し、`combat.test.ts`・`enemies.test.ts`・`advanceTurn.test.ts`のダメージ固定値前提のアサーションも実際のイベント値から導出する形に改めて一度は導入したが、実機確認前に「既存の(固定値)実装に戻したい」という判断で撤回した。`src/game/damage.ts`の`rollDamage`とそのテストは**将来また使うタイミングのためにそのまま残し**、`combat.ts`・`enemies.ts`・上記3テストファイルは撤回前(マイルストーン14終了時点)の固定値実装に戻した。`balance.ts`の`DAMAGE_VARIANCE_STDDEV`も、今は何からも呼ばれないが定数として残置している。
+
+**`Rng.getNormal`について**: `src/rng.ts`のBox-Muller実装は今回このマイルストーンで新規に足したものではなく、近代化改修の初期(コミットb72f753、Windows Terminal実機確認用デモスクリプト追加のタイミング)から存在していた、rot.js由来の「本物の」正規分布実装。今回もこの関数自体には一切手を入れていない。
+
+自動テスト(型検査・lint・Vitest・knip)は通過済み。
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
+- ダメージの乱数幅(マイルストーン15で正規分布版`rollDamage`を実装したが撤回。`src/game/damage.ts`にユーティリティとテストを残してあるので、再導入時は`combat.ts`/`enemies.ts`から呼び直すだけで済む)
 - スケジューラ接続(`src/scheduler/`のspeed schedulerは今も未使用。敵の速度差自体はマイルストーン9でプレーンデータ方式により解決済み — 上記参照。クロージャベースのSchedulerがリデューサの`GameState`と根本的に相性が悪いことが判明したため、実際に接続するとしたらリデューサ外の非ターン制な何かが対象になる)
 - 扉ギミック(封印中): 鍵つき扉など「特殊な出入口」として意味を持たせられるようになったら再導入。ただの通過タイルなら不要(不思議のダンジョン系準拠)。焼き込み実装はコミット9cf29be、見分けづらさ・2マス通路問題は上記マイルストーン2の記録を参照
 - セーブ/ロード(GameStateのシリアライズ)

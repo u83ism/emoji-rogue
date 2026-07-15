@@ -25,23 +25,17 @@ describe("isAdjacent", () => {
 describe("applyPlayerAttack", () => {
 	const state = buildArenaGameState(9, 9, 1);
 
-	it("damages the target (a roll around playerAttackDamage) and logs the hit", () => {
-		/* plenty of hp so the target survives regardless of the exact roll */
-		const target = zombie(5, 4, 20);
+	it("damages the target and logs the hit", () => {
+		const target = zombie(5, 4);
 		const bystander = zombie(7, 7);
 		const next = applyPlayerAttack(
 			{ ...state, enemies: [target, bystander] },
 			target,
 		);
-		const [hitEvent] = next.events;
-		if (hitEvent?.type !== "enemy-hit") {
-			throw new Error("unreachable: applyPlayerAttack always logs enemy-hit");
-		}
-		const damage = hitEvent.payload.damage;
-		expect(damage).toBeGreaterThanOrEqual(1);
-		expect(damage).toBeLessThanOrEqual(state.playerAttackDamage + 3);
-		expect(next.enemies).toEqual([zombie(5, 4, 20 - damage), bystander]);
-		expect(next.rng).not.toEqual(state.rng); /* the roll consumed randomness */
+		expect(next.enemies).toEqual([zombie(5, 4, ZOMBIE_MAX_HP - 1), bystander]);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+		]);
 	});
 
 	it("removes a target whose hp reaches zero and logs the defeat", () => {
@@ -52,14 +46,10 @@ describe("applyPlayerAttack", () => {
 			target,
 		);
 		expect(next.enemies).toEqual([bystander]);
-		expect(next.events[0]).toMatchObject({
-			type: "enemy-hit",
-			payload: { target: "zombie" },
-		});
-		expect(next.events[1]).toEqual({
-			type: "enemy-defeated",
-			payload: { target: "zombie" },
-		});
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
 	});
 
 	it("does not move the player or touch the terrain", () => {
@@ -69,18 +59,13 @@ describe("applyPlayerAttack", () => {
 		expect(next.terrain).toBe(state.terrain);
 	});
 
-	it("rolls around playerAttackDamage, not a hardcoded base (a sword raises it)", () => {
-		const target = zombie(5, 4, 20);
+	it("deals playerAttackDamage, not a hardcoded amount (a sword raises it)", () => {
+		const target = zombie(5, 4, 10);
 		const boosted = { ...state, playerAttackDamage: 3, enemies: [target] };
 		const next = applyPlayerAttack(boosted, target);
-		const [hitEvent] = next.events;
-		if (hitEvent?.type !== "enemy-hit") {
-			throw new Error("unreachable: applyPlayerAttack always logs enemy-hit");
-		}
-		const damage = hitEvent.payload.damage;
-		/* clearly rolling around the boosted mean (3), not the base (1) */
-		expect(damage).toBeGreaterThanOrEqual(2);
-		expect(damage).toBeLessThanOrEqual(4);
-		expect(next.enemies).toEqual([zombie(5, 4, 20 - damage)]);
+		expect(next.enemies).toEqual([zombie(5, 4, 7)]);
+		expect(next.events).toEqual([
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 3 } },
+		]);
 	});
 });

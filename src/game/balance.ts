@@ -1,5 +1,9 @@
 // Combat tuning knobs, all in one place. Values are provisional and expected
 // to change after real-terminal playtesting (docs/tasks/game.md, milestone 5).
+// Damage is a fixed amount — no dice — so combat stays deterministic
+// (docs/tasks/game.md milestone 15: a normal-distribution roll was tried and
+// rolled back, but the reusable rollDamage() in damage.ts is kept for when
+// dice-based damage is wanted again).
 
 import type { EnemyKind } from "./events.js";
 
@@ -8,9 +12,9 @@ export const PLAYER_ATTACK_DAMAGE = 1;
 /** However high playerDefense climbs, an enemy attack always deals at least this much. */
 export const MIN_DAMAGE_TAKEN = 1;
 /**
- * Standard deviation for damage rolls (see damage.ts's rollDamage). Normal,
- * not uniform, so hits cluster around the mean instead of swinging evenly
- * across the whole range — see docs/tasks/game.md milestone 15.
+ * Standard deviation for damage.ts's rollDamage(), which nothing currently
+ * calls — combat is deterministic for now (see the comment above). Kept so
+ * the normal-distribution pattern is ready to wire back in later.
  */
 export const DAMAGE_VARIANCE_STDDEV = 0.5;
 

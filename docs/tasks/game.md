@@ -820,6 +820,26 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 `GameState`への新規フィールド追加なし・`SAVE_FORMAT_VERSION`据え置きで完結した(既存フィールドからの純粋な導出のみ)。`messages.ts`に`formatScoreSummary`を追加し、スコア文言の組み立ても他の`formatEvent`/`formatInventoryEntry`と同じくshell側の1箇所に集約した。`main.tsx`では`state.status`が`"dead"`/`"won"`になった最終フレームでログの下にスコア行を1行追加しただけで、既存の「最終フレームが画面に残ったままexitする」という仕組みをそのまま利用した。パイプライン確認では、所持金・到達階層・レベル・アミュレット所持を組み合わせた複数パターンで`calculateScore`が期待通り増減することを`dist/game/index.mjs`越しに確認した。テストは760件(前回756件から+4)すべて通過、型検査・lint・knip・buildも全てクリーン。
 **マイルストーン49完了(2026-07-15)。**
 
+## マイルストーン50 — 索敵の薬(FOVを迂回して敵の位置を一時的に可視化)
+
+原作Rogueのpotion of monster detectionは、マップ全体の敵の位置を一時的に見えるようにする——地形は見えないままだが、敵だけはFOVの外や未探索領域にいても表示される。これまでの一時状態(混乱・浮遊・盲目・麻痺)は視界やプレイヤーの行動そのものに作用するものだったが、この薬は初めて「敵の描画条件」に作用する。`frame.ts`の`buildFrameGrid`は現在「`visiblePoints`に含まれる敵だけ描画する」という1行の条件分岐で敵の可視性を決めており(`if (!visiblePoints.has(...)) continue;`)、この条件に`state.detectMonstersTurnsRemaining > 0`を`||`で足すだけで実現できる。マイルストーン46で新設した`applyTurnEndTicks`にもう1つtickを足すだけで済むため、実装コストは既存の一時状態群の中でも最小の部類になる。
+
+- [ ] `src/game/events.ts`: `ItemKind`に`"detect-monster"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-detected-monsters`(payload: 継続ターン数`turns`)・`detect-monsters-faded`(payloadなし)を追加
+- [ ] `src/game/state.ts`: `GameState`に`detectMonstersTurnsRemaining: number`(構造変更)を追加
+- [ ] `src/game/balance.ts`: `DETECT_MONSTER_POTION_DURATION = 20`・`DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 25`を追加
+- [ ] `src/game/detectMonsters.ts`(新規、`confusion.ts`/`levitation.ts`/`blindness.ts`/`paralysis.ts`と対になるファイル): `applyDetectMonstersTick(state)` — `detectMonstersTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`detect-monsters-faded`を記録する純粋関数(rng不使用) + テスト
+- [ ] `src/game/advanceTurn.ts`: `applyTurnEndTicks`に`applyDetectMonstersTick`を追加(既存の呼び出し4箇所すべてに自動的に効く)。`applyUseItem`に`detect-monster`分岐(`detectMonstersTurnsRemaining`を`DETECT_MONSTER_POTION_DURATION`にセットし`player-detected-monsters`を記録)を追加 + テスト
+- [ ] `src/game/frame.ts`: 敵描画の可視性条件を`visiblePoints.has(encodePointKey(enemy.x, enemy.y)) || state.detectMonstersTurnsRemaining > 0`に変更(地形やアイテムの可視性条件はそのまま — 索敵の薬は敵の位置だけを暴く) + テスト
+- [ ] `src/game/floor.ts`: スポーンプールから低確率で索敵の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`"detect-monster": 💊`(未鑑定のため回復薬等と同一)を追加
+- [ ] `src/main.tsx`: ステータスバーに索敵中であることを示す表示を追加(混乱中・浮遊中・盲目・麻痺と同様の1項目)
+- [ ] `src/messages.ts`: `ITEM_NAMES`に`"detect-monster": "索敵の薬"`、`player-detected-monsters`(「◯を飲んだ。敵の気配を感じ取れるようになった!」)・`detect-monsters-faded`(「敵の気配を感じられなくなった」)の文言 + テスト
+- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"detect-monster"`を追加。`detectMonstersTurnsRemaining`(0以上の整数)の検証、`player-detected-monsters`/`detect-monsters-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を22に** + テスト
+- [ ] `src/game/save.test.ts`: shape guardに`detectMonstersTurnsRemaining: "number"`を追記
+- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、索敵の薬を飲むと視界外・未探索領域の敵が`buildFrameGrid`の出力に現れることを確認する
+
+自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

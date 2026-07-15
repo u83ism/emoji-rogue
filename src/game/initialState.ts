@@ -84,7 +84,7 @@ export function buildDungeonGameState(
 	seed: number,
 ): GameState {
 	const rng = createRng(seed);
-	const layout = buildFloorLayout(width, height, rng);
+	const layout = buildFloorLayout(width, height, rng, 1);
 
 	return deriveExploredState({
 		width,

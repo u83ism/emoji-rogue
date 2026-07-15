@@ -11,14 +11,14 @@ export const PLAYER_ATTACK_DAMAGE = 1;
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;
 export const ZOMBIE_ACTIONS_PER_TURN = 1;
-export const ZOMBIE_COUNT_PER_FLOOR = 3;
+export const ZOMBIE_COUNT_BASE = 3;
 
 // A glass cannon: one hit kills it, but it acts twice per player turn, so
 // standing next to one costs as much HP as standing next to two zombies.
 export const BAT_MAX_HP = 1;
 export const BAT_ATTACK_DAMAGE = 1;
 export const BAT_ACTIONS_PER_TURN = 2;
-export const BAT_COUNT_PER_FLOOR = 2;
+export const BAT_COUNT_BASE = 2;
 
 /**
  * Per-kind lookup tables so `advanceEnemies`/`floor.ts` stay kind-agnostic —
@@ -41,6 +41,33 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ACTIONS_PER_TURN,
 	bat: BAT_ACTIONS_PER_TURN,
+};
+
+/** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */
+export interface EnemyCountScaling {
+	readonly base: number;
+	readonly growthInterval: number;
+	readonly max: number;
+}
+
+/** Bats grow faster (every 2 floors vs. every 3) — deeper floors skew towards the faster kind. */
+export const ENEMY_COUNT_SCALING: Readonly<
+	Record<EnemyKind, EnemyCountScaling>
+> = {
+	zombie: { base: ZOMBIE_COUNT_BASE, growthInterval: 3, max: 8 },
+	bat: { base: BAT_COUNT_BASE, growthInterval: 2, max: 8 },
+};
+
+/** How many of `kind` spawn on the given (1-based) floor. */
+export const calculateEnemyCountForFloor = (
+	kind: EnemyKind,
+	floor: number,
+): number => {
+	const scaling = ENEMY_COUNT_SCALING[kind];
+	return Math.min(
+		scaling.base + Math.floor((floor - 1) / scaling.growthInterval),
+		scaling.max,
+	);
 };
 
 export const POTION_COUNT_PER_FLOOR = 2;

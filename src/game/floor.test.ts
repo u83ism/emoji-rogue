@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
+import { calculateEnemyCountForFloor } from "./balance.js";
 import { descendStairs } from "./floor.js";
 import { buildDungeonGameState } from "./initialState.js";
 
@@ -58,6 +59,20 @@ describe("descendStairs", () => {
 			expect(state.floor).toBe(i + 2);
 			expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 			expect(state.terrain[state.stairs.x]?.[state.stairs.y]).toBe(0);
+		}
+	});
+
+	it("spawns more enemies on deeper floors, matching the scaling formula", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= 7; floor++) {
+			state = descendStairs(state);
+			const kinds = state.enemies.map((enemy) => enemy.kind);
+			expect(kinds.filter((kind) => kind === "zombie").length).toBe(
+				calculateEnemyCountForFloor("zombie", floor),
+			);
+			expect(kinds.filter((kind) => kind === "bat").length).toBe(
+				calculateEnemyCountForFloor("bat", floor),
+			);
 		}
 	});
 });

@@ -344,6 +344,27 @@ describe("confusion potion spawning", () => {
 	});
 });
 
+describe("levitation potion spawning", () => {
+	it("spawns a levitation potion on some floors and not others (independent per-floor roll)", () => {
+		const outcomes = Array.from({ length: 20 }, (_, index) =>
+			buildDungeonGameState(40, 20, index + 1).items.some(
+				(item) => item.kind === "levitation",
+			),
+		);
+		expect(outcomes.some((spawned) => spawned)).toBe(true);
+		expect(outcomes.some((spawned) => !spawned)).toBe(true);
+	});
+
+	it("never spawns more than one levitation potion on a floor", () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			const levitationCount = buildDungeonGameState(40, 20, seed).items.filter(
+				(item) => item.kind === "levitation",
+			).length;
+			expect(levitationCount).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
 describe("thief spawning", () => {
 	it("spawns a thief on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>

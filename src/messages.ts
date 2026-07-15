@@ -34,6 +34,7 @@ const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	wand: "杖",
 	confusion: "混乱の薬",
 	slow: "杖",
+	levitation: "浮遊の薬",
 };
 
 /** Shown for any potion-family item not yet identified this run. */
@@ -197,5 +198,9 @@ export const formatEvent = (
 			return "混乱がおさまった";
 		case "enemy-slowed":
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
+		case "player-levitated":
+			return `${ITEM_NAMES.levitation}を飲んだ。体がふわりと浮いた!`;
+		case "levitation-faded":
+			return "浮遊の効果が切れた";
 	}
 };

@@ -361,6 +361,39 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts well-formed player-levitated and levitation-faded events and rejects a broken one", () => {
+		const levitated = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-levitated", payload: { turns: 15 } }],
+		});
+		expect(levitated.ok).toBe(true);
+
+		const faded = validateGameState({
+			...buildValidState(),
+			events: [{ type: "levitation-faded", payload: {} }],
+		});
+		expect(faded.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-levitated", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("rejects a non-integer or negative levitationTurnsRemaining", () => {
+		expectRejected(
+			{ ...buildValidState(), levitationTurnsRemaining: -1 },
+			"levitationTurnsRemaining",
+		);
+		expectRejected(
+			{ ...buildValidState(), levitationTurnsRemaining: 1.5 },
+			"levitationTurnsRemaining",
+		);
+	});
+
 	it("rejects a non-integer or negative confusedTurnsRemaining", () => {
 		expectRejected(
 			{ ...buildValidState(), confusedTurnsRemaining: -1 },

@@ -17,7 +17,8 @@ export type ItemKind =
 	| "enchant-armor"
 	| "wand"
 	| "confusion"
-	| "slow";
+	| "slow"
+	| "levitation";
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
@@ -28,6 +29,7 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"poison",
 	"strength",
 	"confusion",
+	"levitation",
 ];
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
@@ -198,6 +200,16 @@ export type GameEvent =
 			/** A wand of slow monster freezing its target — see advanceEnemies. */
 			readonly type: "enemy-slowed";
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+	  }
+	| {
+			/** Drinking a levitation potion — see applyLevitationTick. */
+			readonly type: "player-levitated";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn levitationTurnsRemaining reaches 0 — see applyLevitationTick. */
+			readonly type: "levitation-faded";
+			readonly payload: Record<string, never>;
 	  };
 
 /**

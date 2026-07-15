@@ -268,3 +268,8 @@ export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 30;
 export const SLOW_WAND_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
 export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 15;
+
+/** How many turns a levitation potion floats the player over traps for. */
+export const LEVITATION_POTION_DURATION = 15;
+/** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
+export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25;

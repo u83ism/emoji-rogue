@@ -16,6 +16,7 @@ import {
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
+	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
@@ -252,6 +253,12 @@ export const buildFloorLayout = (
 		rng.getUniformInt(0, 99) < CONFUSION_POTION_SPAWN_CHANCE_PERCENT
 	) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "confusion" });
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < LEVITATION_POTION_SPAWN_CHANCE_PERCENT
+	) {
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "levitation" });
 	}
 	if (
 		remaining.length > 0 &&

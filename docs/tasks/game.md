@@ -664,20 +664,22 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 原作Rogueの"potion of levitation"を導入する。未鑑定ポーションの5種類目(混乱の薬に続く2つ目の一時状態系ポーション)。効果は単純明快——一定ターンの間、わな(ダーツ・落とし穴)の発動そのものを無効化する。`applyTrapTrigger`は既にダメージ系・強制降下系の両方を1つの関数で扱っているため、「発動前に早期returnする1行」を足すだけで両方に自動的に効く。混乱(マイルストーン40)で確立した`applyXxxTick`+専用ファイルの型をそのまま踏襲する。
 
-- [ ] `src/game/events.ts`: `ItemKind`に`"levitation"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-levitated`(payload: 継続ターン数`turns`)・`levitation-faded`(payloadなし)を追加
-- [ ] `src/game/state.ts`: `GameState`に`levitationTurnsRemaining: number`(構造変更)を追加
-- [ ] `src/game/balance.ts`: `LEVITATION_POTION_DURATION = 15`・`LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25`(他の未鑑定ポーションと同じ独立per-floor判定)を追加
-- [ ] `src/game/levitation.ts`(新規、`confusion.ts`と対になるファイル): `applyLevitationTick(state)` — `levitationTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`levitation-faded`を記録する純粋関数(rng不使用) + テスト
-- [ ] `src/game/floor.ts`: スポーンプールから低確率で浮遊の薬を1個抽選(見た目は回復薬と同一) + テスト
-- [ ] `src/game/advanceTurn.ts`: `applyTrapTrigger`の先頭で`state.levitationTurnsRemaining > 0`なら`state`をそのまま返す(わなは発動せず、消費もされない——浮いて素通りする)。`applyUseItem`に`levitation`分岐(`levitationTurnsRemaining`を`LEVITATION_POTION_DURATION`にセットし`player-levitated`を記録)を追加。move/wait/use-itemの3箇所すべてで`applyLevitationTick`を(`applyConfusionTick`等と並べて)呼ぶ + テスト(わな無効化・落とし穴による強制降下も無効化されること・鑑定・継続ターン数の減衰を含む)
-- [ ] `src/game/frame.ts`: `ITEM_GLYPHS`に`levitation: 💊`(未鑑定のため回復薬等と同一)を追加
-- [ ] `src/main.tsx`: ステータスバーに浮遊中であることを示す表示を追加(混乱中と同様の1項目)
-- [ ] `src/messages.ts`: `ITEM_NAMES`に`levitation: "浮遊の薬"`、`player-levitated`(「◯を飲んだ。体がふわりと浮いた!」)・`levitation-faded`(「浮遊の効果が切れた」)の文言 + テスト
-- [ ] `src/game/validateGameState.ts`: `isItemKind`に`"levitation"`を追加。`levitationTurnsRemaining`(0以上の整数)の検証、`player-levitated`/`levitation-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を17に** + テスト
-- [ ] `src/game/save.test.ts`: shape guardに`levitationTurnsRemaining: "number"`を追記
-- [ ] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、わな(ダーツ・落とし穴それぞれ)の上に浮遊状態で乗せても`playerHp`・`floor`が変化しない(わなが消費されずそのまま残る)ことを確認し、浮遊が切れた後は通常どおりわなが発動することを確認する
+- [x] `src/game/events.ts`: `ItemKind`に`"levitation"`を追加し`POTION_KINDS`に加える。`GameEvent`に`player-levitated`(payload: 継続ターン数`turns`)・`levitation-faded`(payloadなし)を追加
+- [x] `src/game/state.ts`: `GameState`に`levitationTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `LEVITATION_POTION_DURATION = 15`・`LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25`(他の未鑑定ポーションと同じ独立per-floor判定)を追加
+- [x] `src/game/levitation.ts`(新規、`confusion.ts`と対になるファイル): `applyLevitationTick(state)` — `levitationTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`levitation-faded`を記録する純粋関数(rng不使用) + テスト
+- [x] `src/game/floor.ts`: スポーンプールから低確率で浮遊の薬を1個抽選(見た目は回復薬と同一) + テスト
+- [x] `src/game/advanceTurn.ts`: `applyTrapTrigger`の先頭で`state.levitationTurnsRemaining > 0`なら`state`をそのまま返す(わなは発動せず、消費もされない——浮いて素通りする)。`applyUseItem`に`levitation`分岐(`levitationTurnsRemaining`を`LEVITATION_POTION_DURATION`にセットし`player-levitated`を記録)を追加。move/wait/use-itemの3箇所すべてで`applyLevitationTick`を(`applyConfusionTick`等と並べて)呼ぶ + テスト(わな無効化・落とし穴による強制降下も無効化されること・鑑定・継続ターン数の減衰を含む)
+- [x] `src/game/frame.ts`: `ITEM_GLYPHS`に`levitation: 💊`(未鑑定のため回復薬等と同一)を追加
+- [x] `src/main.tsx`: ステータスバーに浮遊中であることを示す表示を追加(混乱中と同様の1項目)
+- [x] `src/messages.ts`: `ITEM_NAMES`に`levitation: "浮遊の薬"`、`player-levitated`(「◯を飲んだ。体がふわりと浮いた!」)・`levitation-faded`(「浮遊の効果が切れた」)の文言 + テスト
+- [x] `src/game/validateGameState.ts`: `isItemKind`に`"levitation"`を追加。`levitationTurnsRemaining`(0以上の整数)の検証、`player-levitated`/`levitation-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を17に** + テスト
+- [x] `src/game/save.test.ts`: shape guardに`levitationTurnsRemaining: "number"`を追記
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、わな(ダーツ・落とし穴それぞれ)の上に浮遊状態で乗せても`playerHp`・`floor`が変化しない(わなが消費されずそのまま残る)ことを確認し、浮遊が切れた後は通常どおりわなが発動することを確認する
 
-自動テスト(型検査・lint・Vitest・knip・build)が通過し、上記パイプライン確認が済んだら完了とする。
+自動テスト(型検査・lint・Vitest・knip・build)は通過済み。パイプライン確認(`npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで実施)でも、浮遊中はダーツトラップでダメージを受けず(わなも消費されず残存)、落とし穴でも強制降下しないこと、浮遊が切れた後は同じダーツトラップが通常どおり発動することを確認。
+
+**マイルストーン42完了(2026-07-15)。**
 
 ## バックログ(マイルストーン未整理)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)

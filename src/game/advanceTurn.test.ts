@@ -5,6 +5,7 @@ import { advanceTurn } from "./advanceTurn.js";
 import {
 	CONFUSION_POTION_DURATION,
 	GOAL_FLOOR,
+	LEVITATION_POTION_DURATION,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
 	SLOW_WAND_DURATION,
@@ -244,6 +245,39 @@ describe("advanceTurn", () => {
 			{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
 			{ type: "floor-descended", payload: { floor: state.floor + 1 } },
 		]);
+	});
+
+	it("levitating floats over a dart trap: no damage, trap left armed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			levitationTurnsRemaining: 5,
+			traps: [{ x: 5, y: 1, kind: "dart" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.traps).toEqual(state.traps); /* untouched, still hidden */
+		expect(next.events.some((event) => event.type === "trap-triggered")).toBe(
+			false,
+		);
+	});
+
+	it("levitating floats over a trapdoor: no forced descent", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			levitationTurnsRemaining: 5,
+			traps: [
+				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
+			],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(state.floor); /* did not fall */
+		expect(next.player).toEqual({
+			x: start.player.x + 1,
+			y: start.player.y,
+		});
+		expect(next.traps).toEqual(state.traps);
 	});
 
 	it("picking up a second potion of the same kind stacks the quantity", () => {
@@ -496,6 +530,28 @@ describe("advanceTurn", () => {
 				(event) =>
 					event.type === "player-confused" &&
 					event.payload.turns === CONFUSION_POTION_DURATION,
+			),
+		).toBe(true);
+	});
+
+	it("using a held levitation potion sets levitationTurnsRemaining and logs player-levitated", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ kind: "levitation" as const, quantity: 1 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { kind: "levitation" },
+		});
+		/* applyLevitationTick runs as part of the same turn-consuming action */
+		expect(next.levitationTurnsRemaining).toBe(LEVITATION_POTION_DURATION - 1);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["levitation"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-levitated" &&
+					event.payload.turns === LEVITATION_POTION_DURATION,
 			),
 		).toBe(true);
 	});
@@ -888,6 +944,7 @@ describe("advanceTurn", () => {
 				"poison",
 				"strength",
 				"confusion",
+				"levitation",
 			] as const,
 			inventory: [{ kind: "identify" as const, quantity: 1 }],
 		};

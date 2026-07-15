@@ -162,6 +162,12 @@ const App = () => {
 						<Text color="magenta">混乱中({state.confusedTurnsRemaining})</Text>
 					</>
 				)}
+				{state.levitationTurnsRemaining > 0 && (
+					<>
+						<Text> </Text>
+						<Text color="cyan">浮遊中({state.levitationTurnsRemaining})</Text>
+					</>
+				)}
 			</Box>
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>

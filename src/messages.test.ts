@@ -176,6 +176,11 @@ describe("formatEvent", () => {
 				{ type: "enemy-slowed", payload: { target: "zombie", turns: 5 } },
 				"杖の力でゾンビの動きを封じた!",
 			],
+			[
+				{ type: "player-levitated", payload: { turns: 15 } },
+				"浮遊の薬を飲んだ。体がふわりと浮いた!",
+			],
+			[{ type: "levitation-faded", payload: {} }, "浮遊の効果が切れた"],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

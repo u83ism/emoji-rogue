@@ -5,6 +5,7 @@ import {
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
 	FOOD_RATION_RESTORE_AMOUNT,
+	LEVITATION_POTION_DURATION,
 	MIN_PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
@@ -25,6 +26,7 @@ import type { GameEvent, ItemKind } from "./events.js";
 import { buildEventLog, POTION_KINDS } from "./events.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
+import { applyLevitationTick } from "./levitation.js";
 import { applyRegenerationTick } from "./regeneration.js";
 import type {
 	Action,
@@ -185,9 +187,14 @@ const applyGoldPickup = (state: GameState): GameState => {
  * bonus hit on an already-trap-killed player. A trapdoor that the player
  * survives additionally hands the (already trap-triggered) state straight to
  * descendStairs — the whole floor gets replaced exactly as if the player had
- * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included.
+ * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. While
+ * levitationTurnsRemaining is set, no trap can trigger at all — the player
+ * floats over it (dart or trapdoor alike), and it stays armed underneath.
  */
 const applyTrapTrigger = (state: GameState): GameState => {
+	if (state.levitationTurnsRemaining > 0) {
+		return state;
+	}
 	const trap = state.traps.find(
 		(candidate) =>
 			candidate.x === state.player.x && candidate.y === state.player.y,
@@ -517,6 +524,21 @@ const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		};
 	}
 
+	if (kind === "levitation") {
+		return {
+			...state,
+			levitationTurnsRemaining: LEVITATION_POTION_DURATION,
+			inventory,
+			identifiedPotionKinds,
+			events: buildEventLog(state.events, [
+				{
+					type: "player-levitated",
+					payload: { turns: LEVITATION_POTION_DURATION },
+				},
+			]),
+		};
+	}
+
 	const amount = Math.min(POTION_HEAL_AMOUNT, PLAYER_MAX_HP - state.playerHp);
 	return {
 		...state,
@@ -602,12 +624,16 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}
 			if (afterPlayer.floor !== state.floor) {
-				return applyConfusionTick(
-					applyRegenerationTick(applyHungerTick(afterPlayer)),
+				return applyLevitationTick(
+					applyConfusionTick(
+						applyRegenerationTick(applyHungerTick(afterPlayer)),
+					),
 				); /* descended — the new floor's enemies wait */
 			}
-			return applyConfusionTick(
-				applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
+			return applyLevitationTick(
+				applyConfusionTick(
+					applyRegenerationTick(applyHungerTick(advanceEnemies(afterPlayer))),
+				),
 			);
 		}
 		case "wait": {
@@ -617,8 +643,10 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.status !== "playing") {
 				return state;
 			}
-			return applyConfusionTick(
-				applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
+			return applyLevitationTick(
+				applyConfusionTick(
+					applyRegenerationTick(applyHungerTick(advanceEnemies(state))),
+				),
 			);
 		}
 		case "use-item": {
@@ -632,8 +660,10 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterUse.status !== "playing") {
 				return afterUse; /* a poison potion ended the run before enemies could act */
 			}
-			return applyConfusionTick(
-				applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
+			return applyLevitationTick(
+				applyConfusionTick(
+					applyRegenerationTick(applyHungerTick(advanceEnemies(afterUse))),
+				),
 			);
 		}
 		case "save": {

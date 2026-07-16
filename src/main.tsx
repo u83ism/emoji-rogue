@@ -2,31 +2,24 @@ import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { parseSeedArgument } from "./cliArgs.js";
 import { advanceTurn } from "./game/advanceTurn.js";
-import {
-	PLAYER_HUNGER_WARNING_THRESHOLD,
-	PLAYER_MAX_FOOD,
-} from "./game/balance.js";
 import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
-import { toInventoryLetter, toUseItemAction } from "./game/inventoryKeymap.js";
+import { toUseItemAction } from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import type { Replay } from "./game/replay.js";
 import { calculateScore } from "./game/score.js";
 import type { Action, GameState } from "./game/state.js";
-import {
-	FULL_WIDTH_INPUT_WARNING,
-	formatConducts,
-	formatEvent,
-	formatInventoryEntry,
-	formatScoreSummary,
-	GAME_SAVED_MESSAGE,
-	INVENTORY_EMPTY_MESSAGE,
-	INVENTORY_TITLE,
-} from "./messages.js";
+import { InventoryOverlay } from "./inventoryOverlay.js";
+import { formatConducts, formatEvent, formatScoreSummary } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
 import { saveReplay } from "./replayFile.js";
 import { loadSavedGameState, saveGameState } from "./saveFile.js";
+import { StatusBar } from "./statusBar.js";
+import {
+	FULL_WIDTH_INPUT_WARNING,
+	GAME_SAVED_MESSAGE,
+} from "./systemMessages.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
 // hands the resulting frame to Ink. All game logic lives in src/game/; all
@@ -35,13 +28,6 @@ import { loadSavedGameState, saveGameState } from "./saveFile.js";
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
 const LOG_LINE_COUNT = 3;
-const LOW_HP_THRESHOLD = 3;
-
-/** Warns in yellow once food drops to the hunger threshold. */
-const resolveFoodTextStyle = (
-	playerFood: number,
-): { readonly color?: string } =>
-	playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD ? { color: "yellow" } : {};
 
 /** Death and victory get their own color to stand out from ordinary log lines. */
 const resolveLogLineStyle = (
@@ -147,55 +133,7 @@ const App = () => {
 	return (
 		<Box flexDirection="column">
 			<GameScreen grid={buildFrameGrid(state)} />
-			<Box>
-				<Text>{state.floor}F </Text>
-				<Text color="blueBright">Lv.{state.playerLevel} </Text>
-				<Text color={state.playerHp <= LOW_HP_THRESHOLD ? "red" : "green"}>
-					HP {state.playerHp}/{state.playerMaxHp}
-				</Text>
-				<Text> </Text>
-				<Text {...resolveFoodTextStyle(state.playerFood)}>
-					満腹度 {state.playerFood}/{PLAYER_MAX_FOOD}
-				</Text>
-				<Text> </Text>
-				<Text>
-					攻 {state.playerAttackDamage} 防 {state.playerDefense}
-				</Text>
-				<Text> </Text>
-				<Text color="yellow">💰{state.goldCollected}</Text>
-				{state.confusedTurnsRemaining > 0 && (
-					<>
-						<Text> </Text>
-						<Text color="magenta">混乱中({state.confusedTurnsRemaining})</Text>
-					</>
-				)}
-				{state.levitationTurnsRemaining > 0 && (
-					<>
-						<Text> </Text>
-						<Text color="cyan">浮遊中({state.levitationTurnsRemaining})</Text>
-					</>
-				)}
-				{state.blindTurnsRemaining > 0 && (
-					<>
-						<Text> </Text>
-						<Text color="gray">盲目({state.blindTurnsRemaining})</Text>
-					</>
-				)}
-				{state.paralyzedTurnsRemaining > 0 && (
-					<>
-						<Text> </Text>
-						<Text color="red">麻痺({state.paralyzedTurnsRemaining})</Text>
-					</>
-				)}
-				{state.detectMonstersTurnsRemaining > 0 && (
-					<>
-						<Text> </Text>
-						<Text color="green">
-							索敵中({state.detectMonstersTurnsRemaining})
-						</Text>
-					</>
-				)}
-			</Box>
+			<StatusBar state={state} />
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
 					{formatEvent(event, state.identifiedPotionKinds)}
@@ -231,21 +169,7 @@ const App = () => {
 					)}
 				</Box>
 			)}
-			{isInventoryOpen && (
-				<Box marginTop={1} flexDirection="column" borderStyle="round">
-					<Text>{INVENTORY_TITLE}</Text>
-					{state.inventory.length === 0 ? (
-						<Text>{INVENTORY_EMPTY_MESSAGE}</Text>
-					) : (
-						state.inventory.map((entry, index) => (
-							<Text key={entry.kind}>
-								{toInventoryLetter(index)}){" "}
-								{formatInventoryEntry(entry, state.identifiedPotionKinds)}
-							</Text>
-						))
-					)}
-				</Box>
-			)}
+			{isInventoryOpen && <InventoryOverlay state={state} />}
 		</Box>
 	);
 };

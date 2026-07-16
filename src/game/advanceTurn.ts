@@ -1,19 +1,21 @@
 import { stepUniform } from "../rng.js";
-import { TRAP_DAMAGE } from "./balance.js";
 import { applyBlindnessTick } from "./blindness.js";
 import { applyPlayerAttack } from "./combat.js";
 import { applyConfusionTick } from "./confusion.js";
 import { applyDetectMonstersTick } from "./detectMonsters.js";
 import { advanceEnemies } from "./enemies.js";
-import { buildEventLog, type GameEvent } from "./events.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { applyHungerTick } from "./hunger.js";
-import { addToInventory } from "./inventory.js";
 import { applyLevitationTick } from "./levitation.js";
 import { applyParalysisTick } from "./paralysis.js";
+import {
+	applyAmuletPickup,
+	applyGoldPickup,
+	applyItemPickup,
+} from "./pickups.js";
 import { applyRegenerationTick } from "./regeneration.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
-import { applyTrapTeleport } from "./teleport.js";
+import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyUseItem } from "./useItem/index.js";
 import { deriveExploredState } from "./vision.js";
 import { applyWindsOfKronTick } from "./windsOfKron.js";
@@ -38,125 +40,6 @@ const findEnemyAt = (
 /** Passability is derived from terrain data, never stored as a function. */
 const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
-
-/**
- * Picks up the item under the player's feet into inventory, if any — no
- * longer used immediately (that's the "use-item" action's job).
- */
-const applyItemPickup = (state: GameState): GameState => {
-	const item = state.items.find(
-		(candidate) =>
-			candidate.x === state.player.x && candidate.y === state.player.y,
-	);
-	if (item === undefined) {
-		return state;
-	}
-	return {
-		...state,
-		inventory: addToInventory(state.inventory, item.kind),
-		items: state.items.filter((candidate) => candidate !== item),
-		events: buildEventLog(state.events, [
-			{ type: "item-picked-up", payload: { kind: item.kind } },
-		]),
-	};
-};
-
-/**
- * Picks up the Amulet of Yendor if it is lying under the player's feet
- * (only possible on GOAL_FLOOR, before it has been taken). Unconditional and
- * immediate, like gold — there is no "use" step, and hasAmulet never turns
- * back off once set.
- */
-const applyAmuletPickup = (state: GameState): GameState => {
-	if (
-		state.amulet === undefined ||
-		state.amulet.x !== state.player.x ||
-		state.amulet.y !== state.player.y
-	) {
-		return state;
-	}
-	return {
-		...state,
-		amulet: undefined,
-		hasAmulet: true,
-		events: buildEventLog(state.events, [
-			{ type: "amulet-obtained", payload: {} },
-		]),
-	};
-};
-
-/**
- * Adds any gold pile under the player's feet straight to goldCollected — no
- * inventory slot, no use-item step, unlike Item. Picking up gold is
- * unconditional and immediate.
- */
-const applyGoldPickup = (state: GameState): GameState => {
-	const pile = state.goldPiles.find(
-		(candidate) =>
-			candidate.x === state.player.x && candidate.y === state.player.y,
-	);
-	if (pile === undefined) {
-		return state;
-	}
-	return {
-		...state,
-		goldCollected: state.goldCollected + pile.amount,
-		goldPiles: state.goldPiles.filter((candidate) => candidate !== pile),
-		events: buildEventLog(state.events, [
-			{ type: "gold-collected", payload: { amount: pile.amount } },
-		]),
-	};
-};
-
-/**
- * Springs any hidden trap under the player's feet: TRAP_DAMAGE[kind] damage,
- * the trap consumed (one-time — never re-triggers, never becomes visible).
- * A fatal hit ends the run with player-died(by: "trap"); advanceTurn's move
- * case checks status right after this runs, so enemies never get a same-turn
- * bonus hit on an already-trap-killed player. A trapdoor that the player
- * survives additionally hands the (already trap-triggered) state straight to
- * descendStairs — the whole floor gets replaced exactly as if the player had
- * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. A
- * teleport trap that the player survives (it deals no damage, so always)
- * instead hands off to applyTrapTeleport — same relocation as the teleport
- * scroll, just triggered by a footstep instead of an inventory item. While
- * levitationTurnsRemaining is set, no trap can trigger at all — the player
- * floats over it (any kind alike), and it stays armed underneath.
- */
-const applyTrapTrigger = (state: GameState): GameState => {
-	if (state.levitationTurnsRemaining > 0) {
-		return state;
-	}
-	const trap = state.traps.find(
-		(candidate) =>
-			candidate.x === state.player.x && candidate.y === state.player.y,
-	);
-	if (trap === undefined) {
-		return state;
-	}
-	const damage = TRAP_DAMAGE[trap.kind];
-	const playerHp = state.playerHp - damage;
-	const events: GameEvent[] = [
-		{ type: "trap-triggered", payload: { kind: trap.kind, damage } },
-	];
-	if (playerHp <= 0) {
-		events.push({ type: "player-died", payload: { by: "trap" } });
-	}
-	const afterTrap: GameState = {
-		...state,
-		playerHp: Math.max(0, playerHp),
-		traps: state.traps.filter((candidate) => candidate !== trap),
-		status: playerHp <= 0 ? "dead" : state.status,
-		events: buildEventLog(state.events, events),
-	};
-	if (trap.kind === "trapdoor" && afterTrap.status === "playing") {
-		return descendStairs(afterTrap);
-	}
-	if (trap.kind === "teleport" && afterTrap.status === "playing") {
-		return applyTrapTeleport(afterTrap);
-	}
-	return afterTrap;
-};
 
 /**
  * A movement turn: bump attack when an enemy occupies the target tile

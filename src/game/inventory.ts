@@ -25,3 +25,14 @@ export const removeFromInventory = (
 			entry.kind === kind ? { ...entry, quantity: entry.quantity - 1 } : entry,
 		)
 		.filter((entry) => entry.quantity > 0);
+
+/** Decrements the stack at `index` by one, dropping it entirely once it hits zero — the nymph's rng-picked steal. */
+export const removeOneFromInventory = (
+	inventory: readonly InventoryEntry[],
+	index: number,
+): readonly InventoryEntry[] =>
+	inventory
+		.map((entry, entryIndex) =>
+			entryIndex === index ? { ...entry, quantity: entry.quantity - 1 } : entry,
+		)
+		.filter((entry) => entry.quantity > 0);

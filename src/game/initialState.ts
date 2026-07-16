@@ -7,7 +7,7 @@ import {
 	PLAYER_MAX_HP,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
-import { buildFloorLayout } from "./floor.js";
+import { buildFloorLayout } from "./floorLayout.js";
 import type { GameState, Position, Stairs } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 

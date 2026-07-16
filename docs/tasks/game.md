@@ -965,9 +965,12 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 ### マイルストーン59 — 重複解消の小粒セット
 
-- [ ] `src/game/combat.ts`: `applyPlayerAttack`/`applyWandStrike`の9割重複を共通コア(ダメージ量とイベント種だけをパラメータ化)に統合
-- [ ] `src/game/initialState.ts`: 2ビルダーが重複保持する約30フィールドの初期値を共通ヘルパーに集約。`export function`宣言2つを`const`+アローに(functional-style.md準拠)
-- [ ] `src/game/vision.ts`: `computeVisiblePoints`の`radius`デフォルト引数(盲目状態を黙って無視する足元の銃)を廃止し、全呼び出し側で明示
+- [x] `src/game/combat.ts`: `applyPlayerAttack`/`applyWandStrike`の9割重複を共通コア`applyEnemyHit`(ダメージ量とヒットイベントだけをパラメータ化)に統合
+- [x] `src/game/initialState.ts`: 2ビルダーが重複保持していた初期値を`INITIAL_RUN_STATE`(`as const satisfies Partial<GameState>`)に集約。GameStateのフィールド追加時の変更箇所が2→1になる。`export function`宣言2つを`const`+アローに(functional-style.md準拠)
+- [x] `src/game/vision.ts`: `computeVisiblePoints`の`radius`デフォルト引数(盲目状態を黙って無視する足元の銃)を廃止し、全呼び出し側で明示。`VIEW_RADIUS`をexportし、floor.tsのスポーンプール計算は「盲目中でも通常視界の外に隠す」意図を明記して素の`VIEW_RADIUS`を渡す
+
+自動テスト(型検査・lint・Vitest 803件・knip・build)通過を確認して完了。
+**マイルストーン59完了(2026-07-16)。**
 
 ### マイルストーン60 — ItemKindリネーム(汎用名占拠の解消)
 

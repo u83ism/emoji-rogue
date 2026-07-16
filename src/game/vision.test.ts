@@ -12,6 +12,7 @@ import {
 	computeVisiblePoints,
 	deriveExploredState,
 	resolveViewRadius,
+	VIEW_RADIUS,
 } from "./vision.js";
 
 /**
@@ -39,7 +40,11 @@ const buildUnexplored = (width: number, height: number): boolean[][] => {
 describe("computeVisiblePoints", () => {
 	it("sees a whole small arena, including its walls", () => {
 		const state = buildArenaGameState(9, 7, 1);
-		const visible = computeVisiblePoints(state.terrain, state.player);
+		const visible = computeVisiblePoints(
+			state.terrain,
+			state.player,
+			VIEW_RADIUS,
+		);
 		for (let x = 0; x < 9; x++) {
 			for (let y = 0; y < 7; y++) {
 				expect(visible.has(encodePointKey(x, y))).toBe(true);
@@ -48,7 +53,11 @@ describe("computeVisiblePoints", () => {
 	});
 
 	it("walls block sight", () => {
-		const visible = computeVisiblePoints(CORRIDOR_TERRAIN, { x: 1, y: 1 });
+		const visible = computeVisiblePoints(
+			CORRIDOR_TERRAIN,
+			{ x: 1, y: 1 },
+			VIEW_RADIUS,
+		);
 		expect(visible.has(encodePointKey(2, 1))).toBe(true);
 		/* the blocking wall itself is visible... */
 		expect(visible.has(encodePointKey(3, 1))).toBe(true);
@@ -59,7 +68,7 @@ describe("computeVisiblePoints", () => {
 
 	it("respects a custom radius, seeing far fewer tiles when it shrinks", () => {
 		const state = buildArenaGameState(9, 7, 1);
-		const wide = computeVisiblePoints(state.terrain, state.player);
+		const wide = computeVisiblePoints(state.terrain, state.player, VIEW_RADIUS);
 		const narrow = computeVisiblePoints(state.terrain, state.player, 1);
 		expect(narrow.size).toBeLessThan(wide.size);
 		expect(narrow.has(encodePointKey(state.player.x, state.player.y))).toBe(

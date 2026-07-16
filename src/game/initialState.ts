@@ -12,6 +12,39 @@ import type { GameState, Position, Stairs } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 /**
+ * The fields every fresh run starts with, identical between the arena
+ * fixture and a real dungeon — one place to extend when GameState grows,
+ * instead of two diverging literals.
+ */
+const INITIAL_RUN_STATE = {
+	playerHp: PLAYER_MAX_HP,
+	playerMaxHp: PLAYER_MAX_HP,
+	playerLevel: 1,
+	playerExperience: 0,
+	playerAttackDamage: PLAYER_ATTACK_DAMAGE,
+	playerDefense: 0,
+	playerFood: PLAYER_MAX_FOOD,
+	hasRingOfRegeneration: false,
+	hasRingOfSustenance: false,
+	confusedTurnsRemaining: 0,
+	levitationTurnsRemaining: 0,
+	armorProtected: false,
+	blindTurnsRemaining: 0,
+	paralyzedTurnsRemaining: 0,
+	detectMonstersTurnsRemaining: 0,
+	inventory: [],
+	identifiedPotionKinds: [],
+	goldCollected: 0,
+	floor: 1,
+	turnsOnCurrentFloor: 0,
+	hasAmulet: false,
+	hasAttacked: false,
+	hasEaten: false,
+	events: [],
+	status: "playing",
+} as const satisfies Partial<GameState>;
+
+/**
  * The bottom-right-most floor tile that is not the player's own — a fixed,
  * deterministic staircase spot for the arena fixture. Falls back to the
  * player's tile on a one-tile arena (standing on stairs triggers nothing;
@@ -38,11 +71,11 @@ const pickArenaStairs = (
  * at the center. Kept as the simplest possible state, mainly for tests.
  * Pure: the same dimensions and seed always produce the same state.
  */
-export function buildArenaGameState(
+export const buildArenaGameState = (
 	width: number,
 	height: number,
 	seed: number,
-): GameState {
+): GameState => {
 	if (width < 3 || height < 3) {
 		throw new Error(
 			"unreachable: arena needs room for at least one floor tile",
@@ -59,45 +92,21 @@ export function buildArenaGameState(
 	};
 
 	return deriveExploredState({
+		...INITIAL_RUN_STATE,
 		width,
 		height,
 		terrain: columns,
 		explored: buildUnexploredColumns(width, height),
 		player,
-		playerHp: PLAYER_MAX_HP,
-		playerMaxHp: PLAYER_MAX_HP,
-		playerLevel: 1,
-		playerExperience: 0,
-		playerAttackDamage: PLAYER_ATTACK_DAMAGE,
-		playerDefense: 0,
-		playerFood: PLAYER_MAX_FOOD,
-		hasRingOfRegeneration: false,
-		hasRingOfSustenance: false,
-		confusedTurnsRemaining: 0,
-		levitationTurnsRemaining: 0,
-		armorProtected: false,
-		blindTurnsRemaining: 0,
-		paralyzedTurnsRemaining: 0,
-		detectMonstersTurnsRemaining: 0,
 		enemies: [],
 		items: [],
-		inventory: [],
-		identifiedPotionKinds: [],
 		goldPiles: [],
-		goldCollected: 0,
 		traps: [],
-		floor: 1,
-		turnsOnCurrentFloor: 0,
 		stairs: pickArenaStairs(columns, player),
 		amulet: undefined,
-		hasAmulet: false,
-		hasAttacked: false,
-		hasEaten: false,
-		events: [],
 		rng: seedToState(seed),
-		status: "playing",
 	});
-}
+};
 
 /**
  * A digger-generated dungeon (floor 1) with the player at the center of the
@@ -106,51 +115,27 @@ export function buildArenaGameState(
  * same seeded stream; this is what makes a whole run reproducible from
  * (dimensions, seed) alone. Pure: deterministic in its arguments.
  */
-export function buildDungeonGameState(
+export const buildDungeonGameState = (
 	width: number,
 	height: number,
 	seed: number,
-): GameState {
+): GameState => {
 	const rng = createRng(seed);
 	const layout = buildFloorLayout(width, height, rng, 1, "down");
 
 	return deriveExploredState({
+		...INITIAL_RUN_STATE,
 		width,
 		height,
 		terrain: layout.terrain,
 		explored: buildUnexploredColumns(width, height),
 		player: layout.player,
-		playerHp: PLAYER_MAX_HP,
-		playerMaxHp: PLAYER_MAX_HP,
-		playerLevel: 1,
-		playerExperience: 0,
-		playerAttackDamage: PLAYER_ATTACK_DAMAGE,
-		playerDefense: 0,
-		playerFood: PLAYER_MAX_FOOD,
-		hasRingOfRegeneration: false,
-		hasRingOfSustenance: false,
-		confusedTurnsRemaining: 0,
-		levitationTurnsRemaining: 0,
-		armorProtected: false,
-		blindTurnsRemaining: 0,
-		paralyzedTurnsRemaining: 0,
-		detectMonstersTurnsRemaining: 0,
 		enemies: layout.enemies,
 		items: layout.items,
-		inventory: [],
-		identifiedPotionKinds: [],
 		goldPiles: layout.goldPiles,
-		goldCollected: 0,
 		traps: layout.traps,
-		floor: 1,
-		turnsOnCurrentFloor: 0,
 		stairs: layout.stairs,
 		amulet: layout.amulet,
-		hasAmulet: false,
-		hasAttacked: false,
-		hasEaten: false,
-		events: [],
 		rng: rng.getState(),
-		status: "playing",
 	});
-}
+};

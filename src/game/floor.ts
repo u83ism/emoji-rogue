@@ -59,7 +59,11 @@ import type {
 	Stairs,
 	Trap,
 } from "./state.js";
-import { computeVisiblePoints, deriveExploredState } from "./vision.js";
+import {
+	computeVisiblePoints,
+	deriveExploredState,
+	VIEW_RADIUS,
+} from "./vision.js";
 
 /** Everything one dungeon floor is made of, before it becomes game state. */
 export interface FloorLayout {
@@ -190,7 +194,10 @@ const collectSpawnPool = (
 	terrain: GameState["terrain"],
 	player: Position,
 ): Position[] => {
-	const visiblePoints = computeVisiblePoints(terrain, player);
+	/* the plain VIEW_RADIUS on purpose: at generation time the spawn pool must
+	 * hide things from the normal-sighted view, even if the player is
+	 * currently blind (blindness fading must not make items pop into sight) */
+	const visiblePoints = computeVisiblePoints(terrain, player, VIEW_RADIUS);
 	const collectFloorTiles = (outOfSightOnly: boolean): Position[] => {
 		const tiles: Position[] = [];
 		for (let x = 0; x < terrain.length; x++) {

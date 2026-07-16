@@ -4,7 +4,7 @@ import { BLIND_VIEW_RADIUS } from "./balance.js";
 import type { GameState } from "./state.js";
 
 /** How far the player can see, in grid rings (precise shadowcasting). */
-const VIEW_RADIUS = 8;
+export const VIEW_RADIUS = 8;
 
 /** The player's current field-of-view radius — shrunk while blind (see BLIND_VIEW_RADIUS). */
 export const resolveViewRadius = (state: GameState): number =>
@@ -13,14 +13,16 @@ export const resolveViewRadius = (state: GameState): number =>
 /**
  * The set of point keys currently visible from `origin`. Derived from the
  * state on every call — visibility is never stored, only the explored grid
- * is (see GameState.explored). `radius` defaults to the normal VIEW_RADIUS;
- * callers holding a real GameState should pass resolveViewRadius(state)
- * instead so blindness shrinks what they see too.
+ * is (see GameState.explored). `radius` is deliberately not defaulted:
+ * callers holding a real GameState must pass resolveViewRadius(state) so
+ * blindness shrinks what they see too, and a default would let them forget
+ * that silently (only radius-independent callers like floor generation pass
+ * the plain VIEW_RADIUS).
  */
 export const computeVisiblePoints = (
 	terrain: GameState["terrain"],
 	origin: GameState["player"],
-	radius: number = VIEW_RADIUS,
+	radius: number,
 ): ReadonlySet<string> => {
 	const lightPasses = (x: number, y: number): boolean => terrain[x]?.[y] === 0;
 	const fov = createPreciseShadowcastingFov(lightPasses);

@@ -7,16 +7,16 @@ describe("useItem/rings", () => {
 	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "ring" as const, quantity: 1 }],
+			inventory: [{ kind: "regeneration-ring" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "ring" },
+			payload: { kind: "regeneration-ring" },
 		});
 		expect(next.hasRingOfRegeneration).toBe(true);
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
-			{ type: "ring-equipped", payload: { kind: "ring" } },
+			{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
 		]);
 	});
 
@@ -24,11 +24,11 @@ describe("useItem/rings", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			hasRingOfRegeneration: true,
-			inventory: [{ kind: "ring" as const, quantity: 1 }],
+			inventory: [{ kind: "regeneration-ring" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "ring" },
+			payload: { kind: "regeneration-ring" },
 		});
 		expect(next.hasRingOfRegeneration).toBe(true);
 		expect(next.inventory).toEqual([]);
@@ -37,16 +37,16 @@ describe("useItem/rings", () => {
 	it("using a held sustenance ring sets hasRingOfSustenance and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "sustenance" as const, quantity: 1 }],
+			inventory: [{ kind: "sustenance-ring" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "sustenance" },
+			payload: { kind: "sustenance-ring" },
 		});
 		expect(next.hasRingOfSustenance).toBe(true);
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
-			{ type: "ring-equipped", payload: { kind: "sustenance" } },
+			{ type: "ring-equipped", payload: { kind: "sustenance-ring" } },
 		]);
 	});
 

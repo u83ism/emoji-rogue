@@ -174,13 +174,22 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "protect-armor",
 		chancePercent: PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	},
-	{ kind: "scroll", chancePercent: SCROLL_SPAWN_CHANCE_PERCENT },
-	{ kind: "mapping", chancePercent: MAPPING_SCROLL_SPAWN_CHANCE_PERCENT },
-	{ kind: "identify", chancePercent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT },
-	{ kind: "ring", chancePercent: RING_SPAWN_CHANCE_PERCENT },
-	{ kind: "sustenance", chancePercent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT },
-	{ kind: "wand", chancePercent: WAND_SPAWN_CHANCE_PERCENT },
-	{ kind: "slow", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
+	{ kind: "teleport-scroll", chancePercent: SCROLL_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "mapping-scroll",
+		chancePercent: MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "identify-scroll",
+		chancePercent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{ kind: "regeneration-ring", chancePercent: RING_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "sustenance-ring",
+		chancePercent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{ kind: "striking-wand", chancePercent: WAND_SPAWN_CHANCE_PERCENT },
+	{ kind: "slow-wand", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
 ];
 
 /**
@@ -330,7 +339,7 @@ export const buildFloorLayout = (
 
 	const items: Item[] = [];
 	for (let i = 0; i < POTION_COUNT_PER_FLOOR && remaining.length > 0; i++) {
-		items.push({ ...drawSpawnTile(remaining, rng), kind: "potion" });
+		items.push({ ...drawSpawnTile(remaining, rng), kind: "heal-potion" });
 	}
 	for (let i = 0; i < FOOD_COUNT_PER_FLOOR && remaining.length > 0; i++) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "food" });

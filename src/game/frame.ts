@@ -42,11 +42,11 @@ const AMULET_CELL: Cell = { glyph: "💎" };
  * one — see docs/design.md's "avoid combining sequences" rule. Shield uses a
  * safety vest for the same reason (🛡️ needs a variation selector). */
 const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
-	potion: { glyph: "💊" },
+	"heal-potion": { glyph: "💊" },
 	sword: { glyph: "🔪" },
 	shield: { glyph: "🦺" },
 	food: { glyph: "🍖" },
-	/* Same glyph as potion, on purpose — poison is unidentified until drunk. */
+	/* Same glyph as heal-potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },
 	/* Also the same glyph — strength is unidentified until drunk too. */
 	strength: { glyph: "💊" },
@@ -67,23 +67,23 @@ const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
 	"protect-armor": { glyph: "🔰" },
 	/* Scroll: single-codepoint, Unicode 6.0. */
-	scroll: { glyph: "📜" },
+	"teleport-scroll": { glyph: "📜" },
 	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */
-	mapping: { glyph: "🧭" },
+	"mapping-scroll": { glyph: "🧭" },
 	/* Magnifying glass: single-codepoint, Unicode 6.0. */
-	identify: { glyph: "🔍" },
+	"identify-scroll": { glyph: "🔍" },
 	/* Ring: single-codepoint, Unicode 6.0. */
-	ring: { glyph: "💍" },
+	"regeneration-ring": { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
-	sustenance: { glyph: "💍" },
+	"sustenance-ring": { glyph: "💍" },
 	/* High voltage: single-codepoint, stable since Unicode 4.0. */
 	"enchant-weapon": { glyph: "⚡" },
 	/* Sparkles: single-codepoint, Unicode 6.0 — distinct from the weapon bolt. */
 	"enchant-armor": { glyph: "✨" },
 	/* Crystal ball: single-codepoint, Unicode 6.0. */
-	wand: { glyph: "🔮" },
+	"striking-wand": { glyph: "🔮" },
 	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */
-	slow: { glyph: "🔮" },
+	"slow-wand": { glyph: "🔮" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 const GOLD_CELL: Cell = { glyph: "💰" };

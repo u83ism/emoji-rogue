@@ -72,13 +72,13 @@ describe("useItem/scrolls", () => {
 	it("using a held scroll teleports the player, consumes the scroll, and consumes rng", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "scroll" as const, quantity: 2 }],
+			inventory: [{ kind: "teleport-scroll" as const, quantity: 2 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "scroll" },
+			payload: { kind: "teleport-scroll" },
 		});
-		expect(next.inventory).toEqual([{ kind: "scroll", quantity: 1 }]);
+		expect(next.inventory).toEqual([{ kind: "teleport-scroll", quantity: 1 }]);
 		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{
@@ -92,11 +92,11 @@ describe("useItem/scrolls", () => {
 		const state = buildDungeonGameState(40, 20, 7);
 		const withScroll = {
 			...state,
-			inventory: [{ kind: "mapping" as const, quantity: 1 }],
+			inventory: [{ kind: "mapping-scroll" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(withScroll, {
 			type: "use-item",
-			payload: { kind: "mapping" },
+			payload: { kind: "mapping-scroll" },
 		});
 		expect(next.inventory).toEqual([]);
 		expect(next.player).toEqual(
@@ -113,42 +113,45 @@ describe("useItem/scrolls", () => {
 	it("using a held identify scroll identifies the first unidentified potion kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "identify" as const, quantity: 1 }],
+			inventory: [{ kind: "identify-scroll" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify" },
+			payload: { kind: "identify-scroll" },
 		});
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["potion"]);
+		expect(next.identifiedPotionKinds).toEqual(["heal-potion"]);
 		expect(next.events).toEqual([
-			{ type: "potion-identified", payload: { kind: "potion" } },
+			{ type: "potion-identified", payload: { kind: "heal-potion" } },
 		]);
 	});
 
 	it("identifying repeatedly reveals one potion kind per scroll, in order", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "identify" as const, quantity: 3 }],
+			inventory: [{ kind: "identify-scroll" as const, quantity: 3 }],
 		};
 		const afterFirst = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify" },
+			payload: { kind: "identify-scroll" },
 		});
-		expect(afterFirst.identifiedPotionKinds).toEqual(["potion"]);
+		expect(afterFirst.identifiedPotionKinds).toEqual(["heal-potion"]);
 
 		const afterSecond = advanceTurn(afterFirst, {
 			type: "use-item",
-			payload: { kind: "identify" },
+			payload: { kind: "identify-scroll" },
 		});
-		expect(afterSecond.identifiedPotionKinds).toEqual(["potion", "poison"]);
+		expect(afterSecond.identifiedPotionKinds).toEqual([
+			"heal-potion",
+			"poison",
+		]);
 
 		const afterThird = advanceTurn(afterSecond, {
 			type: "use-item",
-			payload: { kind: "identify" },
+			payload: { kind: "identify-scroll" },
 		});
 		expect(afterThird.identifiedPotionKinds).toEqual([
-			"potion",
+			"heal-potion",
 			"poison",
 			"strength",
 		]);
@@ -158,7 +161,7 @@ describe("useItem/scrolls", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			identifiedPotionKinds: [
-				"potion",
+				"heal-potion",
 				"poison",
 				"strength",
 				"confusion",
@@ -169,11 +172,11 @@ describe("useItem/scrolls", () => {
 				"detect-monster",
 				"life",
 			] as const,
-			inventory: [{ kind: "identify" as const, quantity: 1 }],
+			inventory: [{ kind: "identify-scroll" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify" },
+			payload: { kind: "identify-scroll" },
 		});
 		expect(next).toBe(state);
 	});

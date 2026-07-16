@@ -198,7 +198,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				items: [{ x: 0, y: 0, kind: "potion" }] /* perimeter wall */,
+				items: [{ x: 0, y: 0, kind: "heal-potion" }] /* perimeter wall */,
 			},
 			"items",
 		);
@@ -210,7 +210,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "player-healed", payload: { by: "potion", amount: -1 } },
+					{ type: "player-healed", payload: { by: "heal-potion", amount: -1 } },
 				],
 			},
 			"events",
@@ -702,7 +702,9 @@ describe("validateGameState", () => {
 	it("accepts a well-formed ring-equipped and player-regenerated event and rejects broken ones", () => {
 		const equipped = validateGameState({
 			...buildValidState(),
-			events: [{ type: "ring-equipped", payload: { kind: "ring" } }],
+			events: [
+				{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
+			],
 		});
 		expect(equipped.ok).toBe(true);
 
@@ -738,7 +740,7 @@ describe("validateGameState", () => {
 	it("accepts a well-formed sustenance ring-equipped event", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "ring-equipped", payload: { kind: "sustenance" } }],
+			events: [{ type: "ring-equipped", payload: { kind: "sustenance-ring" } }],
 		});
 		expect(result.ok).toBe(true);
 	});
@@ -754,7 +756,7 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			inventory: [
-				{ kind: "potion", quantity: 3 },
+				{ kind: "heal-potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
 				{ kind: "shield", quantity: 1 },
 				{ kind: "food", quantity: 2 },
@@ -763,7 +765,7 @@ describe("validateGameState", () => {
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
 			expect(accepted.value.inventory).toEqual([
-				{ kind: "potion", quantity: 3 },
+				{ kind: "heal-potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
 				{ kind: "shield", quantity: 1 },
 				{ kind: "food", quantity: 2 },
@@ -775,7 +777,10 @@ describe("validateGameState", () => {
 			"inventory",
 		);
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "potion", quantity: 0 }] },
+			{
+				...buildValidState(),
+				inventory: [{ kind: "heal-potion", quantity: 0 }],
+			},
 			"inventory",
 		);
 	});
@@ -963,13 +968,16 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "scroll", quantity: 1 }],
+			inventory: [{ kind: "teleport-scroll", quantity: 1 }],
 			events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "scroll", quantity: 0 }] },
+			{
+				...buildValidState(),
+				inventory: [{ kind: "teleport-scroll", quantity: 0 }],
+			},
 			"inventory",
 		);
 		expectRejected(
@@ -989,13 +997,16 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "mapping", quantity: 1 }],
+			inventory: [{ kind: "mapping-scroll", quantity: 1 }],
 			events: [{ type: "floor-mapped", payload: {} }],
 		});
 		expect(accepted.ok).toBe(true);
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "mapping", quantity: 0 }] },
+			{
+				...buildValidState(),
+				inventory: [{ kind: "mapping-scroll", quantity: 0 }],
+			},
 			"inventory",
 		);
 	});
@@ -1004,13 +1015,16 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "identify", quantity: 1 }],
+			inventory: [{ kind: "identify-scroll", quantity: 1 }],
 			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
 		});
 		expect(accepted.ok).toBe(true);
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "identify", quantity: 0 }] },
+			{
+				...buildValidState(),
+				inventory: [{ kind: "identify-scroll", quantity: 0 }],
+			},
 			"inventory",
 		);
 		expectRejected(

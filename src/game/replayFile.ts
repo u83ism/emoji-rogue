@@ -3,8 +3,8 @@ import type { Replay } from "./replay.js";
 import { isRecord } from "./validateGameState.js";
 import { validateReplay } from "./validateReplay.js";
 
-/** Independent of SAVE_FORMAT_VERSION — a replay and a save are different files. */
-export const REPLAY_FORMAT_VERSION = 1;
+/** Independent of SAVE_FORMAT_VERSION — a replay and a save are different files. 2: ItemKind renames (use-item actions carry the kind). */
+export const REPLAY_FORMAT_VERSION = 2;
 
 export type ReplayFileError =
 	| { readonly kind: "malformed-json" }

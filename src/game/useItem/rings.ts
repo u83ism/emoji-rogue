@@ -9,10 +9,10 @@ import type { GameState, InventoryEntry } from "../state.js";
 export const applyUseRing = (
 	state: GameState,
 	inventory: readonly InventoryEntry[],
-	kind: "ring" | "sustenance",
+	kind: "regeneration-ring" | "sustenance-ring",
 ): GameState => ({
 	...state,
-	...(kind === "ring"
+	...(kind === "regeneration-ring"
 		? { hasRingOfRegeneration: true }
 		: { hasRingOfSustenance: true }),
 	inventory,

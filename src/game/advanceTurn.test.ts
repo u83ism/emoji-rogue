@@ -153,7 +153,7 @@ describe("advanceTurn", () => {
 	});
 
 	it("stepping onto a potion picks it up into inventory (not used yet)", () => {
-		const potion = { x: 5, y: 1, kind: "potion" as const };
+		const potion = { x: 5, y: 1, kind: "heal-potion" as const };
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: 7,
@@ -163,9 +163,9 @@ describe("advanceTurn", () => {
 		expect(next.player).toEqual({ x: 5, y: 1 });
 		expect(next.playerHp).toBe(7); /* unchanged — picking up does not heal */
 		expect(next.items).toEqual([]);
-		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
+		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
 		expect(next.events).toEqual([
-			{ type: "item-picked-up", payload: { kind: "potion" } },
+			{ type: "item-picked-up", payload: { kind: "heal-potion" } },
 		]);
 	});
 
@@ -188,11 +188,11 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			goldPiles: [{ x: 5, y: 1, amount: 3 }],
-			items: [{ x: 5, y: 1, kind: "potion" as const }],
+			items: [{ x: 5, y: 1, kind: "heal-potion" as const }],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.goldCollected).toBe(3);
-		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
+		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
 	});
 
 	it("stepping onto a hidden trap springs it: damage dealt, trap consumed", () => {
@@ -314,11 +314,11 @@ describe("advanceTurn", () => {
 	it("picking up a second potion of the same kind stacks the quantity", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			items: [{ x: 5, y: 1, kind: "potion" as const }],
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			items: [{ x: 5, y: 1, kind: "heal-potion" as const }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, move("east"));
-		expect(next.inventory).toEqual([{ kind: "potion", quantity: 2 }]);
+		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 2 }]);
 	});
 
 	it("detectMonstersTurnsRemaining reaches 0 and fires detect-monsters-faded", () => {
@@ -386,11 +386,11 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
 			paralyzedTurnsRemaining: 3,
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.paralyzedTurnsRemaining).toBe(2);
@@ -492,9 +492,9 @@ describe("advanceTurn", () => {
 		const usedItem = advanceTurn(
 			{
 				...buildArenaGameState(9, 3, 1),
-				inventory: [{ kind: "potion" as const, quantity: 1 }],
+				inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 			},
-			{ type: "use-item", payload: { kind: "potion" } },
+			{ type: "use-item", payload: { kind: "heal-potion" } },
 		);
 		expect(usedItem.playerFood).toBe(PLAYER_MAX_FOOD - 1);
 	});

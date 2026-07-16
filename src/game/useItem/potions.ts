@@ -44,7 +44,7 @@ export const applyUsePotion = (
 	);
 
 	switch (kind) {
-		case "potion": {
+		case "heal-potion": {
 			const amount = Math.min(
 				POTION_HEAL_AMOUNT,
 				state.playerMaxHp - state.playerHp,

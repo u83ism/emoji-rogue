@@ -16,24 +16,24 @@ const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 };
 
 const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
-	potion: "回復薬",
+	"heal-potion": "回復薬",
 	sword: "剣",
 	shield: "盾",
 	food: "食料",
 	poison: "毒薬",
-	scroll: "巻物",
-	mapping: "地図の巻物",
-	identify: "識別の巻物",
+	"teleport-scroll": "巻物",
+	"mapping-scroll": "地図の巻物",
+	"identify-scroll": "識別の巻物",
 	strength: "怪力の薬",
-	ring: "指輪",
-	/* Same generic name as ring — which effect it grants only shows once worn. */
-	sustenance: "指輪",
+	"regeneration-ring": "指輪",
+	/* Same generic display name as regeneration-ring — which effect it grants only shows once worn. */
+	"sustenance-ring": "指輪",
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
-	/* Generic name, like ring/sustenance — which effect it grants only shows once used. */
-	wand: "杖",
+	/* Generic display name, like the rings — which effect it grants only shows once used. */
+	"striking-wand": "杖",
 	confusion: "混乱の薬",
-	slow: "杖",
+	"slow-wand": "杖",
 	levitation: "浮遊の薬",
 	"protect-armor": "防具保護の巻物",
 	blindness: "盲目の薬",
@@ -210,7 +210,7 @@ export const formatEvent = (
 				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を盗まれた!`
 				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
 		case "ring-equipped":
-			return event.payload.kind === "sustenance"
+			return event.payload.kind === "sustenance-ring"
 				? `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`
 				: `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
 		case "player-regenerated":

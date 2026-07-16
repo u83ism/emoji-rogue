@@ -17,12 +17,12 @@ describe("applyUseItem dispatch", () => {
 	it("using an item spends a turn: adjacent enemies still get to act", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 			enemies: [zombie(5, 1)] /* adjacent to the player */,
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 		expect(next.playerHp).toBe(state.playerHp - 1);
 		expect(next.events.some((event) => event.type === "player-hit")).toBe(true);
@@ -35,7 +35,7 @@ describe("applyUseItem dispatch", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 		expect(next).toBe(state);
 	});

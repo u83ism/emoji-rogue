@@ -44,22 +44,22 @@ export const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 			return applyUseEnchantArmorScroll(state, inventory);
 		case "protect-armor":
 			return applyUseProtectArmorScroll(state, inventory);
-		case "scroll":
+		case "teleport-scroll":
 			return applyUseTeleportScroll(state, inventory);
-		case "mapping":
+		case "mapping-scroll":
 			return applyUseMappingScroll(state, inventory);
-		case "identify":
+		case "identify-scroll":
 			return applyUseIdentifyScroll(state, inventory);
 		case "food":
 			return applyUseFood(state, inventory);
-		case "ring":
-		case "sustenance":
+		case "regeneration-ring":
+		case "sustenance-ring":
 			return applyUseRing(state, inventory, kind);
-		case "wand":
+		case "striking-wand":
 			return applyUseStrikingWand(state, inventory);
-		case "slow":
+		case "slow-wand":
 			return applyUseSlowWand(state, inventory);
-		case "potion":
+		case "heal-potion":
 		case "poison":
 		case "strength":
 		case "confusion":

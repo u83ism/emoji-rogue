@@ -296,14 +296,14 @@ describe("advanceEnemies", () => {
 	it("an adjacent nymph steals the only held item stack (removed entirely) and flees", () => {
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]); /* the nymph is gone for good */
 		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
-			{ type: "item-stolen", payload: { kind: "potion" } },
+			{ type: "item-stolen", payload: { kind: "heal-potion" } },
 		]);
 	});
 
@@ -323,7 +323,7 @@ describe("advanceEnemies", () => {
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
 			inventory: [
-				{ kind: "potion" as const, quantity: 1 },
+				{ kind: "heal-potion" as const, quantity: 1 },
 				{ kind: "sword" as const, quantity: 1 },
 			],
 		};
@@ -333,7 +333,7 @@ describe("advanceEnemies", () => {
 		if (stolenEvent === undefined || stolenEvent.type !== "item-stolen") {
 			throw new Error("unreachable: expected an item-stolen event");
 		}
-		expect(["potion", "sword"]).toContain(stolenEvent.payload.kind);
+		expect(["heal-potion", "sword"]).toContain(stolenEvent.payload.kind);
 		expect(
 			next.inventory.some((entry) => entry.kind === stolenEvent.payload.kind),
 		).toBe(false);
@@ -355,7 +355,7 @@ describe("advanceEnemies", () => {
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
 		const state = {
 			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([

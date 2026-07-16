@@ -27,32 +27,32 @@ describe("useItem/potions", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
-			inventory: [{ kind: "potion" as const, quantity: 2 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 2 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 		expect(next.playerHp).toBe(PLAYER_MAX_HP);
-		expect(next.inventory).toEqual([{ kind: "potion", quantity: 1 }]);
+		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
 		expect(next.events).toEqual([
-			{ type: "player-healed", payload: { by: "potion", amount: 3 } },
+			{ type: "player-healed", payload: { by: "heal-potion", amount: 3 } },
 		]);
 	});
 
 	it("using the last potion at full health wastes it (amount 0) and empties the stack", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 		expect(next.playerHp).toBe(state.playerHp);
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
-			{ type: "player-healed", payload: { by: "potion", amount: 0 } },
+			{ type: "player-healed", payload: { by: "heal-potion", amount: 0 } },
 		]);
 	});
 
@@ -113,13 +113,13 @@ describe("useItem/potions", () => {
 	it("drinking either potion kind only identifies that kind, not the other", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "potion" as const, quantity: 1 }],
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
-		expect(next.identifiedPotionKinds).toEqual(["potion"]);
+		expect(next.identifiedPotionKinds).toEqual(["heal-potion"]);
 	});
 
 	it("using a held confusion potion sets confusedTurnsRemaining and logs player-confused", () => {

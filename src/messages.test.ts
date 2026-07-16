@@ -41,11 +41,11 @@ describe("formatEvent", () => {
 			],
 			[{ type: "floor-descended", payload: { floor: 2 } }, "2階に降りた"],
 			[
-				{ type: "player-healed", payload: { by: "potion", amount: 5 } },
+				{ type: "player-healed", payload: { by: "heal-potion", amount: 5 } },
 				"回復薬を飲んだ。HPが5回復した",
 			],
 			[
-				{ type: "player-healed", payload: { by: "potion", amount: 0 } },
+				{ type: "player-healed", payload: { by: "heal-potion", amount: 0 } },
 				"回復薬を飲んだが、HPは満タンだった",
 			],
 			[{ type: "item-picked-up", payload: { kind: "sword" } }, "剣を拾った"],
@@ -119,7 +119,10 @@ describe("formatEvent", () => {
 				{ type: "player-teleported", payload: { x: 5, y: 3 } },
 				"巻物を読んだ。テレポートした!",
 			],
-			[{ type: "item-picked-up", payload: { kind: "scroll" } }, "巻物を拾った"],
+			[
+				{ type: "item-picked-up", payload: { kind: "teleport-scroll" } },
+				"巻物を拾った",
+			],
 			[
 				{ type: "floor-mapped", payload: {} },
 				"地図の巻物を読んだ。フロア全体が明らかになった!",
@@ -149,11 +152,11 @@ describe("formatEvent", () => {
 				"ニンフに襲われたが、何も盗られなかった",
 			],
 			[
-				{ type: "ring-equipped", payload: { kind: "ring" } },
+				{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
 				"指輪を身につけた。じわじわとHPが回復するようになった!",
 			],
 			[
-				{ type: "ring-equipped", payload: { kind: "sustenance" } },
+				{ type: "ring-equipped", payload: { kind: "sustenance-ring" } },
 				"指輪を身につけた。空腹の進みがゆるやかになった!",
 			],
 			[
@@ -236,7 +239,10 @@ describe("formatEvent", () => {
 
 	it("shows the generic unidentified name for a potion-family pickup not yet identified", () => {
 		expect(
-			formatEvent({ type: "item-picked-up", payload: { kind: "potion" } }, []),
+			formatEvent(
+				{ type: "item-picked-up", payload: { kind: "heal-potion" } },
+				[],
+			),
 		).toBe("未鑑定の薬を拾った");
 		expect(
 			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, []),
@@ -251,9 +257,10 @@ describe("formatEvent", () => {
 
 	it("reveals the real name for a potion-family pickup once that kind is identified", () => {
 		expect(
-			formatEvent({ type: "item-picked-up", payload: { kind: "potion" } }, [
-				"potion",
-			]),
+			formatEvent(
+				{ type: "item-picked-up", payload: { kind: "heal-potion" } },
+				["heal-potion"],
+			),
 		).toBe("回復薬を拾った");
 		expect(
 			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, [
@@ -263,7 +270,7 @@ describe("formatEvent", () => {
 		/* identifying one potion kind does not reveal the other */
 		expect(
 			formatEvent({ type: "item-picked-up", payload: { kind: "poison" } }, [
-				"potion",
+				"heal-potion",
 			]),
 		).toBe("未鑑定の薬を拾った");
 	});
@@ -283,7 +290,9 @@ describe("formatEvent", () => {
 describe("formatInventoryEntry", () => {
 	it("formats a stack as name and quantity", () => {
 		expect(
-			formatInventoryEntry({ kind: "potion", quantity: 2 }, ["potion"]),
+			formatInventoryEntry({ kind: "heal-potion", quantity: 2 }, [
+				"heal-potion",
+			]),
 		).toBe("回復薬 x2");
 		expect(formatInventoryEntry({ kind: "sword", quantity: 1 }, [])).toBe(
 			"剣 x1",
@@ -294,15 +303,15 @@ describe("formatInventoryEntry", () => {
 		expect(formatInventoryEntry({ kind: "food", quantity: 3 }, [])).toBe(
 			"食料 x3",
 		);
-		expect(formatInventoryEntry({ kind: "scroll", quantity: 1 }, [])).toBe(
-			"巻物 x1",
-		);
-		expect(formatInventoryEntry({ kind: "mapping", quantity: 1 }, [])).toBe(
-			"地図の巻物 x1",
-		);
-		expect(formatInventoryEntry({ kind: "identify", quantity: 1 }, [])).toBe(
-			"識別の巻物 x1",
-		);
+		expect(
+			formatInventoryEntry({ kind: "teleport-scroll", quantity: 1 }, []),
+		).toBe("巻物 x1");
+		expect(
+			formatInventoryEntry({ kind: "mapping-scroll", quantity: 1 }, []),
+		).toBe("地図の巻物 x1");
+		expect(
+			formatInventoryEntry({ kind: "identify-scroll", quantity: 1 }, []),
+		).toBe("識別の巻物 x1");
 		expect(
 			formatInventoryEntry({ kind: "raise-level", quantity: 1 }, [
 				"raise-level",
@@ -311,7 +320,7 @@ describe("formatInventoryEntry", () => {
 	});
 
 	it("shows the generic unidentified name for an unidentified potion-family stack", () => {
-		expect(formatInventoryEntry({ kind: "potion", quantity: 2 }, [])).toBe(
+		expect(formatInventoryEntry({ kind: "heal-potion", quantity: 2 }, [])).toBe(
 			"未鑑定の薬 x2",
 		);
 		expect(formatInventoryEntry({ kind: "poison", quantity: 1 }, [])).toBe(

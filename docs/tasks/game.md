@@ -976,10 +976,12 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 **セーブ・リプレイ形式が壊れる変更。セーブが使い捨てで済むリリース前が唯一の実施好機。** 各カテゴリ1号が占拠した汎用名を自己記述的な名前に改める(naming.mdの新規則の適用)。
 
-- [ ] リネーム: `potion`→`heal-potion`、`scroll`→`teleport-scroll`、`mapping`→`mapping-scroll`、`identify`→`identify-scroll`、`ring`→`regeneration-ring`、`sustenance`→`sustenance-ring`、`wand`→`striking-wand`、`slow`→`slow-wand`(残りのポーション種への`-potion`サフィックス統一は実施時に判断 — `poison`等は単独でも自己記述的)
-- [ ] `SAVE_FORMAT_VERSION`を25に、`REPLAY_FORMAT_VERSION`を2に(`use-item`アクションが`kind`を含むため両方壊れる)
-- [ ] `demo/main.js`(ブラウザデモ)の追従確認
-- [ ] `POTION_KINDS`・`ITEM_GLYPHS`・`ITEM_NAMES`・validateGameState・全テストの機械的追従
+- [x] リネーム: `potion`→`heal-potion`、`scroll`→`teleport-scroll`、`mapping`→`mapping-scroll`、`identify`→`identify-scroll`、`ring`→`regeneration-ring`、`sustenance`→`sustenance-ring`、`wand`→`striking-wand`、`slow`→`slow-wand`。残りのポーション種(`poison`・`strength`等)への`-potion`サフィックス統一は**見送り**——各々効果を名乗っており単独で自己記述的、かつ`"poison"`は`DeathCause`の値としても使われており一括置換すると死因の意味まで巻き込まれるため(死因の`"poison"`は据え置き)
+- [x] `SAVE_FORMAT_VERSION`を25に、`REPLAY_FORMAT_VERSION`を2に(`use-item`アクションが`kind`を含むため両方壊れる)
+- [x] `demo/main.js`(ブラウザデモ)・`scripts/`の追従確認: kind文字列の直接参照なし(表示はすべて`formatEvent`/`formatInventoryEntry`経由)のため変更不要
+- [x] `POTION_KINDS`・`ITEM_GLYPHS`・`ITEM_NAMES`・validateGameState・全テストの機械的追従(引用符付きリテラルの一括置換+辞書のbareキー2ファイルを手動更新)。テスト803件・型検査・lint・knip・buildすべて通過
+
+**マイルストーン60完了(2026-07-16)。**
 
 ### マイルストーン61 — 行数ゲートとmessages.ts分割
 

@@ -2,22 +2,22 @@
 export type EnemyKind = "zombie" | "bat" | "thief" | "nymph" | "aquator";
 
 export type ItemKind =
-	| "potion"
+	| "heal-potion"
 	| "sword"
 	| "shield"
 	| "food"
 	| "poison"
-	| "scroll"
-	| "mapping"
-	| "identify"
+	| "teleport-scroll"
+	| "mapping-scroll"
+	| "identify-scroll"
 	| "strength"
-	| "ring"
-	| "sustenance"
+	| "regeneration-ring"
+	| "sustenance-ring"
 	| "enchant-weapon"
 	| "enchant-armor"
-	| "wand"
+	| "striking-wand"
 	| "confusion"
-	| "slow"
+	| "slow-wand"
 	| "levitation"
 	| "protect-armor"
 	| "blindness"
@@ -27,7 +27,7 @@ export type ItemKind =
 	| "life";
 
 const POTION_KIND_VALUES = [
-	"potion",
+	"heal-potion",
 	"poison",
 	"strength",
 	"confusion",

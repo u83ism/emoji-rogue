@@ -56,9 +56,9 @@ describe("descendStairs", () => {
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
 			/* potions and food rations are guaranteed; the sword is a per-floor chance (0 or 1) */
-			expect(state.items.filter((item) => item.kind === "potion").length).toBe(
-				POTION_COUNT_PER_FLOOR,
-			);
+			expect(
+				state.items.filter((item) => item.kind === "heal-potion").length,
+			).toBe(POTION_COUNT_PER_FLOOR);
 			expect(state.items.filter((item) => item.kind === "food").length).toBe(
 				FOOD_COUNT_PER_FLOOR,
 			);
@@ -72,13 +72,13 @@ describe("descendStairs", () => {
 				state.items.filter((item) => item.kind === "poison").length,
 			).toBeLessThanOrEqual(1);
 			expect(
-				state.items.filter((item) => item.kind === "scroll").length,
+				state.items.filter((item) => item.kind === "teleport-scroll").length,
 			).toBeLessThanOrEqual(1);
 			expect(
-				state.items.filter((item) => item.kind === "mapping").length,
+				state.items.filter((item) => item.kind === "mapping-scroll").length,
 			).toBeLessThanOrEqual(1);
 			expect(
-				state.items.filter((item) => item.kind === "identify").length,
+				state.items.filter((item) => item.kind === "identify-scroll").length,
 			).toBeLessThanOrEqual(1);
 			expect(
 				state.items.filter((item) => item.kind === "strength").length,
@@ -268,7 +268,7 @@ describe("teleport scroll spawning", () => {
 	it("spawns a scroll on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "scroll",
+				(item) => item.kind === "teleport-scroll",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -278,7 +278,7 @@ describe("teleport scroll spawning", () => {
 	it("never spawns more than one scroll on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const scrollCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "scroll",
+				(item) => item.kind === "teleport-scroll",
 			).length;
 			expect(scrollCount).toBeLessThanOrEqual(1);
 		}
@@ -289,7 +289,7 @@ describe("mapping scroll spawning", () => {
 	it("spawns a mapping scroll on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "mapping",
+				(item) => item.kind === "mapping-scroll",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -299,7 +299,7 @@ describe("mapping scroll spawning", () => {
 	it("never spawns more than one mapping scroll on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const mappingCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "mapping",
+				(item) => item.kind === "mapping-scroll",
 			).length;
 			expect(mappingCount).toBeLessThanOrEqual(1);
 		}
@@ -310,7 +310,7 @@ describe("identify scroll spawning", () => {
 	it("spawns an identify scroll on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "identify",
+				(item) => item.kind === "identify-scroll",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -320,7 +320,7 @@ describe("identify scroll spawning", () => {
 	it("never spawns more than one identify scroll on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const identifyCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "identify",
+				(item) => item.kind === "identify-scroll",
 			).length;
 			expect(identifyCount).toBeLessThanOrEqual(1);
 		}
@@ -714,7 +714,7 @@ describe("ring spawning", () => {
 		 * deterministically contain no spawn at all */
 		const outcomes = Array.from({ length: 60 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "ring",
+				(item) => item.kind === "regeneration-ring",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -724,7 +724,7 @@ describe("ring spawning", () => {
 	it("never spawns more than one ring on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const ringCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "ring",
+				(item) => item.kind === "regeneration-ring",
 			).length;
 			expect(ringCount).toBeLessThanOrEqual(1);
 		}
@@ -735,7 +735,7 @@ describe("wand spawning", () => {
 	it("spawns a wand on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "wand",
+				(item) => item.kind === "striking-wand",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -745,7 +745,7 @@ describe("wand spawning", () => {
 	it("never spawns more than one wand on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const wandCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "wand",
+				(item) => item.kind === "striking-wand",
 			).length;
 			expect(wandCount).toBeLessThanOrEqual(1);
 		}
@@ -756,7 +756,7 @@ describe("slow wand spawning", () => {
 	it("spawns a slow wand on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "slow",
+				(item) => item.kind === "slow-wand",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -766,7 +766,7 @@ describe("slow wand spawning", () => {
 	it("never spawns more than one slow wand on a floor", () => {
 		for (let seed = 1; seed <= 20; seed++) {
 			const slowWandCount = buildDungeonGameState(40, 20, seed).items.filter(
-				(item) => item.kind === "slow",
+				(item) => item.kind === "slow-wand",
 			).length;
 			expect(slowWandCount).toBeLessThanOrEqual(1);
 		}
@@ -784,7 +784,7 @@ describe("sustenance ring spawning", () => {
 	it("spawns a sustenance ring on some floors and not others (independent per-floor roll)", () => {
 		const outcomes = Array.from({ length: 20 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
-				(item) => item.kind === "sustenance",
+				(item) => item.kind === "sustenance-ring",
 			),
 		);
 		expect(outcomes.some((spawned) => spawned)).toBe(true);
@@ -797,7 +797,7 @@ describe("sustenance ring spawning", () => {
 				40,
 				20,
 				seed,
-			).items.filter((item) => item.kind === "sustenance").length;
+			).items.filter((item) => item.kind === "sustenance-ring").length;
 			expect(sustenanceRingCount).toBeLessThanOrEqual(1);
 		}
 	});

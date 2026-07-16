@@ -104,22 +104,22 @@ const isEnemyArray = (
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
-	value === "potion" ||
+	value === "heal-potion" ||
 	value === "sword" ||
 	value === "shield" ||
 	value === "food" ||
 	value === "poison" ||
-	value === "scroll" ||
-	value === "mapping" ||
-	value === "identify" ||
+	value === "teleport-scroll" ||
+	value === "mapping-scroll" ||
+	value === "identify-scroll" ||
 	value === "strength" ||
-	value === "ring" ||
-	value === "sustenance" ||
+	value === "regeneration-ring" ||
+	value === "sustenance-ring" ||
 	value === "enchant-weapon" ||
 	value === "enchant-armor" ||
-	value === "wand" ||
+	value === "striking-wand" ||
 	value === "confusion" ||
-	value === "slow" ||
+	value === "slow-wand" ||
 	value === "levitation" ||
 	value === "protect-armor" ||
 	value === "blindness" ||

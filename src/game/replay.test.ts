@@ -47,7 +47,7 @@ describe("buildReplayGameState", () => {
 			{ type: "move", payload: { direction: "west" } },
 			{ type: "move", payload: { direction: "east" } },
 			{ type: "wait" },
-			{ type: "use-item", payload: { kind: "potion" } },
+			{ type: "use-item", payload: { kind: "heal-potion" } },
 			{ type: "use-item", payload: { kind: "sword" } },
 			{ type: "use-item", payload: { kind: "shield" } },
 		];

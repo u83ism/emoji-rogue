@@ -12,13 +12,13 @@ describe("toInventoryLetter", () => {
 
 describe("toUseItemAction", () => {
 	const inventory: readonly InventoryEntry[] = [
-		{ kind: "potion", quantity: 2 },
+		{ kind: "heal-potion", quantity: 2 },
 	];
 
 	it("maps the row's letter to a use-item action for that kind", () => {
 		expect(toUseItemAction("a", inventory)).toEqual({
 			type: "use-item",
-			payload: { kind: "potion" },
+			payload: { kind: "heal-potion" },
 		});
 	});
 

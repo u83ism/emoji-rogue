@@ -147,7 +147,11 @@ describe("buildFrameGrid", () => {
 
 	it("draws a scroll with its own glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const scroll = { x: 12, y: 2, kind: "scroll" as const }; /* distance 3 */
+		const scroll = {
+			x: 12,
+			y: 2,
+			kind: "teleport-scroll" as const,
+		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [scroll] })[2]?.[12]?.glyph).toBe(
 			"📜",
 		);
@@ -155,7 +159,11 @@ describe("buildFrameGrid", () => {
 
 	it("draws a mapping scroll with its own glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const mapping = { x: 12, y: 2, kind: "mapping" as const }; /* distance 3 */
+		const mapping = {
+			x: 12,
+			y: 2,
+			kind: "mapping-scroll" as const,
+		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [mapping] })[2]?.[12]?.glyph).toBe(
 			"🧭",
 		);
@@ -166,7 +174,7 @@ describe("buildFrameGrid", () => {
 		const identify = {
 			x: 12,
 			y: 2,
-			kind: "identify" as const,
+			kind: "identify-scroll" as const,
 		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [identify] })[2]?.[12]?.glyph).toBe(
 			"🔍",
@@ -187,7 +195,11 @@ describe("buildFrameGrid", () => {
 
 	it("draws visible potions, with enemies taking precedence", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const potion = { x: 12, y: 2, kind: "potion" as const }; /* distance 3 */
+		const potion = {
+			x: 12,
+			y: 2,
+			kind: "heal-potion" as const,
+		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [potion] })[2]?.[12]?.glyph).toBe(
 			"💊",
 		);
@@ -223,7 +235,7 @@ describe("buildFrameGrid", () => {
 		const covered = {
 			...wide,
 			goldPiles: [pile],
-			items: [{ x: 12, y: 2, kind: "potion" as const }],
+			items: [{ x: 12, y: 2, kind: "heal-potion" as const }],
 		};
 		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("💊");
 

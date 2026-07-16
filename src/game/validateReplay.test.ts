@@ -8,7 +8,7 @@ const VALID_REPLAY = {
 	actions: [
 		{ type: "move", payload: { direction: "north" } },
 		{ type: "wait" },
-		{ type: "use-item", payload: { kind: "potion" } },
+		{ type: "use-item", payload: { kind: "heal-potion" } },
 		{ type: "save" },
 		{ type: "quit" },
 	],

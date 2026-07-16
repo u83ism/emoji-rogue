@@ -26,11 +26,7 @@ export type ItemKind =
 	| "detect-monster"
 	| "life";
 
-/**
- * Kinds with a potion effect — visually identical (same glyph, same generic
- * name) until identified. See GameState.identifiedPotionKinds.
- */
-export const POTION_KINDS: readonly ItemKind[] = [
+const POTION_KIND_VALUES = [
 	"potion",
 	"poison",
 	"strength",
@@ -41,7 +37,18 @@ export const POTION_KINDS: readonly ItemKind[] = [
 	"raise-level",
 	"detect-monster",
 	"life",
-];
+] as const satisfies readonly ItemKind[];
+
+/** The potion subset of ItemKind — lets useItem/potions.ts switch exhaustively. */
+export type PotionKind = (typeof POTION_KIND_VALUES)[number];
+
+/**
+ * Kinds with a potion effect — visually identical (same glyph, same generic
+ * name) until identified. See GameState.identifiedPotionKinds. Typed as the
+ * wider ItemKind[] so `POTION_KINDS.includes(anyItemKind)` stays a plain
+ * membership test at call sites.
+ */
+export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
 
 /** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
 export type TrapKind = "dart" | "trapdoor" | "teleport";

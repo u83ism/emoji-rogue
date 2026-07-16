@@ -955,10 +955,13 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 `advanceTurn.ts`(805行)の中核肥大要因である`applyUseItem`(23分岐if連鎖・約330行)をカテゴリ別モジュールに分割し、コンパイル時網羅性チェックを入れる。**現在の暗黙フォールスルー(未処理kindが回復薬扱い)を廃止**する。
 
-- [ ] `src/game/useItem/`ディレクトリ新設: `equipment.ts`(剣・盾・強化/保護巻物)、`potions.ts`(薬10種 — durationを設定するだけの同型5種はテーブル化を検討)、`scrolls.ts`(テレポート・地図・識別)、`wands.ts`(攻撃・鈍足)+ディスパッチャ`index.ts`(網羅`switch`、`default`なし、`kind satisfies never`で締める)
-- [ ] `src/game/advanceTurn.ts`: `applyUseItem`と関連ヘルパー(`rollCurse`・`identifyPotionKind`・`findNearestVisibleEnemy`等)を`useItem/`へ移動。目標300行前後
-- [ ] `src/game/advanceTurn.test.ts`(1442行): 移動したロジックのテストを`useItem/`配下の対応テストファイルへ分割移動
-- [ ] 検証: テスト件数が減っていないこと、全通過
+- [x] `src/game/useItem/`ディレクトリ新設: `equipment.ts`(剣・盾+`rollCurse`)、`potions.ts`(薬10種の網羅switch — duration同型5種のテーブル化はフィールド名が各々異なり型安全なテーブルが組めないため見送り)、`scrolls.ts`(強化2種・保護・テレポート・地図・識別 — 強化/保護も巻物なのでここ)、`wands.ts`(攻撃・鈍足+`findNearestVisibleEnemy`)、`rings.ts`(再生・満腹)、`food.ts`+ディスパッチャ`index.ts`。ディスパッチャは`default`なしの網羅`switch`で、caseの書き忘れは関数の戻り値型違反としてコンパイルエラーになる(暗黙の回復薬フォールスルーは廃止)。`events.ts`に`PotionKind`型(POTION_KINDSから導出)を追加し`potions.ts`のswitchも網羅チェック付き
+- [x] 共有ヘルパーの切り出し: `src/game/inventory.ts`(`addToInventory`/`removeFromInventory`)・`src/game/teleport.ts`(`applyTrapTeleport` — scrolls.tsとadvanceTurn.tsの循環importを避けるため独立ファイル化) + 各テスト
+- [x] `src/game/advanceTurn.ts`: 805→**303行**(移動対象: `applyUseItem`・`rollCurse`・`identifyPotionKind`・`findNearestVisibleEnemy`・`collectTeleportTargets`・`applyTrapTeleport`・インベントリ操作2関数)
+- [x] `src/game/advanceTurn.test.ts`: 1442→658行。use-item系テスト43件を`useItem/`配下6ファイル+`teleport.test.ts`へ移設
+- [x] 検証: テスト803件(移設分は件数維持、+6は`inventory.test.ts`の新規単体テスト)全通過。型検査・lint・knip・buildクリーン
+
+**マイルストーン58完了(2026-07-16)。**
 
 ### マイルストーン59 — 重複解消の小粒セット
 

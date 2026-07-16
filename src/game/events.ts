@@ -1,30 +1,47 @@
-/** Events carry it so the shell can name the attacker. */
-export type EnemyKind = "zombie" | "bat" | "thief" | "nymph" | "aquator";
+// The kind catalogs are value arrays first, types second (derived via
+// `(typeof X)[number]`): a single source of truth that both the compiler and
+// the save validator (validateGameState.ts's membership checks) read, so
+// adding a kind is one entry — never a union member plus a hand-kept
+// validator list drifting apart.
 
-export type ItemKind =
-	| "heal-potion"
-	| "sword"
-	| "shield"
-	| "food"
-	| "poison"
-	| "teleport-scroll"
-	| "mapping-scroll"
-	| "identify-scroll"
-	| "strength"
-	| "regeneration-ring"
-	| "sustenance-ring"
-	| "enchant-weapon"
-	| "enchant-armor"
-	| "striking-wand"
-	| "confusion"
-	| "slow-wand"
-	| "levitation"
-	| "protect-armor"
-	| "blindness"
-	| "paralysis"
-	| "raise-level"
-	| "detect-monster"
-	| "life";
+export const ENEMY_KIND_VALUES = [
+	"zombie",
+	"bat",
+	"thief",
+	"nymph",
+	"aquator",
+] as const;
+
+/** Events carry it so the shell can name the attacker. */
+export type EnemyKind = (typeof ENEMY_KIND_VALUES)[number];
+
+export const ITEM_KIND_VALUES = [
+	"heal-potion",
+	"sword",
+	"shield",
+	"food",
+	"poison",
+	"teleport-scroll",
+	"mapping-scroll",
+	"identify-scroll",
+	"strength",
+	"regeneration-ring",
+	"sustenance-ring",
+	"enchant-weapon",
+	"enchant-armor",
+	"striking-wand",
+	"confusion",
+	"slow-wand",
+	"levitation",
+	"protect-armor",
+	"blindness",
+	"paralysis",
+	"raise-level",
+	"detect-monster",
+	"life",
+] as const;
+
+export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
 
 const POTION_KIND_VALUES = [
 	"heal-potion",
@@ -50,8 +67,10 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
  */
 export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
 
-/** Hidden until stepped on — see advanceTurn.ts's trap trigger. */
-export type TrapKind = "dart" | "trapdoor" | "teleport";
+export const TRAP_KIND_VALUES = ["dart", "trapdoor", "teleport"] as const;
+
+/** Hidden until stepped on — see trapTrigger.ts. */
+export type TrapKind = (typeof TRAP_KIND_VALUES)[number];
 
 /** What killed the player — an enemy kind, starvation, a trap, or a poison potion. */
 export type DeathCause = EnemyKind | "hunger" | "trap" | "poison";

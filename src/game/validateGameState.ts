@@ -1,12 +1,15 @@
 import { err, ok, type Result } from "../result.js";
 import type { RngState } from "../rng.js";
 import { PLAYER_MAX_FOOD } from "./balance.js";
-import type {
-	DeathCause,
-	EnemyKind,
-	GameEvent,
-	ItemKind,
-	TrapKind,
+import {
+	type DeathCause,
+	ENEMY_KIND_VALUES,
+	type EnemyKind,
+	type GameEvent,
+	ITEM_KIND_VALUES,
+	type ItemKind,
+	TRAP_KIND_VALUES,
+	type TrapKind,
 } from "./events.js";
 import type {
 	Enemy,
@@ -75,18 +78,17 @@ const standsOnFloor = (
 const isStairsDirection = (value: unknown): value is Stairs["direction"] =>
 	value === "up" || value === "down";
 
+/** Membership test against a literal-value catalog, doubling as a type guard. */
+const isOneOf = <Member>(
+	values: readonly Member[],
+	value: unknown,
+): value is Member => values.some((candidate) => candidate === value);
+
 export const isEnemyKind = (value: unknown): value is EnemyKind =>
-	value === "zombie" ||
-	value === "bat" ||
-	value === "thief" ||
-	value === "nymph" ||
-	value === "aquator";
+	isOneOf(ENEMY_KIND_VALUES, value);
 
 const isDeathCause = (value: unknown): value is DeathCause =>
-	isEnemyKind(value) ||
-	value === "hunger" ||
-	value === "trap" ||
-	value === "poison";
+	isEnemyKind(value) || isOneOf(["hunger", "trap", "poison"] as const, value);
 
 const isEnemyArray = (
 	value: unknown,
@@ -104,29 +106,7 @@ const isEnemyArray = (
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
-	value === "heal-potion" ||
-	value === "sword" ||
-	value === "shield" ||
-	value === "food" ||
-	value === "poison" ||
-	value === "teleport-scroll" ||
-	value === "mapping-scroll" ||
-	value === "identify-scroll" ||
-	value === "strength" ||
-	value === "regeneration-ring" ||
-	value === "sustenance-ring" ||
-	value === "enchant-weapon" ||
-	value === "enchant-armor" ||
-	value === "striking-wand" ||
-	value === "confusion" ||
-	value === "slow-wand" ||
-	value === "levitation" ||
-	value === "protect-armor" ||
-	value === "blindness" ||
-	value === "paralysis" ||
-	value === "raise-level" ||
-	value === "detect-monster" ||
-	value === "life";
+	isOneOf(ITEM_KIND_VALUES, value);
 
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
@@ -163,7 +143,7 @@ const isGoldPileArray = (
 	);
 
 const isTrapKind = (value: unknown): value is TrapKind =>
-	value === "dart" || value === "trapdoor" || value === "teleport";
+	isOneOf(TRAP_KIND_VALUES, value);
 
 const isTrapArray = (
 	value: unknown,
@@ -175,112 +155,96 @@ const isTrapArray = (
 			isRecord(trap) && standsOnFloor(trap, terrain) && isTrapKind(trap.kind),
 	);
 
+type PayloadValidator = (payload: Record<string, unknown>) => boolean;
+
+/** An event whose payload is always empty carries nothing to validate. */
+const emptyPayload: PayloadValidator = () => true;
+
+/**
+ * One payload validator per event type. Keyed by GameEvent["type"], so adding
+ * an event without adding its validator is a compile error (the old switch's
+ * `default: return false` only failed at runtime).
+ */
+const EVENT_PAYLOAD_VALIDATORS: Readonly<
+	Record<GameEvent["type"], PayloadValidator>
+> = {
+	"player-hit": (payload) =>
+		isEnemyKind(payload.by) && isPositiveInteger(payload.damage),
+	"enemy-hit": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+	"sneak-attack": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+	"enemy-defeated": (payload) => isEnemyKind(payload.target),
+	"player-died": (payload) => isDeathCause(payload.by),
+	"floor-descended": (payload) => isPositiveInteger(payload.floor),
+	"floor-ascended": (payload) => isPositiveInteger(payload.floor),
+	"amulet-obtained": emptyPayload,
+	"player-healed": (payload) =>
+		isItemKind(payload.by) && isNonNegativeInteger(payload.amount),
+	"item-picked-up": (payload) => isItemKind(payload.kind),
+	"game-won": emptyPayload,
+	"weapon-equipped": (payload) =>
+		isItemKind(payload.kind) && isInteger(payload.bonus),
+	"armor-equipped": (payload) =>
+		isItemKind(payload.kind) && isNonZeroInteger(payload.bonus),
+	"player-hungry": emptyPayload,
+	"player-starved": (payload) => isPositiveInteger(payload.damage),
+	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
+	"gold-collected": (payload) => isPositiveInteger(payload.amount),
+	/* trapdoor and teleport are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE */
+	"trap-triggered": (payload) =>
+		payload.kind === "trapdoor" || payload.kind === "teleport"
+			? isNonNegativeInteger(payload.damage)
+			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
+	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
+	"player-teleported": (payload) =>
+		isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y),
+	"floor-mapped": emptyPayload,
+	"potion-identified": (payload) => isItemKind(payload.kind),
+	"player-strengthened": (payload) => isPositiveInteger(payload.bonus),
+	"gold-stolen": (payload) => isNonNegativeInteger(payload.amount),
+	"item-stolen": (payload) =>
+		payload.kind === undefined || isItemKind(payload.kind),
+	"ring-equipped": (payload) => isItemKind(payload.kind),
+	"player-regenerated": (payload) => isPositiveInteger(payload.amount),
+	"weapon-enchanted": (payload) => isPositiveInteger(payload.bonus),
+	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
+	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
+	"wand-struck": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+	"player-confused": (payload) => isPositiveInteger(payload.turns),
+	"confusion-faded": emptyPayload,
+	"enemy-slowed": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"player-levitated": (payload) => isPositiveInteger(payload.turns),
+	"levitation-faded": emptyPayload,
+	"armor-protected": emptyPayload,
+	"player-blinded": (payload) => isPositiveInteger(payload.turns),
+	"blindness-faded": emptyPayload,
+	"player-leveled-up": (payload) => isPositiveInteger(payload.level),
+	"player-paralyzed": (payload) => isPositiveInteger(payload.turns),
+	"paralysis-faded": emptyPayload,
+	"player-detected-monsters": (payload) => isPositiveInteger(payload.turns),
+	"detect-monsters-faded": emptyPayload,
+	"player-revitalized": (payload) => isPositiveInteger(payload.maxHpBonus),
+	"winds-of-kron-warning": emptyPayload,
+	"winds-of-kron-eviction": emptyPayload,
+};
+
+/** The same table widened for lookup by an untrusted string key. */
+const EVENT_VALIDATOR_LOOKUP: Readonly<Record<string, PayloadValidator>> =
+	EVENT_PAYLOAD_VALIDATORS;
+
 const isGameEvent = (value: unknown): boolean => {
-	if (!isRecord(value) || !isRecord(value.payload)) {
+	if (
+		!isRecord(value) ||
+		typeof value.type !== "string" ||
+		!isRecord(value.payload)
+	) {
 		return false;
 	}
-	const payload = value.payload;
-	switch (value.type) {
-		case "player-hit":
-			return isEnemyKind(payload.by) && isPositiveInteger(payload.damage);
-		case "enemy-hit":
-			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
-		case "sneak-attack":
-			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
-		case "enemy-defeated":
-			return isEnemyKind(payload.target);
-		case "player-died":
-			return isDeathCause(payload.by);
-		case "floor-descended":
-			return isPositiveInteger(payload.floor);
-		case "floor-ascended":
-			return isPositiveInteger(payload.floor);
-		case "amulet-obtained":
-			return true;
-		case "player-healed":
-			return isItemKind(payload.by) && isNonNegativeInteger(payload.amount);
-		case "item-picked-up":
-			return isItemKind(payload.kind);
-		case "game-won":
-			return true;
-		case "weapon-equipped":
-			return isItemKind(payload.kind) && isInteger(payload.bonus);
-		case "armor-equipped":
-			return isItemKind(payload.kind) && isNonZeroInteger(payload.bonus);
-		case "player-hungry":
-			return true;
-		case "player-starved":
-			return isPositiveInteger(payload.damage);
-		case "player-ate":
-			return isNonNegativeInteger(payload.amount);
-		case "gold-collected":
-			return isPositiveInteger(payload.amount);
-		case "trap-triggered":
-			/* trapdoor and teleport are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE */
-			return payload.kind === "trapdoor" || payload.kind === "teleport"
-				? isNonNegativeInteger(payload.damage)
-				: isTrapKind(payload.kind) && isPositiveInteger(payload.damage);
-		case "player-poisoned":
-			return isPositiveInteger(payload.damage);
-		case "player-teleported":
-			return isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y);
-		case "floor-mapped":
-			return true;
-		case "potion-identified":
-			return isItemKind(payload.kind);
-		case "player-strengthened":
-			return isPositiveInteger(payload.bonus);
-		case "gold-stolen":
-			return isNonNegativeInteger(payload.amount);
-		case "item-stolen":
-			return payload.kind === undefined || isItemKind(payload.kind);
-		case "ring-equipped":
-			return isItemKind(payload.kind);
-		case "player-regenerated":
-			return isPositiveInteger(payload.amount);
-		case "weapon-enchanted":
-			return isPositiveInteger(payload.bonus);
-		case "armor-enchanted":
-			return isPositiveInteger(payload.bonus);
-		case "armor-rusted":
-			return isPositiveInteger(payload.amount);
-		case "wand-struck":
-			return isEnemyKind(payload.target) && isPositiveInteger(payload.damage);
-		case "player-confused":
-			return isPositiveInteger(payload.turns);
-		case "confusion-faded":
-			return true;
-		case "enemy-slowed":
-			return isEnemyKind(payload.target) && isPositiveInteger(payload.turns);
-		case "player-levitated":
-			return isPositiveInteger(payload.turns);
-		case "levitation-faded":
-			return true;
-		case "armor-protected":
-			return true;
-		case "player-blinded":
-			return isPositiveInteger(payload.turns);
-		case "blindness-faded":
-			return true;
-		case "player-leveled-up":
-			return isPositiveInteger(payload.level);
-		case "player-paralyzed":
-			return isPositiveInteger(payload.turns);
-		case "paralysis-faded":
-			return true;
-		case "player-detected-monsters":
-			return isPositiveInteger(payload.turns);
-		case "detect-monsters-faded":
-			return true;
-		case "player-revitalized":
-			return isPositiveInteger(payload.maxHpBonus);
-		case "winds-of-kron-warning":
-			return true;
-		case "winds-of-kron-eviction":
-			return true;
-		default:
-			return false;
-	}
+	const validatePayload = EVENT_VALIDATOR_LOOKUP[value.type];
+	return validatePayload?.(value.payload) ?? false;
 };
 
 const isGameEventArray = (value: unknown): value is readonly GameEvent[] =>
@@ -304,6 +268,11 @@ const isRngState = (value: unknown): value is RngState =>
 export const validateGameState = (
 	value: unknown,
 ): Result<GameState, string> => {
+	/* The per-field checks below are deliberately NOT a data-driven loop:
+	 * each `if (!isX(field)) return err(...)` narrows the field's static type,
+	 * and the ok(...) construction at the bottom depends on every one of those
+	 * narrowings. A generic loop would validate at runtime but leave the
+	 * fields `unknown`, forcing casts this codebase forbids. */
 	if (!isRecord(value)) {
 		return err("root");
 	}

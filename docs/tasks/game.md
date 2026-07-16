@@ -1,6 +1,6 @@
 ﻿# emoji-rogue ゲーム開発タスクトラッカー
 
-ここから先のゲーム実装(GameState・入力ループ・敵・UI)のトラッカー。`develop`/`develop-loop` スキルはここを読んでタスクを選ぶ。近代化改修(rot.jsフォークの関数型変換)の完了済み履歴は `docs/tasks/modernization.md` を参照(タグ `modernization-complete` が完了地点)。
+ここから先のゲーム実装(GameState・入力ループ・敵・UI)のトラッカー。`develop` スキルはここを読んでタスクを選ぶ(`develop-loop`スキルはgoalコマンド以前の疑似自律実行用だったため2026-07-16に削除)。近代化改修(rot.jsフォークの関数型変換)の完了済み履歴は `docs/tasks/modernization.md` を参照(タグ `modernization-complete` が完了地点)。
 
 ## ゲーム層の設計方針(2026-07-13決定)
 

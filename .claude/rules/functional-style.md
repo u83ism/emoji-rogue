@@ -24,3 +24,9 @@ Functional Core, Imperative Shell: pure computation in the core, a thin effectfu
   - A pure function must never use a forbidden-verb name, and vice versa.
 - Events / notification-shaped data are plain discriminated unions (`{ type: "...", payload: {...} }`), never
   class instances.
+- Branching over a union's members (item kinds, enemy kinds, event types) must be either a per-kind lookup
+  table (`Readonly<Record<Kind, Value>>` — see `balance.ts`'s `ENEMY_MAX_HP` idiom) or an exhaustive
+  `switch` the compiler checks (no `default`; end a non-returning switch with `kind satisfies never`).
+  `if`-chains over a union are forbidden past ~3 branches: they carry no exhaustiveness check, so a newly
+  added member silently falls into whatever the last branch does (the `applyUseItem` near-miss this rule
+  exists to prevent — its trailing block silently treated any unhandled kind as a healing potion).

@@ -5,7 +5,7 @@ import type { Replay } from "./game/replay.js";
 import {
 	buildReplayFileContent,
 	parseReplayFileContent,
-} from "./game/replayFile.js";
+} from "./game/replayFormat.js";
 
 // Shell-side file effects around the pure replay format (src/game/replayFile.ts).
 // The path parameter exists for tests; the game always uses the default.

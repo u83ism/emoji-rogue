@@ -18,8 +18,8 @@ export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
 export type { Replay } from "./replay.js";
 export { buildReplayGameState } from "./replay.js";
-export type { ReplayFileError } from "./replayFile.js";
-export { parseReplayFileContent } from "./replayFile.js";
+export type { ReplayFileError } from "./replayFormat.js";
+export { parseReplayFileContent } from "./replayFormat.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,

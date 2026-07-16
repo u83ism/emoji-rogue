@@ -3,7 +3,7 @@ import type { Replay } from "./replay.js";
 import {
 	buildReplayFileContent,
 	parseReplayFileContent,
-} from "./replayFile.js";
+} from "./replayFormat.js";
 
 const REPLAY: Replay = {
 	width: 40,

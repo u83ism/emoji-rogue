@@ -1,7 +1,10 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { buildSaveFileContent, parseSaveFileContent } from "./game/save.js";
+import {
+	buildSaveFileContent,
+	parseSaveFileContent,
+} from "./game/saveFormat.js";
 import type { GameState } from "./game/state.js";
 
 // Shell-side file effects around the pure save format (src/game/save.ts).

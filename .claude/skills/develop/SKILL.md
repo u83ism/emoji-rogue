@@ -14,4 +14,9 @@ description: Spec check → implement → test (if logic involved) → update pr
    exists because 50 milestones of "append one branch per feature" quietly grew `advanceTurn.ts` to 805
    lines before anyone checked.)
 5. **Update progress docs**: update `docs/tasks/game.md` to check off the completed item(s) and note any
-   new follow-up tasks discovered along the way. No broader spec-consistency check is performed here.
+   new follow-up tasks discovered along the way.
+6. **Keep documentation truthful**: if the change makes any project documentation wrong — player-facing
+   behavior, codebase structure, commands, whatever document describes the thing you just changed — update
+   that documentation in the same task. Deliberately phrased abstractly: the point is "docs must not lie
+   about the current state", not a fixed file list. (This step exists because the codebase reading guide
+   still said "the game layer does not exist yet" 61 milestones after it started existing.)

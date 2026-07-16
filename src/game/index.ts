@@ -11,7 +11,12 @@ export {
 	INVENTORY_TITLE,
 } from "../systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
-export { GOAL_FLOOR, PLAYER_MAX_HP } from "./balance.js";
+export {
+	GOAL_FLOOR,
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+	PLAYER_MAX_FOOD,
+	PLAYER_MAX_HP,
+} from "./balance.js";
 export type { EnemyKind, GameEvent, ItemKind } from "./events.js";
 export { buildFrameGrid } from "./frame.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";

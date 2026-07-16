@@ -11,7 +11,8 @@ import {
 	GOAL_FLOOR,
 	INVENTORY_EMPTY_MESSAGE,
 	INVENTORY_TITLE,
-	PLAYER_MAX_HP,
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+	PLAYER_MAX_FOOD,
 	toInventoryLetter,
 	toUseItemAction,
 } from "../dist/game/index.mjs";
@@ -75,10 +76,61 @@ const renderMap = () => {
 	}
 };
 
+// Same chip-per-status table as the CLI's statusBar.tsx — adding a status is
+// one entry here too.
+const STATUS_CHIPS = [
+	{
+		label: "混乱中",
+		color: "#f6f",
+		remaining: (s) => s.confusedTurnsRemaining,
+	},
+	{
+		label: "浮遊中",
+		color: "#6ff",
+		remaining: (s) => s.levitationTurnsRemaining,
+	},
+	{ label: "盲目", color: "#999", remaining: (s) => s.blindTurnsRemaining },
+	{ label: "麻痺", color: "#f66", remaining: (s) => s.paralyzedTurnsRemaining },
+	{
+		label: "索敵中",
+		color: "#6f6",
+		remaining: (s) => s.detectMonstersTurnsRemaining,
+	},
+];
+
+const appendStatusSegment = (text, color) => {
+	const segment = document.createElement("span");
+	segment.textContent = text;
+	if (color !== undefined) {
+		segment.style.color = color;
+	}
+	statusElement.appendChild(segment);
+};
+
+// Mirrors the CLI status bar (statusBar.tsx): floor, level, HP, food, attack
+// and defense, gold, then one chip per active temporary status.
 const renderStatus = () => {
-	statusElement.textContent = `${state.floor}F (目標 ${GOAL_FLOOR}F)  HP ${state.playerHp}/${PLAYER_MAX_HP}`;
-	statusElement.style.color =
-		state.playerHp <= LOW_HP_THRESHOLD ? "#f66" : "#6f6";
+	statusElement.textContent = "";
+	appendStatusSegment(`${state.floor}F (目標 ${GOAL_FLOOR}F) `);
+	appendStatusSegment(`Lv.${state.playerLevel} `, "#69f");
+	appendStatusSegment(
+		`HP ${state.playerHp}/${state.playerMaxHp}`,
+		state.playerHp <= LOW_HP_THRESHOLD ? "#f66" : "#6f6",
+	);
+	appendStatusSegment(
+		` 満腹度 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
+		state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD ? "#ff6" : undefined,
+	);
+	appendStatusSegment(
+		` 攻 ${state.playerAttackDamage} 防 ${state.playerDefense}`,
+	);
+	appendStatusSegment(` 💰${state.goldCollected}`, "#fd6");
+	for (const chip of STATUS_CHIPS) {
+		const remaining = chip.remaining(state);
+		if (remaining > 0) {
+			appendStatusSegment(` ${chip.label}(${remaining})`, chip.color);
+		}
+	}
 };
 
 const renderLog = () => {

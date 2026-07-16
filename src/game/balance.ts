@@ -225,7 +225,7 @@ export const DART_TRAP_DAMAGE = 2;
 export const TRAPDOOR_DAMAGE = 0;
 /** Chance (out of 100), independently rolled per floor (never on GOAL_FLOOR), that a trapdoor spawns. */
 export const TRAPDOOR_SPAWN_CHANCE_PERCENT = 15;
-/** No damage — the penalty is being relocated at random, see teleport.ts's applyTrapTeleport. */
+/** No damage — the penalty is being relocated at random, see teleport.ts's applyRandomTeleport. */
 export const TELEPORT_TRAP_DAMAGE = 0;
 /**
  * Chance (out of 100), independently rolled per floor, that a teleport trap

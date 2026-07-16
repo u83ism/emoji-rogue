@@ -2,7 +2,7 @@ import { encodePointKey } from "../../pointkey.js";
 import { SLOW_WAND_DURATION } from "../balance.js";
 import { applyWandStrike } from "../combat.js";
 import { buildEventLog } from "../events.js";
-import type { Enemy, GameState, InventoryEntry } from "../state.js";
+import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
 
 /**
@@ -37,34 +37,28 @@ const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
 /**
  * A wand of striking hits the nearest visible enemy for flat damage. With no
  * visible target it is a no-op — same reference, no turn spent, wand not
- * consumed, matching how using an unheld item behaves.
+ * consumed, matching how using an unheld item behaves. Consumption from
+ * inventory happens in the dispatcher (useItem/index.ts).
  */
-export const applyUseStrikingWand = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => {
+export const applyUseStrikingWand = (state: GameState): GameState => {
 	const target = findNearestVisibleEnemy(state);
 	if (target === undefined) {
 		return state;
 	}
-	return applyWandStrike({ ...state, inventory }, target);
+	return applyWandStrike(state, target);
 };
 
 /**
  * A wand of slow monster freezes the nearest visible enemy for
  * SLOW_WAND_DURATION turns. Same no-visible-target no-op as the striking wand.
  */
-export const applyUseSlowWand = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => {
+export const applyUseSlowWand = (state: GameState): GameState => {
 	const target = findNearestVisibleEnemy(state);
 	if (target === undefined) {
 		return state;
 	}
 	return {
 		...state,
-		inventory,
 		enemies: state.enemies.map((enemy) =>
 			enemy === target
 				? { ...enemy, slowedTurnsRemaining: SLOW_WAND_DURATION }

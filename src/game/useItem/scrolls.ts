@@ -1,61 +1,46 @@
 import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
 import { buildEventLog, POTION_KINDS } from "../events.js";
-import type { GameState, InventoryEntry } from "../state.js";
-import { applyTrapTeleport } from "../teleport.js";
+import type { GameState } from "../state.js";
+import { applyRandomTeleport } from "../teleport.js";
+
+// Consumption from inventory happens in the dispatcher (useItem/index.ts),
+// never in the handlers here — a handler only applies its effect.
 
 /** An enchant weapon scroll always raises playerAttackDamage — never cursed, unlike a found sword. */
-export const applyUseEnchantWeaponScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => ({
+export const applyUseEnchantWeaponScroll = (state: GameState): GameState => ({
 	...state,
 	playerAttackDamage: state.playerAttackDamage + ENCHANT_WEAPON_BONUS,
-	inventory,
 	events: buildEventLog(state.events, [
 		{ type: "weapon-enchanted", payload: { bonus: ENCHANT_WEAPON_BONUS } },
 	]),
 });
 
 /** An enchant armor scroll always raises playerDefense — never cursed, unlike a found shield. */
-export const applyUseEnchantArmorScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => ({
+export const applyUseEnchantArmorScroll = (state: GameState): GameState => ({
 	...state,
 	playerDefense: state.playerDefense + ENCHANT_ARMOR_BONUS,
-	inventory,
 	events: buildEventLog(state.events, [
 		{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
 	]),
 });
 
 /** A protect armor scroll sets armorProtected for good — aquator rust never lands again. */
-export const applyUseProtectArmorScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => ({
+export const applyUseProtectArmorScroll = (state: GameState): GameState => ({
 	...state,
 	armorProtected: true,
-	inventory,
 	events: buildEventLog(state.events, [
 		{ type: "armor-protected", payload: {} },
 	]),
 });
 
 /** A teleport scroll relocates the player exactly like a teleport trap does. */
-export const applyUseTeleportScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => ({ ...applyTrapTeleport(state), inventory });
+export const applyUseTeleportScroll = (state: GameState): GameState =>
+	applyRandomTeleport(state);
 
 /** A magic mapping scroll reveals the whole floor as explored. */
-export const applyUseMappingScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => ({
+export const applyUseMappingScroll = (state: GameState): GameState => ({
 	...state,
 	explored: state.terrain.map((column) => column.map(() => true)),
-	inventory,
 	events: buildEventLog(state.events, [{ type: "floor-mapped", payload: {} }]),
 });
 
@@ -65,10 +50,7 @@ export const applyUseMappingScroll = (
  * no-op — same reference, no turn spent, scroll not consumed, matching how
  * using an unheld item behaves.
  */
-export const applyUseIdentifyScroll = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => {
+export const applyUseIdentifyScroll = (state: GameState): GameState => {
 	const target = POTION_KINDS.find(
 		(potionKind) => !state.identifiedPotionKinds.includes(potionKind),
 	);
@@ -77,7 +59,6 @@ export const applyUseIdentifyScroll = (
 	}
 	return {
 		...state,
-		inventory,
 		identifiedPotionKinds: [...state.identifiedPotionKinds, target],
 		events: buildEventLog(state.events, [
 			{ type: "potion-identified", payload: { kind: target } },

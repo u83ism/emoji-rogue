@@ -16,7 +16,7 @@ import {
 	type PotionKind,
 } from "../events.js";
 import { applyLevelUp } from "../experience.js";
-import type { GameState, InventoryEntry } from "../state.js";
+import type { GameState } from "../state.js";
 
 /** `identifiedPotionKinds` with `kind` added, if it was not already there. */
 const identifyPotionKind = (
@@ -32,10 +32,10 @@ const identifyPotionKind = (
  * the rest of the run (see GameState.identifiedPotionKinds) — drinking is
  * what reveals an unidentified potion's true name. The healing potion heals
  * up to the cap (drinking at full health wastes it); poison can end the run.
+ * Consumption from inventory happens in the dispatcher (useItem/index.ts).
  */
 export const applyUsePotion = (
 	state: GameState,
-	inventory: readonly InventoryEntry[],
 	kind: PotionKind,
 ): GameState => {
 	const identifiedPotionKinds = identifyPotionKind(
@@ -52,7 +52,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				playerHp: state.playerHp + amount,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{ type: "player-healed", payload: { by: kind, amount } },
@@ -70,7 +69,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				playerHp: Math.max(0, playerHp),
-				inventory,
 				identifiedPotionKinds,
 				status: playerHp <= 0 ? "dead" : state.status,
 				events: buildEventLog(state.events, events),
@@ -81,7 +79,6 @@ export const applyUsePotion = (
 				...state,
 				playerAttackDamage:
 					state.playerAttackDamage + STRENGTH_POTION_ATTACK_BONUS,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -94,7 +91,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				confusedTurnsRemaining: CONFUSION_POTION_DURATION,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -107,7 +103,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				levitationTurnsRemaining: LEVITATION_POTION_DURATION,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -120,7 +115,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				blindTurnsRemaining: BLIND_POTION_DURATION,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{ type: "player-blinded", payload: { turns: BLIND_POTION_DURATION } },
@@ -130,7 +124,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				paralyzedTurnsRemaining: PARALYSIS_POTION_DURATION,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -140,12 +133,11 @@ export const applyUsePotion = (
 				]),
 			};
 		case "raise-level":
-			return { ...applyLevelUp(state), inventory, identifiedPotionKinds };
+			return { ...applyLevelUp(state), identifiedPotionKinds };
 		case "detect-monster":
 			return {
 				...state,
 				detectMonstersTurnsRemaining: DETECT_MONSTER_POTION_DURATION,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -160,7 +152,6 @@ export const applyUsePotion = (
 				...state,
 				playerMaxHp,
 				playerHp: playerMaxHp,
-				inventory,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{

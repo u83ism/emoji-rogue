@@ -7,7 +7,7 @@ import {
 	SWORD_CURSE_CHANCE_PERCENT,
 } from "../balance.js";
 import { buildEventLog } from "../events.js";
-import type { GameState, InventoryEntry } from "../state.js";
+import type { GameState } from "../state.js";
 
 /**
  * Whether an equipped sword/shield turns out cursed, rolled fresh at use
@@ -29,12 +29,10 @@ const rollCurse = (
 /**
  * A sword permanently raises playerAttackDamage — stacking, no cap — unless
  * the curse roll lands, which lowers it instead (clamped at
- * MIN_PLAYER_ATTACK_DAMAGE so attacks never hit for zero).
+ * MIN_PLAYER_ATTACK_DAMAGE so attacks never hit for zero). Consumption from
+ * inventory happens in the dispatcher (useItem/index.ts), not here.
  */
-export const applyUseSword = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => {
+export const applyUseSword = (state: GameState): GameState => {
 	const { cursed, rng } = rollCurse(state.rng, SWORD_CURSE_CHANCE_PERCENT);
 	const rawBonus = cursed ? -SWORD_ATTACK_BONUS : SWORD_ATTACK_BONUS;
 	const playerAttackDamage = Math.max(
@@ -44,7 +42,6 @@ export const applyUseSword = (
 	return {
 		...state,
 		playerAttackDamage,
-		inventory,
 		rng,
 		events: buildEventLog(state.events, [
 			{
@@ -63,16 +60,12 @@ export const applyUseSword = (
  * curse roll lands, which lowers it instead (allowed to go negative; see
  * MIN_DAMAGE_TAKEN for why no clamp is needed on the damage side).
  */
-export const applyUseShield = (
-	state: GameState,
-	inventory: readonly InventoryEntry[],
-): GameState => {
+export const applyUseShield = (state: GameState): GameState => {
 	const { cursed, rng } = rollCurse(state.rng, SHIELD_CURSE_CHANCE_PERCENT);
 	const bonus = cursed ? -SHIELD_DEFENSE_BONUS : SHIELD_DEFENSE_BONUS;
 	return {
 		...state,
 		playerDefense: state.playerDefense + bonus,
-		inventory,
 		rng,
 		events: buildEventLog(state.events, [
 			{ type: "armor-equipped", payload: { kind: "shield", bonus } },

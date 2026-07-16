@@ -16,49 +16,40 @@ import {
 import { applyUseSlowWand, applyUseStrikingWand } from "./wands.js";
 
 /**
- * Uses one held item of `kind`, dispatching to the per-category handler with
- * the already-decremented inventory. Using a kind not held is a no-op (same
- * reference, no turn spent), and a handler may itself return the input state
- * unchanged to signal the same (a wand with no visible target, an identify
- * scroll with nothing left to identify).
- *
- * The switch is deliberately exhaustive with no default: adding an ItemKind
- * without wiring a handler here must be a compile error, never a silent
- * fallthrough into some other item's effect.
+ * The per-kind effect, without inventory consumption. Deliberately
+ * exhaustive with no default: adding an ItemKind without wiring a handler
+ * here must be a compile error, never a silent fallthrough into some other
+ * item's effect. A handler may return the input state unchanged (same
+ * reference) to signal "nothing happened" — a wand with no visible target,
+ * an identify scroll with nothing left to identify.
  */
-export const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
-	const held = state.inventory.find((entry) => entry.kind === kind);
-	if (held === undefined) {
-		return state;
-	}
-	const inventory = removeFromInventory(state.inventory, kind);
-
+const applyItemEffect = (state: GameState, kind: ItemKind): GameState => {
 	switch (kind) {
 		case "sword":
-			return applyUseSword(state, inventory);
+			return applyUseSword(state);
 		case "shield":
-			return applyUseShield(state, inventory);
+			return applyUseShield(state);
 		case "enchant-weapon":
-			return applyUseEnchantWeaponScroll(state, inventory);
+			return applyUseEnchantWeaponScroll(state);
 		case "enchant-armor":
-			return applyUseEnchantArmorScroll(state, inventory);
+			return applyUseEnchantArmorScroll(state);
 		case "protect-armor":
-			return applyUseProtectArmorScroll(state, inventory);
+			return applyUseProtectArmorScroll(state);
 		case "teleport-scroll":
-			return applyUseTeleportScroll(state, inventory);
+			return applyUseTeleportScroll(state);
 		case "mapping-scroll":
-			return applyUseMappingScroll(state, inventory);
+			return applyUseMappingScroll(state);
 		case "identify-scroll":
-			return applyUseIdentifyScroll(state, inventory);
+			return applyUseIdentifyScroll(state);
 		case "food":
-			return applyUseFood(state, inventory);
+			return applyUseFood(state);
 		case "regeneration-ring":
 		case "sustenance-ring":
-			return applyUseRing(state, inventory, kind);
+			return applyUseRing(state, kind);
 		case "striking-wand":
-			return applyUseStrikingWand(state, inventory);
+			return applyUseStrikingWand(state);
 		case "slow-wand":
-			return applyUseSlowWand(state, inventory);
+			return applyUseSlowWand(state);
 		case "heal-potion":
 		case "poison":
 		case "strength":
@@ -69,6 +60,29 @@ export const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
 		case "raise-level":
 		case "detect-monster":
 		case "life":
-			return applyUsePotion(state, inventory, kind);
+			return applyUsePotion(state, kind);
 	}
+};
+
+/**
+ * Uses one held item of `kind`: the effect from applyItemEffect, then one
+ * item consumed from inventory — in this one place only, so a handler can
+ * never forget to consume (the structural fix for a contract that used to
+ * live in every handler). Using a kind not held, or a kind whose handler
+ * declared a no-op, returns the input state (same reference, no turn spent,
+ * nothing consumed).
+ */
+export const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
+	const held = state.inventory.find((entry) => entry.kind === kind);
+	if (held === undefined) {
+		return state;
+	}
+	const afterEffect = applyItemEffect(state, kind);
+	if (afterEffect === state) {
+		return state;
+	}
+	return {
+		...afterEffect,
+		inventory: removeFromInventory(state.inventory, kind),
+	};
 };

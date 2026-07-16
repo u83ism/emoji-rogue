@@ -2,7 +2,7 @@ import { TRAP_DAMAGE } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { descendStairs } from "./floor.js";
 import type { GameState } from "./state.js";
-import { applyTrapTeleport } from "./teleport.js";
+import { applyRandomTeleport } from "./teleport.js";
 
 /**
  * Springs any hidden trap under the player's feet: TRAP_DAMAGE[kind] damage,
@@ -14,7 +14,7 @@ import { applyTrapTeleport } from "./teleport.js";
  * descendStairs — the whole floor gets replaced exactly as if the player had
  * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. A
  * teleport trap that the player survives (it deals no damage, so always)
- * instead hands off to applyTrapTeleport — same relocation as the teleport
+ * instead hands off to applyRandomTeleport — same relocation as the teleport
  * scroll, just triggered by a footstep instead of an inventory item. While
  * levitationTurnsRemaining is set, no trap can trigger at all — the player
  * floats over it (any kind alike), and it stays armed underneath.
@@ -49,7 +49,7 @@ export const applyTrapTrigger = (state: GameState): GameState => {
 		return descendStairs(afterTrap);
 	}
 	if (trap.kind === "teleport" && afterTrap.status === "playing") {
-		return applyTrapTeleport(afterTrap);
+		return applyRandomTeleport(afterTrap);
 	}
 	return afterTrap;
 };

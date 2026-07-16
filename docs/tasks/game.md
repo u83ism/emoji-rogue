@@ -936,7 +936,59 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 自動テスト(型検査・lint・Vitest 797件・knip・build)通過を確認して完了。数値の手応えは次回テストプレイで再評価する。
 **マイルストーン56完了(2026-07-16)。**
 
+## リファクタリング棚卸し(2026-07-16監査) — マイルストーン57〜61
+
+マイルストーン8〜56の連続実装で生じた構造的負債の解消計画。監査所見の要約: スタイル規則(クラス/`any`/略語禁止、Result/throw使い分け、i18n規律、シリアライズ可能なGameState)はほぼ完全に守られている一方、「1機能=既存ファイルに1分岐追記」の積み重ねでゲーム層コア5ファイルが150/200行ルールを大幅超過(`advanceTurn.ts` 805行、`floor.ts` 538行など)。ドメインモデルは平坦で追記専用——`ItemKind`にカテゴリ軸がなく汎用名占拠(`"scroll"`=テレポートの巻物)があり、`applyUseItem`は網羅性チェックのない23分岐if連鎖で末尾が暗黙に回復薬扱い(分岐追加忘れが黙って回復薬になる)。恒久対応として`.claude/rules/functional-style.md`(union分岐はテーブルor網羅switch、if連鎖禁止)・`.claude/rules/naming.md`(union要素名は文脈なしで自己記述的に)・`develop`スキル(実装後のファイルサイズ確認ステップ)を2026-07-16に更新済み。以下は挙動保存のリファクタで、各マイルストーンが独立にビルド可能。
+
+### マイルストーン57 — floor.tsのスポーンテーブル化
+
+`buildFloorLayout`の23連コピペ抽選ifブロック(アイテム)と同型の敵抽選3ブロックをデータテーブル+ループに置換する。**rngの消費順(既存の抽選順)を配列順として厳密に維持**することで、既存シードの生成結果・floor.test.tsのシード依存テストへの影響をゼロにする。
+
+- [ ] `src/game/balance.ts`(または`floor.ts`内): `ITEM_SPAWN_TABLE: readonly { kind: ItemKind; chancePercent: number }[]`(現行の抽選順で列挙)と`ENEMY_SPAWN_TABLE`(thief/nymph/aquator)を導入。既存の個別`*_SPAWN_CHANCE_PERCENT`定数はテーブルの値として参照を維持(定数名の変更はしない — テスト・ドキュメントからの参照が多いため)
+- [ ] `src/game/floor.ts`: 23個のifブロックをテーブル走査ループに置換。確定湧き(回復薬・食料・金・わな)は現状維持
+- [ ] 検証: 既存floor.test.tsが無修正で全通過すること(同一シード同一結果=rng消費順が保存された証拠)
+- [ ] 期待効果: floor.ts 538→約300行。アイテム追加時のfloor.ts側変更がテーブル1行になる
+
+### マイルストーン58 — applyUseItemの分割と網羅性担保
+
+`advanceTurn.ts`(805行)の中核肥大要因である`applyUseItem`(23分岐if連鎖・約330行)をカテゴリ別モジュールに分割し、コンパイル時網羅性チェックを入れる。**現在の暗黙フォールスルー(未処理kindが回復薬扱い)を廃止**する。
+
+- [ ] `src/game/useItem/`ディレクトリ新設: `equipment.ts`(剣・盾・強化/保護巻物)、`potions.ts`(薬10種 — durationを設定するだけの同型5種はテーブル化を検討)、`scrolls.ts`(テレポート・地図・識別)、`wands.ts`(攻撃・鈍足)+ディスパッチャ`index.ts`(網羅`switch`、`default`なし、`kind satisfies never`で締める)
+- [ ] `src/game/advanceTurn.ts`: `applyUseItem`と関連ヘルパー(`rollCurse`・`identifyPotionKind`・`findNearestVisibleEnemy`等)を`useItem/`へ移動。目標300行前後
+- [ ] `src/game/advanceTurn.test.ts`(1442行): 移動したロジックのテストを`useItem/`配下の対応テストファイルへ分割移動
+- [ ] 検証: テスト件数が減っていないこと、全通過
+
+### マイルストーン59 — 重複解消の小粒セット
+
+- [ ] `src/game/combat.ts`: `applyPlayerAttack`/`applyWandStrike`の9割重複を共通コア(ダメージ量とイベント種だけをパラメータ化)に統合
+- [ ] `src/game/initialState.ts`: 2ビルダーが重複保持する約30フィールドの初期値を共通ヘルパーに集約。`export function`宣言2つを`const`+アローに(functional-style.md準拠)
+- [ ] `src/game/vision.ts`: `computeVisiblePoints`の`radius`デフォルト引数(盲目状態を黙って無視する足元の銃)を廃止し、全呼び出し側で明示
+
+### マイルストーン60 — ItemKindリネーム(汎用名占拠の解消)
+
+**セーブ・リプレイ形式が壊れる変更。セーブが使い捨てで済むリリース前が唯一の実施好機。** 各カテゴリ1号が占拠した汎用名を自己記述的な名前に改める(naming.mdの新規則の適用)。
+
+- [ ] リネーム: `potion`→`heal-potion`、`scroll`→`teleport-scroll`、`mapping`→`mapping-scroll`、`identify`→`identify-scroll`、`ring`→`regeneration-ring`、`sustenance`→`sustenance-ring`、`wand`→`striking-wand`、`slow`→`slow-wand`(残りのポーション種への`-potion`サフィックス統一は実施時に判断 — `poison`等は単独でも自己記述的)
+- [ ] `SAVE_FORMAT_VERSION`を25に、`REPLAY_FORMAT_VERSION`を2に(`use-item`アクションが`kind`を含むため両方壊れる)
+- [ ] `demo/main.js`(ブラウザデモ)の追従確認
+- [ ] `POTION_KINDS`・`ITEM_GLYPHS`・`ITEM_NAMES`・validateGameState・全テストの機械的追従
+
+### マイルストーン61 — 行数ゲートとmessages.ts分割
+
+- [ ] `scripts/check-file-sizes.mjs`(新規、依存なし): 対象ファイルが200行超ならエラー。対象は`src/game/**`とシェル層(`src/main.tsx`・`src/messages.ts`・`src/saveFile.ts`等のsrc直下ゲーム関連ファイル)。**フォーク層(`src/map/`・`src/fov/`・`src/color.ts`等)は近代化履歴付きの移植コードなので対象外**と明記
+- [ ] `package.json`: `npm test`または`lint`パイプラインに接続
+- [ ] `src/messages.ts`(259行): 名前辞書(`ITEM_NAMES`等)と`formatEvent`を分割
+- [ ] ゲートがgreenで通ること(マイルストーン57・58完了後なら超過ファイルは解消済みのはず)
+
+### 実施順の注意
+
+57→58→59は独立だが番号順推奨(57が最も機械的でリスクが低い)。60は57・58完了後(分割済みのファイルに対するリネームの方が差分が読みやすい)。61は最後(ゲートは超過解消後でないとredになる)。
+
 ## バックログ(マイルストーン未整理)
+- floor.test.tsの「シード1〜Nのどれかで出現する/しない」型テスト(シード宝くじ)の設計見直し(出現率の数値変更のたびに壊れる — マイルストーン56で2件、試行範囲拡大で応急処置済み。恒久策はrng注入または閾値直叩き)
+- `src/game/save.ts`と`src/saveFile.ts`、`src/game/replayFile.ts`と`src/replayFile.ts`の同名ペアの命名整理(レイヤ分離自体は正しい。純粋層を`saveFormat.ts`/`replayFormat.ts`に改名する案)
+- 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
+- `validateGameState.ts`(535行)のテーブル駆動化(手書きバリデーションは依存追加禁止ルールの受容コストだが、フィールド定義テーブルで行数は圧縮できる)
 - 識別の巻物の鑑定対象をインベントリ優先にする(2026-07-16テストプレイの指摘: 未鑑定の薬を持って読んでも`POTION_KINDS`先頭順で手持ちと無関係な種類が鑑定され、手持ちが「未鑑定の薬」のまま残り不思議のダンジョン系の期待とズレる。最小改善案: インベントリ内の未鑑定ポーション先頭を優先し、無ければ現行どおり全体リスト順。アイテム選択プロンプト+種類ごとのフレーバー名まで踏み込むなら下記「ポーションのフレーバーテキスト」項と合流する別マイルストーン級)
 - 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)

@@ -985,12 +985,15 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 ### マイルストーン61 — 行数ゲートとmessages.ts分割
 
-- [ ] `scripts/check-file-sizes.mjs`(新規、依存なし): 対象ファイルが200行超ならエラー。対象は`src/game/**`とシェル層(`src/main.tsx`・`src/messages.ts`・`src/saveFile.ts`等のsrc直下ゲーム関連ファイル)。**フォーク層(`src/map/`・`src/fov/`・`src/color.ts`等)は近代化履歴付きの移植コードなので対象外**と明記
-- [ ] `package.json`: `npm test`または`lint`パイプラインに接続
-- [ ] `src/messages.ts`(259行): 名前辞書(`ITEM_NAMES`等)と`formatEvent`を分割
-- [ ] `src/game/floor.ts`(マイルストーン57のテーブル化後も460行): スポーン系(`FloorLayout`・スポーンテーブル・`drawSpawnTile`系・`collectSpawnPool`・`buildFloorLayout`)を`floorLayout.ts`(必要ならさらに`spawnTables.ts`)へ分割し、floor.tsはフロア遷移(`buildFloorTransition`/`descendStairs`/`ascendStairs`)だけにする
-- [ ] `src/game/validateGameState.ts`(535行)・`src/game/enemies.ts`(289行)・`src/game/events.ts`(296行)・`src/game/balance.ts`(356行)の扱いを決める(分割するか、ゲートの除外リストに理由付きで載せるか)
-- [ ] ゲートがgreenで通ること
+- [x] `scripts/check-file-sizes.mjs`(新規、依存なし): 対象ファイルが200行超ならエラー。対象は`src/game/**`とシェル層のsrc直下ゲーム関連ファイル。**フォーク層(`src/map/`・`src/fov/`・`src/color.ts`等)は近代化履歴付きの移植コードなので対象外**、`*.test.ts`も対象外(テストの粒度は「1ソース1テスト」規則でソース側に固定されるため、ソース分割でしか縮まない)と明記。超過を許すには`EXCEPTIONS`に理由付きで登録する以外の道がない設計
+- [x] `package.json`: `npm run lint`に接続(`biome check . && node scripts/check-file-sizes.mjs`)
+- [x] `src/messages.ts`(259行): 名前辞書を`src/gameNames.ts`、システム通知を`src/systemMessages.ts`に分割 → messages.ts 182行
+- [x] `src/game/floor.ts`(460行): `spawnPool.ts`(抽選プール+`SpawnChance`型)・`floorEnemies.ts`(敵テーブル+`drawFloorEnemies`)・`floorItems.ts`(アイテムテーブル+`drawFloorItems`)・`floorLayout.ts`(`buildFloorLayout`)に分割し、floor.tsはフロア遷移のみ(88行)に。スポーン系テストはfloorLayout.test.tsへ移設
+- [x] 追加の分割(ゲートを通すため): `advanceTurn.ts`(303行)→`pickups.ts`・`trapTrigger.ts`を切り出し186行に(対応テストも分割)。`enemies.ts`(289行)→`enemyMovement.ts`(A*追跡・徘徊)を切り出し182行に(`removeOneFromInventory`は`inventory.ts`へ)。`frame.ts`(217行)→グリフ辞書を`glyphs.ts`へ切り出し136行に。`main.tsx`(256行)→`statusBar.tsx`・`inventoryOverlay.tsx`を切り出し177行に
+- [x] ゲート除外リスト(理由付き): `balance.ts`(調整ノブの単一責務カタログ)・`events.ts`(単一の判別可能union)・`validateGameState.ts`(手書き検証=依存追加禁止の受容コスト、テーブル駆動化はバックログ)の3件のみ
+- [x] ゲートgreen(対象54ファイル・例外3)。テスト803件・型検査・lint・knip・buildすべて通過
+
+**マイルストーン61完了(2026-07-16)。リファクタリング棚卸し(57〜61)全完了。**
 
 ### 実施順の注意
 

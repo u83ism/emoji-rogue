@@ -944,10 +944,12 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 
 `buildFloorLayout`の23連コピペ抽選ifブロック(アイテム)と同型の敵抽選3ブロックをデータテーブル+ループに置換する。**rngの消費順(既存の抽選順)を配列順として厳密に維持**することで、既存シードの生成結果・floor.test.tsのシード依存テストへの影響をゼロにする。
 
-- [ ] `src/game/balance.ts`(または`floor.ts`内): `ITEM_SPAWN_TABLE: readonly { kind: ItemKind; chancePercent: number }[]`(現行の抽選順で列挙)と`ENEMY_SPAWN_TABLE`(thief/nymph/aquator)を導入。既存の個別`*_SPAWN_CHANCE_PERCENT`定数はテーブルの値として参照を維持(定数名の変更はしない — テスト・ドキュメントからの参照が多いため)
-- [ ] `src/game/floor.ts`: 23個のifブロックをテーブル走査ループに置換。確定湧き(回復薬・食料・金・わな)は現状維持
-- [ ] 検証: 既存floor.test.tsが無修正で全通過すること(同一シード同一結果=rng消費順が保存された証拠)
-- [ ] 期待効果: floor.ts 538→約300行。アイテム追加時のfloor.ts側変更がテーブル1行になる
+- [x] `src/game/floor.ts`内(balance.tsではなくこちら — 定数はbalance.tsからのimportを維持することでknipの未使用export検出とも両立): `SpawnChance<Kind>`型と`ITEM_SPAWN_TABLE`(現行の抽選順で21種列挙)・`ENEMY_SPAWN_TABLE`(thief/nymph/aquator)を導入。個別`*_SPAWN_CHANCE_PERCENT`定数は名前・場所とも不変
+- [x] `src/game/floor.ts`: 24個のifブロック(アイテム21+敵3)をテーブル走査ループ2つに置換。確定湧き(回復薬・食料・金・わな)は現状維持。テーブルに「配列順=rng消費順。並び替えは全シードのダンジョンを変えるため新種は末尾に追加」の警告コメントを明記
+- [x] 検証: 既存floor.test.tsが**無修正で**全通過(797件 — 同一シード同一結果=rng消費順が保存された証拠)。型検査・lint・knip・buildもクリーン
+- [x] 実測効果: floor.ts 538→460行(テーブル自体がBiome整形で縦に伸びるため見積りの約300行には届かず)。アイテム追加時のfloor.ts側変更はテーブル1行になった。**残りの200行超過はマイルストーン61に分割タスクとして計上**(developスキルのファイルサイズ確認ステップに従う)
+
+**マイルストーン57完了(2026-07-16)。**
 
 ### マイルストーン58 — applyUseItemの分割と網羅性担保
 
@@ -978,7 +980,9 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 - [ ] `scripts/check-file-sizes.mjs`(新規、依存なし): 対象ファイルが200行超ならエラー。対象は`src/game/**`とシェル層(`src/main.tsx`・`src/messages.ts`・`src/saveFile.ts`等のsrc直下ゲーム関連ファイル)。**フォーク層(`src/map/`・`src/fov/`・`src/color.ts`等)は近代化履歴付きの移植コードなので対象外**と明記
 - [ ] `package.json`: `npm test`または`lint`パイプラインに接続
 - [ ] `src/messages.ts`(259行): 名前辞書(`ITEM_NAMES`等)と`formatEvent`を分割
-- [ ] ゲートがgreenで通ること(マイルストーン57・58完了後なら超過ファイルは解消済みのはず)
+- [ ] `src/game/floor.ts`(マイルストーン57のテーブル化後も460行): スポーン系(`FloorLayout`・スポーンテーブル・`drawSpawnTile`系・`collectSpawnPool`・`buildFloorLayout`)を`floorLayout.ts`(必要ならさらに`spawnTables.ts`)へ分割し、floor.tsはフロア遷移(`buildFloorTransition`/`descendStairs`/`ascendStairs`)だけにする
+- [ ] `src/game/validateGameState.ts`(535行)・`src/game/enemies.ts`(289行)・`src/game/events.ts`(296行)・`src/game/balance.ts`(356行)の扱いを決める(分割するか、ゲートの除外リストに理由付きで載せるか)
+- [ ] ゲートがgreenで通ること
 
 ### 実施順の注意
 

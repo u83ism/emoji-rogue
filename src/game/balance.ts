@@ -157,13 +157,13 @@ export const calculateEnemyCountForFloor = (
 	);
 };
 
-export const POTION_COUNT_PER_FLOOR = 2;
+export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
 /** Permanent boost to playerAttackDamage per sword used. Stacks — no cap. */
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
-export const SWORD_SPAWN_CHANCE_PERCENT = 30;
+export const SWORD_SPAWN_CHANCE_PERCENT = 15;
 /**
  * Chance (out of 100) that a sword turns out cursed the moment it's used —
  * rolled fresh at use time, not at spawn (see docs/tasks/game.md milestone
@@ -177,27 +177,27 @@ export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 /** Permanent boost to playerDefense per shield used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
 export const SHIELD_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a shield spawns. */
-export const SHIELD_SPAWN_CHANCE_PERCENT = 30;
+export const SHIELD_SPAWN_CHANCE_PERCENT = 15;
 /** Chance (out of 100) that a shield turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
 export const SHIELD_CURSE_CHANCE_PERCENT = 20;
 
 export const POISON_DAMAGE = 4;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
-export const POISON_POTION_SPAWN_CHANCE_PERCENT = 30;
+export const POISON_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /** Chance (out of 100), independently rolled per floor, that a teleport scroll spawns. */
-export const SCROLL_SPAWN_CHANCE_PERCENT = 30;
+export const SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
 /** Chance (out of 100), independently rolled per floor, that a magic mapping scroll spawns. */
-export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 30;
+export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
-export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 30;
+export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
 /** Permanent boost to playerAttackDamage per strength potion drunk. Same magnitude as a sword. */
 export const STRENGTH_POTION_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
-export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 30;
+export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /**
  * The deepest floor — where the Amulet of Yendor lies. It has no down
@@ -213,7 +213,7 @@ export const PLAYER_HUNGER_WARNING_THRESHOLD = 30;
 /** HP lost per turn while playerFood is at 0. */
 export const STARVATION_DAMAGE_PER_TURN = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;
-export const FOOD_COUNT_PER_FLOOR = 1;
+export const FOOD_COUNT_PER_FLOOR = 2;
 
 export const GOLD_PILES_PER_FLOOR = 3;
 export const GOLD_AMOUNT_MIN = 2;
@@ -243,7 +243,7 @@ export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
-export const RING_SPAWN_CHANCE_PERCENT = 15;
+export const RING_SPAWN_CHANCE_PERCENT = 8;
 /**
  * Chance (out of 100), rolled independently every turn a ring of
  * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it
@@ -253,7 +253,7 @@ export const RING_SPAWN_CHANCE_PERCENT = 15;
 export const RING_REGEN_CHANCE_PERCENT = 20;
 
 /** Chance (out of 100), independently rolled per floor, that a ring of sustenance spawns. */
-export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 15;
+export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
 /**
  * Chance (out of 100), rolled independently every turn a ring of sustenance
  * is equipped, that the whole hunger tick (food loss, and any starvation
@@ -269,7 +269,7 @@ export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
  */
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
-export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
  * Permanent boost to playerDefense per scroll read — same magnitude as a
@@ -277,7 +277,7 @@ export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 20;
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
-export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
  * Fixed ranged damage a wand of striking deals — higher than the player's
@@ -286,30 +286,30 @@ export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;
  */
 export const WAND_STRIKE_DAMAGE = 3;
 /** Chance (out of 100), independently rolled per floor, that a wand spawns. */
-export const WAND_SPAWN_CHANCE_PERCENT = 15;
+export const WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */
-export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 30;
+export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /** How many turns a wand of slow monster freezes its target for. */
 export const SLOW_WAND_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
-export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 15;
+export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** How many turns a levitation potion floats the player over traps for. */
 export const LEVITATION_POTION_DURATION = 15;
 /** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
-export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 25;
+export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
 /** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. */
-export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 20;
+export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a blindness potion shrinks the player's field of view for. */
 export const BLIND_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a blindness potion spawns. */
-export const BLIND_POTION_SPAWN_CHANCE_PERCENT = 25;
+export const BLIND_POTION_SPAWN_CHANCE_PERCENT = 12;
 /** Field of view radius while blind — adjacent tiles only. */
 export const BLIND_VIEW_RADIUS = 1;
 
@@ -320,10 +320,10 @@ export const BLIND_VIEW_RADIUS = 1;
  */
 export const PARALYSIS_POTION_DURATION = 3;
 /** Chance (out of 100), independently rolled per floor, that a paralysis potion spawns. */
-export const PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 25;
+export const PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 12;
 
 /** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
-export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 15;
+export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 8;
 
 /** Final-score weights — see calculateScore in score.ts. */
 export const SCORE_PER_FLOOR = 100;
@@ -333,12 +333,12 @@ export const SCORE_AMULET_BONUS = 500;
 /** How many turns a detect monster potion reveals every enemy through, regardless of FOV. */
 export const DETECT_MONSTER_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a detect monster potion spawns. */
-export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 25;
+export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 12;
 
 /** Permanent playerMaxHp increase from a potion of life — higher than a level-up's bonus, a high-value find. */
 export const LIFE_POTION_MAX_HP_BONUS = 5;
 /** Chance (out of 100), independently rolled per floor, that a potion of life spawns — rare, like raise-level. */
-export const LIFE_POTION_SPAWN_CHANCE_PERCENT = 15;
+export const LIFE_POTION_SPAWN_CHANCE_PERCENT = 8;
 
 /** Turns spent on one floor before a winds-of-kron-warning fires — see applyWindsOfKronTick. */
 export const WINDS_OF_KRON_WARNING_TURNS = 150;

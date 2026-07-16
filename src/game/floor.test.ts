@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
 import {
 	calculateEnemyCountForFloor,
+	FOOD_COUNT_PER_FLOOR,
 	GOAL_FLOOR,
 	MONSTER_HOUSE_ENEMY_COUNT,
+	POTION_COUNT_PER_FLOOR,
 } from "./balance.js";
 import { ascendStairs, descendStairs } from "./floor.js";
 import { buildDungeonGameState } from "./initialState.js";
@@ -55,9 +57,11 @@ describe("descendStairs", () => {
 		for (const state of [start, below]) {
 			/* potions and food rations are guaranteed; the sword is a per-floor chance (0 or 1) */
 			expect(state.items.filter((item) => item.kind === "potion").length).toBe(
-				2,
+				POTION_COUNT_PER_FLOOR,
 			);
-			expect(state.items.filter((item) => item.kind === "food").length).toBe(1);
+			expect(state.items.filter((item) => item.kind === "food").length).toBe(
+				FOOD_COUNT_PER_FLOOR,
+			);
 			expect(
 				state.items.filter((item) => item.kind === "sword").length,
 			).toBeLessThanOrEqual(1);
@@ -388,7 +392,9 @@ describe("levitation potion spawning", () => {
 
 describe("protect armor scroll spawning", () => {
 	it("spawns a protect armor scroll on some floors and not others (independent per-floor roll)", () => {
-		const outcomes = Array.from({ length: 20 }, (_, index) =>
+		/* 60 seeds, not 20 — at a 10% per-floor chance a 20-seed window can
+		 * deterministically contain no spawn at all */
+		const outcomes = Array.from({ length: 60 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
 				(item) => item.kind === "protect-armor",
 			),
@@ -704,7 +710,9 @@ describe("ascendStairs", () => {
 
 describe("ring spawning", () => {
 	it("spawns a ring on some floors and not others (independent per-floor roll)", () => {
-		const outcomes = Array.from({ length: 20 }, (_, index) =>
+		/* 60 seeds, not 20 — at an 8% per-floor chance a 20-seed window can
+		 * deterministically contain no spawn at all */
+		const outcomes = Array.from({ length: 60 }, (_, index) =>
 			buildDungeonGameState(40, 20, index + 1).items.some(
 				(item) => item.kind === "ring",
 			),

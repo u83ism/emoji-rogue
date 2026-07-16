@@ -158,6 +158,10 @@ const App = () => {
 					満腹度 {state.playerFood}/{PLAYER_MAX_FOOD}
 				</Text>
 				<Text> </Text>
+				<Text>
+					攻 {state.playerAttackDamage} 防 {state.playerDefense}
+				</Text>
+				<Text> </Text>
 				<Text color="yellow">💰{state.goldCollected}</Text>
 				{state.confusedTurnsRemaining > 0 && (
 					<>

@@ -7,11 +7,17 @@ import type { GameState } from "../game/state.js";
 
 const LOW_HP_THRESHOLD = 3;
 
-/** Warns in yellow once food drops to the hunger threshold. */
+/** Two stages: yellow once food dips to the warning threshold, red once it hits 0 (starving). */
 const resolveFoodTextStyle = (
 	playerFood: number,
-): { readonly color?: string } =>
-	playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD ? { color: "yellow" } : {};
+): { readonly color?: string } => {
+	if (playerFood <= 0) {
+		return { color: "red" };
+	}
+	return playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
+		? { color: "yellow" }
+		: {};
+};
 
 /**
  * One chip per temporary status, shown only while its counter is positive.

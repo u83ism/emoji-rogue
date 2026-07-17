@@ -119,7 +119,11 @@ const renderStatus = () => {
 	);
 	appendStatusSegment(
 		` 満腹度 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
-		state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD ? "#ff6" : undefined,
+		state.playerFood <= 0
+			? "#f66"
+			: state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
+				? "#ff6"
+				: undefined,
 	);
 	appendStatusSegment(
 		` 攻 ${state.playerAttackDamage} 防 ${state.playerDefense}`,

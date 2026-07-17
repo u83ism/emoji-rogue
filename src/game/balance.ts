@@ -209,8 +209,13 @@ export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 export const GOAL_FLOOR = 10;
 
 export const PLAYER_MAX_FOOD = 100;
-/** playerFood at or below this triggers a one-time player-hungry warning. */
-export const PLAYER_HUNGER_WARNING_THRESHOLD = 30;
+/**
+ * playerFood at or below this triggers the one-time player-hungry warning
+ * and turns the status-bar food readout yellow (red is reserved for 0 —
+ * see statusBar.tsx). Raised 30→50 (2026-07-18 playtest): with only one
+ * stage at 30, the drop from 100 was going unnoticed until it was critical.
+ */
+export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
 /** HP lost per turn while playerFood is at 0. */
 export const STARVATION_DAMAGE_PER_TURN = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;

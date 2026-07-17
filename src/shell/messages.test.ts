@@ -129,7 +129,7 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "potion-identified", payload: { kind: "poison" } },
-				"毒薬の正体を見破った!",
+				"毒薬がどれか判明した。以後この種類は実名で表示される",
 			],
 			[
 				{ type: "player-strengthened", payload: { bonus: 1 } },

@@ -1,11 +1,17 @@
 import { at } from "../indexing.js";
 import type { Action, InventoryEntry } from "./state.js";
 
-const FIRST_LETTER_CODE = "a".charCodeAt(0);
+/**
+ * Selection letters for inventory rows, in assignment order. `i` is
+ * deliberately absent: inside the open overlay `i` closes it (see main.tsx),
+ * so a row lettered `i` could never be selected (2026-07-18 playtest —
+ * the 9th item was unreachable).
+ */
+const INVENTORY_LETTERS = "abcdefghjklmnopqrstuvwxyz";
 
-/** The single letter assigned to the Nth inventory row (a, b, c, ...). */
+/** The single letter assigned to the Nth inventory row (a, b, ..., h, j, ...). */
 export const toInventoryLetter = (index: number): string =>
-	String.fromCharCode(FIRST_LETTER_CODE + index);
+	INVENTORY_LETTERS[index] ?? "?";
 
 /**
  * The `use-item` action for a keypress inside the open inventory overlay, or

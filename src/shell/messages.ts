@@ -121,7 +121,11 @@ export const formatEvent = (
 		case "floor-mapped":
 			return "地図の巻物を読んだ。フロア全体が明らかになった!";
 		case "potion-identified":
-			return `${ITEM_NAMES[event.payload.kind]}の正体を見破った!`;
+			/* Identification is per-kind and run-global, not per held item — the
+			 * wording must not imply an item in the inventory transformed
+			 * (2026-07-18 playtest: "見破った!" read as if a held potion changed,
+			 * and kinds not held looked like vanished items). */
+			return `${ITEM_NAMES[event.payload.kind]}がどれか判明した。以後この種類は実名で表示される`;
 		case "player-strengthened":
 			return `${ITEM_NAMES.strength}を飲んだ。攻撃力が${event.payload.bonus}上がった!`;
 		case "gold-stolen":

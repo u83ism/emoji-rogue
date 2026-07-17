@@ -1053,7 +1053,7 @@ Kaachan/slime-architecture-rules両リポジトリの調査で「検知は機械
 - [x] `shell/messages.ts`: `potion-identified`の文言を「◯がどれか判明した。以後この種類は実名で表示される」に変更(アイテム変化を匂わせず、種類単位の解禁であることを明示) + テスト追従
 - [x] `game/inventoryKeymap.ts`: 選択レターを`abcdefgh jklmn...`(`i`を欠番)に変更。9行目は`j`になる。`INVENTORY_TITLE`の「iかEscで閉じる」は`i`が永久に行に割り当たらなくなったため据え置きで正しい + `i`が行に解決しないこと・9行目が`j`で選択できることのテスト追加
 
-自動テスト(型検査・lint・Vitest 768件・knip・build)通過を確認して完了。
+自動テスト(型検査・lint・Vitest 767件・knip・build)通過を確認して完了。
 **マイルストーン66完了(2026-07-18)。**
 
 ### 実施順の注意

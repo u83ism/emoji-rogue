@@ -1020,6 +1020,19 @@ precise shadowcasting(半径8)で「今見えている場所」「見たこと�
 自動テスト(型検査・lint+行数ゲート・Vitest 757件・knip・build)通過を確認して完了。
 **マイルストーン63完了(2026-07-17)。**
 
+## マイルストーン64 — フォルダ粒度ルールとドメイン分割の実行(2026-07-18)
+
+Kaachan/slime-architecture-rules両リポジトリの調査で「検知は機械・提案はAI・裁可は人間」「hint→warning→errorのエスカレーション」「閾値超過→ドメインモデリング提案→ユーザー承認で構造変更」が既に設計済みであることを確認し、その設計をemoji-rogueに輸入した。実装はKaachan本体ではなく自前スクリプト(KaachanはSlimeのレイヤー語彙に結合しており非Webの本リポジトリでは全ルール空振りのため)。フォルダ命名の裁可過程で「tick」が**AI造語のドキュメント経由ロンダリング**(AIが付けた名前がトラッカーに載り既存語彙に見えていた)と判明し、出所ラベルの定義を「人間の発話・裁可由来のみ」に精緻化した。
+
+- [x] ドメイン分割(全て人間が命名を裁可、2026-07-18): `turnEnd/`(ターン終了時に自動で進む処理8件 — 「ticks」案は却下され改名)・`floor/`(transitions/layout/enemies/items/spawnPool)・`format/`(saveFormat/replayFormat/validate両輪/replay)・`items/`(useItem/を動詞→名詞ドメインに昇格。use.ts(旧index)+品目6+inventory+pickupsを吸収)・`src/shell/`(シェル8ファイル。main.tsxのみビルド設定の都合でルート残置)
+- [x] コア残り20ファイルは「リデューサ核はフラットで一覧できる価値」で例外登録(現状維持も正当な結論、の初適用)
+- [x] `scripts/check-structure.mjs`(旧check-file-sizes.mjsを正当化ベースに再設計): ファイル200行(hint 150)+フォルダ15ファイル(hint 10、非テスト)。超過の容認は人間裁可の正当化のみ — ファイルは先頭の`file-size-exception:`コメント(違反箇所に理由が残る)、フォルダは`structure-exceptions.json`。旧EXCEPTIONSマップ(スクリプト内コード)は廃止し、balance/events/validateGameStateの3件をプラグマに移行
+- [x] `.claude/rules/file-structure.md`: フォルダ粒度・正当化lint・「分割はAIが提案し人間が裁可(現状維持も正当)」・出所ラベル(既存語彙=人間の発話/裁可由来のみ。ロンダリング禁止)を明文化。developスキルのステップ4も構造lint参照に更新
+- [x] `docs/architecture.md`: 新フォルダ構成・構造lintの説明に追従
+
+自動テスト(型検査・lint(hint 9/error 0)・Vitest 757件・knip・build)通過を確認して完了。
+**マイルストーン64完了(2026-07-18)。**
+
 ### 実施順の注意
 
 57→58→59は独立だが番号順推奨(57が最も機械的でリスクが低い)。60は57・58完了後(分割済みのファイルに対するリネームの方が差分が読みやすい)。61は最後(ゲートは超過解消後でないとredになる)。

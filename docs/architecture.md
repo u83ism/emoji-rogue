@@ -14,7 +14,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 |---|---|---|
 | フォーク層(道具箱) | `src/` 直下・`src/map/`・`src/fov/`・`src/path/` 等 | rot.js由来のアルゴリズム。ゲームを知らない |
 | ゲーム層(純粋核) | `src/game/` | `advanceTurn(state, action): GameState` のリデューサと、その状態・生成・検証。I/Oなし |
-| シェル層(命令的殻) | `src/main.tsx`・`src/statusBar.tsx`・`src/messages.ts`・`src/saveFile.ts` 等 | 入力読み取り・文言化・描画・ファイルI/O。ここだけが効果を持つ |
+| シェル層(命令的殻) | `src/shell/`(+エントリポイント `src/main.tsx` のみルート直下) | 入力読み取り・文言化・描画chrome・ファイルI/O。ここだけが効果を持つ |
 
 **フォーク層を読むなら**: ①`src/rng.ts`(純粋な状態遷移 `stepUniform(state) => {value, state}` が全ての土台。グローバルシングルトンは存在しない — 乱数が必要な関数は全て `rng` を明示引数で受け取る) ②`src/result.ts`(10行のResult型。チェーンAPIなし、早期return一択) ③`src/map/digger.ts`(「クラス→ファクトリ関数+クロージャ」変換の代表例)。
 
@@ -40,18 +40,18 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 
 | 場所 | 中身 |
 |---|---|
-| `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ / 全調整ノブ |
-| `advanceTurn.ts` | リデューサ本体。`pickups.ts`(拾得)・`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
-| `useItem/` | アイテム使用。`index.ts`のdefaultなし網羅switchが`equipment/potions/scrolls/wands/rings/food`へ分配。**kind追加時のハンドラ書き忘れはコンパイルエラー** |
+| `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
+| `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
+| `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
 | `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン / A*追跡・徘徊 |
-| `floor.ts` / `floorLayout.ts` / `floorEnemies.ts` / `floorItems.ts` / `spawnPool.ts` | フロア遷移 / フロア組み立て / 敵・アイテムのスポーンテーブル(**配列順=rng消費順**。並び替えは全シードを変える) / 抽選プール |
-| `hunger.ts` `confusion.ts` `levitation.ts` `blindness.ts` `paralysis.ts` `detectMonsters.ts` `regeneration.ts` `windsOfKron.ts` `experience.ts` | ターン終了時tick群。1状態異常=1ファイル |
+| `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
+| `turnEnd/` | ターン終了時に毎回自動で進む処理(空腹・混乱・浮遊・盲目・麻痺・索敵・再生・クロンの風)。1件=1ファイル、全て`applyTurnEndTicks`から呼ばれる |
+| `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
 | `vision.ts` / `frame.ts` / `glyphs.ts` | FOV導出(可視集合は保存せず毎回導出、既踏破のみ状態) / フレーム構築 / 絵文字辞書 |
-| `save.ts` / `replayFile.ts` / `validateGameState.ts` / `validateReplay.ts` | セーブ・リプレイの**純粋な**形式化とパース(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`)。ファイルI/Oはシェル側の `src/saveFile.ts`/`src/replayFile.ts` |
-| `inventory.ts` / `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `initialState.ts` / `columns.ts` | 持ち物操作 / キー変換 / スコア / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成ヘルパー |
+| `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層: `main.tsx`(入力ループ+セッション) / `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `messages.ts`+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts`。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `messages.ts`+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts`。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 フォーク層は従来どおり: `src/map/`(生成器8種) `src/fov/`(3アルゴリズム) `src/path/`(A*/Dijkstra) `src/scheduler/`+`src/engine.ts`(未接続のまま温存) `src/lighting.ts` `src/color.ts` `src/text.ts` `src/noise/` `src/stringgenerator.ts`、共有ヘルパー `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts`、公開バレル `src/index.ts`。
 
@@ -87,14 +87,14 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - **union要素名は文脈なしで自己記述的に**(`"teleport-scroll"`。カテゴリ1号が汎用名を占拠しない)
 - **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使わない)
 - **座標キー**: `src/pointkey.ts` の `encodePointKey/decodePointKey`(`"x,y"`形式)。直書き禁止
-- **ファイルは200行まで**: `scripts/check-file-sizes.mjs` が`npm run lint`で強制(ゲーム層+シェル層対象、フォーク層とテストは対象外。例外は理由付き登録のみ)
+- **構造lint(正当化ベース)**: `scripts/check-structure.mjs` が`npm run lint`で、ファイル200行(目安150)とフォルダ15ファイル(目安10、非テスト)を強制。hint→error→justifiedの3段で、超過の容認は**人間裁可の正当化**(ファイル=先頭の`file-size-exception:`コメント、フォルダ=`scripts/structure-exceptions.json`)のみ。フォルダ分割=ドメインモデリングはAIが提案し人間が命名を裁可する(`.claude/rules/file-structure.md`)
 - テストはソースと同居(`foo.ts` → `foo.test.ts`)。横断テストは `map/generators.test.ts`・`map/invariants.test.ts` と `advanceTurn.test.ts` のファズテスト
 
 ## 検証コマンド
 
 ```
 npm run typecheck   # tsc --noEmit(エラー0が正常)
-npm run lint        # Biome + ファイル行数ゲート
+npm run lint        # Biome + 構造lint(行数+フォルダ粒度、正当化ベース)
 npm run knip        # 未使用ファイル・export検出
 npm test            # Vitest(803件・2026-07-16時点)
 npm run build       # tsdown → dist/

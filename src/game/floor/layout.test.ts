@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRng } from "../../rng.js";
 import { GOAL_FLOOR } from "../balance.js";
 import { buildFloorLayout } from "./layout.js";
+import { isRoomTileAwayFromDoors } from "./spawnPool.js";
 
 // Layout-level tests only. Per-kind spawn behavior is covered
 // deterministically in floorEnemies.test.ts / floorItems.test.ts, and the
@@ -36,6 +37,22 @@ describe("buildFloorLayout", () => {
 		expect(goal.amulet).not.toBeUndefined();
 		if (goal.amulet !== undefined) {
 			expect(goal.terrain[goal.amulet.x]?.[goal.amulet.y]).toBe(0);
+		}
+	});
+
+	it("places the staircase inside a room, away from doorways", () => {
+		for (let seed = 1; seed <= 15; seed++) {
+			const layout = buildFloorLayout(40, 20, createRng(seed), 2, "down");
+			expect(isRoomTileAwayFromDoors(layout.rooms, layout.stairs)).toBe(true);
+		}
+	});
+
+	it("places every trap inside a room, away from doorways", () => {
+		for (let seed = 1; seed <= 15; seed++) {
+			const layout = buildFloorLayout(40, 20, createRng(seed), 2, "down");
+			for (const trap of layout.traps) {
+				expect(isRoomTileAwayFromDoors(layout.rooms, trap)).toBe(true);
+			}
 		}
 	});
 });

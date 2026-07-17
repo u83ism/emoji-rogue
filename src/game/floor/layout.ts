@@ -1,6 +1,6 @@
 import { at } from "../../indexing.js";
 import { createDiggerMap } from "../../map/digger.js";
-import { getRoomCenter } from "../../map/features.js";
+import { getRoomCenter, type Room } from "../../map/features.js";
 import type { Rng } from "../../rng.js";
 import { GOAL_FLOOR } from "../balance.js";
 import { buildEmptyColumns } from "../columns.js";
@@ -14,7 +14,12 @@ import type {
 } from "../state.js";
 import { drawFloorEnemies } from "./enemies.js";
 import { drawFloorItems } from "./items.js";
-import { collectSpawnPool, drawSpawnTile } from "./spawnPool.js";
+import {
+	collectSpawnPool,
+	drawSpawnTile,
+	drawSpawnTileWhere,
+	isRoomTileAwayFromDoors,
+} from "./spawnPool.js";
 
 /** Everything one dungeon floor is made of, before it becomes game state. */
 export interface FloorLayout {
@@ -27,6 +32,8 @@ export interface FloorLayout {
 	readonly stairs: Stairs;
 	/** Only set when this layout is GOAL_FLOOR — see buildFloorLayout. */
 	readonly amulet: Position | undefined;
+	/** The digger's room rectangles — kept for placement checks and tests; never part of GameState. */
+	readonly rooms: readonly Room[];
 }
 
 /**
@@ -35,10 +42,16 @@ export interface FloorLayout {
  * drawFloorEnemies (floorEnemies.ts), a staircase, and the items, gold and
  * traps of drawFloorItems (floorItems.ts), all drawn from the spawn pool.
  * Nothing shares a tile with anything else unless the pool ran dry (tiny
- * fully-visible maps). `stairsDirection` sets the generated staircase's
- * direction, except on GOAL_FLOOR, where it is always forced to "up" (there
- * is nothing lower) and the Amulet of Yendor spawns instead of nothing —
- * guaranteed, not a percent-chance draw like the other items.
+ * fully-visible maps).
+ *
+ * The staircase and every trap only land on room-interior tiles away from
+ * doorways (see isRoomTileAwayFromDoors) — stepping on stairs descends
+ * immediately, so a staircase in a corridor would physically block passage.
+ * The staircase falls back to any tile if no such tile is pooled (degenerate
+ * maps); traps are simply skipped then. `stairsDirection` sets the generated
+ * staircase's direction, except on GOAL_FLOOR, where it is always forced to
+ * "up" (there is nothing lower) and the Amulet of Yendor spawns instead of
+ * nothing — guaranteed, not a percent-chance draw like the other items.
  */
 export const buildFloorLayout = (
 	width: number,
@@ -51,8 +64,9 @@ export const buildFloorLayout = (
 	const dungeon = createDiggerMap(width, height, rng).create((x, y, value) => {
 		at(columns, x)[y] = value;
 	});
+	const rooms = dungeon.getRooms();
 
-	const firstRoom = dungeon.getRooms()[0];
+	const firstRoom = rooms[0];
 	if (firstRoom === undefined) {
 		throw new Error("unreachable: digger always digs at least one room");
 	}
@@ -60,21 +74,26 @@ export const buildFloorLayout = (
 	const player: Position = { x: playerX, y: playerY };
 
 	const pool = collectSpawnPool(columns, player);
-	const enemies = drawFloorEnemies(
-		dungeon.getRooms(),
-		firstRoom,
-		pool,
-		rng,
-		floor,
-	);
+	const enemies = drawFloorEnemies(rooms, firstRoom, pool, rng, floor);
 
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);
+	const isWalkAroundTile = (position: Position): boolean =>
+		isRoomTileAwayFromDoors(rooms, position);
 	const direction = floor === GOAL_FLOOR ? "up" : stairsDirection;
-	const stairs: Stairs = { ...drawSpawnTile(remaining, rng), direction };
+	const stairs: Stairs = {
+		...(drawSpawnTileWhere(remaining, rng, isWalkAroundTile) ??
+			drawSpawnTile(remaining, rng)),
+		direction,
+	};
 	const amulet: Position | undefined =
 		floor === GOAL_FLOOR ? drawSpawnTile(remaining, rng) : undefined;
 
-	const { items, goldPiles, traps } = drawFloorItems(remaining, rng, floor);
+	const { items, goldPiles, traps } = drawFloorItems(
+		remaining,
+		rng,
+		floor,
+		isWalkAroundTile,
+	);
 
 	return {
 		terrain: columns,
@@ -85,5 +104,6 @@ export const buildFloorLayout = (
 		traps,
 		stairs,
 		amulet,
+		rooms,
 	};
 };

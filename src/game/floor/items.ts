@@ -33,7 +33,11 @@ import {
 } from "../balance.js";
 import type { ItemKind } from "../events.js";
 import type { GoldPile, Item, Position, Trap } from "../state.js";
-import { drawSpawnTile, type SpawnChance } from "./spawnPool.js";
+import {
+	drawSpawnTile,
+	drawSpawnTileWhere,
+	type SpawnChance,
+} from "./spawnPool.js";
 
 /**
  * Chance-rolled items, one independent roll per entry. Same rng-order caveat
@@ -106,11 +110,17 @@ export interface FloorItems {
  * chance-rolled trapdoor (never on GOAL_FLOOR — it would generate a floor
  * beyond it) and teleport trap (allowed on GOAL_FLOOR — it only relocates
  * the player within the floor).
+ *
+ * Traps only land on tiles satisfying `isTrapTileEligible` (room interiors
+ * away from doorways — see layout.ts): an invisible trap on a corridor or
+ * doorway tile would be unavoidable. A trap whose draw finds no eligible
+ * tile is skipped, never relocated onto an ineligible one.
  */
 export const drawFloorItems = (
 	remaining: Position[],
 	rng: Rng,
 	floor: number,
+	isTrapTileEligible: (position: Position) => boolean,
 ): FloorItems => {
 	const items: Item[] = [];
 	for (let i = 0; i < POTION_COUNT_PER_FLOOR && remaining.length > 0; i++) {
@@ -138,20 +148,30 @@ export const drawFloorItems = (
 
 	const traps: Trap[] = [];
 	for (let i = 0; i < TRAP_COUNT_PER_FLOOR && remaining.length > 0; i++) {
-		traps.push({ ...drawSpawnTile(remaining, rng), kind: "dart" });
+		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
+		if (tile === undefined) {
+			break;
+		}
+		traps.push({ ...tile, kind: "dart" });
 	}
 	if (
 		floor !== GOAL_FLOOR &&
 		remaining.length > 0 &&
 		rng.getUniformInt(0, 99) < TRAPDOOR_SPAWN_CHANCE_PERCENT
 	) {
-		traps.push({ ...drawSpawnTile(remaining, rng), kind: "trapdoor" });
+		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
+		if (tile !== undefined) {
+			traps.push({ ...tile, kind: "trapdoor" });
+		}
 	}
 	if (
 		remaining.length > 0 &&
 		rng.getUniformInt(0, 99) < TELEPORT_TRAP_SPAWN_CHANCE_PERCENT
 	) {
-		traps.push({ ...drawSpawnTile(remaining, rng), kind: "teleport" });
+		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
+		if (tile !== undefined) {
+			traps.push({ ...tile, kind: "teleport" });
+		}
 	}
 
 	return { items, goldPiles, traps };

@@ -159,30 +159,36 @@ describe("descendStairs", () => {
 	});
 });
 describe("ascendStairs", () => {
-	it("is the mirror of descendStairs: decrements the floor and regenerates it with an up staircase", () => {
+	it("ascending from floor 2 regenerates floor 1 as a real floor with an up staircase", () => {
 		const deep = descendStairs(buildDungeonGameState(40, 20, 7));
 		const back = ascendStairs({ ...deep, playerHp: 5 });
 		expect(back.floor).toBe(1);
-		expect(back.status).toBe("exited"); /* no amulet — see below */
+		expect(back.status).toBe("playing"); /* not a finish line anymore */
+		expect(back.stairs.direction).toBe("up");
+		expect(back.playerHp).toBe(5);
+		expect(back.events.at(-1)).toEqual({
+			type: "floor-ascended",
+			payload: { floor: 1 },
+		});
 	});
 
 	it("resets turnsOnCurrentFloor to 0 on a mid-retrace ascent", () => {
 		/* floor 3, so ascending lands on floor 2 — buildFloorTransition's path,
-		 * not the floor-1 early return */
+		 * not the surfacing early return */
 		const deep = descendStairs(descendStairs(buildDungeonGameState(40, 20, 7)));
 		const back = ascendStairs({ ...deep, turnsOnCurrentFloor: 80 });
 		expect(back.floor).toBe(2);
 		expect(back.turnsOnCurrentFloor).toBe(0);
 	});
 
-	it("generating a floor mid-retrace always gets an up staircase", () => {
+	it("generating a floor mid-retrace always gets an up staircase, floor 1 included", () => {
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
 			state = descendStairs(state);
 		}
 		/* now at GOAL_FLOOR carrying nothing; simulate having taken the amulet */
 		state = { ...state, hasAmulet: true };
-		for (let floor = GOAL_FLOOR - 1; floor >= 2; floor--) {
+		for (let floor = GOAL_FLOOR - 1; floor >= 1; floor--) {
 			state = ascendStairs(state);
 			expect(state.floor).toBe(floor);
 			expect(state.stairs.direction).toBe("up");
@@ -190,16 +196,18 @@ describe("ascendStairs", () => {
 		}
 	});
 
-	it("surfacing with the amulet wins the run without generating a floor 0", () => {
+	it("surfacing from floor 1 with the amulet wins the run without generating a floor 0", () => {
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
 			state = descendStairs(state);
 		}
 		state = { ...state, hasAmulet: true };
-		for (let floor = GOAL_FLOOR - 1; floor >= 2; floor--) {
+		for (let floor = GOAL_FLOOR - 1; floor >= 1; floor--) {
 			state = ascendStairs(state);
 		}
+		expect(state.floor).toBe(1);
 		const surfaced = ascendStairs(state);
+		expect(surfaced.floor).toBe(1);
 		expect(surfaced.status).toBe("won");
 		expect(surfaced.events.at(-1)).toEqual({
 			type: "game-won",
@@ -207,12 +215,15 @@ describe("ascendStairs", () => {
 		});
 	});
 
-	it("surfacing without the amulet exits instead of winning", () => {
+	it("surfacing from floor 1 without the amulet exits instead of winning", () => {
 		const deep = descendStairs(buildDungeonGameState(40, 20, 7));
 		expect(deep.hasAmulet).toBe(false);
-		const surfaced = ascendStairs(deep);
+		const retracedFirstFloor = ascendStairs(deep);
+		expect(retracedFirstFloor.status).toBe("playing");
+		const surfaced = ascendStairs(retracedFirstFloor);
 		expect(surfaced.status).toBe("exited");
-		expect(surfaced.events).toEqual(deep.events); /* no event logged */
+		/* no event logged for an empty-handed exit */
+		expect(surfaced.events).toEqual(retracedFirstFloor.events);
 	});
 
 	it("is deterministic, like descendStairs", () => {

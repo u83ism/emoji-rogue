@@ -61,15 +61,18 @@ export const descendStairs = (state: GameState): GameState =>
 	});
 
 /**
- * The next floor up. Reaching floor 1 or below means the player has
- * surfaced: no floor is generated for it, the run just ends — in victory
- * (game-won) if hasAmulet, otherwise the same "exited" status a manual quit
- * produces (no special event; leaving empty-handed is not a loss, just an
- * early end, as in the original).
+ * The next floor up. The run only ends when ascending from floor 1: the
+ * retraced floor 1 is a real floor — regenerated with an "up" staircase like
+ * every retrace floor — that must be walked and climbed out of, not a finish
+ * line crossed the moment floor 2 is left (2026-07-18 playtest: winning on
+ * the 2F→1F transition read as surfacing from a floor that was never
+ * entered). Surfacing wins (game-won) with the amulet, otherwise it is the
+ * same "exited" status a manual quit produces (no special event; leaving
+ * empty-handed is not a loss, just an early end, as in the original).
  */
 export const ascendStairs = (state: GameState): GameState => {
 	const nextFloor = state.floor - 1;
-	if (nextFloor <= 1) {
+	if (nextFloor <= 0) {
 		if (!state.hasAmulet) {
 			return { ...state, floor: 1, turnsOnCurrentFloor: 0, status: "exited" };
 		}

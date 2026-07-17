@@ -398,7 +398,7 @@ describe("advanceTurn", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
 		const state = {
 			...start,
-			floor: 2,
+			floor: 1,
 			hasAmulet: false,
 			stairs: {
 				x: start.player.x + 1,
@@ -414,7 +414,7 @@ describe("advanceTurn", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
 		const state = {
 			...start,
-			floor: 2,
+			floor: 1,
 			hasAmulet: true,
 			stairs: {
 				x: start.player.x + 1,

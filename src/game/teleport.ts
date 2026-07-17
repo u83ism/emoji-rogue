@@ -37,7 +37,7 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
 /**
  * Relocates the player to a random floor tile (consuming state.rng) and
  * refreshes the explored grid from the new position. Shared by the teleport
- * scroll (useItem/scrolls.ts) and the teleport trap (trapTrigger.ts).
+ * scroll (items/scrolls.ts) and the teleport trap (trapTrigger.ts).
  */
 export const applyRandomTeleport = (state: GameState): GameState => {
 	const targets = collectTeleportTargets(state);

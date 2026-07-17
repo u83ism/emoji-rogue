@@ -1,24 +1,24 @@
 import { stepUniform } from "../rng.js";
-import { applyBlindnessTick } from "./blindness.js";
 import { applyPlayerAttack } from "./combat.js";
-import { applyConfusionTick } from "./confusion.js";
-import { applyDetectMonstersTick } from "./detectMonsters.js";
 import { advanceEnemies } from "./enemies.js";
-import { ascendStairs, descendStairs } from "./floor.js";
-import { applyHungerTick } from "./hunger.js";
-import { applyLevitationTick } from "./levitation.js";
-import { applyParalysisTick } from "./paralysis.js";
+import { ascendStairs, descendStairs } from "./floor/transitions.js";
 import {
 	applyAmuletPickup,
 	applyGoldPickup,
 	applyItemPickup,
-} from "./pickups.js";
-import { applyRegenerationTick } from "./regeneration.js";
+} from "./items/pickups.js";
+import { applyUseItem } from "./items/use.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
-import { applyUseItem } from "./useItem/index.js";
+import { applyBlindnessTick } from "./turnEnd/blindness.js";
+import { applyConfusionTick } from "./turnEnd/confusion.js";
+import { applyDetectMonstersTick } from "./turnEnd/detectMonsters.js";
+import { applyHungerTick } from "./turnEnd/hunger.js";
+import { applyLevitationTick } from "./turnEnd/levitation.js";
+import { applyParalysisTick } from "./turnEnd/paralysis.js";
+import { applyRegenerationTick } from "./turnEnd/regeneration.js";
+import { applyWindsOfKronTick } from "./turnEnd/windsOfKron.js";
 import { deriveExploredState } from "./vision.js";
-import { applyWindsOfKronTick } from "./windsOfKron.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>

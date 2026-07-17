@@ -26,7 +26,7 @@
 		"dev": "tsdown --watch",
 		"start": "node dist/main.mjs",
 		"typecheck": "tsc --noEmit",
-		"lint": "biome check . && node scripts/check-file-sizes.mjs",
+		"lint": "biome check . && node scripts/check-structure.mjs",
 		"lint:fix": "biome check --write .",
 		"knip": "knip",
 		"test": "vitest run",

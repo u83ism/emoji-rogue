@@ -1,25 +1,29 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
-import { parseSeedArgument } from "./cliArgs.js";
 import { advanceTurn } from "./game/advanceTurn.js";
 import type { GameEvent } from "./game/events.js";
+import type { Replay } from "./game/format/replay.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { buildDungeonGameState } from "./game/initialState.js";
 import { toUseItemAction } from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
-import type { Replay } from "./game/replay.js";
 import { calculateScore } from "./game/score.js";
 import type { Action, GameState } from "./game/state.js";
-import { InventoryOverlay } from "./inventoryOverlay.js";
-import { formatConducts, formatEvent, formatScoreSummary } from "./messages.js";
 import { GameScreen } from "./renderer/index.js";
-import { saveReplay } from "./replayFile.js";
-import { loadSavedGameState, saveGameState } from "./saveFile.js";
-import { StatusBar } from "./statusBar.js";
+import { parseSeedArgument } from "./shell/cliArgs.js";
+import { InventoryOverlay } from "./shell/inventoryOverlay.js";
+import {
+	formatConducts,
+	formatEvent,
+	formatScoreSummary,
+} from "./shell/messages.js";
+import { saveReplay } from "./shell/replayFile.js";
+import { loadSavedGameState, saveGameState } from "./shell/saveFile.js";
+import { StatusBar } from "./shell/statusBar.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
 	GAME_SAVED_MESSAGE,
-} from "./systemMessages.js";
+} from "./shell/systemMessages.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
 // hands the resulting frame to Ink. All game logic lives in src/game/; all

@@ -1,3 +1,4 @@
+/* file-size-exception: kindカタログとGameEventのunion定義 — 判別可能unionは1箇所で読める価値を優先(2026-07-18裁可) */
 // The kind catalogs are value arrays first, types second (derived via
 // `(typeof X)[number]`): a single source of truth that both the compiler and
 // the save validator (validateGameState.ts's membership checks) read, so
@@ -56,7 +57,7 @@ const POTION_KIND_VALUES = [
 	"life",
 ] as const satisfies readonly ItemKind[];
 
-/** The potion subset of ItemKind — lets useItem/potions.ts switch exhaustively. */
+/** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
 export type PotionKind = (typeof POTION_KIND_VALUES)[number];
 
 /**

@@ -1,0 +1,6 @@
+{
+	"//": "Folder-granularity exceptions for scripts/check-structure.mjs. Every entry is a human-approved justification — AI must not add or edit entries on its own (.claude/rules/file-structure.md).",
+	"folders": {
+		"src/game": "リデューサ核(状態・イベント・ターン進行・戦闘・描画)はフラットで一覧できる価値を優先。ドメインに切れる塊(items/floor/format/turnEnd)は切り出し済み(2026-07-18裁可)"
+	}
+}

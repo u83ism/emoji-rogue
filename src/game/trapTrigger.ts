@@ -1,6 +1,6 @@
 import { TRAP_DAMAGE } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import { descendStairs } from "./floor.js";
+import { descendStairs } from "./floor/transitions.js";
 import type { GameState } from "./state.js";
 import { applyRandomTeleport } from "./teleport.js";
 

@@ -11,7 +11,7 @@ import {
 import { isAdjacent } from "./combat.js";
 import { stepTowardPlayer, stepWandering } from "./enemyMovement.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import { removeOneFromInventory } from "./inventory.js";
+import { removeOneFromInventory } from "./items/inventory.js";
 import type { Enemy, GameState, Position } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 

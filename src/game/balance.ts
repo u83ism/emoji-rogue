@@ -1,3 +1,4 @@
+/* file-size-exception: 調整ノブの単一責務カタログ — 1種1エントリで、分割するとノブが散る(2026-07-18裁可) */
 // Combat tuning knobs, all in one place. Values are provisional and expected
 // to change after real-terminal playtesting (docs/tasks/game.md, milestone 5).
 // Damage is a fixed amount — no dice — so combat stays deterministic

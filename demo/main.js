@@ -1,5 +1,5 @@
 // Browser shell for emoji-rogue. Imports the built game layer directly —
-// no bundler, no build step of its own (see docs/tasks/game.md milestone 17).
+// no bundler, no build step of its own (see docs/tasks/game-history.md milestone 17).
 // Deliberately does not wire save/quit: the browser has no filesystem and no
 // process to exit (localStorage would be the drop-in point for save later).
 import {

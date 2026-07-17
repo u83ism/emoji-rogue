@@ -1,6 +1,6 @@
 # emoji-rogue アーキテクチャガイド
 
-コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
+コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**完了マイルストーンの履歴**は `docs/tasks/game-history.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
 
 ## 一言でいうと
 
@@ -26,15 +26,15 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 キー入力 (useInput)                        src/main.tsx
  └→ toAction / toUseItemAction             src/game/keymap.ts, inventoryKeymap.ts
      └→ advanceTurn(state, action)         src/game/advanceTurn.ts
-         ├→ applyMove → 攻撃/階段/拾得/わな    combat.ts, floor.ts, pickups.ts, trapTrigger.ts
-         ├→ applyUseItem(網羅switch)          useItem/index.ts → 各カテゴリモジュール
+         ├→ applyMove → 攻撃/階段/拾得/わな    combat.ts, floor/, items/pickups.ts, trapTrigger.ts
+         ├→ applyUseItem(網羅switch)          items/use.ts → 各カテゴリモジュール
          ├→ advanceEnemies(敵の1ターン)       enemies.ts, enemyMovement.ts
-         └→ applyTurnEndTicks(状態異常等)     hunger.ts, confusion.ts, ...
+         └→ applyTurnEndTicks(状態異常等)     turnEnd/hunger.ts, turnEnd/confusion.ts, ...
              └→ buildFrameGrid(state)      src/game/frame.ts + glyphs.ts
                  └→ <GameScreen>           src/renderer/ (Inkが端末に描画)
 ```
 
-新しいフロアは `floorLayout.ts`(digger地形 + `floorEnemies.ts`/`floorItems.ts` のスポーンテーブル)が生成し、`floor.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
+新しいフロアは `floor/layout.ts`(digger地形 + `floor/enemies.ts`/`floor/items.ts` のスポーンテーブル)が生成し、`floor/transitions.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
 
 ## ディレクトリマップ(ゲーム層)
 
@@ -83,7 +83,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 
 - **クラス禁止**。内部状態が必要なら「ファクトリ関数+クロージャ」
 - **Result vs throw**: 「正常系の失敗」はResult、型が正しければ到達不能な箇所はthrow(`throw new Error("unreachable: ...")`)
-- **unionの分岐はlookupテーブルか網羅switch**(`balance.ts`の`ENEMY_MAX_HP`イディオム / `useItem/index.ts`のdefaultなしswitch)。3分岐超のif連鎖は禁止
+- **unionの分岐はlookupテーブルか網羅switch**(`balance.ts`の`ENEMY_MAX_HP`イディオム / `items/use.ts`のdefaultなしswitch)。3分岐超のif連鎖は禁止
 - **union要素名は文脈なしで自己記述的に**(`"teleport-scroll"`。カテゴリ1号が汎用名を占拠しない)
 - **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使わない)
 - **座標キー**: `src/pointkey.ts` の `encodePointKey/decodePointKey`(`"x,y"`形式)。直書き禁止
@@ -96,7 +96,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 npm run typecheck   # tsc --noEmit(エラー0が正常)
 npm run lint        # Biome + 構造lint(行数+フォルダ粒度、正当化ベース)
 npm run knip        # 未使用ファイル・export検出
-npm test            # Vitest(803件・2026-07-16時点)
+npm test            # Vitest(767件・2026-07-18時点)
 npm run build       # tsdown → dist/
 ```
 
@@ -107,5 +107,5 @@ CI(`.github/workflows/ci.yml`)はPR毎に全部走らせる(pushトリガーはm
 ## 設計上の既知の決定
 
 - **Dijkstraのキャッシュ廃止**(2026-07-13): 原本由来の呼び出し間キャッシュは地形変化時に古い経路を返すため除去。性能が問題になったら距離場のターンごと純粋導出で対応
-- **スケジューラ未接続**: クロージャベースの`Scheduler`はシリアライズ可能な`GameState`と相性が悪い。敵の速度差は`ENEMY_ACTIONS_PER_TURN`のプレーンデータで表現(マイルストーン9)
-- **イベントログはローリングウィンドウ**(直近20件)。ラン全体の履歴は持たない — ラン通算の事実が必要なら`hasAttacked`のような恒久フィールドを直接持つ(マイルストーン54の教訓)
+- **スケジューラ未接続**: クロージャベースの`Scheduler`はシリアライズ可能な`GameState`と相性が悪い。敵の速度差は`ENEMY_ACTIONS_PER_TURN`のプレーンデータで表現(docs/tasks/game-history.md マイルストーン9)
+- **イベントログはローリングウィンドウ**(直近20件)。ラン全体の履歴は持たない — ラン通算の事実が必要なら`hasAttacked`のような恒久フィールドを直接持つ(docs/tasks/game-history.md マイルストーン54の教訓)

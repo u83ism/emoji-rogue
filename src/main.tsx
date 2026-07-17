@@ -51,7 +51,7 @@ interface Session {
 	/**
 	 * Undefined when this session resumed from a save: a resumed run has no
 	 * true initial state to replay from, so it is deliberately left
-	 * unrecorded (docs/tasks/game.md milestone 18).
+	 * unrecorded (docs/tasks/game-history.md milestone 18).
 	 */
 	readonly replay: Replay | undefined;
 }

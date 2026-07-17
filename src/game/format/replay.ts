@@ -20,7 +20,7 @@ export interface Replay {
  * (width, height, seed), then fold advanceTurn over every recorded action in
  * order. Pure and deterministic — the same replay always reproduces the
  * same run, which is the entire payoff of keeping RngState inside GameState
- * (docs/tasks/game.md's design decisions, milestone 1).
+ * (docs/tasks/game.md's design decisions).
  */
 export const buildReplayGameState = (replay: Replay): GameState => {
 	let state = buildDungeonGameState(replay.width, replay.height, replay.seed);

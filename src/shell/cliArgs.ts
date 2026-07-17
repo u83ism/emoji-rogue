@@ -5,7 +5,7 @@ const SEED_ARGUMENT_PATTERN = /^--seed=(.+)$/;
  * Undefined for a missing or invalid seed so the caller can fall back to
  * Date.now(). Mirrors demo/'s `?seed=` URL parameter and the same
  * validation rule (finite, positive) — both exist for the same "share a
- * seed" purpose from the design decisions in docs/tasks/game.md milestone 1.
+ * seed" purpose from the design decisions in docs/tasks/game.md.
  */
 export const parseSeedArgument = (
 	argv: readonly string[],

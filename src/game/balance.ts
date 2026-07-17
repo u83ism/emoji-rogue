@@ -1,8 +1,8 @@
 /* file-size-exception: 調整ノブの単一責務カタログ — 1種1エントリで、分割するとノブが散る(2026-07-18裁可) */
 // Combat tuning knobs, all in one place. Values are provisional and expected
-// to change after real-terminal playtesting (docs/tasks/game.md, milestone 5).
+// to change after real-terminal playtesting (docs/tasks/game-history.md, milestone 5).
 // Damage is a fixed amount — no dice — so combat stays deterministic
-// (docs/tasks/game.md milestone 15: a normal-distribution roll was tried and
+// (docs/tasks/game-history.md milestone 15: a normal-distribution roll was tried and
 // rolled back, but the reusable rollDamage() in damage.ts is kept for when
 // dice-based damage is wanted again).
 
@@ -99,7 +99,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
  * (src/scheduler/) can't live inside a serializable GameState, so speed
- * differences are plain data instead — see docs/tasks/game.md milestone 9.
+ * differences are plain data instead — see docs/tasks/game-history.md milestone 9.
  */
 export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ACTIONS_PER_TURN,
@@ -167,7 +167,7 @@ export const SWORD_ATTACK_BONUS = 1;
 export const SWORD_SPAWN_CHANCE_PERCENT = 15;
 /**
  * Chance (out of 100) that a sword turns out cursed the moment it's used —
- * rolled fresh at use time, not at spawn (see docs/tasks/game.md milestone
+ * rolled fresh at use time, not at spawn (see docs/tasks/game-history.md milestone
  * 29: inventory stacks lose per-item identity, so there is nowhere to pin a
  * curse flag onto a specific sword ahead of time).
  */
@@ -271,7 +271,7 @@ export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 /**
  * Permanent boost to playerAttackDamage per scroll read — same magnitude as
  * a sword, but unlike a found sword this is never cursed (scrolls have no
- * curse mechanic in this game, see docs/tasks/game.md milestone 36).
+ * curse mechanic in this game, see docs/tasks/game-history.md milestone 36).
  */
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */

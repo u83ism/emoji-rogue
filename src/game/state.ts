@@ -71,7 +71,7 @@ export type Stairs = Position & {
 
 /**
  * A hidden trap, sprung once stepped on and then removed — never drawn, even
- * after triggering (no discovery/marking mechanic; see docs/tasks/game.md
+ * after triggering (no discovery/marking mechanic; see docs/tasks/game-history.md
  * milestone 22).
  */
 export type Trap = Position & {

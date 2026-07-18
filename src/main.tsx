@@ -142,7 +142,11 @@ const App = () => {
 			 * status bar and log lines never shift. */}
 			<StatusBar state={state} />
 			{isInventoryOpen ? (
-				<Box height={MAP_HEIGHT} flexDirection="column">
+				/* Pinned to the map's exact footprint (width AND height): a
+				 * full-terminal-width border row is exactly as wide as the
+				 * viewport, and one mis-measured column there wraps the line
+				 * and scrolls the status bar off the top. */
+				<Box height={MAP_HEIGHT} width={MAP_WIDTH * 2} flexDirection="column">
 					<InventoryOverlay state={state} />
 				</Box>
 			) : (

@@ -64,7 +64,9 @@ npx serve .   # または python3 -m http.server などリポジトリルート�
 
 - [docs/architecture.md](docs/architecture.md) — コードベースの読み方
 - [docs/design.md](docs/design.md) — 製品コンセプトと絵文字方針
+- [docs/catalog.md](docs/catalog.md) — 敵・アイテム・わなの全一覧(ゲームのデータから生成。`npm run docs:catalog`で更新)
 - [docs/tasks/game.md](docs/tasks/game.md) — ゲーム開発タスクトラッカー
+- [docs/tasks/game-history.md](docs/tasks/game-history.md) — 完了済みマイルストーンの全記録
 - [docs/tasks/modernization.md](docs/tasks/modernization.md) — rot.js近代化改修の全記録(完了済み)
 
 ## 近代化rot.jsコアだけ欲しい場合

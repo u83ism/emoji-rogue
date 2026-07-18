@@ -5,6 +5,7 @@
 // internals or past it into the shell-facing i18n module.
 
 export type { Cell } from "../renderer/index.js";
+export { buildCatalogMarkdown } from "../shell/catalog.js";
 export { formatEvent, formatInventoryEntry } from "../shell/messages.js";
 export {
 	INVENTORY_EMPTY_MESSAGE,

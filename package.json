@@ -27,6 +27,7 @@
 		"start": "node dist/main.mjs",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check . && node scripts/check-structure.mjs",
+		"docs:catalog": "tsdown && node scripts/generate-catalog.mjs",
 		"lint:fix": "biome check --write .",
 		"knip": "knip",
 		"test": "vitest run",

@@ -77,10 +77,13 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"regeneration-ring": { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
 	"sustenance-ring": { glyph: "💍" },
-	/* Crystal ball: single-codepoint, Unicode 6.0. */
-	"striking-wand": { glyph: "🔮" },
+	/* Magic wand: single-codepoint, VS16-free, Emoji 13.0 — within the
+	 * Emoji-15.1 ceiling (docs/emoji-policy.md ADR 2026-07-19). Replaces the
+	 * earlier crystal-ball glyph, which was semantically a mismatch for
+	 * "wand" but was the best fit under the old (Unicode-6.0) ceiling. */
+	"striking-wand": { glyph: "🪄" },
 	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */
-	"slow-wand": { glyph: "🔮" },
+	"slow-wand": { glyph: "🪄" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };

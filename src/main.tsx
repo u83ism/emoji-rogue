@@ -137,9 +137,17 @@ const App = () => {
 	return (
 		<Box flexDirection="column">
 			{/* Status above the map, ログ類 below — the 不思議のダンジョン layout
-			 * ratified in milestone 68. */}
+			 * ratified in milestone 68. The inventory panel replaces the map
+			 * while open (milestone 70), pinned to the map's height so the
+			 * status bar and log lines never shift. */}
 			<StatusBar state={state} />
-			<GameScreen grid={buildFrameGrid(state)} />
+			{isInventoryOpen ? (
+				<Box height={MAP_HEIGHT} flexDirection="column">
+					<InventoryOverlay state={state} />
+				</Box>
+			) : (
+				<GameScreen grid={buildFrameGrid(state)} />
+			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
 					{formatEvent(event, state.identifiedPotionKinds)}
@@ -175,7 +183,6 @@ const App = () => {
 					)}
 				</Box>
 			)}
-			{isInventoryOpen && <InventoryOverlay state={state} />}
 		</Box>
 	);
 };

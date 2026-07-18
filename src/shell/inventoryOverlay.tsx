@@ -5,12 +5,14 @@ import { formatInventoryEntry } from "./messages.js";
 import { INVENTORY_EMPTY_MESSAGE, INVENTORY_TITLE } from "./systemMessages.js";
 
 /**
- * The held-items overlay opened with `i`: one lettered row per stack, or the
- * empty notice. Whether it is open lives in the shell (main.tsx) — display
- * state, never part of GameState.
+ * The held-items panel opened with `i`. Shown INSTEAD of the map (milestone
+ * 70, 不思議のダンジョン style) — main.tsx swaps it in for `<GameScreen>`
+ * inside a map-height box, so the status bar and log never move. Whether it
+ * is open lives in the shell (main.tsx) — display state, never part of
+ * GameState.
  */
 export const InventoryOverlay = ({ state }: { readonly state: GameState }) => (
-	<Box marginTop={1} flexDirection="column" borderStyle="round">
+	<Box flexDirection="column" borderStyle="round">
 		<Text>{INVENTORY_TITLE}</Text>
 		{state.inventory.length === 0 ? (
 			<Text>{INVENTORY_EMPTY_MESSAGE}</Text>

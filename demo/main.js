@@ -60,6 +60,8 @@ const inventoryElement = document.getElementById("inventory");
 const seedElement = document.getElementById("seed");
 
 const renderMap = () => {
+	/* the inventory panel replaces the map while open — same exclusivity as the CLI (milestone 70) */
+	mapElement.hidden = isInventoryOpen;
 	const grid = buildFrameGrid(state);
 	mapElement.style.gridTemplateColumns = `repeat(${state.width}, 1.4em)`;
 	mapElement.textContent = "";

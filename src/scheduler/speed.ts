@@ -19,9 +19,9 @@ export interface SpeedScheduler<T extends SpeedActor> extends Scheduler<T> {
 /**
  * Speed-based scheduler: faster items (higher `getSpeed()`) come up more often.
  */
-export function createSpeedScheduler<
+export const createSpeedScheduler = <
 	T extends SpeedActor,
->(): SpeedScheduler<T> {
+>(): SpeedScheduler<T> => {
 	const state = createSchedulerState<T>();
 
 	const scheduler: SpeedScheduler<T> = {
@@ -45,4 +45,4 @@ export function createSpeedScheduler<
 		},
 	};
 	return scheduler;
-}
+};

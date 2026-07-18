@@ -19,21 +19,21 @@ interface Item {
 /**
  * Simplified A* algorithm: all edges have a value of 1.
  */
-export function createAStarPath(
+export const createAStarPath = (
 	toX: number,
 	toY: number,
 	passable: PassableCallback,
 	options: Partial<PathOptions> = {},
-): Path {
+): Path => {
 	const topology = options.topology ?? 8;
 	const dirs = getPathDirs(topology);
 
-	function distance(
+	const distance = (
 		x: number,
 		y: number,
 		fromX: number,
 		fromY: number,
-	): number {
+	): number => {
 		switch (topology) {
 			case 4:
 				return Math.abs(x - fromX) + Math.abs(y - fromY);
@@ -53,13 +53,13 @@ export function createAStarPath(
 				// constructed an invalid options object despite the type system.
 				throw new Error("Incorrect topology for A* computation");
 		}
-	}
+	};
 
 	return (fromX: number, fromY: number, callback: ComputeCallback) => {
 		const todo: Item[] = [];
 		const done: Record<string, Item> = {};
 
-		function add(x: number, y: number, prev: Item | null): void {
+		const add = (x: number, y: number, prev: Item | null): void => {
 			const h = distance(x, y, fromX, fromY);
 			const item: Item = { x, y, prev, g: prev ? prev.g + 1 : 0, h };
 
@@ -78,7 +78,7 @@ export function createAStarPath(
 			}
 
 			todo.push(item);
-		}
+		};
 
 		add(toX, toY, null);
 
@@ -117,4 +117,4 @@ export function createAStarPath(
 		}
 		return ok(undefined);
 	};
-}
+};

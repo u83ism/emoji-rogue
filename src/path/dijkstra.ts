@@ -22,12 +22,12 @@ interface Item {
  * version cached the search frontier across calls; that cache silently
  * returned stale paths once passability changed, so it was removed.)
  */
-export function createDijkstraPath(
+export const createDijkstraPath = (
 	toX: number,
 	toY: number,
 	passable: PassableCallback,
 	options: Partial<PathOptions> = {},
-): Path {
+): Path => {
 	const dirs = getPathDirs(options.topology ?? 8);
 
 	return (fromX: number, fromY: number, callback: ComputeCallback) => {
@@ -73,4 +73,4 @@ export function createDijkstraPath(
 		}
 		return ok(undefined);
 	};
-}
+};

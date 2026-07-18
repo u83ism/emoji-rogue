@@ -28,10 +28,10 @@ const GRADIENTS: ReadonlyArray<readonly [number, number]> = [
  * With Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
  * Better rank ordering method by Stefan Gustavson in 2012.
  */
-export function createSimplexNoise(
+export const createSimplexNoise = (
 	rng: ShuffleSource,
 	gradients = 256,
-): NoiseSource {
+): NoiseSource => {
 	const permutations: number[] = [];
 	for (let i = 0; i < gradients; i++) {
 		permutations.push(i);
@@ -109,4 +109,4 @@ export function createSimplexNoise(
 		// The result is scaled to return values in the interval [-1,1].
 		return 70 * (n0 + n1 + n2);
 	};
-}
+};

@@ -29,7 +29,7 @@ export type Path = (
  * should try them (reordered for 8-topology so vertical/horizontal directions
  * come first, for a more aesthetic result).
  */
-export function getPathDirs(topology: 4 | 6 | 8): [number, number][] {
+export const getPathDirs = (topology: 4 | 6 | 8): [number, number][] => {
 	const dirs = DIRS[topology].map(toXy);
 	if (topology === 8) {
 		const [d0, d1, d2, d3, d4, d5, d6, d7] = dirs;
@@ -48,15 +48,15 @@ export function getPathDirs(topology: 4 | 6 | 8): [number, number][] {
 		return [d0, d2, d4, d6, d1, d3, d5, d7];
 	}
 	return dirs;
-}
+};
 
 /** Passable neighbors of (cx, cy) along the given direction vectors. */
-export function getNeighbors(
+export const getNeighbors = (
 	dirs: readonly [number, number][],
 	passable: PassableCallback,
 	cx: number,
 	cy: number,
-): [number, number][] {
+): [number, number][] => {
 	const result: [number, number][] = [];
 	for (const [dx, dy] of dirs) {
 		const x = cx + dx;
@@ -67,4 +67,4 @@ export function getNeighbors(
 		result.push([x, y]);
 	}
 	return result;
-}
+};

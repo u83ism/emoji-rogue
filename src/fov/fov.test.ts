@@ -58,7 +58,9 @@ interface LightCallbackWithCenter extends LightPassesCallback {
 	center: [number, number];
 }
 
-function buildLightCallback(map: readonly string[]): LightCallbackWithCenter {
+const buildLightCallback = (
+	map: readonly string[],
+): LightCallbackWithCenter => {
 	let center: [number, number] = [0, 0];
 	for (let j = 0; j < map.length; j++) {
 		const row = map[j];
@@ -77,9 +79,9 @@ function buildLightCallback(map: readonly string[]): LightCallbackWithCenter {
 	}) as LightCallbackWithCenter;
 	result.center = center;
 	return result;
-}
+};
 
-function checkResult(
+const checkResult = (
 	compute: (
 		x: number,
 		y: number,
@@ -88,7 +90,7 @@ function checkResult(
 	) => void,
 	center: [number, number],
 	result: readonly string[],
-): void {
+): void => {
 	const used = new Set<string>();
 	const callback: VisibilityCallback = (x, y) => {
 		const row = result[y];
@@ -105,7 +107,7 @@ function checkResult(
 			expect(used.has(`${i},${j}`)).toBe(true);
 		}
 	}
-}
+};
 
 describe("Discrete Shadowcasting", () => {
 	it("computes visible ring0", () => {

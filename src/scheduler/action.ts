@@ -20,7 +20,7 @@ const DEFAULT_DURATION = 1;
  * Action-based scheduler: each item is scheduled with an explicit duration
  * (defaulting to 1), adjustable for the active item via `setDuration`.
  */
-export function createActionScheduler<T>(): ActionScheduler<T> {
+export const createActionScheduler = <T>(): ActionScheduler<T> => {
 	const state = createSchedulerState<T>();
 	let duration = DEFAULT_DURATION; /* for the currently active item */
 
@@ -61,4 +61,4 @@ export function createActionScheduler<T>(): ActionScheduler<T> {
 		},
 	};
 	return scheduler;
-}
+};

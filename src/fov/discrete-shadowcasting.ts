@@ -9,18 +9,18 @@ import {
 /**
  * Discrete shadowcasting algorithm. Obsoleted by precise shadowcasting.
  */
-export function createDiscreteShadowcastingFov(
+export const createDiscreteShadowcastingFov = (
 	lightPasses: LightPassesCallback,
 	options: Partial<FovOptions> = {},
-): Fov {
+): Fov => {
 	const topology = options.topology ?? 8;
 
-	function isVisible(
+	const isVisible = (
 		startAngle: number,
 		endAngle: number,
 		blocks: boolean,
 		data: number[],
-	): boolean {
+	): boolean => {
 		if (startAngle < 0) {
 			const v1 = isVisible(0, endAngle, blocks, data);
 			const v2 = isVisible(360 + startAngle, 360, blocks, data);
@@ -84,7 +84,7 @@ export function createDiscreteShadowcastingFov(
 		}
 
 		return true;
-	}
+	};
 
 	return (x: number, y: number, radius: number, callback) => {
 		/* this place is always visible */
@@ -125,4 +125,4 @@ export function createDiscreteShadowcastingFov(
 			} /* for all cells in this ring */
 		} /* for all rings */
 	};
-}
+};

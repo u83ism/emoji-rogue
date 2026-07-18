@@ -11,18 +11,18 @@ type Arc = [number, number];
 /**
  * Precise shadowcasting algorithm.
  */
-export function createPreciseShadowcastingFov(
+export const createPreciseShadowcastingFov = (
 	lightPasses: LightPassesCallback,
 	options: Partial<FovOptions> = {},
-): Fov {
+): Fov => {
 	const topology = options.topology ?? 8;
 
-	function checkVisibility(
+	const checkVisibility = (
 		a1: Arc,
 		a2: Arc,
 		blocks: boolean,
 		shadows: Arc[],
-	): number {
+	): number => {
 		if (a1[0] > a2[0]) {
 			/* split into two sub-arcs */
 			const v1 = checkVisibility(a1, [a1[1], a1[1]], blocks, shadows);
@@ -116,7 +116,7 @@ export function createPreciseShadowcastingFov(
 		const arcLength = (a2[0] * a1[1] - a1[0] * a2[1]) / (a1[1] * a2[1]);
 
 		return visibleLength / arcLength;
-	}
+	};
 
 	return (x: number, y: number, radius: number, callback) => {
 		/* this place is always visible */
@@ -168,4 +168,4 @@ export function createPreciseShadowcastingFov(
 			} /* for all cells in this ring */
 		} /* for all rings */
 	};
-}
+};

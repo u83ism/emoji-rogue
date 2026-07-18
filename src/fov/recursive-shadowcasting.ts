@@ -45,10 +45,10 @@ export interface RecursiveShadowcastingFov {
  * Based on Peter Harkins' implementation of Björn Bergström's algorithm
  * described here: http://www.roguebasin.com/index.php?title=FOV_using_recursive_shadowcasting
  */
-export function createRecursiveShadowcastingFov(
+export const createRecursiveShadowcastingFov = (
 	lightPasses: LightPassesCallback,
-): RecursiveShadowcastingFov {
-	function castVisibility(
+): RecursiveShadowcastingFov => {
+	const castVisibility = (
 		startX: number,
 		startY: number,
 		row: number,
@@ -60,7 +60,7 @@ export function createRecursiveShadowcastingFov(
 		yx: number,
 		yy: number,
 		callback: VisibilityCallback,
-	): void {
+	): void => {
 		if (visSlopeStartInput < visSlopeEnd) {
 			return;
 		}
@@ -134,15 +134,15 @@ export function createRecursiveShadowcastingFov(
 				break;
 			}
 		}
-	}
+	};
 
-	function renderOctant(
+	const renderOctant = (
 		x: number,
 		y: number,
 		octant: readonly [number, number, number, number],
 		radius: number,
 		callback: VisibilityCallback,
-	): void {
+	): void => {
 		/* radius incremented by 1 to provide same coverage area as other shadowcasting radiuses */
 		castVisibility(
 			x,
@@ -157,7 +157,7 @@ export function createRecursiveShadowcastingFov(
 			octant[3],
 			callback,
 		);
-	}
+	};
 
 	return {
 		compute(x, y, radius, callback) {
@@ -196,4 +196,4 @@ export function createRecursiveShadowcastingFov(
 			renderOctant(x, y, at(OCTANTS, previousOctant), radius, callback);
 		},
 	};
-}
+};

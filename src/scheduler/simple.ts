@@ -11,7 +11,7 @@ import {
  * Simple fair scheduler (round-robin style): every item comes up again after
  * every other item has had a turn.
  */
-export function createSimpleScheduler<T>(): Scheduler<T> {
+export const createSimpleScheduler = <T>(): Scheduler<T> => {
 	const state = createSchedulerState<T>();
 
 	const scheduler: Scheduler<T> = {
@@ -38,4 +38,4 @@ export function createSimpleScheduler<T>(): Scheduler<T> {
 		},
 	};
 	return scheduler;
-}
+};

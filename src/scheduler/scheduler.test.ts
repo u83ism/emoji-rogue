@@ -57,9 +57,9 @@ describe("Simple", () => {
 });
 
 describe("Speed", () => {
-	function actor(speed: number): SpeedActor {
+	const actor = (speed: number): SpeedActor => {
 		return { getSpeed: () => speed };
-	}
+	};
 
 	const A50 = actor(50);
 	const A100a = actor(100);

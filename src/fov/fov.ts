@@ -23,12 +23,12 @@ export type Fov = (
 ) => void;
 
 /** Return all neighbors in a concentric ring around (cx, cy) at range r. */
-export function getCircle(
+export const getCircle = (
 	topology: 4 | 6 | 8,
 	cx: number,
 	cy: number,
 	r: number,
-): [number, number][] {
+): [number, number][] => {
 	let dirs: [number, number][];
 	let countFactor: number;
 	let startOffset: [number, number];
@@ -80,4 +80,4 @@ export function getCircle(
 	}
 
 	return result;
-}
+};

@@ -136,8 +136,10 @@ const App = () => {
 
 	return (
 		<Box flexDirection="column">
-			<GameScreen grid={buildFrameGrid(state)} />
+			{/* Status above the map, ログ類 below — the 不思議のダンジョン layout
+			 * ratified in milestone 68. */}
 			<StatusBar state={state} />
+			<GameScreen grid={buildFrameGrid(state)} />
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
 					{formatEvent(event, state.identifiedPotionKinds)}

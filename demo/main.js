@@ -118,7 +118,7 @@ const renderStatus = () => {
 		state.playerHp <= LOW_HP_THRESHOLD ? "#f66" : "#6f6",
 	);
 	appendStatusSegment(
-		` 満腹度 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
+		` 🍖 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
 		state.playerFood <= 0
 			? "#f66"
 			: state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
@@ -126,7 +126,7 @@ const renderStatus = () => {
 				: undefined,
 	);
 	appendStatusSegment(
-		` 攻 ${state.playerAttackDamage} 防 ${state.playerDefense}`,
+		` 💪 ${state.playerAttackDamage} 🦺 ${state.playerDefense}`,
 	);
 	appendStatusSegment(` 💰${state.goldCollected}`, "#fd6");
 	for (const chip of STATUS_CHIPS) {

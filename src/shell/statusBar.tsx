@@ -57,10 +57,16 @@ const STATUS_CHIPS: readonly {
 ];
 
 /**
- * The one-line chrome row under the map: floor, level, HP, food, attack and
- * defense, gold, and a chip per active temporary status. Plain text only —
- * emoji chrome would trip Ink's wide-character width measuring (the 💰 is
- * the deliberate, verified exception).
+ * The one-line chrome row ABOVE the map (the 不思議のダンジョン layout):
+ * floor, level, HP, food, attack and defense, gold, and a chip per active
+ * temporary status. Chrome emoji are allowed under the same stability bar as
+ * map tiles — single codepoint, no variation selector, East Asian Width
+ * Wide, verified on a real terminal (milestone 68 amended milestone 5's
+ * blanket "no emoji in chrome" rule; 💰 was the precedent). 🍖/🦺 deliberately
+ * reuse the food/shield item glyphs: the pickup and the number it moves
+ * share a face. Floor ("1F"), level ("Lv.") and HP stay text — their emoji
+ * candidates were either unstable (🪜), variation-selector-bound (❤️) or
+ * colliding with map glyphs (🔽).
  */
 export const StatusBar = ({ state }: { readonly state: GameState }) => (
 	<Box>
@@ -71,11 +77,11 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 		</Text>
 		<Text> </Text>
 		<Text {...resolveFoodTextStyle(state.playerFood)}>
-			満腹度 {state.playerFood}/{PLAYER_MAX_FOOD}
+			🍖 {state.playerFood}/{PLAYER_MAX_FOOD}
 		</Text>
 		<Text> </Text>
 		<Text>
-			攻 {state.playerAttackDamage} 防 {state.playerDefense}
+			💪 {state.playerAttackDamage} 🦺 {state.playerDefense}
 		</Text>
 		<Text> </Text>
 		<Text color="yellow">💰{state.goldCollected}</Text>

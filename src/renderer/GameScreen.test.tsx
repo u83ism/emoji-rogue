@@ -6,9 +6,9 @@ import { GameScreen } from "./GameScreen.js";
 // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escape codes requires matching the ESC control character
 const ANSI_ESCAPE = /\x1b\[[0-9;]*m/g;
 
-function stripAnsi(text: string): string {
+const stripAnsi = (text: string): string => {
 	return text.replace(ANSI_ESCAPE, "");
-}
+};
 
 describe("GameScreen", () => {
 	it("renders one line per grid row, in order", () => {

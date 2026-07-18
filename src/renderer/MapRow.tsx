@@ -10,15 +10,14 @@ export interface MapRowProps {
  * when unset (not present-with-value-undefined), which a plain
  * `color={run.fg}` JSX prop can't express under exactOptionalPropertyTypes.
  */
-function colorProps(run: CellRun): {
-	color?: string;
-	backgroundColor?: string;
-} {
+const colorProps = (
+	run: CellRun,
+): { color?: string; backgroundColor?: string } => {
 	const props: { color?: string; backgroundColor?: string } = {};
 	if (run.fg !== undefined) props.color = run.fg;
 	if (run.bg !== undefined) props.backgroundColor = run.bg;
 	return props;
-}
+};
 
 /**
  * Renders one row of the map grid as a sequence of colored text runs.
@@ -26,7 +25,7 @@ function colorProps(run: CellRun): {
  * per-cell Box sizing is exactly where a general-purpose layout engine's
  * runtime width measurement of emoji has historically gone wrong.
  */
-export function MapRow({ runs }: MapRowProps) {
+export const MapRow = ({ runs }: MapRowProps) => {
 	return (
 		<Box flexDirection="row">
 			{runs.map((run, index) => (
@@ -37,4 +36,4 @@ export function MapRow({ runs }: MapRowProps) {
 			))}
 		</Box>
 	);
-}
+};

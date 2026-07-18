@@ -17,11 +17,11 @@ export type TileGlyphs = Readonly<Record<number, Cell>>;
  * `gridFrom` is grounded in what actually exists today: a generated dungeon
  * map. Extend this once a real game state model exists.
  */
-export function gridFrom(
+export const gridFrom = (
 	map: readonly (readonly number[])[],
 	glyphs: TileGlyphs,
 	fallback: Cell,
-): Cell[][] {
+): Cell[][] => {
 	const width = map.length;
 	const height = width > 0 ? (map[0]?.length ?? 0) : 0;
 
@@ -35,4 +35,4 @@ export function gridFrom(
 		grid.push(row);
 	}
 	return grid;
-}
+};

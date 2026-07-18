@@ -10,7 +10,7 @@ export interface GameScreenProps {
 /**
  * Renders a full grid of logical cells, one `<MapRow>` per row.
  */
-export function GameScreen({ grid }: GameScreenProps) {
+export const GameScreen = ({ grid }: GameScreenProps) => {
 	return (
 		<Box flexDirection="column">
 			{grid.map((row, index) => (
@@ -19,4 +19,4 @@ export function GameScreen({ grid }: GameScreenProps) {
 			))}
 		</Box>
 	);
-}
+};

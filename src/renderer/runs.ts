@@ -11,14 +11,14 @@ export interface CellRun {
 	readonly bg?: string | undefined;
 }
 
-function sameStyle(run: CellRun, cell: Cell): boolean {
+const sameStyle = (run: CellRun, cell: Cell): boolean => {
 	return run.fg === cell.fg && run.bg === cell.bg;
-}
+};
 
 /**
  * Run-length-encodes a row of cells by color. Pure: same input, same output.
  */
-export function groupIntoRuns(cells: readonly Cell[]): CellRun[] {
+export const groupIntoRuns = (cells: readonly Cell[]): CellRun[] => {
 	const runs: CellRun[] = [];
 
 	for (const cell of cells) {
@@ -31,4 +31,4 @@ export function groupIntoRuns(cells: readonly Cell[]): CellRun[] {
 	}
 
 	return runs;
-}
+};

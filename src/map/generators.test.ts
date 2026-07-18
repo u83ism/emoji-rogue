@@ -10,22 +10,22 @@ import { createRogueMap } from "./rogue.js";
 const WIDTH = 20;
 const HEIGHT = 20;
 
-function collect(
+const collect = (
 	build: (callback: (x: number, y: number, value: number) => void) => void,
-) {
+) => {
 	const cells = new Map<string, number>();
 	build((x, y, value) => {
 		cells.set(`${x},${y}`, value);
 	});
 	return cells;
-}
+};
 
-function expectFullGridOfBinaryValues(cells: Map<string, number>) {
+const expectFullGridOfBinaryValues = (cells: Map<string, number>) => {
 	expect(cells.size).toBe(WIDTH * HEIGHT);
 	for (const value of cells.values()) {
 		expect([0, 1]).toContain(value);
 	}
-}
+};
 
 describe("createArenaMap", () => {
 	it("fills the grid with an empty room bordered by walls", () => {

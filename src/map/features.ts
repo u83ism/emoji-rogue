@@ -45,32 +45,32 @@ export type CreateFeatureAt = (
 	options: FeatureOptions,
 ) => Feature;
 
-function createRoom(
+const createRoom = (
 	x1: number,
 	y1: number,
 	x2: number,
 	y2: number,
 	doorX?: number,
 	doorY?: number,
-): Room {
+): Room => {
 	const room: Room = { kind: "room", x1, y1, x2, y2, doors: {} };
 	if (doorX !== undefined && doorY !== undefined) {
 		addDoor(room, doorX, doorY);
 	}
 	return room;
-}
+};
 
 /**
  * Room of random size, with a given door position and direction.
  */
-export function createRoomAt(
+export const createRoomAt = (
 	rng: Rng,
 	x: number,
 	y: number,
 	dx: number,
 	dy: number,
 	options: RoomOptions,
-): Room {
+): Room => {
 	const width = rng.getUniformInt(options.roomWidth[0], options.roomWidth[1]);
 	const height = rng.getUniformInt(
 		options.roomHeight[0],
@@ -106,17 +106,17 @@ export function createRoomAt(
 	// unit direction vector. Reaching here means a caller bug, not a normal
 	// "can't build a room here" outcome.
 	throw new Error("dx or dy must be 1 or -1");
-}
+};
 
 /**
  * Room of random size, positioned around center coordinates.
  */
-export function createRoomAtCenter(
+export const createRoomAtCenter = (
 	rng: Rng,
 	cx: number,
 	cy: number,
 	options: RoomOptions,
-): Room {
+): Room => {
 	const width = rng.getUniformInt(options.roomWidth[0], options.roomWidth[1]);
 	const height = rng.getUniformInt(
 		options.roomHeight[0],
@@ -129,17 +129,17 @@ export function createRoomAtCenter(
 	const y2 = y1 + height - 1;
 
 	return createRoom(x1, y1, x2, y2);
-}
+};
 
 /**
  * Room of random size within the given dimensions.
  */
-export function createRandomRoom(
+export const createRandomRoom = (
 	rng: Rng,
 	availWidth: number,
 	availHeight: number,
 	options: RoomOptions,
-): Room {
+): Room => {
 	const width = rng.getUniformInt(options.roomWidth[0], options.roomWidth[1]);
 	const height = rng.getUniformInt(
 		options.roomHeight[0],
@@ -155,30 +155,30 @@ export function createRandomRoom(
 	const y2 = y1 + height - 1;
 
 	return createRoom(x1, y1, x2, y2);
-}
+};
 
-export function addDoor(room: Room, x: number, y: number): void {
+export const addDoor = (room: Room, x: number, y: number): void => {
 	room.doors[encodePointKey(x, y)] = 1;
-}
+};
 
-export function getDoors(
+export const getDoors = (
 	room: Room,
 	callback: (x: number, y: number) => void,
-): void {
+): void => {
 	for (const key of Object.keys(room.doors)) {
 		const [x, y] = decodePointKey(key);
 		callback(x, y);
 	}
-}
+};
 
-export function clearDoors(room: Room): void {
+export const clearDoors = (room: Room): void => {
 	room.doors = {};
-}
+};
 
-export function addDoors(
+export const addDoors = (
 	room: Room,
 	isWallCallback: TestPositionCallback,
-): void {
+): void => {
 	const left = room.x1 - 1;
 	const right = room.x2 + 1;
 	const top = room.y1 - 1;
@@ -195,13 +195,13 @@ export function addDoors(
 			addDoor(room, x, y);
 		}
 	}
-}
+};
 
-export function roomIsValid(
+export const roomIsValid = (
 	room: Room,
 	isWallCallback: TestPositionCallback,
 	canBeDugCallback: TestPositionCallback,
-): boolean {
+): boolean => {
 	const left = room.x1 - 1;
 	const right = room.x2 + 1;
 	const top = room.y1 - 1;
@@ -218,12 +218,12 @@ export function roomIsValid(
 	}
 
 	return true;
-}
+};
 
 /**
  * @param digCallback Signature (x, y, value). Values: 0 = empty, 1 = wall, 2 = door. Multiple doors are allowed.
  */
-export function digRoom(room: Room, digCallback: DigCallback): void {
+export const digRoom = (room: Room, digCallback: DigCallback): void => {
 	const left = room.x1 - 1;
 	const right = room.x2 + 1;
 	const top = room.y1 - 1;
@@ -242,63 +242,63 @@ export function digRoom(room: Room, digCallback: DigCallback): void {
 			digCallback(x, y, value);
 		}
 	}
-}
+};
 
-export function getRoomCenter(room: Room): [number, number] {
+export const getRoomCenter = (room: Room): [number, number] => {
 	return [
 		Math.round((room.x1 + room.x2) / 2),
 		Math.round((room.y1 + room.y2) / 2),
 	];
-}
+};
 
-export function getRoomLeft(room: Room): number {
+export const getRoomLeft = (room: Room): number => {
 	return room.x1;
-}
-export function getRoomRight(room: Room): number {
+};
+export const getRoomRight = (room: Room): number => {
 	return room.x2;
-}
-export function getRoomTop(room: Room): number {
+};
+export const getRoomTop = (room: Room): number => {
 	return room.y1;
-}
-export function getRoomBottom(room: Room): number {
+};
+export const getRoomBottom = (room: Room): number => {
 	return room.y2;
-}
+};
 
 /**
  * A corridor with fixed endpoints (not randomly generated).
  */
-export function createCorridor(
+export const createCorridor = (
 	startX: number,
 	startY: number,
 	endX: number,
 	endY: number,
-): Corridor {
+): Corridor => {
 	return { kind: "corridor", startX, startY, endX, endY, endsWithAWall: true };
-}
+};
 
-export function createCorridorAt(
+export const createCorridorAt = (
 	rng: Rng,
 	x: number,
 	y: number,
 	dx: number,
 	dy: number,
 	options: CorridorOptions,
-): Corridor {
+): Corridor => {
 	const length = rng.getUniformInt(
 		options.corridorLength[0],
 		options.corridorLength[1],
 	);
 	return createCorridor(x, y, x + dx * length, y + dy * length);
-}
+};
 
 /**
  * Validates a corridor, shortening it in place if it runs into an obstacle.
  */
-export function corridorIsValid(
+export const corridorIsValid = (
 	corridor: Corridor,
 	isWallCallback: TestPositionCallback,
 	canBeDugCallback: TestPositionCallback,
-): boolean {
+): boolean => {
 	const sx = corridor.startX;
 	const sy = corridor.startY;
 	let dx = corridor.endX - sx;
@@ -366,15 +366,15 @@ export function corridorIsValid(
 	}
 
 	return true;
-}
+};
 
 /**
  * @param digCallback Signature (x, y, value). Values: 0 = empty.
  */
-export function digCorridor(
+export const digCorridor = (
 	corridor: Corridor,
 	digCallback: DigCallback,
-): void {
+): void => {
 	const sx = corridor.startX;
 	const sy = corridor.startY;
 	let dx = corridor.endX - sx;
@@ -389,12 +389,12 @@ export function digCorridor(
 		const y = sy + i * dy;
 		digCallback(x, y, 0);
 	}
-}
+};
 
-export function createCorridorPriorityWalls(
+export const createCorridorPriorityWalls = (
 	corridor: Corridor,
 	priorityWallCallback: (x: number, y: number) => void,
-): void {
+): void => {
 	if (!corridor.endsWithAWall) return;
 
 	const sx = corridor.startX;
@@ -410,4 +410,4 @@ export function createCorridorPriorityWalls(
 	priorityWallCallback(corridor.endX + dx, corridor.endY + dy);
 	priorityWallCallback(corridor.endX + nx, corridor.endY + ny);
 	priorityWallCallback(corridor.endX - nx, corridor.endY - ny);
-}
+};

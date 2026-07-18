@@ -36,11 +36,11 @@ export interface CellularMap {
 /**
  * Cellular automaton map generator.
  */
-export function createCellularMap(
+export const createCellularMap = (
 	width: number,
 	height: number,
 	options: Partial<CellularOptions> = {},
-): CellularMap {
+): CellularMap => {
 	const resolvedOptions: CellularOptions = {
 		born: [5, 6, 7, 8],
 		survive: [4, 5, 6, 7, 8],
@@ -50,21 +50,21 @@ export function createCellularMap(
 	const dirs = DIRS[resolvedOptions.topology].map(toXy);
 	let map = fillMap(width, height, 0);
 
-	function getCell(x: number, y: number): number {
+	const getCell = (x: number, y: number): number => {
 		const column = map[x];
 		if (column === undefined) throw new Error("cellular map: x out of range");
 		const value = column[y];
 		if (value === undefined) throw new Error("cellular map: y out of range");
 		return value;
-	}
+	};
 
-	function setCell(x: number, y: number, value: number): void {
+	const setCell = (x: number, y: number, value: number): void => {
 		const column = map[x];
 		if (column === undefined) throw new Error("cellular map: x out of range");
 		column[y] = value;
-	}
+	};
 
-	function getNeighbors(cx: number, cy: number): number {
+	const getNeighbors = (cx: number, cy: number): number => {
 		let result = 0;
 		for (const [dx, dy] of dirs) {
 			const x = cx + dx;
@@ -73,9 +73,9 @@ export function createCellularMap(
 			result += getCell(x, y) === 1 ? 1 : 0;
 		}
 		return result;
-	}
+	};
 
-	function serviceCallback(callback: CreateCallback): void {
+	const serviceCallback = (callback: CreateCallback): void => {
 		for (let j = 0; j < height; j++) {
 			let widthStep = 1;
 			let widthStart = 0;
@@ -87,20 +87,20 @@ export function createCellularMap(
 				callback(i, j, getCell(i, j));
 			}
 		}
-	}
+	};
 
-	function freeSpace(x: number, y: number, value: number): boolean {
+	const freeSpace = (x: number, y: number, value: number): boolean => {
 		return (
 			x >= 0 && x < width && y >= 0 && y < height && getCell(x, y) === value
 		);
-	}
+	};
 
 	/* the original rot.js used "x.y" here; unified to the shared "x,y" key */
-	function pointKey(p: Point): string {
+	const pointKey = (p: Point): string => {
 		return encodePointKey(p[0], p[1]);
-	}
+	};
 
-	function getClosest(point: Point, space: PointMap): Point {
+	const getClosest = (point: Point, space: PointMap): Point => {
 		let minPoint: Point | null = null;
 		let minDist = Number.POSITIVE_INFINITY;
 		for (const key of Object.keys(space)) {
@@ -120,15 +120,15 @@ export function createCellularMap(
 			);
 		}
 		return minPoint;
-	}
+	};
 
-	function findConnected(
+	const findConnected = (
 		connected: PointMap,
 		notConnected: PointMap,
 		stackInput: Point[],
 		keepNotConnected: boolean,
 		value: number,
-	): void {
+	): void => {
 		const stack = stackInput.slice();
 		while (stack.length > 0) {
 			const p = stack.shift();
@@ -167,13 +167,13 @@ export function createCellularMap(
 				}
 			}
 		}
-	}
+	};
 
-	function getFromTo(
+	const getFromTo = (
 		rng: Rng,
 		connected: PointMap,
 		notConnected: PointMap,
-	): [Point, Point] {
+	): [Point, Point] => {
 		let from: Point = [0, 0];
 		let to: Point = [0, 0];
 		const connectedKeys = Object.keys(connected);
@@ -194,16 +194,16 @@ export function createCellularMap(
 			if (d < 64) break;
 		}
 		return [from, to];
-	}
+	};
 
-	function tunnelToConnected(
+	const tunnelToConnected = (
 		to: Point,
 		from: Point,
 		connected: PointMap,
 		notConnected: PointMap,
 		value: number,
 		connectionCallback?: ConnectionCallback,
-	): void {
+	): void => {
 		let a = from[0] < to[0] ? from : to;
 		let b = from[0] < to[0] ? to : from;
 		for (let xx = a[0]; xx <= b[0]; xx++) {
@@ -230,16 +230,16 @@ export function createCellularMap(
 		if (connectionCallback && a[1] < b[1]) {
 			connectionCallback([b[0], a[1]], [b[0], b[1]]);
 		}
-	}
+	};
 
-	function tunnelToConnected6(
+	const tunnelToConnected6 = (
 		to: Point,
 		from: Point,
 		connected: PointMap,
 		notConnected: PointMap,
 		value: number,
 		connectionCallback?: ConnectionCallback,
-	): void {
+	): void => {
 		const a = from[0] < to[0] ? from : to;
 		const b = from[0] < to[0] ? to : from;
 
@@ -273,7 +273,7 @@ export function createCellularMap(
 		if (connectionCallback) {
 			connectionCallback(from, to);
 		}
-	}
+	};
 
 	return {
 		randomize(rng: Rng, probability: number): void {
@@ -381,4 +381,4 @@ export function createCellularMap(
 			if (callback) serviceCallback(callback);
 		},
 	};
-}
+};

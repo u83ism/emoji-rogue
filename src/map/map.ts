@@ -1,11 +1,11 @@
 export type CreateCallback = (x: number, y: number, contents: number) => void;
 
 /** A width x height grid filled with `value`. */
-export function fillMap(
+export const fillMap = (
 	width: number,
 	height: number,
 	value: number,
-): number[][] {
+): number[][] => {
 	const map: number[][] = [];
 	for (let i = 0; i < width; i++) {
 		const column: number[] = [];
@@ -15,4 +15,4 @@ export function fillMap(
 		map.push(column);
 	}
 	return map;
-}
+};

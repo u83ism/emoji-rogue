@@ -4,26 +4,26 @@ import type { CreateCallback } from "./map.js";
 type Room = [number, number, number, number];
 type Point = [number, number];
 
-function at(map: readonly number[][], x: number, y: number): number {
+const at = (map: readonly number[][], x: number, y: number): number => {
 	const column = map[x];
 	if (column === undefined) throw new Error("divided maze: x out of range");
 	const value = column[y];
 	if (value === undefined) throw new Error("divided maze: y out of range");
 	return value;
-}
+};
 
-function set(map: number[][], x: number, y: number, value: number): void {
+const set = (map: number[][], x: number, y: number, value: number): void => {
 	const column = map[x];
 	if (column === undefined) throw new Error("divided maze: x out of range");
 	column[y] = value;
-}
+};
 
-function partitionRoom(
+const partitionRoom = (
 	rng: Rng,
 	map: number[][],
 	stack: Room[],
 	room: Room,
-): void {
+): void => {
 	const availX: number[] = [];
 	const availY: number[] = [];
 
@@ -100,17 +100,17 @@ function partitionRoom(
 	stack.push([x + 1, room[1], room[2], y - 1]); /* right top */
 	stack.push([room[0], y + 1, x - 1, room[3]]); /* left bottom */
 	stack.push([x + 1, y + 1, room[2], room[3]]); /* right bottom */
-}
+};
 
 /**
  * Recursively divided maze, http://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_division_method
  */
-export function createDividedMazeMap(
+export const createDividedMazeMap = (
 	width: number,
 	height: number,
 	rng: Rng,
 	callback: CreateCallback,
-): void {
+): void => {
 	const map: number[][] = [];
 	for (let i = 0; i < width; i++) {
 		const column: number[] = [];
@@ -133,4 +133,4 @@ export function createDividedMazeMap(
 			callback(i, j, at(map, i, j));
 		}
 	}
-}
+};

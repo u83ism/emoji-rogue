@@ -48,12 +48,12 @@ const FEATURE_ATTEMPTS = 20; /* how many times to try creating a feature on a su
  * Heavily based on Mike Anderson's ideas from the "Tyrant" algorithm, mentioned at
  * http://www.roguebasin.roguelikedevelopment.org/index.php?title=Dungeon-Building_Algorithm.
  */
-export function createDiggerMap(
+export const createDiggerMap = (
 	width: number,
 	height: number,
 	rng: Rng,
 	options: Partial<DiggerOptions> = {},
-): DiggerMap {
+): DiggerMap => {
 	const resolvedOptions: DiggerOptions = {
 		roomWidth: [3, 9],
 		roomHeight: [3, 5],
@@ -72,21 +72,21 @@ export function createDiggerMap(
 	let rooms: Room[] = [];
 	let corridors: Corridor[] = [];
 
-	function at(x: number, y: number): number {
+	const at = (x: number, y: number): number => {
 		const column = map[x];
 		if (column === undefined) throw new Error("digger map: x out of range");
 		const value = column[y];
 		if (value === undefined) throw new Error("digger map: y out of range");
 		return value;
-	}
+	};
 
-	function setCell(x: number, y: number, value: number): void {
+	const setCell = (x: number, y: number, value: number): void => {
 		const column = map[x];
 		if (column === undefined) throw new Error("digger map: x out of range");
 		column[y] = value;
-	}
+	};
 
-	function digCallback(x: number, y: number, value: number): void {
+	const digCallback = (x: number, y: number, value: number): void => {
 		if (value === 0 || value === 2) {
 			/* empty */
 			setCell(x, y, 0);
@@ -95,46 +95,46 @@ export function createDiggerMap(
 			/* wall */
 			walls[encodePointKey(x, y)] = 1;
 		}
-	}
+	};
 
-	function isWallCallback(x: number, y: number): boolean {
+	const isWallCallback = (x: number, y: number): boolean => {
 		if (x < 0 || y < 0 || x >= width || y >= height) return false;
 		return at(x, y) === 1;
-	}
+	};
 
-	function canBeDugCallback(x: number, y: number): boolean {
+	const canBeDugCallback = (x: number, y: number): boolean => {
 		if (x < 1 || y < 1 || x + 1 >= width || y + 1 >= height) return false;
 		return at(x, y) === 1;
-	}
+	};
 
-	function priorityWallCallback(x: number, y: number): void {
+	const priorityWallCallback = (x: number, y: number): void => {
 		walls[encodePointKey(x, y)] = 2;
-	}
+	};
 
-	function featureIsValid(feature: Feature): boolean {
+	const featureIsValid = (feature: Feature): boolean => {
 		return feature.kind === "room"
 			? roomIsValid(feature, isWallCallback, canBeDugCallback)
 			: corridorIsValid(feature, isWallCallback, canBeDugCallback);
-	}
+	};
 
-	function digFeature(feature: Feature): void {
+	const digFeature = (feature: Feature): void => {
 		if (feature.kind === "room") {
 			digRoom(feature, digCallback);
 		} else {
 			digCorridor(feature, digCallback);
 		}
-	}
+	};
 
-	function firstRoom(): void {
+	const firstRoom = (): void => {
 		const cx = Math.floor(width / 2);
 		const cy = Math.floor(height / 2);
 		const room = createRoomAtCenter(rng, cx, cy, resolvedOptions);
 		rooms.push(room);
 		digRoom(room, digCallback);
-	}
+	};
 
 	/** Get a suitable wall id ("x,y"), or null if none is available. */
-	function findWall(): string | null {
+	const findWall = (): string | null => {
 		const prio1: string[] = [];
 		const prio2: string[] = [];
 		for (const id of Object.keys(walls)) {
@@ -149,10 +149,15 @@ export function createDiggerMap(
 		if (id === null) return null;
 		delete walls[id];
 		return id;
-	}
+	};
 
 	/** @returns was this a successful try? */
-	function tryFeature(x: number, y: number, dx: number, dy: number): boolean {
+	const tryFeature = (
+		x: number,
+		y: number,
+		dx: number,
+		dy: number,
+	): boolean => {
 		const featureName = rng.getWeightedValue(featureWeights);
 		const feature = FEATURES[featureName](rng, x, y, dx, dy, resolvedOptions);
 
@@ -168,20 +173,20 @@ export function createDiggerMap(
 		}
 
 		return true;
-	}
+	};
 
-	function removeSurroundingWalls(cx: number, cy: number): void {
+	const removeSurroundingWalls = (cx: number, cy: number): void => {
 		for (const [dx, dy] of dirs4) {
 			delete walls[encodePointKey(cx + dx, cy + dy)];
 			delete walls[encodePointKey(cx + 2 * dx, cy + 2 * dy)];
 		}
-	}
+	};
 
 	/** Vector in the "digging" direction, or null if it doesn't exist (or isn't unique). */
-	function getDiggingDirection(
+	const getDiggingDirection = (
 		cx: number,
 		cy: number,
-	): [number, number] | null {
+	): [number, number] | null => {
 		if (cx <= 0 || cy <= 0 || cx >= width - 1 || cy >= height - 1) return null;
 
 		let result: [number, number] | null = null;
@@ -201,15 +206,15 @@ export function createDiggerMap(
 		if (!result) return null;
 
 		return [-result[0], -result[1]];
-	}
+	};
 
 	/** Find empty spaces surrounding rooms, and apply doors. */
-	function addDoorsToRooms(): void {
+	const addDoorsToRooms = (): void => {
 		for (const room of rooms) {
 			clearDoors(room);
 			addDoors(room, (x, y) => at(x, y) === 1);
 		}
-	}
+	};
 
 	const diggerMap: DiggerMap = {
 		getRooms: () => rooms,
@@ -273,4 +278,4 @@ export function createDiggerMap(
 		},
 	};
 	return diggerMap;
-}
+};

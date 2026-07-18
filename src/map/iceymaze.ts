@@ -9,7 +9,7 @@ type Dirs = [
 	[number, number],
 ];
 
-function randomizeDirs(rng: Rng): Dirs {
+const randomizeDirs = (rng: Rng): Dirs => {
 	const dirs: Dirs = [
 		[0, 0],
 		[0, 0],
@@ -45,33 +45,33 @@ function randomizeDirs(rng: Rng): Dirs {
 	}
 
 	return dirs;
-}
+};
 
-function isFree(
+const isFree = (
 	map: readonly number[][],
 	x: number,
 	y: number,
 	width: number,
 	height: number,
-): boolean {
+): boolean => {
 	if (x < 1 || y < 1 || x >= width || y >= height) {
 		return false;
 	}
 	const column = map[x];
 	return column !== undefined && column[y] !== 0;
-}
+};
 
 /**
  * Icey's Maze generator.
  * See http://www.roguebasin.roguelikedevelopment.org/index.php?title=Simple_maze for explanation.
  */
-export function createIceyMazeMap(
+export const createIceyMazeMap = (
 	widthInput: number,
 	heightInput: number,
 	rng: Rng,
 	callback: CreateCallback,
 	regularity = 0,
-): void {
+): void => {
 	const map = fillMap(widthInput, heightInput, 1);
 
 	const width = widthInput - (widthInput % 2 ? 1 : 2);
@@ -140,4 +140,4 @@ export function createIceyMazeMap(
 			callback(i, j, value);
 		}
 	}
-}
+};

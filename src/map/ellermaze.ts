@@ -5,7 +5,7 @@ import { fillMap } from "./map.js";
 type List = number[];
 
 /** Join lists with "i" and "i+1" */
-function addToList(i: number, left: List, right: List): void {
+const addToList = (i: number, left: List, right: List): void => {
 	const rightAtI = right[i];
 	const leftAtI1 = left[i + 1];
 	if (rightAtI === undefined || leftAtI1 === undefined) {
@@ -15,10 +15,10 @@ function addToList(i: number, left: List, right: List): void {
 	left[rightAtI] = leftAtI1;
 	right[i] = i + 1;
 	left[i + 1] = i;
-}
+};
 
 /** Remove "i" from its list */
-function removeFromList(i: number, left: List, right: List): void {
+const removeFromList = (i: number, left: List, right: List): void => {
 	const leftAtI = left[i];
 	const rightAtI = right[i];
 	if (leftAtI === undefined || rightAtI === undefined) {
@@ -28,18 +28,18 @@ function removeFromList(i: number, left: List, right: List): void {
 	left[rightAtI] = leftAtI;
 	right[i] = i;
 	left[i] = i;
-}
+};
 
 /**
  * Maze generator - Eller's algorithm.
  * See http://homepages.cwi.nl/~tromp/maze.html for explanation.
  */
-export function createEllerMazeMap(
+export const createEllerMazeMap = (
 	width: number,
 	height: number,
 	rng: Rng,
 	callback: CreateCallback,
-): void {
+): void => {
 	const map = fillMap(width, height, 1);
 	const w = Math.ceil((width - 2) / 2);
 
@@ -114,4 +114,4 @@ export function createEllerMazeMap(
 			callback(i, j2, value);
 		}
 	}
-}
+};

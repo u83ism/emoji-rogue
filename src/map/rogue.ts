@@ -30,25 +30,25 @@ export interface RogueMap {
 	create(callback?: CreateCallback): void;
 }
 
-function calculateRoomSize(size: number, cell: number): [number, number] {
+const calculateRoomSize = (size: number, cell: number): [number, number] => {
 	let max = Math.floor((size / cell) * 0.8);
 	let min = Math.floor((size / cell) * 0.25);
 	if (min < 2) min = 2;
 	if (max < 2) max = 2;
 	return [min, max];
-}
+};
 
 /**
  * Dungeon generator which uses the "original" Rogue dungeon generation algorithm.
  * See http://kuoi.com/~kamikaze/GameDesign/art07_rogue_dungeon.php
  * @author hyakugei
  */
-export function createRogueMap(
+export const createRogueMap = (
 	width: number,
 	height: number,
 	rng: Rng,
 	optionsInput: Partial<RogueOptions> = {},
-): RogueMap {
+): RogueMap => {
 	const dirs8 = DIRS[8].map(toXy);
 
 	const partialOptions: Partial<RogueOptions> = {
@@ -70,29 +70,29 @@ export function createRogueMap(
 	let rooms: RogueRoom[][] = [];
 	let connectedCells: Point[] = [];
 
-	function at(x: number, y: number): number {
+	const at = (x: number, y: number): number => {
 		const column = map[x];
 		if (column === undefined) throw new Error("rogue map: x out of range");
 		const value = column[y];
 		if (value === undefined) throw new Error("rogue map: y out of range");
 		return value;
-	}
+	};
 
-	function set(x: number, y: number, value: number): void {
+	const set = (x: number, y: number, value: number): void => {
 		const column = map[x];
 		if (column === undefined) throw new Error("rogue map: x out of range");
 		column[y] = value;
-	}
+	};
 
-	function room(cellX: number, cellY: number): RogueRoom {
+	const room = (cellX: number, cellY: number): RogueRoom => {
 		const column = rooms[cellX];
 		if (column === undefined) throw new Error("rogue map: cellX out of range");
 		const value = column[cellY];
 		if (value === undefined) throw new Error("rogue map: cellY out of range");
 		return value;
-	}
+	};
 
-	function initRooms(): void {
+	const initRooms = (): void => {
 		rooms = [];
 		for (let i = 0; i < resolvedOptions.cellWidth; i++) {
 			const column: RogueRoom[] = [];
@@ -109,9 +109,9 @@ export function createRogueMap(
 			}
 			rooms.push(column);
 		}
-	}
+	};
 
-	function connectRooms(): void {
+	const connectRooms = (): void => {
 		/* pick random starting grid */
 		let cgx = rng.getUniformInt(0, resolvedOptions.cellWidth - 1);
 		let cgy = rng.getUniformInt(0, resolvedOptions.cellHeight - 1);
@@ -157,9 +157,9 @@ export function createRogueMap(
 				}
 			} while (dirToCheck.length > 0 && found === false);
 		} while (dirToCheck.length > 0);
-	}
+	};
 
-	function connectUnconnectedRooms(): void {
+	const connectUnconnectedRooms = (): void => {
 		/*
 		 * While there are unconnected rooms, try to connect them to a random
 		 * connected neighbor (if a room has no connected neighbors yet, just
@@ -214,9 +214,9 @@ export function createRogueMap(
 				}
 			}
 		}
-	}
+	};
 
-	function createRooms(): void {
+	const createRooms = (): void => {
 		const cw = resolvedOptions.cellWidth;
 		const ch = resolvedOptions.cellHeight;
 
@@ -276,9 +276,9 @@ export function createRogueMap(
 				}
 			}
 		}
-	}
+	};
 
-	function getWallPosition(aRoom: RogueRoom, aDirection: number): Point {
+	const getWallPosition = (aRoom: RogueRoom, aDirection: number): Point => {
 		let rx: number;
 		let ry: number;
 		let door: number;
@@ -309,9 +309,9 @@ export function createRogueMap(
 			set(door, ry, 0);
 		}
 		return [rx, ry];
-	}
+	};
 
-	function drawCorridor(startPosition: Point, endPosition: Point): void {
+	const drawCorridor = (startPosition: Point, endPosition: Point): void => {
 		const xOffset = endPosition[0] - startPosition[0];
 		const yOffset = endPosition[1] - startPosition[1];
 
@@ -356,9 +356,9 @@ export function createRogueMap(
 				remaining--;
 			}
 		}
-	}
+	};
 
-	function createCorridors(): void {
+	const createCorridors = (): void => {
 		const cw = resolvedOptions.cellWidth;
 		const ch = resolvedOptions.cellHeight;
 
@@ -392,7 +392,7 @@ export function createRogueMap(
 				}
 			}
 		}
-	}
+	};
 
 	return {
 		create(callback?: CreateCallback): void {
@@ -419,4 +419,4 @@ export function createRogueMap(
 			}
 		},
 	};
-}
+};

@@ -49,12 +49,12 @@ const CORRIDOR_ATTEMPTS = 20; /* corridors are tried this many times before the 
  * Dungeon generator which tries to fill the space evenly. Generates
  * independent rooms and tries to connect them.
  */
-export function createUniformMap(
+export const createUniformMap = (
 	width: number,
 	height: number,
 	rng: Rng,
 	options: Partial<UniformOptions> = {},
-): UniformMap {
+): UniformMap => {
 	const resolvedOptions: UniformOptions = {
 		roomWidth: [3, 9],
 		roomHeight: [3, 5],
@@ -70,36 +70,36 @@ export function createUniformMap(
 	let connected: Room[] = [];
 	let unconnected: Room[] = [];
 
-	function at(x: number, y: number): number {
+	const at = (x: number, y: number): number => {
 		const column = map[x];
 		if (column === undefined) throw new Error("uniform map: x out of range");
 		const value = column[y];
 		if (value === undefined) throw new Error("uniform map: y out of range");
 		return value;
-	}
+	};
 
-	function set(x: number, y: number, value: number): void {
+	const set = (x: number, y: number, value: number): void => {
 		const column = map[x];
 		if (column === undefined) throw new Error("uniform map: x out of range");
 		column[y] = value;
-	}
+	};
 
-	function digCallback(x: number, y: number, value: number): void {
+	const digCallback = (x: number, y: number, value: number): void => {
 		set(x, y, value);
 		if (value === 0) dug++;
-	}
+	};
 
-	function isWallCallback(x: number, y: number): boolean {
+	const isWallCallback = (x: number, y: number): boolean => {
 		if (x < 0 || y < 0 || x >= width || y >= height) return false;
 		return at(x, y) === 1;
-	}
+	};
 
-	function canBeDugCallback(x: number, y: number): boolean {
+	const canBeDugCallback = (x: number, y: number): boolean => {
 		if (x < 1 || y < 1 || x + 1 >= width || y + 1 >= height) return false;
 		return at(x, y) === 1;
-	}
+	};
 
-	function generateRoom(): Room | null {
+	const generateRoom = (): Room | null => {
 		for (let attempt = 0; attempt < ROOM_ATTEMPTS; attempt++) {
 			const room = createRandomRoom(rng, width, height, resolvedOptions);
 			if (!roomIsValid(room, isWallCallback, canBeDugCallback)) continue;
@@ -109,9 +109,9 @@ export function createUniformMap(
 			return room;
 		}
 		return null; /* no room was generated in the given number of attempts */
-	}
+	};
 
-	function generateRooms(): void {
+	const generateRooms = (): void => {
 		const w = width - 2;
 		const h = height - 2;
 
@@ -121,9 +121,12 @@ export function createUniformMap(
 			if (dug / (w * h) > resolvedOptions.roomDugPercentage)
 				break; /* achieved requested amount of free space */
 		} while (room);
-	}
+	};
 
-	function closestRoom(candidates: readonly Room[], room: Room): Room | null {
+	const closestRoom = (
+		candidates: readonly Room[],
+		room: Room,
+	): Room | null => {
 		let dist = Number.POSITIVE_INFINITY;
 		const center = getRoomCenter(room);
 		let result: Room | null = null;
@@ -140,9 +143,9 @@ export function createUniformMap(
 		}
 
 		return result;
-	}
+	};
 
-	function digLine(points: readonly Point[]): void {
+	const digLine = (points: readonly Point[]): void => {
 		for (let i = 1; i < points.length; i++) {
 			const start = points[i - 1];
 			const end = points[i];
@@ -152,9 +155,9 @@ export function createUniformMap(
 			digCorridor(corridor, digCallback);
 			corridors.push(corridor);
 		}
-	}
+	};
 
-	function placeInWall(room: Room, dirIndex: number): Point | null {
+	const placeInWall = (room: Room, dirIndex: number): Point | null => {
 		let start: Point = [0, 0];
 		let dir: Point = [0, 0];
 		let length = 0;
@@ -203,9 +206,9 @@ export function createUniformMap(
 
 		const validSpots = avail.filter((spot): spot is Point => spot !== null);
 		return validSpots.length ? rng.getItem(validSpots) : null;
-	}
+	};
 
-	function connectRooms(room1: Room, room2: Room): boolean {
+	const connectRooms = (room1: Room, room2: Room): boolean => {
 		const center1 = getRoomCenter(room1);
 		const center2 = getRoomCenter(room2);
 
@@ -318,9 +321,9 @@ export function createUniformMap(
 		}
 
 		return true;
-	}
+	};
 
-	function generateCorridors(): boolean {
+	const generateCorridors = (): boolean => {
 		for (let attempt = 0; attempt < CORRIDOR_ATTEMPTS; attempt++) {
 			corridors = [];
 
@@ -357,7 +360,7 @@ export function createUniformMap(
 			}
 		}
 		return false;
-	}
+	};
 
 	const uniformMap: UniformMap = {
 		getRooms: () => rooms,
@@ -390,4 +393,4 @@ export function createUniformMap(
 		},
 	};
 	return uniformMap;
-}
+};

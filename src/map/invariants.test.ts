@@ -22,9 +22,9 @@ const SEEDS = Array.from({ length: 25 }, (_, i) => i + 1);
 
 type Grid = number[][];
 
-function buildGrid(
+const buildGrid = (
 	build: (callback: (x: number, y: number, value: number) => void) => void,
-): Grid {
+): Grid => {
 	const grid: Grid = [];
 	for (let x = 0; x < WIDTH; x++) {
 		grid.push(new Array<number>(HEIGHT).fill(-1));
@@ -35,31 +35,31 @@ function buildGrid(
 		column[y] = value;
 	});
 	return grid;
-}
+};
 
-function cellAt(grid: Grid, x: number, y: number): number {
+const cellAt = (grid: Grid, x: number, y: number): number => {
 	const value = grid[x]?.[y];
 	if (value === undefined) throw new Error(`cell out of range: ${x},${y}`);
 	return value;
-}
+};
 
-function expectEveryCellWritten(grid: Grid): void {
+const expectEveryCellWritten = (grid: Grid): void => {
 	for (let x = 0; x < WIDTH; x++) {
 		for (let y = 0; y < HEIGHT; y++) {
 			expect(cellAt(grid, x, y)).not.toBe(-1);
 		}
 	}
-}
+};
 
-function expectValuesWithin(grid: Grid, allowed: readonly number[]): void {
+const expectValuesWithin = (grid: Grid, allowed: readonly number[]): void => {
 	for (let x = 0; x < WIDTH; x++) {
 		for (let y = 0; y < HEIGHT; y++) {
 			expect(allowed).toContain(cellAt(grid, x, y));
 		}
 	}
-}
+};
 
-function expectBorderIsAllWalls(grid: Grid): void {
+const expectBorderIsAllWalls = (grid: Grid): void => {
 	for (let x = 0; x < WIDTH; x++) {
 		expect(cellAt(grid, x, 0)).toBe(1);
 		expect(cellAt(grid, x, HEIGHT - 1)).toBe(1);
@@ -68,16 +68,16 @@ function expectBorderIsAllWalls(grid: Grid): void {
 		expect(cellAt(grid, 0, y)).toBe(1);
 		expect(cellAt(grid, WIDTH - 1, y)).toBe(1);
 	}
-}
+};
 
 /**
  * Every open cell must be reachable from every other open cell via
  * 4-neighbor movement ("open" = any value in openValues).
  */
-function expectOpenCellsConnected(
+const expectOpenCellsConnected = (
 	grid: Grid,
 	openValues: readonly number[],
-): void {
+): void => {
 	const isOpen = (x: number, y: number): boolean =>
 		x >= 0 &&
 		x < WIDTH &&
@@ -121,7 +121,7 @@ function expectOpenCellsConnected(
 	}
 
 	expect(visited.size).toBe(totalOpen);
-}
+};
 
 describe("createDiggerMap invariants", () => {
 	it.each(SEEDS)("seed %i: connected floor inside a walled border", (seed) => {

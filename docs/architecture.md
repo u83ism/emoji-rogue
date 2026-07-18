@@ -100,7 +100,7 @@ npm test            # Vitest(767件・2026-07-18時点)
 npm run build       # tsdown → dist/
 ```
 
-CI(`.github/workflows/ci.yml`)はPR毎に全部走らせる(pushトリガーはmaster指定のため現運用のdevelopブランチでは発火しない — コスト判断で意図的に現状維持、2026-07-16)。
+CI(`.github/workflows/ci.yml`)はPR毎に全部走らせる。pushトリガーは`main`指定(2026-07-18、ブラウザデモ公開に合わせて`develop`から派生する形で`main`運用を開始。デフォルトブランチも`main`)。
 
 実機確認の手段: `npm run build && npm start`(Windows Terminal必須)、`node scripts/demo-renderer.mjs`(レンダラー単体)、`node scripts/replay-verify.mjs`(リプレイ再構築)、`demo/`(ブラウザ版)。
 

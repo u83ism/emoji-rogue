@@ -61,22 +61,22 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"detect-monster": { glyph: "💊" },
 	/* Same glyph again — life is unidentified until drunk too. */
 	life: { glyph: "💊" },
-	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
-	"protect-armor": { glyph: "🔰" },
-	/* Scroll: single-codepoint, Unicode 6.0. */
+	/* Scroll: single-codepoint, Unicode 6.0. Every scroll kind shares this
+	 * glyph — genre convention (Mystery Dungeon et al.) is that item art is
+	 * fixed per category, and identity is conveyed by the name shown on
+	 * pickup, not by varying the icon. Unlike wands/rings below, scrolls are
+	 * not anonymous (their real name shows immediately), so the shared glyph
+	 * carries no gameplay weight here — it's purely the genre convention. */
+	"protect-armor": { glyph: "📜" },
 	"teleport-scroll": { glyph: "📜" },
-	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */
-	"mapping-scroll": { glyph: "🧭" },
-	/* Magnifying glass: single-codepoint, Unicode 6.0. */
-	"identify-scroll": { glyph: "🔍" },
+	"mapping-scroll": { glyph: "📜" },
+	"identify-scroll": { glyph: "📜" },
+	"enchant-weapon": { glyph: "📜" },
+	"enchant-armor": { glyph: "📜" },
 	/* Ring: single-codepoint, Unicode 6.0. */
 	"regeneration-ring": { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
 	"sustenance-ring": { glyph: "💍" },
-	/* High voltage: single-codepoint, stable since Unicode 4.0. */
-	"enchant-weapon": { glyph: "⚡" },
-	/* Sparkles: single-codepoint, Unicode 6.0 — distinct from the weapon bolt. */
-	"enchant-armor": { glyph: "✨" },
 	/* Crystal ball: single-codepoint, Unicode 6.0. */
 	"striking-wand": { glyph: "🔮" },
 	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */

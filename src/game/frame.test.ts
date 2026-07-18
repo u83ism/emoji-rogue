@@ -145,7 +145,7 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
-	it("draws a scroll with its own glyph", () => {
+	it("draws a scroll with its glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const scroll = {
 			x: 12,
@@ -157,27 +157,23 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
-	it("draws a mapping scroll with its own glyph", () => {
+	it("draws every scroll kind with the same glyph — category art is fixed, identity comes from the name", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const mapping = {
 			x: 12,
 			y: 2,
 			kind: "mapping-scroll" as const,
 		}; /* distance 3 */
-		expect(buildFrameGrid({ ...wide, items: [mapping] })[2]?.[12]?.glyph).toBe(
-			"🧭",
-		);
-	});
-
-	it("draws an identify scroll with its own glyph", () => {
-		const wide = buildArenaGameState(30, 5, 1);
 		const identify = {
 			x: 12,
 			y: 2,
 			kind: "identify-scroll" as const,
-		}; /* distance 3 */
+		};
+		expect(buildFrameGrid({ ...wide, items: [mapping] })[2]?.[12]?.glyph).toBe(
+			"📜",
+		);
 		expect(buildFrameGrid({ ...wide, items: [identify] })[2]?.[12]?.glyph).toBe(
-			"🔍",
+			"📜",
 		);
 	});
 

@@ -19,9 +19,10 @@
 - [x] マイルストーン5の「chromeに絵文字禁止」ルールを改訂: タイルと同じ安定基準(単一コードポイント・VS16不要・EAW Wide)+実機確認済みの絵文字はchrome可(💰が先例)。architecture.mdのレンダラー設計判断に反映
 - [x] `src/main.tsx`: `<StatusBar>`をマップの上に移動。`demo/index.html`も同順に
 - [x] `shell/statusBar.tsx`・`demo/main.js`: 🍖/💪/🦺ラベル化
-- [ ] 実機スモークテスト: 最上段表示・絵文字ラベルの幅ズレ/折り返しがないこと(Windows Terminal)。次回テストプレイで確認
+- [x] 実機スモークテスト: 最上段表示・絵文字ラベルの幅ズレ/折り返しがないこと(2026-07-18、Windows Terminalで確認済み)
 
-自動テスト(型検査・lint・Vitest 767件・knip・build)は通過済み。実機確認のみ保留。
+自動テスト(型検査・lint・Vitest 767件・knip・build)は通過済み。
+**マイルストーン68完了(2026-07-18)。**
 
 ## マイルストーン69 — フォーク層の`function`宣言を全てアロー関数に統一(2026-07-18)
 

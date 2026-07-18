@@ -16,7 +16,7 @@ export interface Engine {
 /**
  * Asynchronous main loop.
  */
-export function createEngine(scheduler: Scheduler<Actor>): Engine {
+export const createEngine = (scheduler: Scheduler<Actor>): Engine => {
 	let lockCount = 1;
 
 	const engine: Engine = {
@@ -52,4 +52,4 @@ export function createEngine(scheduler: Scheduler<Actor>): Engine {
 		},
 	};
 	return engine;
-}
+};

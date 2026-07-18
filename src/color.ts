@@ -4,7 +4,7 @@ import { clamp } from "./util.js";
 
 export type Color = [number, number, number];
 
-export function fromString(str: string): Color {
+export const fromString = (str: string): Color => {
 	const cached = CACHE[str];
 	if (cached !== undefined) {
 		return cached.slice() as Color;
@@ -48,12 +48,12 @@ export function fromString(str: string): Color {
 
 	CACHE[str] = computed;
 	return computed.slice() as Color;
-}
+};
 
 /**
  * Add two or more colors
  */
-export function add(color1: Color, ...colors: Color[]): Color {
+export const add = (color1: Color, ...colors: Color[]): Color => {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
@@ -61,24 +61,24 @@ export function add(color1: Color, ...colors: Color[]): Color {
 		}
 	}
 	return result;
-}
+};
 
 /**
  * Add two or more colors, MODIFIES FIRST ARGUMENT
  */
-export function add_(color1: Color, ...colors: Color[]): Color {
+export const add_ = (color1: Color, ...colors: Color[]): Color => {
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
 			color1[i] = at(color1, i) + at(color, i);
 		}
 	}
 	return color1;
-}
+};
 
 /**
  * Multiply (mix) two or more colors
  */
-export function multiply(color1: Color, ...colors: Color[]): Color {
+export const multiply = (color1: Color, ...colors: Color[]): Color => {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
@@ -87,12 +87,12 @@ export function multiply(color1: Color, ...colors: Color[]): Color {
 		result[i] = Math.round(at(result, i));
 	}
 	return result;
-}
+};
 
 /**
  * Multiply (mix) two or more colors, MODIFIES FIRST ARGUMENT
  */
-export function multiply_(color1: Color, ...colors: Color[]): Color {
+export const multiply_ = (color1: Color, ...colors: Color[]): Color => {
 	for (let i = 0; i < 3; i++) {
 		for (const color of colors) {
 			color1[i] = (at(color1, i) * at(color, i)) / 255;
@@ -100,12 +100,16 @@ export function multiply_(color1: Color, ...colors: Color[]): Color {
 		color1[i] = Math.round(at(color1, i));
 	}
 	return color1;
-}
+};
 
 /**
  * Interpolate (blend) two colors with a given factor
  */
-export function interpolate(color1: Color, color2: Color, factor = 0.5): Color {
+export const interpolate = (
+	color1: Color,
+	color2: Color,
+	factor = 0.5,
+): Color => {
 	const result = color1.slice() as Color;
 	for (let i = 0; i < 3; i++) {
 		result[i] = Math.round(
@@ -113,23 +117,23 @@ export function interpolate(color1: Color, color2: Color, factor = 0.5): Color {
 		);
 	}
 	return result;
-}
+};
 
 /**
  * Interpolate (blend) two colors with a given factor in HSL mode
  */
-export function interpolateHSL(
+export const interpolateHSL = (
 	color1: Color,
 	color2: Color,
 	factor = 0.5,
-): Color {
+): Color => {
 	const hsl1 = rgb2hsl(color1);
 	const hsl2 = rgb2hsl(color2);
 	for (let i = 0; i < 3; i++) {
 		hsl1[i] = at(hsl1, i) + factor * (at(hsl2, i) - at(hsl1, i));
 	}
 	return hsl2rgb(hsl1);
-}
+};
 
 /**
  * Create a new random color based on this one
@@ -137,7 +141,11 @@ export function interpolateHSL(
  * @param color
  * @param diff Set of standard deviations
  */
-export function randomize(rng: Rng, color: Color, diff: number | Color): Color {
+export const randomize = (
+	rng: Rng,
+	color: Color,
+	diff: number | Color,
+): Color => {
 	const result = color.slice() as Color;
 	if (Array.isArray(diff)) {
 		for (let i = 0; i < 3; i++) {
@@ -150,12 +158,12 @@ export function randomize(rng: Rng, color: Color, diff: number | Color): Color {
 		}
 	}
 	return result;
-}
+};
 
 /**
  * Converts an RGB color value to HSL. Expects 0..255 inputs, produces 0..1 outputs.
  */
-export function rgb2hsl(color: Color): Color {
+export const rgb2hsl = (color: Color): Color => {
 	const r = color[0] / 255;
 	const g = color[1] / 255;
 	const b = color[2] / 255;
@@ -186,9 +194,9 @@ export function rgb2hsl(color: Color): Color {
 	}
 
 	return [h, s, l];
-}
+};
 
-function hue2rgb(p: number, q: number, t: number): number {
+const hue2rgb = (p: number, q: number, t: number): number => {
 	let normalized = t;
 	if (normalized < 0) normalized += 1;
 	if (normalized > 1) normalized -= 1;
@@ -196,12 +204,12 @@ function hue2rgb(p: number, q: number, t: number): number {
 	if (normalized < 1 / 2) return q;
 	if (normalized < 2 / 3) return p + (q - p) * (2 / 3 - normalized) * 6;
 	return p;
-}
+};
 
 /**
  * Converts an HSL color value to RGB. Expects 0..1 inputs, produces 0..255 outputs.
  */
-export function hsl2rgb(color: Color): Color {
+export const hsl2rgb = (color: Color): Color => {
 	const l = color[2];
 
 	if (color[1] === 0) {
@@ -216,19 +224,19 @@ export function hsl2rgb(color: Color): Color {
 	const g = hue2rgb(p, q, color[0]);
 	const b = hue2rgb(p, q, color[0] - 1 / 3);
 	return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
+};
 
-export function toRGB(color: Color): string {
+export const toRGB = (color: Color): string => {
 	const clamped = color.map((x) => clamp(x, 0, 255));
 	return `rgb(${clamped.join(",")})`;
-}
+};
 
-export function toHex(color: Color): string {
+export const toHex = (color: Color): string => {
 	const clamped = color.map((x) =>
 		clamp(x, 0, 255).toString(16).padStart(2, "0"),
 	);
 	return `#${clamped.join("")}`;
-}
+};
 
 const CACHE: Record<string, Color> = {
 	black: [0, 0, 0],

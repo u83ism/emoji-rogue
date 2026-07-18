@@ -18,10 +18,10 @@ export interface Measurement {
 /**
  * Measure the size of a resulting text block.
  */
-export function measure(
+export const measure = (
 	str: string,
 	maxWidth = Number.POSITIVE_INFINITY,
-): Measurement {
+): Measurement => {
 	const result: Measurement = { width: 0, height: 1 };
 	const tokens = tokenize(str, maxWidth);
 	let lineWidth = 0;
@@ -42,16 +42,16 @@ export function measure(
 	result.width = Math.max(result.width, lineWidth);
 
 	return result;
-}
+};
 
 /**
  * Convert a string to a series of formatting/text tokens, with line breaks
  * already inserted for the given maximum width.
  */
-export function tokenize(
+export const tokenize = (
 	str: string,
 	maxWidth = Number.POSITIVE_INFINITY,
-): Token[] {
+): Token[] => {
 	const result: Token[] = [];
 
 	/* first tokenization pass - split texts and color formatting commands */
@@ -80,10 +80,10 @@ export function tokenize(
 	}
 
 	return breakLines(result, maxWidth);
-}
+};
 
 /** Insert line breaks into the first-pass tokenized data. */
-function breakLines(tokens: Token[], maxWidth: number): Token[] {
+const breakLines = (tokens: Token[], maxWidth: number): Token[] => {
 	const width = maxWidth || Infinity;
 
 	let i = 0;
@@ -200,18 +200,18 @@ function breakLines(tokens: Token[], maxWidth: number): Token[] {
 	tokens.pop(); /* remove fake token */
 
 	return tokens;
-}
+};
 
 /**
  * Split the text token at `tokenIndex` into two, inserting a newline token
  * between them. Returns the (now-shortened) value of the original token.
  */
-function breakInsideToken(
+const breakInsideToken = (
 	tokens: Token[],
 	tokenIndex: number,
 	breakIndex: number,
 	removeBreakChar: boolean,
-): string {
+): string => {
 	const token = tokens[tokenIndex];
 	if (token === undefined || token.type !== "text") {
 		throw new Error("breakInsideToken: tokenIndex must reference a text token");
@@ -222,4 +222,4 @@ function breakInsideToken(
 	};
 	tokens.splice(tokenIndex + 1, 0, { type: "newline" }, newTextToken);
 	return token.value.substring(0, breakIndex);
-}
+};

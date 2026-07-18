@@ -12,7 +12,7 @@ export interface EventQueue<T> {
 /**
  * Generic event queue: stores events and retrieves them based on their time.
  */
-export function createEventQueue<T>(): EventQueue<T> {
+export const createEventQueue = <T>(): EventQueue<T> => {
 	let time = 0;
 	let events = createMinHeap<T>();
 
@@ -51,4 +51,4 @@ export function createEventQueue<T>(): EventQueue<T> {
 			return events.remove(event);
 		},
 	};
-}
+};

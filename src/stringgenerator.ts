@@ -24,10 +24,10 @@ export interface StringGenerator {
  * Copied from a RogueBasin article on names from a high order Markov Process
  * and a simplified Katz back-off scheme. Offers configurable order and prior.
  */
-export function createStringGenerator(
+export const createStringGenerator = (
 	rng: Rng,
 	options: Partial<Options> = {},
-): StringGenerator {
+): StringGenerator => {
 	const resolvedOptions: Options = {
 		words: false,
 		order: 3,
@@ -47,22 +47,22 @@ export function createStringGenerator(
 	};
 	let data: Record<string, Record<string, number>> = {};
 
-	function split(value: string): string[] {
+	const split = (value: string): string[] => {
 		return value.split(resolvedOptions.words ? /\s+/ : "");
-	}
+	};
 
-	function join(parts: readonly string[]): string {
+	const join = (parts: readonly string[]): string => {
 		return parts.join(resolvedOptions.words ? " " : "");
-	}
+	};
 
-	function observeEvent(context: readonly string[], event: string): void {
+	const observeEvent = (context: readonly string[], event: string): void => {
 		const key = join(context);
 		const bucket = data[key] ?? {};
 		bucket[event] = (bucket[event] ?? 0) + 1;
 		data[key] = bucket;
-	}
+	};
 
-	function backoff(contextInput: readonly string[]): string[] {
+	const backoff = (contextInput: readonly string[]): string[] => {
 		let context = contextInput.slice();
 		if (context.length > resolvedOptions.order) {
 			context = context.slice(-resolvedOptions.order);
@@ -75,9 +75,9 @@ export function createStringGenerator(
 			context = context.slice(1);
 		}
 		return context;
-	}
+	};
 
-	function sample(contextInput: readonly string[]): string {
+	const sample = (contextInput: readonly string[]): string => {
 		const context = backoff(contextInput);
 		const eventCounts = data[join(context)];
 
@@ -98,7 +98,7 @@ export function createStringGenerator(
 		}
 
 		return rng.getWeightedValue(available);
-	}
+	};
 
 	return {
 		clear(): void {
@@ -147,4 +147,4 @@ export function createStringGenerator(
 			].join(", ");
 		},
 	};
-}
+};

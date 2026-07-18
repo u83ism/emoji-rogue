@@ -38,21 +38,21 @@ export interface Lighting {
 	compute(lightingCallback: LightingCallback): Lighting;
 }
 
-function at<T>(map: Record<string, T>, key: string): T {
+const at = <T>(map: Record<string, T>, key: string): T => {
 	const value = map[key];
 	if (value === undefined) {
 		throw new Error(`lighting: missing expected key "${key}"`);
 	}
 	return value;
-}
+};
 
 /**
  * Lighting computation, based on a traditional FOV for multiple light sources and multiple passes.
  */
-export function createLighting(
+export const createLighting = (
 	reflectivityCallback: ReflectivityCallback,
 	options: Partial<LightingOptions> = {},
-): Lighting {
+): Lighting => {
 	const resolvedOptions: LightingOptions = {
 		passes: 1,
 		emissionThreshold: 100,
@@ -65,12 +65,12 @@ export function createLighting(
 	let reflectivityCache: NumberMap = {};
 	let fovCache: Record<string, NumberMap> = {};
 
-	function resetCaches(): void {
+	const resetCaches = (): void => {
 		reflectivityCache = {};
 		fovCache = {};
-	}
+	};
 
-	function updateFOV(x: number, y: number): NumberMap {
+	const updateFOV = (x: number, y: number): NumberMap => {
 		const key1 = encodePointKey(x, y);
 		const cache: NumberMap = {};
 		fovCache[key1] = cache;
@@ -86,15 +86,15 @@ export function createLighting(
 		});
 
 		return cache;
-	}
+	};
 
 	/** Compute one iteration from one cell. */
-	function emitLightFromCell(
+	const emitLightFromCell = (
 		x: number,
 		y: number,
 		color: LightColor,
 		litCells: LightingMap,
-	): void {
+	): void => {
 		const key = encodePointKey(x, y);
 		const fovResult = key in fovCache ? at(fovCache, key) : updateFOV(x, y);
 
@@ -116,26 +116,26 @@ export function createLighting(
 					tupleAt(result, i) + Math.round(tupleAt(color, i) * formFactor);
 			} /* add light color */
 		}
-	}
+	};
 
 	/** Compute one iteration from all emitting cells. */
-	function emitLight(
+	const emitLight = (
 		emittingCells: LightingMap,
 		litCells: LightingMap,
 		doneCells: NumberMap,
-	): void {
+	): void => {
 		for (const key of Object.keys(emittingCells)) {
 			const [x, y] = decodePointKey(key);
 			emitLightFromCell(x, y, at(emittingCells, key), litCells);
 			doneCells[key] = 1;
 		}
-	}
+	};
 
 	/** Prepare a list of emitters for the next pass. */
-	function computeEmitters(
+	const computeEmitters = (
 		litCells: LightingMap,
 		doneCells: NumberMap,
-	): LightingMap {
+	): LightingMap => {
 		const result: LightingMap = {};
 
 		for (const key of Object.keys(litCells)) {
@@ -168,7 +168,7 @@ export function createLighting(
 		}
 
 		return result;
-	}
+	};
 
 	const lighting: Lighting = {
 		setOptions(newOptions: Partial<LightingOptions>): Lighting {
@@ -240,4 +240,4 @@ export function createLighting(
 		},
 	};
 	return lighting;
-}
+};

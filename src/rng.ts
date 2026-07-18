@@ -22,7 +22,7 @@ export interface UniformStep {
  * Derive the initial RNG state from a seed. Pure: same seed always produces
  * the same state.
  */
-export function seedToState(seed: number): RngState {
+export const seedToState = (seed: number): RngState => {
 	const normalizedSeed = seed < 1 ? 1 / seed : seed;
 	const s0 = (normalizedSeed >>> 0) * FRAC;
 	const step1 = (normalizedSeed * 69069 + 1) >>> 0;
@@ -30,18 +30,18 @@ export function seedToState(seed: number): RngState {
 	const step2 = (step1 * 69069 + 1) >>> 0;
 	const s2 = step2 * FRAC;
 	return { s0, s1, s2, c: 1 };
-}
+};
 
 /**
  * Advance the RNG by one step. Pure: returns the next pseudorandom value
  * [0,1) together with the next state, rather than mutating anything.
  */
-export function stepUniform(state: RngState): UniformStep {
+export const stepUniform = (state: RngState): UniformStep => {
 	const t = 2091639 * state.s0 + state.c * FRAC;
 	const c = t | 0;
 	const value = t - c;
 	return { value, state: { s0: state.s1, s1: state.s2, s2: value, c } };
-}
+};
 
 export interface Rng {
 	getSeed(): number;
@@ -71,23 +71,23 @@ export interface Rng {
  * this is a value you create and thread through explicitly — nothing is
  * shared unless you pass the same instance around.
  */
-export function createRng(seed: number = Date.now()): Rng {
+export const createRng = (seed: number = Date.now()): Rng => {
 	let seedValue = seed < 1 ? 1 / seed : seed;
 	let state = seedToState(seed);
 
-	function getUniform(): number {
+	const getUniform = (): number => {
 		const step = stepUniform(state);
 		state = step.state;
 		return step.value;
-	}
+	};
 
-	function getUniformInt(lowerBound: number, upperBound: number): number {
+	const getUniformInt = (lowerBound: number, upperBound: number): number => {
 		const max = Math.max(lowerBound, upperBound);
 		const min = Math.min(lowerBound, upperBound);
 		return Math.floor(getUniform() * (max - min + 1)) + min;
-	}
+	};
 
-	function getNormal(mean = 0, stddev = 1): number {
+	const getNormal = (mean = 0, stddev = 1): number => {
 		let u: number;
 		let v: number;
 		let r: number;
@@ -98,13 +98,13 @@ export function createRng(seed: number = Date.now()): Rng {
 		} while (r > 1 || r === 0);
 		const gauss = u * Math.sqrt((-2 * Math.log(r)) / r);
 		return mean + gauss * stddev;
-	}
+	};
 
-	function getPercentage(): number {
+	const getPercentage = (): number => {
 		return 1 + Math.floor(getUniform() * 100);
-	}
+	};
 
-	function getItem<T>(array: readonly T[]): T | null {
+	const getItem = <T>(array: readonly T[]): T | null => {
 		if (!array.length) {
 			return null;
 		}
@@ -114,9 +114,9 @@ export function createRng(seed: number = Date.now()): Rng {
 			throw new Error("getItem: computed index out of range");
 		}
 		return value;
-	}
+	};
 
-	function shuffle<T>(array: readonly T[]): T[] {
+	const shuffle = <T>(array: readonly T[]): T[] => {
 		const result: T[] = [];
 		const remaining = array.slice();
 		while (remaining.length) {
@@ -128,9 +128,9 @@ export function createRng(seed: number = Date.now()): Rng {
 			result.push(...remaining.splice(index, 1));
 		}
 		return result;
-	}
+	};
 
-	function getWeightedValue<K extends string>(data: Record<K, number>): K {
+	const getWeightedValue = <K extends string>(data: Record<K, number>): K => {
 		const keys = Object.keys(data) as K[];
 		if (keys.length === 0) {
 			throw new Error("getWeightedValue: data must have at least one entry");
@@ -156,7 +156,7 @@ export function createRng(seed: number = Date.now()): Rng {
 			throw new Error("unreachable: keys is non-empty");
 		}
 		return lastKey;
-	}
+	};
 
 	const rng: Rng = {
 		getSeed: () => seedValue,
@@ -186,4 +186,4 @@ export function createRng(seed: number = Date.now()): Rng {
 		},
 	};
 	return rng;
-}
+};

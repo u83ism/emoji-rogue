@@ -4,19 +4,19 @@
  * @param n Modulus
  * @returns x modulo n
  */
-export function mod(x: number, n: number): number {
+export const mod = (x: number, n: number): number => {
 	return ((x % n) + n) % n;
-}
+};
 
-export function clamp(val: number, min = 0, max = 1): number {
+export const clamp = (val: number, min = 0, max = 1): number => {
 	if (val < min) return min;
 	if (val > max) return max;
 	return val;
-}
+};
 
-export function capitalize(value: string): string {
+export const capitalize = (value: string): string => {
 	return value.charAt(0).toUpperCase() + value.substring(1);
-}
+};
 
 /**
  * Maps a `%x{...}`/`%x` directive letter to the method name invoked on the
@@ -31,7 +31,7 @@ export const formatMap: Record<string, string> = {
  * Format a string in a flexible way. Scans for %s-style directives and
  * replaces them with arguments, dispatching through `formatMap`.
  */
-export function format(template: string, ...args: unknown[]): string {
+export const format = (template: string, ...args: unknown[]): string => {
 	const remaining = args.slice();
 
 	const replacer = (
@@ -75,4 +75,4 @@ export function format(template: string, ...args: unknown[]): string {
 		return replaced;
 	};
 	return template.replace(/%(?:([a-z]+)|(?:\{([^}]+)\}))/gi, replacer);
-}
+};

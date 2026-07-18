@@ -17,19 +17,19 @@ export interface MinHeap<T> {
  * A binary min-heap keyed by `key`, with `timestamp` (insertion order) as the
  * tie-breaker so equal keys come out FIFO.
  */
-export function createMinHeap<T>(): MinHeap<T> {
+export const createMinHeap = <T>(): MinHeap<T> => {
 	let heap: HeapWrapper<T>[] = [];
 	let timestamp = 0;
 
-	function lessThan(a: HeapWrapper<T>, b: HeapWrapper<T>): boolean {
+	const lessThan = (a: HeapWrapper<T>, b: HeapWrapper<T>): boolean => {
 		return a.key === b.key ? a.timestamp < b.timestamp : a.key < b.key;
-	}
+	};
 
-	function existNode(index: number): boolean {
+	const existNode = (index: number): boolean => {
 		return index >= 0 && index < heap.length;
-	}
+	};
 
-	function swap(x: number, y: number): void {
+	const swap = (x: number, y: number): void => {
 		const nodeAtX = heap[x];
 		const nodeAtY = heap[y];
 		if (nodeAtX === undefined || nodeAtY === undefined) {
@@ -37,9 +37,9 @@ export function createMinHeap<T>(): MinHeap<T> {
 		}
 		heap[x] = nodeAtY;
 		heap[y] = nodeAtX;
-	}
+	};
 
-	function minNode(candidates: number[]): number {
+	const minNode = (candidates: number[]): number => {
 		const valid = candidates.filter(existNode);
 		let minimal = valid[0];
 		if (minimal === undefined) {
@@ -56,9 +56,9 @@ export function createMinHeap<T>(): MinHeap<T> {
 			}
 		}
 		return minimal;
-	}
+	};
 
-	function updateUp(index: number): void {
+	const updateUp = (index: number): void => {
 		if (index === 0) return;
 		const parent = Math.floor((index - 1) / 2);
 		const nodeAtIndex = heap[index];
@@ -72,9 +72,9 @@ export function createMinHeap<T>(): MinHeap<T> {
 			swap(index, parent);
 			updateUp(parent);
 		}
-	}
+	};
 
-	function updateDown(index: number): void {
+	const updateDown = (index: number): void => {
 		const leftChild = 2 * index + 1;
 		const rightChild = 2 * index + 2;
 		if (!existNode(leftChild)) return;
@@ -83,7 +83,7 @@ export function createMinHeap<T>(): MinHeap<T> {
 			swap(index, minimal);
 			updateDown(minimal);
 		}
-	}
+	};
 
 	return {
 		push(value: T, key: number): void {
@@ -154,4 +154,4 @@ export function createMinHeap<T>(): MinHeap<T> {
 			}));
 		},
 	};
-}
+};

@@ -1,12 +1,15 @@
 // Browser shell for emoji-rogue. Imports the built game layer directly —
 // no bundler, no build step of its own (see docs/tasks/game-history.md milestone 17).
-// Deliberately does not wire save/quit: the browser has no filesystem and no
-// process to exit (localStorage would be the drop-in point for save later).
+// Deliberately does not wire quit (no process to exit). Save uses localStorage
+// as the CLI's suspend-save comment anticipated, but auto-saves every turn
+// instead of on an explicit key — a browser tab can be closed at any moment
+// with no equivalent of the CLI's "press s before you quit" (milestone 79).
 import {
 	advanceTurn,
 	BLINDNESS_GLYPH,
 	buildDungeonGameState,
 	buildFrameGrid,
+	buildSaveFileContent,
 	CONFUSION_GLYPH,
 	DETECT_MONSTER_GLYPH,
 	formatEvent,
@@ -18,6 +21,8 @@ import {
 	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
+	parseSaveFileContent,
+	SAVE_LOAD_WARNING_MESSAGE,
 	toInventoryLetter,
 	toUseItemAction,
 } from "../dist/game/index.mjs";
@@ -54,14 +59,56 @@ const readSeedFromUrl = () => {
 	return Number.isFinite(requested) && requested > 0 ? requested : Date.now();
 };
 
-const seed = readSeedFromUrl();
-let state = buildDungeonGameState(WIDTH, HEIGHT, seed);
+const SAVE_STORAGE_KEY = "emoji-rogue-save";
+
+/**
+ * Read and consume the one save slot from localStorage — same "resumes
+ * exactly once" semantics as the CLI's saveFile.ts (roguelike suspend
+ * convention: a save must not survive the run it resumed). Distinguishes
+ * "no save" from "a save existed but failed to parse" so the caller can
+ * warn instead of failing silently, mirroring src/shell/saveFile.ts's
+ * LoadSaveOutcome.
+ */
+const loadSavedState = () => {
+	const content = localStorage.getItem(SAVE_STORAGE_KEY);
+	if (content === null) {
+		return { kind: "none" };
+	}
+	localStorage.removeItem(SAVE_STORAGE_KEY);
+	const parsed = parseSaveFileContent(content);
+	return parsed.ok
+		? { kind: "loaded", state: parsed.value }
+		: { kind: "corrupted" };
+};
+
+/**
+ * Auto-saves after every turn (unlike the CLI's explicit `s` key) since a
+ * tab can be closed at any moment. Clears the slot once the run is no
+ * longer playing so a finished run's save can't be resumed (same
+ * save-scumming guard as the CLI never suspend-saving a dead/won state).
+ */
+const persistSaveState = (currentState) => {
+	if (currentState.status === "playing") {
+		localStorage.setItem(SAVE_STORAGE_KEY, buildSaveFileContent(currentState));
+	} else {
+		localStorage.removeItem(SAVE_STORAGE_KEY);
+	}
+};
+
+const savedOutcome = loadSavedState();
+const seed = savedOutcome.kind === "loaded" ? undefined : readSeedFromUrl();
+let state =
+	savedOutcome.kind === "loaded"
+		? savedOutcome.state
+		: buildDungeonGameState(WIDTH, HEIGHT, seed);
 let isInventoryOpen = false;
+let showSaveLoadWarning = savedOutcome.kind === "corrupted";
 
 const mapElement = document.getElementById("map");
 const statusElement = document.getElementById("status");
 const logElement = document.getElementById("log");
 const inventoryElement = document.getElementById("inventory");
+const warningElement = document.getElementById("warning");
 const seedElement = document.getElementById("seed");
 
 const renderMap = () => {
@@ -199,7 +246,12 @@ const render = () => {
 	renderStatus();
 	renderLog();
 	renderInventory();
-	seedElement.textContent = `seed: ${seed}`;
+	warningElement.hidden = !showSaveLoadWarning;
+	warningElement.textContent = showSaveLoadWarning
+		? SAVE_LOAD_WARNING_MESSAGE
+		: "";
+	seedElement.textContent =
+		seed === undefined ? "再開したセーブデータ" : `seed: ${seed}`;
 };
 
 window.addEventListener("keydown", (event) => {
@@ -213,6 +265,7 @@ window.addEventListener("keydown", (event) => {
 		isInventoryOpen = false;
 		if (action !== undefined) {
 			state = advanceTurn(state, action);
+			persistSaveState(state);
 		}
 		render();
 		return;
@@ -229,7 +282,9 @@ window.addEventListener("keydown", (event) => {
 		return;
 	}
 	event.preventDefault();
+	showSaveLoadWarning = false;
 	state = advanceTurn(state, action);
+	persistSaveState(state);
 	render();
 });
 

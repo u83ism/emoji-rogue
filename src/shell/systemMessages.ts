@@ -10,6 +10,10 @@ export const FULL_WIDTH_INPUT_WARNING =
 export const GAME_SAVED_MESSAGE =
 	"セーブしました。次回起動時に続きから再開します";
 
+/** Shown once at boot when a save existed but couldn't be loaded (corrupted, or from an incompatible version). */
+export const SAVE_LOAD_WARNING_MESSAGE =
+	"保存データを読み込めませんでした(壊れているか、対応していない形式です)。新しく開始します";
+
 /** Title line atop the inventory overlay while it's open. */
 export const INVENTORY_TITLE = "持ち物(iかEscで閉じる)";
 

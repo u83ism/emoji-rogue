@@ -1,16 +1,11 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
-import { advanceTurn } from "./game/advanceTurn.js";
 import type { GameEvent } from "./game/events.js";
-import type { Replay } from "./game/format/replay.js";
 import { buildFrameGrid } from "./game/frame.js";
-import { buildDungeonGameState } from "./game/initialState.js";
 import { toUseItemAction } from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
-import type { Action, GameState } from "./game/state.js";
 import { GameScreen } from "./renderer/index.js";
-import { parseSeedArgument } from "./shell/cliArgs.js";
 import { InventoryOverlay } from "./shell/inventoryOverlay.js";
 import {
 	formatConducts,
@@ -18,16 +13,19 @@ import {
 	formatScoreSummary,
 } from "./shell/messages.js";
 import { saveReplay } from "./shell/replayFile.js";
-import { loadSavedGameState, saveGameState } from "./shell/saveFile.js";
+import { saveGameState } from "./shell/saveFile.js";
+import { createSession, recordAction } from "./shell/session.js";
 import { StatusBar } from "./shell/statusBar.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
 	GAME_SAVED_MESSAGE,
+	SAVE_LOAD_WARNING_MESSAGE,
 } from "./shell/systemMessages.js";
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
 // hands the resulting frame to Ink. All game logic lives in src/game/; all
-// human-readable wording comes from src/messages.ts.
+// human-readable wording comes from src/messages.ts. Session bootstrapping
+// (resume-from-save vs. fresh dungeon) lives in shell/session.ts.
 
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
@@ -46,41 +44,14 @@ const resolveLogLineStyle = (
 	return {};
 };
 
-interface Session {
-	readonly state: GameState;
-	/**
-	 * Undefined when this session resumed from a save: a resumed run has no
-	 * true initial state to replay from, so it is deliberately left
-	 * unrecorded (docs/tasks/game-history.md milestone 18).
-	 */
-	readonly replay: Replay | undefined;
-}
-
-const createSession = (): Session => {
-	const loaded = loadSavedGameState();
-	if (loaded !== undefined) {
-		return { state: loaded, replay: undefined };
-	}
-	const seed = parseSeedArgument(process.argv.slice(2)) ?? Date.now();
-	return {
-		state: buildDungeonGameState(MAP_WIDTH, MAP_HEIGHT, seed),
-		replay: { width: MAP_WIDTH, height: MAP_HEIGHT, seed, actions: [] },
-	};
-};
-
-const recordAction = (session: Session, action: Action): Session => ({
-	state: advanceTurn(session.state, action),
-	replay:
-		session.replay === undefined
-			? undefined
-			: { ...session.replay, actions: [...session.replay.actions, action] },
-});
-
 const App = () => {
 	const { exit } = useApp();
 	const [session, setSession] = useState(createSession);
 	const { state, replay } = session;
 	const [showFullWidthWarning, setShowFullWidthWarning] = useState(false);
+	const [showSaveLoadWarning, setShowSaveLoadWarning] = useState(
+		() => session.saveWasCorrupted,
+	);
 	/* Whether the inventory overlay is open. Purely a display concern (which
 	 * panel is showing), not part of the simulated world, so it lives here
 	 * instead of in GameState — it must never end up in a save file. */
@@ -113,6 +84,7 @@ const App = () => {
 			return;
 		}
 		setShowFullWidthWarning(false);
+		setShowSaveLoadWarning(false);
 		setSession((current) => recordAction(current, action));
 	});
 
@@ -177,10 +149,15 @@ const App = () => {
 			)}
 			{/* System notices (app/session concerns — never game events, never
 			 * saved), kept visually apart from the log by a blank line. */}
-			{(showFullWidthWarning || state.status === "suspended") && (
+			{(showFullWidthWarning ||
+				showSaveLoadWarning ||
+				state.status === "suspended") && (
 				<Box marginTop={1} flexDirection="column">
 					{showFullWidthWarning && (
 						<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
+					)}
+					{showSaveLoadWarning && (
+						<Text color="yellow">{SAVE_LOAD_WARNING_MESSAGE}</Text>
 					)}
 					{state.status === "suspended" && (
 						<Text color="cyan">{GAME_SAVED_MESSAGE}</Text>

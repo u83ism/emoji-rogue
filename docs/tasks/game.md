@@ -147,6 +147,24 @@ functional-style.mdの「`const`+アロー優先」はゲーム層・シェル�
 自動テスト(Vitest 768件)・typecheck・構造lint・build通過を確認して完了。
 **マイルストーン78完了(2026-07-19)。**
 
+## マイルストーン79 — ブラウザデモにセーブ/ロードを追加、CLI版のセーブ破損時にも警告を追加(2026-07-19)
+
+`demo/main.js`冒頭コメントに元々あった「localStorage would be the drop-in point for save later」という伏線を実現。CLI版と同じ1スロット・消費型のセーブ形式(`src/game/format/saveFormat.ts`)をそのまま流用し、保存先だけ`fs`→`localStorage`に差し替えた。CLI版は`s`キーでの明示的セーブだが、ブラウザはタブがいつ閉じられるか分からないため毎ターン自動セーブにした(仕様の差はここだけで、フォーマット・消費セマンティクス・「プレイ中でなくなったら保存しない」という不正リプレイ防止の考え方は共通)。
+
+あわせて、CLI版がセーブファイルの破損/バージョン不一致を黙って捨てていた(`loadSavedGameState`が`undefined`を返すだけで警告が無かった)点も、今回のブラウザ側の警告表示実装に合わせて改善した。
+
+- [x] `src/game/format/saveFormat.ts`の`buildSaveFileContent`/`parseSaveFileContent`/`SaveFileError`型、`src/shell/systemMessages.ts`の`SAVE_LOAD_WARNING_MESSAGE`を`src/game/index.ts`から再エクスポート(ブラウザからも同じフォーマット・同じ文言を使うため)
+- [x] `src/shell/saveFile.ts`: `loadSavedGameState`の戻り値を`GameState | undefined`から`LoadSaveOutcome`(`none`/`loaded`/`corrupted`の判別可能union)に変更。「セーブ無し」と「セーブはあったが読めなかった」を区別できるように
+- [x] `src/main.tsx`: `SAVE_LOAD_WARNING_MESSAGE`をセーブ破損時に1回だけ表示(既存の全角入力警告と同じ表示ブロック・同じ「次の入力で消える」挙動)
+- [x] `src/shell/session.ts`(新規): `main.tsx`にあった`Session`型・`createSession`・`recordAction`を分離。今回の変更でmain.tsxが200行の構造lint上限を超えたため、ファイル分割案を提示して人間裁可を得た上で実施(`.claude/rules/file-structure.md`の「AIは正当化を単独で書かない」規律通り)。副次効果として、これまでmain.tsxに埋もれてテストできなかった`recordAction`が`session.test.ts`で単体テスト可能になった
+- [x] `demo/main.js`: `emoji-rogue-save`キーでlocalStorageに毎ターン自動セーブ(プレイ中のみ、死亡/勝利で即クリア)。起動時に読み込み・消費し、破損時は警告表示。`demo/index.html`/`style.css`に警告用の`#warning`要素を追加(DOM順はCLIに合わせログの後ろ)
+- [x] `src/shell/saveFile.test.ts`: 新しい`LoadSaveOutcome`の形に合わせて期待値を更新
+- [x] `src/shell/session.test.ts`(新規): `recordAction`の単体テスト(`createSession`は実ファイルパスに直接依存するため対象外、既存の`saveFile.test.ts`でカバー)
+- [x] Playwright実機確認: 新規開始時は警告なし、1手進めるとlocalStorageに自動セーブされる、リロードでセーブを消費して再開する、seed表示が「再開したセーブデータ」になる、破損したlocalStorageからは警告を表示して新規開始する、次の入力で警告が消える、の5点を確認。CLI側はこの環境にtmux/PTYが無く対話実機確認は未実施(自動テストでのカバーのみ)
+
+自動テスト(Vitest 772件)・typecheck・knip・構造lint・build通過を確認して完了。
+**マイルストーン79完了(2026-07-19)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

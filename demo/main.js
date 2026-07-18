@@ -79,22 +79,35 @@ const renderMap = () => {
 };
 
 // Same chip-per-status table as the CLI's statusBar.tsx — adding a status is
-// one entry here too.
+// one entry here too. Glyph choices and their reasoning: see statusBar.tsx.
 const STATUS_CHIPS = [
 	{
 		label: "混乱中",
+		glyph: "💫",
 		color: "#f6f",
 		remaining: (s) => s.confusedTurnsRemaining,
 	},
 	{
 		label: "浮遊中",
+		glyph: "🪽",
 		color: "#6ff",
 		remaining: (s) => s.levitationTurnsRemaining,
 	},
-	{ label: "盲目", color: "#999", remaining: (s) => s.blindTurnsRemaining },
-	{ label: "麻痺", color: "#f66", remaining: (s) => s.paralyzedTurnsRemaining },
+	{
+		label: "盲目",
+		glyph: "🙈",
+		color: "#999",
+		remaining: (s) => s.blindTurnsRemaining,
+	},
+	{
+		label: "麻痺",
+		glyph: "⚡",
+		color: "#f66",
+		remaining: (s) => s.paralyzedTurnsRemaining,
+	},
 	{
 		label: "索敵中",
+		glyph: "🔭",
 		color: "#6f6",
 		remaining: (s) => s.detectMonstersTurnsRemaining,
 	},
@@ -116,7 +129,7 @@ const renderStatus = () => {
 	appendStatusSegment(`${state.floor}F (目標 ${GOAL_FLOOR}F) `);
 	appendStatusSegment(`Lv.${state.playerLevel} `, "#69f");
 	appendStatusSegment(
-		`HP ${state.playerHp}/${state.playerMaxHp}`,
+		`💓 ${state.playerHp}/${state.playerMaxHp}`,
 		state.playerHp <= LOW_HP_THRESHOLD ? "#f66" : "#6f6",
 	);
 	appendStatusSegment(
@@ -134,7 +147,7 @@ const renderStatus = () => {
 	for (const chip of STATUS_CHIPS) {
 		const remaining = chip.remaining(state);
 		if (remaining > 0) {
-			appendStatusSegment(` ${chip.label}(${remaining})`, chip.color);
+			appendStatusSegment(` ${chip.glyph}(${remaining})`, chip.color);
 		}
 	}
 };

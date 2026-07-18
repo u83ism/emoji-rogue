@@ -143,11 +143,11 @@ const renderStatus = () => {
 	appendStatusSegment(
 		` 💪 ${state.playerAttackDamage} 🦺 ${state.playerDefense}`,
 	);
-	appendStatusSegment(` 💰${state.goldCollected}`, "#fd6");
+	appendStatusSegment(` 💰 ${state.goldCollected}`, "#fd6");
 	for (const chip of STATUS_CHIPS) {
 		const remaining = chip.remaining(state);
 		if (remaining > 0) {
-			appendStatusSegment(` ${chip.glyph}(${remaining})`, chip.color);
+			appendStatusSegment(` ${chip.glyph} (${remaining})`, chip.color);
 		}
 	}
 };

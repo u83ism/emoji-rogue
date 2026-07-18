@@ -103,7 +103,7 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 			💪 {state.playerAttackDamage} 🦺 {state.playerDefense}
 		</Text>
 		<Text> </Text>
-		<Text color="yellow">💰{state.goldCollected}</Text>
+		<Text color="yellow">💰 {state.goldCollected}</Text>
 		{STATUS_CHIPS.map((chip) => {
 			const remaining = chip.resolveRemaining(state);
 			if (remaining <= 0) {
@@ -112,7 +112,7 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 			return (
 				<Text key={chip.label} color={chip.color}>
 					{" "}
-					{chip.glyph}({remaining})
+					{chip.glyph} ({remaining})
 				</Text>
 			);
 		})}

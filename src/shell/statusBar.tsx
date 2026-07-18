@@ -3,6 +3,13 @@ import {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 } from "../game/balance.js";
+import {
+	BLINDNESS_GLYPH,
+	CONFUSION_GLYPH,
+	DETECT_MONSTER_GLYPH,
+	LEVITATION_GLYPH,
+	PARALYSIS_GLYPH,
+} from "../game/glyphs.js";
 import type { GameState } from "../game/state.js";
 
 const LOW_HP_THRESHOLD = 3;
@@ -43,31 +50,31 @@ const STATUS_CHIPS: readonly {
 }[] = [
 	{
 		label: "混乱中",
-		glyph: "💫",
+		glyph: CONFUSION_GLYPH,
 		color: "magenta",
 		resolveRemaining: (state) => state.confusedTurnsRemaining,
 	},
 	{
 		label: "浮遊中",
-		glyph: "🪽",
+		glyph: LEVITATION_GLYPH,
 		color: "cyan",
 		resolveRemaining: (state) => state.levitationTurnsRemaining,
 	},
 	{
 		label: "盲目",
-		glyph: "🙈",
+		glyph: BLINDNESS_GLYPH,
 		color: "gray",
 		resolveRemaining: (state) => state.blindTurnsRemaining,
 	},
 	{
 		label: "麻痺",
-		glyph: "⚡",
+		glyph: PARALYSIS_GLYPH,
 		color: "red",
 		resolveRemaining: (state) => state.paralyzedTurnsRemaining,
 	},
 	{
 		label: "索敵中",
-		glyph: "🔭",
+		glyph: DETECT_MONSTER_GLYPH,
 		color: "green",
 		resolveRemaining: (state) => state.detectMonstersTurnsRemaining,
 	},

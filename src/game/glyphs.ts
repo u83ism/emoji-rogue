@@ -92,6 +92,17 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };
 
+/* Status-effect chip glyphs shown in chrome (src/shell/statusBar.tsx,
+ * demo/main.js) — exported here (not just inline in statusBar.tsx) so both
+ * consumers share one definition instead of hand-copying the emoji and
+ * silently drifting (see docs/tasks/game.md milestone 78). Selection
+ * rationale for each is in milestone 74 and docs/emoji-registry.md. */
+export const CONFUSION_GLYPH = "💫";
+export const LEVITATION_GLYPH = "🪽";
+export const BLINDNESS_GLYPH = "🙈";
+export const PARALYSIS_GLYPH = "⚡";
+export const DETECT_MONSTER_GLYPH = "🔭";
+
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on
 // color emoji, so remembered terrain is drawn as background-color silhouettes

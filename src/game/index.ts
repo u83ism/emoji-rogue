@@ -24,6 +24,13 @@ export { buildReplayGameState } from "./format/replay.js";
 export type { ReplayFileError } from "./format/replayFormat.js";
 export { parseReplayFileContent } from "./format/replayFormat.js";
 export { buildFrameGrid } from "./frame.js";
+export {
+	BLINDNESS_GLYPH,
+	CONFUSION_GLYPH,
+	DETECT_MONSTER_GLYPH,
+	LEVITATION_GLYPH,
+	PARALYSIS_GLYPH,
+} from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
 export { calculateScore } from "./score.js";

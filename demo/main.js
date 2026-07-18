@@ -4,13 +4,18 @@
 // process to exit (localStorage would be the drop-in point for save later).
 import {
 	advanceTurn,
+	BLINDNESS_GLYPH,
 	buildDungeonGameState,
 	buildFrameGrid,
+	CONFUSION_GLYPH,
+	DETECT_MONSTER_GLYPH,
 	formatEvent,
 	formatInventoryEntry,
 	GOAL_FLOOR,
 	INVENTORY_EMPTY_MESSAGE,
 	INVENTORY_TITLE,
+	LEVITATION_GLYPH,
+	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 	toInventoryLetter,
@@ -79,35 +84,36 @@ const renderMap = () => {
 };
 
 // Same chip-per-status table as the CLI's statusBar.tsx — adding a status is
-// one entry here too. Glyph choices and their reasoning: see statusBar.tsx.
+// one entry here too. Glyphs are imported from the shared game core (see
+// glyphs.js) so the two never drift; only color/label stay per-shell.
 const STATUS_CHIPS = [
 	{
 		label: "混乱中",
-		glyph: "💫",
+		glyph: CONFUSION_GLYPH,
 		color: "#f6f",
 		remaining: (s) => s.confusedTurnsRemaining,
 	},
 	{
 		label: "浮遊中",
-		glyph: "🪽",
+		glyph: LEVITATION_GLYPH,
 		color: "#6ff",
 		remaining: (s) => s.levitationTurnsRemaining,
 	},
 	{
 		label: "盲目",
-		glyph: "🙈",
+		glyph: BLINDNESS_GLYPH,
 		color: "#999",
 		remaining: (s) => s.blindTurnsRemaining,
 	},
 	{
 		label: "麻痺",
-		glyph: "⚡",
+		glyph: PARALYSIS_GLYPH,
 		color: "#f66",
 		remaining: (s) => s.paralyzedTurnsRemaining,
 	},
 	{
 		label: "索敵中",
-		glyph: "🔭",
+		glyph: DETECT_MONSTER_GLYPH,
 		color: "#6f6",
 		remaining: (s) => s.detectMonstersTurnsRemaining,
 	},

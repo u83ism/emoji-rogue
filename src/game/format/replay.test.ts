@@ -49,7 +49,7 @@ describe("buildReplayGameState", () => {
 			{ type: "wait" },
 			{ type: "use-item", payload: { kind: "heal-potion" } },
 			{ type: "use-item", payload: { kind: "sword" } },
-			{ type: "use-item", payload: { kind: "shield" } },
+			{ type: "use-item", payload: { kind: "armor" } },
 		];
 
 		for (const seed of [1, 2, 3]) {

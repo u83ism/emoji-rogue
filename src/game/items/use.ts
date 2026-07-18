@@ -1,6 +1,6 @@
 import type { ItemKind } from "../events.js";
 import type { GameState } from "../state.js";
-import { applyUseShield, applyUseSword } from "./equipment.js";
+import { applyUseArmor, applyUseSword } from "./equipment.js";
 import { applyUseFood } from "./food.js";
 import { removeFromInventory } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
@@ -27,8 +27,8 @@ const applyItemEffect = (state: GameState, kind: ItemKind): GameState => {
 	switch (kind) {
 		case "sword":
 			return applyUseSword(state);
-		case "shield":
-			return applyUseShield(state);
+		case "armor":
+			return applyUseArmor(state);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state);
 		case "enchant-armor":

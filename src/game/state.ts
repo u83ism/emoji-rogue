@@ -115,8 +115,8 @@ export interface GameState {
 	/** Base damage plus any permanent bonus from swords used so far. */
 	readonly playerAttackDamage: number;
 	/**
-	 * Damage reduction from shields used so far (0 initially) — can go negative
-	 * from a cursed shield (see MIN_DAMAGE_TAKEN, which floors damage taken
+	 * Damage reduction from armor used so far (0 initially) — can go negative
+	 * from cursed armor (see MIN_DAMAGE_TAKEN, which floors damage taken
 	 * regardless).
 	 */
 	readonly playerDefense: number;

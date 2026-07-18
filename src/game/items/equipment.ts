@@ -1,8 +1,8 @@
 import { createRng, type RngState } from "../../rng.js";
 import {
+	ARMOR_CURSE_CHANCE_PERCENT,
+	ARMOR_DEFENSE_BONUS,
 	MIN_PLAYER_ATTACK_DAMAGE,
-	SHIELD_CURSE_CHANCE_PERCENT,
-	SHIELD_DEFENSE_BONUS,
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
 } from "../balance.js";
@@ -10,7 +10,7 @@ import { buildEventLog } from "../events.js";
 import type { GameState } from "../state.js";
 
 /**
- * Whether an equipped sword/shield turns out cursed, rolled fresh at use
+ * Whether an equipped sword/armor turns out cursed, rolled fresh at use
  * time (see SWORD_CURSE_CHANCE_PERCENT's comment for why not at spawn),
  * consuming (and advancing) the rng in the same temporary-stateful-Rng
  * pattern floor.ts's descendStairs and the teleport scroll both use.
@@ -56,19 +56,19 @@ export const applyUseSword = (state: GameState): GameState => {
 };
 
 /**
- * A shield permanently raises playerDefense — stacking, no cap — unless the
+ * Armor permanently raises playerDefense — stacking, no cap — unless the
  * curse roll lands, which lowers it instead (allowed to go negative; see
  * MIN_DAMAGE_TAKEN for why no clamp is needed on the damage side).
  */
-export const applyUseShield = (state: GameState): GameState => {
-	const { cursed, rng } = rollCurse(state.rng, SHIELD_CURSE_CHANCE_PERCENT);
-	const bonus = cursed ? -SHIELD_DEFENSE_BONUS : SHIELD_DEFENSE_BONUS;
+export const applyUseArmor = (state: GameState): GameState => {
+	const { cursed, rng } = rollCurse(state.rng, ARMOR_CURSE_CHANCE_PERCENT);
+	const bonus = cursed ? -ARMOR_DEFENSE_BONUS : ARMOR_DEFENSE_BONUS;
 	return {
 		...state,
 		playerDefense: state.playerDefense + bonus,
 		rng,
 		events: buildEventLog(state.events, [
-			{ type: "armor-equipped", payload: { kind: "shield", bonus } },
+			{ type: "armor-equipped", payload: { kind: "armor", bonus } },
 		]),
 	};
 };

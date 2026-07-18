@@ -137,10 +137,10 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
-	it("draws a shield with its own glyph, distinct from swords", () => {
+	it("draws armor with its own glyph, distinct from swords", () => {
 		const wide = buildArenaGameState(30, 5, 1);
-		const shield = { x: 12, y: 2, kind: "shield" as const }; /* distance 3 */
-		expect(buildFrameGrid({ ...wide, items: [shield] })[2]?.[12]?.glyph).toBe(
+		const armor = { x: 12, y: 2, kind: "armor" as const }; /* distance 3 */
+		expect(buildFrameGrid({ ...wide, items: [armor] })[2]?.[12]?.glyph).toBe(
 			"🦺",
 		);
 	});

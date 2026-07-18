@@ -1,4 +1,7 @@
 import {
+	ARMOR_CURSE_CHANCE_PERCENT,
+	ARMOR_DEFENSE_BONUS,
+	ARMOR_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_BONUS,
@@ -12,9 +15,6 @@ import {
 	RING_REGEN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
-	SHIELD_CURSE_CHANCE_PERCENT,
-	SHIELD_DEFENSE_BONUS,
-	SHIELD_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
@@ -111,11 +111,11 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: { type: "chance", percent: SWORD_SPAWN_CHANCE_PERCENT },
 		effect: `攻撃力が${SWORD_ATTACK_BONUS}恒久的に上がる。${SWORD_CURSE_CHANCE_PERCENT}%で呪われており逆に下がる(下限${MIN_PLAYER_ATTACK_DAMAGE})`,
 	},
-	shield: {
-		catalogName: "盾",
+	armor: {
+		catalogName: "鎧",
 		category: "装備",
-		spawn: { type: "chance", percent: SHIELD_SPAWN_CHANCE_PERCENT },
-		effect: `防御力が${SHIELD_DEFENSE_BONUS}恒久的に上がる。${SHIELD_CURSE_CHANCE_PERCENT}%で呪われており逆に下がる(負にもなる)`,
+		spawn: { type: "chance", percent: ARMOR_SPAWN_CHANCE_PERCENT },
+		effect: `防御力が${ARMOR_DEFENSE_BONUS}恒久的に上がる。${ARMOR_CURSE_CHANCE_PERCENT}%で呪われており逆に下がる(負にもなる)`,
 	},
 	food: {
 		catalogName: "食料",

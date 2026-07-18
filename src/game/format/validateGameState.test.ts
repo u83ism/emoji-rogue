@@ -156,7 +156,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				playerDefense: 1.5,
-			} /* cursed shields make negative valid, but non-integers never are */,
+			} /* cursed armor makes negative valid, but non-integers never are */,
 			"playerDefense",
 		);
 		expectRejected(
@@ -645,7 +645,7 @@ describe("validateGameState", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
 			],
 		});
 		expect(result.ok).toBe(true);
@@ -663,7 +663,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "armor-equipped", payload: { kind: "shield", bonus: 0 } },
+					{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
 				],
 			},
 			"events",
@@ -752,13 +752,13 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords, shields and food) and rejects a broken one", () => {
+	it("accepts a well-formed inventory (including swords, armor and food) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			inventory: [
 				{ kind: "heal-potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
-				{ kind: "shield", quantity: 1 },
+				{ kind: "armor", quantity: 1 },
 				{ kind: "food", quantity: 2 },
 			],
 		});
@@ -767,7 +767,7 @@ describe("validateGameState", () => {
 			expect(accepted.value.inventory).toEqual([
 				{ kind: "heal-potion", quantity: 3 },
 				{ kind: "sword", quantity: 1 },
-				{ kind: "shield", quantity: 1 },
+				{ kind: "armor", quantity: 1 },
 				{ kind: "food", quantity: 2 },
 			]);
 		}

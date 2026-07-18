@@ -39,7 +39,7 @@ describe("toUseItemAction", () => {
 			{ kind: "poison", quantity: 1 },
 			{ kind: "food", quantity: 1 },
 			{ kind: "sword", quantity: 1 },
-			{ kind: "shield", quantity: 1 },
+			{ kind: "armor", quantity: 1 },
 			{ kind: "teleport-scroll", quantity: 1 },
 			{ kind: "mapping-scroll", quantity: 1 },
 			{ kind: "identify-scroll", quantity: 1 },

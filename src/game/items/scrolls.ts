@@ -15,7 +15,7 @@ export const applyUseEnchantWeaponScroll = (state: GameState): GameState => ({
 	]),
 });
 
-/** An enchant armor scroll always raises playerDefense — never cursed, unlike a found shield. */
+/** An enchant armor scroll always raises playerDefense — never cursed, unlike found armor. */
 export const applyUseEnchantArmorScroll = (state: GameState): GameState => ({
 	...state,
 	playerDefense: state.playerDefense + ENCHANT_ARMOR_BONUS,

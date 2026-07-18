@@ -40,7 +40,7 @@ const buildPool = (size: number): Position[] =>
 const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"sword",
 	"enchant-weapon",
-	"shield",
+	"armor",
 	"enchant-armor",
 	"poison",
 	"strength",

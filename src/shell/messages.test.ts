@@ -63,8 +63,8 @@ describe("formatEvent", () => {
 				"剣を装備した。攻撃力が1上がった!",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
-				"盾を装備した。防御力が1上がった!",
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
+				"鎧を装備した。防御力が1上がった!",
 			],
 			[
 				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -1 } },
@@ -75,8 +75,8 @@ describe("formatEvent", () => {
 				"剣を装備したが、呪われていた……攻撃力は変わらなかった",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "shield", bonus: -1 } },
-				"盾を装備したが、呪われていた……防御力が1下がった",
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
+				"鎧を装備したが、呪われていた……防御力が1下がった",
 			],
 			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
 			[
@@ -297,8 +297,8 @@ describe("formatInventoryEntry", () => {
 		expect(formatInventoryEntry({ kind: "sword", quantity: 1 }, [])).toBe(
 			"剣 x1",
 		);
-		expect(formatInventoryEntry({ kind: "shield", quantity: 1 }, [])).toBe(
-			"盾 x1",
+		expect(formatInventoryEntry({ kind: "armor", quantity: 1 }, [])).toBe(
+			"鎧 x1",
 		);
 		expect(formatInventoryEntry({ kind: "food", quantity: 3 }, [])).toBe(
 			"食料 x3",

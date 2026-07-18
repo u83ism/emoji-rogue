@@ -23,7 +23,7 @@ describe("items/scrolls", () => {
 	});
 
 	it("using a held enchant armor scroll always raises playerDefense, never cursed", () => {
-		/* seed 1 is the one that curses a shield (see equipment.test.ts) — an
+		/* seed 1 is the one that curses armor (see equipment.test.ts) — an
 		 * enchant scroll must still succeed unconditionally from the same rng state */
 		const state = {
 			...buildArenaGameState(9, 3, 1),

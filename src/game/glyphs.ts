@@ -36,12 +36,16 @@ export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
 export const AMULET_CELL: Cell = { glyph: "💎" };
 /* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require
- * one — see docs/design.md's "avoid combining sequences" rule. Shield uses a
- * safety vest for the same reason (🛡️ needs a variation selector). */
+ * one — see docs/design.md's "avoid combining sequences" rule (re-verified
+ * milestone 73: both 🗡️/⚔️ still need VS16). The defense equipment item
+ * uses a safety vest for the same reason (🛡️ needs a variation selector) —
+ * milestone 75 renamed the item itself from "shield"/盾 to "armor"/鎧 to
+ * match the glyph, rather than keep hunting for a shield-shaped emoji that
+ * doesn't exist under this stability bar. */
 export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"heal-potion": { glyph: "💊" },
 	sword: { glyph: "🔪" },
-	shield: { glyph: "🦺" },
+	armor: { glyph: "🦺" },
 	food: { glyph: "🍖" },
 	/* Same glyph as heal-potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },

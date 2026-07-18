@@ -19,7 +19,7 @@ export type EnemyKind = (typeof ENEMY_KIND_VALUES)[number];
 export const ITEM_KIND_VALUES = [
 	"heal-potion",
 	"sword",
-	"shield",
+	"armor",
 	"food",
 	"poison",
 	"teleport-scroll",
@@ -210,7 +210,7 @@ export type GameEvent =
 			readonly payload: { readonly bonus: number };
 	  }
 	| {
-			/** Always a positive bonus — enchant-armor is never cursed, unlike a found shield. */
+			/** Always a positive bonus — enchant-armor is never cursed, unlike found armor. */
 			readonly type: "armor-enchanted";
 			readonly payload: { readonly bonus: number };
 	  }

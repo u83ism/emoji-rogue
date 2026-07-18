@@ -34,7 +34,7 @@ export const BAT_COUNT_BASE = 2;
 // Never deals HP damage — it steals gold on contact and flees instead (see
 // advanceEnemies's kind-specific branch) and does not scale with depth like
 // zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an independent
-// per-floor roll like sword/shield.
+// per-floor roll like sword/armor.
 export const THIEF_MAX_HP = 2;
 export const THIEF_ATTACK_DAMAGE = 0;
 export const THIEF_ACTIONS_PER_TURN = 1;
@@ -175,12 +175,12 @@ export const SWORD_CURSE_CHANCE_PERCENT = 20;
 /** However cursed a sword, playerAttackDamage never drops below this. */
 export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 
-/** Permanent boost to playerDefense per shield used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
-export const SHIELD_DEFENSE_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that a shield spawns. */
-export const SHIELD_SPAWN_CHANCE_PERCENT = 15;
-/** Chance (out of 100) that a shield turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
-export const SHIELD_CURSE_CHANCE_PERCENT = 20;
+/** Permanent boost to playerDefense per armor used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
+export const ARMOR_DEFENSE_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that armor spawns. */
+export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
+/** Chance (out of 100) that armor turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
+export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 
 export const POISON_DAMAGE = 4;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
@@ -278,8 +278,8 @@ export const ENCHANT_WEAPON_BONUS = 1;
 export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
- * Permanent boost to playerDefense per scroll read — same magnitude as a
- * shield, but (like enchant-weapon) never cursed.
+ * Permanent boost to playerDefense per scroll read — same magnitude as
+ * armor, but (like enchant-weapon) never cursed.
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */

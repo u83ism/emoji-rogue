@@ -80,7 +80,7 @@ const STATUS_CHIPS: readonly {
  * map tiles — single codepoint, no variation selector, East Asian Width
  * Wide, verified on a real terminal (milestone 68 amended milestone 5's
  * blanket "no emoji in chrome" rule; 💰 was the precedent). 🍖/🦺 deliberately
- * reuse the food/shield item glyphs: the pickup and the number it moves
+ * reuse the food/armor item glyphs: the pickup and the number it moves
  * share a face. Floor ("1F") and level ("Lv.") stay text — their emoji
  * candidates were either unstable (🪜) or colliding with map glyphs (🔽).
  * HP moved from text to 💓 in milestone 74, once docs/emoji-policy.md's

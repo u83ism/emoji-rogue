@@ -1,51 +1,54 @@
 {
-	"name": "emoji-rogue",
-	"version": "0.0.0",
-	"description": "A CLI roguelike rendered in emoji, built on a modernized fork of rot.js's map/FOV/pathfinding/scheduler algorithms",
-	"private": true,
-	"type": "module",
-	"engines": {
-		"node": ">=20"
-	},
-	"license": "BSD-3-Clause",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		},
-		"./game": {
-			"types": "./dist/game/index.d.mts",
-			"import": "./dist/game/index.mjs"
-		}
-	},
-	"files": [
-		"dist"
-	],
-	"scripts": {
-		"build": "tsdown",
-		"dev": "tsdown --watch",
-		"start": "node dist/main.mjs",
-		"typecheck": "tsc --noEmit",
-		"lint": "biome check . && node scripts/check-structure.mjs",
-		"docs:catalog": "tsdown && node scripts/generate-catalog.mjs",
-		"lint:fix": "biome check --write .",
-		"knip": "knip",
-		"test": "vitest run",
-		"test:watch": "vitest"
-	},
-	"dependencies": {
-		"ink": "^7.1.0",
-		"react": "^19.2.7"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.5.3",
-		"@types/node": "^26.1.1",
-		"@types/react": "^19.2.17",
-		"ink-testing-library": "^4.0.0",
-		"knip": "^6.26.0",
-		"tsdown": "^0.22.5",
-		"typescript": "^7.0.2",
-		"unrun": "^0.3.1",
-		"vitest": "^4.1.10"
-	}
+  "name": "emoji-rogue",
+  "version": "0.0.0",
+  "description": "A CLI roguelike rendered in emoji, built on a modernized fork of rot.js's map/FOV/pathfinding/scheduler algorithms",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "BSD-3-Clause",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./game": {
+      "types": "./dist/game/index.d.mts",
+      "import": "./dist/game/index.mjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "start": "node dist/main.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check . && node scripts/check-structure.mjs",
+    "docs:catalog": "tsdown && node scripts/generate-catalog.mjs",
+    "lint:fix": "biome check --write .",
+    "knip": "knip",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "dependencies": {
+    "ink": "^7.1.0",
+    "react": "^19.2.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.3",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "ink-testing-library": "^4.0.0",
+    "knip": "^6.26.0",
+    "tsdown": "^0.22.5",
+    "typescript": "^7.0.2",
+    "unrun": "^0.3.1",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.112.0"
+  }
 }

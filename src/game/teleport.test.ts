@@ -6,11 +6,11 @@ describe("teleport", () => {
 	it("is deterministic: the same state always teleports to the same tile", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["teleport-scroll" as const],
+			inventory: [{ itemId: 1, kind: "teleport-scroll" } as const],
 		};
 		const action = {
 			type: "use-item",
-			payload: { kind: "teleport-scroll" },
+			payload: { itemId: 1 },
 		} as const;
 		expect(advanceTurn(state, action)).toEqual(advanceTurn(state, action));
 	});
@@ -19,12 +19,12 @@ describe("teleport", () => {
 		let state = buildDungeonGameState(40, 20, 42);
 		state = {
 			...state,
-			inventory: ["teleport-scroll" as const],
+			inventory: [{ itemId: 1, kind: "teleport-scroll" } as const],
 		};
 		for (let attempt = 0; attempt < 20; attempt++) {
 			const next = advanceTurn(state, {
 				type: "use-item",
-				payload: { kind: "teleport-scroll" },
+				payload: { itemId: 1 },
 			});
 			for (const enemy of next.enemies) {
 				expect(enemy.x === next.player.x && enemy.y === next.player.y).toBe(

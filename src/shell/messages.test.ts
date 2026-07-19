@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GameEvent } from "../game/events.js";
-import {
-	formatConducts,
-	formatEvent,
-	formatInventoryTitle,
-	formatScoreSummary,
-} from "./messages.js";
+import { formatConducts, formatEvent, formatScoreSummary } from "./messages.js";
 
 describe("formatEvent", () => {
 	it("turns every event kind into a Japanese log line", () => {
@@ -68,23 +63,31 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
-				"剣を装備した。攻撃力が1上がった!",
+				"剣を装備した。攻撃力+1",
 			],
 			[
 				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
-				"鎧を装備した。防御力が1上がった!",
+				"鎧を装備した。防御力+1",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -1 } },
-				"剣を装備したが、呪われていた……攻撃力が1下がった",
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
+				"鎧を装備したが、錆びついていて防御力は上がらなかった",
+			],
+			[{ type: "item-unequipped", payload: { kind: "sword" } }, "剣を外した"],
+			[
+				{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
+				"鎧は呪われていて外せない!",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 0 } },
-				"剣を装備したが、呪われていた……攻撃力は変わらなかった",
+				{
+					type: "curse-revealed",
+					payload: { kind: "regeneration-ring" },
+				},
+				"指輪は呪われていた……外せなくなってしまった!",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
-				"鎧を装備したが、呪われていた……防御力が1下がった",
+				{ type: "items-decursed", payload: { count: 2 } },
+				"解呪の巻物を読んだ。呪いが解け、2個のアイテムを外せるようになった!",
 			],
 			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
 			[
@@ -173,15 +176,15 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "weapon-enchanted", payload: { bonus: 1 } },
-				"武器強化の巻物を読んだ。攻撃力が1上がった!",
+				"武器強化の巻物を読んだ。指定した剣の攻撃力が1上がった!",
 			],
 			[
 				{ type: "armor-enchanted", payload: { bonus: 1 } },
-				"防具強化の巻物を読んだ。防御力が1上がった!",
+				"防具強化の巻物を読んだ。指定した防具の防御力が1上がった!",
 			],
 			[
 				{ type: "armor-rusted", payload: { amount: 1 } },
-				"防具が錆びついた!防御力が1下がった",
+				"装備中の防具が錆びついた!防御力が1下がった",
 			],
 			[
 				{ type: "wand-struck", payload: { target: "zombie", damage: 3 } },
@@ -203,7 +206,7 @@ describe("formatEvent", () => {
 			[{ type: "levitation-faded", payload: {} }, "浮遊の効果が切れた"],
 			[
 				{ type: "armor-protected", payload: {} },
-				"防具保護の巻物を読んだ。防具が錆びなくなった!",
+				"防具保護の巻物を読んだ。指定した防具が錆びなくなった!",
 			],
 			[
 				{ type: "player-blinded", payload: { turns: 20 } },
@@ -303,13 +306,6 @@ describe("formatEvent", () => {
 				"poison",
 			]),
 		).toBe("ニンフに毒薬を盗まれた!");
-	});
-});
-
-describe("formatInventoryTitle", () => {
-	it("appends the held count over capacity to the title", () => {
-		expect(formatInventoryTitle(0)).toBe("持ち物(iかEscで閉じる) 0/20");
-		expect(formatInventoryTitle(3)).toBe("持ち物(iかEscで閉じる) 3/20");
 	});
 });
 

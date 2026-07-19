@@ -40,9 +40,28 @@ export const ITEM_KIND_VALUES = [
 	"raise-level",
 	"detect-monster",
 	"life",
+	"remove-curse-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
+
+const EQUIPMENT_ITEM_KIND_VALUES = [
+	"sword",
+	"armor",
+	"regeneration-ring",
+	"sustenance-ring",
+] as const satisfies readonly ItemKind[];
+
+/** The equippable subset of ItemKind — held as a HeldItem with equip/curse state (see GameState.inventory). */
+export type EquipmentItemKind = (typeof EQUIPMENT_ITEM_KIND_VALUES)[number];
+
+export const EQUIPMENT_ITEM_KINDS: readonly ItemKind[] =
+	EQUIPMENT_ITEM_KIND_VALUES;
+
+/** Type guard form of EQUIPMENT_ITEM_KINDS — narrows an ItemKind to EquipmentItemKind. */
+export const isEquipmentItemKind = (
+	kind: ItemKind,
+): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 const POTION_KIND_VALUES = [
 	"heal-potion",
@@ -313,6 +332,26 @@ export type GameEvent =
 			/** Fired the turn turnsOnCurrentFloor reaches WINDS_OF_KRON_EVICTION_TURNS — see applyWindsOfKronTick. */
 			readonly type: "winds-of-kron-eviction";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** Taking off a sword/armor/ring — the mirror of weapon-equipped/armor-equipped/ring-equipped. */
+			readonly type: "item-unequipped";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** Trying to unequip a cursed sword/armor/ring — no-op, see items/equipment.ts and items/rings.ts. */
+			readonly type: "equip-blocked-cursed";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A curse revealed the moment an item is equipped — rolled at pickup, only shown now. See items/pickups.ts. */
+			readonly type: "curse-revealed";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A remove-curse scroll freeing every currently-equipped cursed item at once. */
+			readonly type: "items-decursed";
+			readonly payload: { readonly count: number };
 	  };
 
 /**

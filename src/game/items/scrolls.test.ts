@@ -1,84 +1,245 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
+import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
 import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
 
 describe("items/scrolls", () => {
-	it("using a held enchant weapon scroll always raises playerAttackDamage, never cursed", () => {
-		/* seed 1 is the one that curses a sword (see equipment.test.ts) — an
-		 * enchant scroll must still succeed unconditionally from the same rng state */
+	it("using a held enchant weapon scroll raises the targeted sword's own attackBonus, regardless of that sword's curse", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["enchant-weapon" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword" as const,
+					equipped: false,
+					cursed: true /* enchanting works the same whether the target is cursed or not */,
+					attackBonus: 1,
+				},
+				{ itemId: 2, kind: "enchant-weapon" as const },
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "enchant-weapon" },
+			payload: { itemId: 2, targetItemId: 1 },
 		});
-		expect(next.playerAttackDamage).toBe(state.playerAttackDamage + 1);
-		expect(next.inventory).toEqual([]);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "sword",
+				equipped: false,
+				cursed: true,
+				attackBonus: 1 + ENCHANT_WEAPON_BONUS,
+			},
+		]);
 		expect(next.rng).toEqual(state.rng); /* deterministic, no curse roll */
 		expect(next.events).toEqual([
-			{ type: "weapon-enchanted", payload: { bonus: 1 } },
+			{ type: "weapon-enchanted", payload: { bonus: ENCHANT_WEAPON_BONUS } },
 		]);
 	});
 
-	it("using a held enchant armor scroll always raises playerDefense, never cursed", () => {
-		/* seed 1 is the one that curses armor (see equipment.test.ts) — an
-		 * enchant scroll must still succeed unconditionally from the same rng state */
+	it("using a held enchant weapon scroll with no matching sword held is a no-op (not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["enchant-armor" as const],
+			inventory: [{ itemId: 1, kind: "enchant-weapon" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "enchant-armor" },
+			payload: { itemId: 1, targetItemId: 999 },
 		});
-		expect(next.playerDefense).toBe(state.playerDefense + 1);
-		expect(next.inventory).toEqual([]);
+		expect(next).toBe(state);
+	});
+
+	it("using a held enchant armor scroll raises the targeted armor's own defenseBonus, regardless of that armor's curse", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: false,
+					cursed: true,
+					defenseBonus: 1,
+					rustProtected: false,
+				},
+				{ itemId: 2, kind: "enchant-armor" as const },
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 2, targetItemId: 1 },
+		});
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "armor",
+				equipped: false,
+				cursed: true,
+				defenseBonus: 1 + ENCHANT_ARMOR_BONUS,
+				rustProtected: false,
+			},
+		]);
 		expect(next.rng).toEqual(state.rng); /* deterministic, no curse roll */
 		expect(next.events).toEqual([
-			{ type: "armor-enchanted", payload: { bonus: 1 } },
+			{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
 		]);
 	});
 
-	it("using a held protect armor scroll sets armorProtected and logs armor-protected", () => {
+	it("using a held protect armor scroll sets the targeted armor's rustProtected and logs armor-protected", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["protect-armor" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: false,
+					cursed: false,
+					defenseBonus: 1,
+					rustProtected: false,
+				},
+				{ itemId: 2, kind: "protect-armor" as const },
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "protect-armor" },
+			payload: { itemId: 2, targetItemId: 1 },
 		});
-		expect(next.armorProtected).toBe(true);
-		expect(next.inventory).toEqual([]);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "armor",
+				equipped: false,
+				cursed: false,
+				defenseBonus: 1,
+				rustProtected: true,
+			},
+		]);
 		expect(next.events).toEqual([{ type: "armor-protected", payload: {} }]);
 	});
 
-	it("using a second protect armor scroll is consumed but changes nothing (already protected)", () => {
+	it("using a protect armor scroll on already-protected armor is a no-op (not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			armorProtected: true,
-			inventory: ["protect-armor" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: false,
+					cursed: false,
+					defenseBonus: 1,
+					rustProtected: true,
+				},
+				{ itemId: 2, kind: "protect-armor" as const },
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "protect-armor" },
+			payload: { itemId: 2, targetItemId: 1 },
 		});
-		expect(next.armorProtected).toBe(true);
-		expect(next.inventory).toEqual([]);
+		expect(next).toBe(state);
+	});
+
+	it("using a held remove-curse scroll frees every currently-equipped cursed item at once", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword" as const,
+					equipped: true,
+					cursed: true,
+					attackBonus: 1,
+				},
+				{
+					itemId: 2,
+					kind: "armor" as const,
+					equipped: true,
+					cursed: true,
+					defenseBonus: 1,
+					rustProtected: false,
+				},
+				{
+					itemId: 3,
+					kind: "regeneration-ring" as const,
+					equipped: true,
+					cursed: true,
+				},
+				/* held but not equipped — its curse must survive untouched */
+				{
+					itemId: 4,
+					kind: "armor" as const,
+					equipped: false,
+					cursed: true,
+					defenseBonus: 1,
+					rustProtected: false,
+				},
+				{ itemId: 5, kind: "remove-curse-scroll" as const },
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 5 },
+		});
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "sword",
+				equipped: true,
+				cursed: false,
+				attackBonus: 1,
+			},
+			{
+				itemId: 2,
+				kind: "armor",
+				equipped: true,
+				cursed: false,
+				defenseBonus: 1,
+				rustProtected: false,
+			},
+			{
+				itemId: 3,
+				kind: "regeneration-ring",
+				equipped: true,
+				cursed: false,
+			},
+			{
+				itemId: 4,
+				kind: "armor",
+				equipped: false,
+				cursed: true,
+				defenseBonus: 1,
+				rustProtected: false,
+			},
+		]);
+		expect(next.events).toEqual([
+			{ type: "items-decursed", payload: { count: 3 } },
+		]);
+	});
+
+	it("using a held remove-curse scroll with nothing equipped and cursed is a no-op (not consumed)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ itemId: 1, kind: "remove-curse-scroll" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next).toBe(state);
 	});
 
 	it("using a held scroll teleports the player, consumes the scroll, and consumes rng", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["teleport-scroll" as const, "teleport-scroll" as const],
+			inventory: [
+				{ itemId: 1, kind: "teleport-scroll" as const },
+				{ itemId: 2, kind: "teleport-scroll" as const },
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "teleport-scroll" },
+			payload: { itemId: 1 },
 		});
-		expect(next.inventory).toEqual(["teleport-scroll"]);
+		expect(next.inventory).toEqual([{ itemId: 2, kind: "teleport-scroll" }]);
 		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{
@@ -92,11 +253,11 @@ describe("items/scrolls", () => {
 		const state = buildDungeonGameState(40, 20, 7);
 		const withScroll = {
 			...state,
-			inventory: ["mapping-scroll" as const],
+			inventory: [{ itemId: 1, kind: "mapping-scroll" as const }],
 		};
 		const next = advanceTurn(withScroll, {
 			type: "use-item",
-			payload: { kind: "mapping-scroll" },
+			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual([]);
 		expect(next.player).toEqual(
@@ -113,11 +274,11 @@ describe("items/scrolls", () => {
 	it("using a held identify scroll identifies the first unidentified potion kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["identify-scroll" as const],
+			inventory: [{ itemId: 1, kind: "identify-scroll" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify-scroll" },
+			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual([]);
 		expect(next.identifiedPotionKinds).toEqual(["heal-potion"]);
@@ -130,20 +291,20 @@ describe("items/scrolls", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
-				"identify-scroll" as const,
-				"identify-scroll" as const,
-				"identify-scroll" as const,
+				{ itemId: 1, kind: "identify-scroll" as const },
+				{ itemId: 2, kind: "identify-scroll" as const },
+				{ itemId: 3, kind: "identify-scroll" as const },
 			],
 		};
 		const afterFirst = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify-scroll" },
+			payload: { itemId: 1 },
 		});
 		expect(afterFirst.identifiedPotionKinds).toEqual(["heal-potion"]);
 
 		const afterSecond = advanceTurn(afterFirst, {
 			type: "use-item",
-			payload: { kind: "identify-scroll" },
+			payload: { itemId: 2 },
 		});
 		expect(afterSecond.identifiedPotionKinds).toEqual([
 			"heal-potion",
@@ -152,7 +313,7 @@ describe("items/scrolls", () => {
 
 		const afterThird = advanceTurn(afterSecond, {
 			type: "use-item",
-			payload: { kind: "identify-scroll" },
+			payload: { itemId: 3 },
 		});
 		expect(afterThird.identifiedPotionKinds).toEqual([
 			"heal-potion",
@@ -176,11 +337,11 @@ describe("items/scrolls", () => {
 				"detect-monster",
 				"life",
 			] as const,
-			inventory: ["identify-scroll" as const],
+			inventory: [{ itemId: 1, kind: "identify-scroll" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "identify-scroll" },
+			payload: { itemId: 1 },
 		});
 		expect(next).toBe(state);
 	});

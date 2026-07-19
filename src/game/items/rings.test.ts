@@ -2,62 +2,152 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_MAX_HP } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
+import { hasEquippedRing } from "./rings.js";
 
 describe("items/rings", () => {
-	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
+	it("equipping a held regeneration ring flips its equipped flag and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["regeneration-ring" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "regeneration-ring" as const,
+					equipped: false,
+					cursed: false,
+				},
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "regeneration-ring" },
+			payload: { itemId: 1 },
 		});
-		expect(next.hasRingOfRegeneration).toBe(true);
-		expect(next.inventory).toEqual([]);
+		expect(hasEquippedRing(next.inventory, "regeneration-ring")).toBe(true);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "regeneration-ring",
+				equipped: true,
+				cursed: false,
+			},
+		]);
 		expect(next.events).toEqual([
 			{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
 		]);
 	});
 
-	it("using a second ring is consumed but changes nothing (already equipped)", () => {
+	it("using an already-equipped ring unequips it", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			hasRingOfRegeneration: true,
-			inventory: ["regeneration-ring" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "regeneration-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "regeneration-ring" },
+			payload: { itemId: 1 },
 		});
-		expect(next.hasRingOfRegeneration).toBe(true);
-		expect(next.inventory).toEqual([]);
+		expect(hasEquippedRing(next.inventory, "regeneration-ring")).toBe(false);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "regeneration-ring",
+				equipped: false,
+				cursed: false,
+			},
+		]);
+		expect(next.events).toEqual([
+			{ type: "item-unequipped", payload: { kind: "regeneration-ring" } },
+		]);
 	});
 
-	it("using a held sustenance ring sets hasRingOfSustenance and logs ring-equipped", () => {
+	it("equipping a held sustenance ring flips its equipped flag and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["sustenance-ring" as const],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sustenance-ring" as const,
+					equipped: false,
+					cursed: false,
+				},
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "sustenance-ring" },
+			payload: { itemId: 1 },
 		});
-		expect(next.hasRingOfSustenance).toBe(true);
-		expect(next.inventory).toEqual([]);
+		expect(hasEquippedRing(next.inventory, "sustenance-ring")).toBe(true);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "sustenance-ring",
+				equipped: true,
+				cursed: false,
+			},
+		]);
 		expect(next.events).toEqual([
 			{ type: "ring-equipped", payload: { kind: "sustenance-ring" } },
 		]);
 	});
 
-	it("a ring of regeneration heals HP over time via waiting turns (wired into every turn-consuming action)", () => {
+	it("equipping a ring unequips whichever other ring (any kind) was equipped before — only one ring slot total", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "regeneration-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+				{
+					itemId: 2,
+					kind: "sustenance-ring" as const,
+					equipped: false,
+					cursed: false,
+				},
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 2 },
+		});
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "regeneration-ring",
+				equipped: false,
+				cursed: false,
+			},
+			{
+				itemId: 2,
+				kind: "sustenance-ring",
+				equipped: true,
+				cursed: false,
+			},
+		]);
+	});
+
+	it("a ring of regeneration heals HP over time via waiting turns while equipped (wired into every turn-consuming action)", () => {
 		const state = {
 			...buildArenaGameState(
 				9,
 				3,
 				1,
 			) /* this seed's first regen roll succeeds */,
-			hasRingOfRegeneration: true,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "regeneration-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+			],
 			playerHp: PLAYER_MAX_HP - 3,
 		};
 		const next = advanceTurn(state, { type: "wait" });

@@ -10,6 +10,10 @@ import {
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 } from "../game/glyphs.js";
+import {
+	calculatePlayerAttackDamage,
+	calculatePlayerDefense,
+} from "../game/items/equipment.js";
 import type { GameState } from "../game/state.js";
 
 const LOW_HP_THRESHOLD = 3;
@@ -107,7 +111,8 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 		</Text>
 		<Text> </Text>
 		<Text>
-			💪 {state.playerAttackDamage} 🦺 {state.playerDefense}
+			💪 {calculatePlayerAttackDamage(state)} 🦺{" "}
+			{calculatePlayerDefense(state.inventory)}
 		</Text>
 		<Text> </Text>
 		<Text color="yellow">💰 {state.goldCollected}</Text>

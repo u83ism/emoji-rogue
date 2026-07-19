@@ -20,6 +20,7 @@ import {
 	POTION_COUNT_PER_FLOOR,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
+	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
@@ -31,7 +32,8 @@ import {
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
-import type { ItemKind } from "../events.js";
+import { type ItemKind, isEquipmentItemKind } from "../events.js";
+import { buildFloorItem } from "../items/heldItemFactory.js";
 import type { GoldPile, Item, Position, Trap } from "../state.js";
 import {
 	drawSpawnTile,
@@ -92,6 +94,11 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 	},
 	{ kind: "striking-wand", chancePercent: WAND_SPAWN_CHANCE_PERCENT },
 	{ kind: "slow-wand", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
+	/* Added in milestone 81 — appended at the end so it doesn't shift the roll order of every earlier kind. */
+	{
+		kind: "remove-curse-scroll",
+		chancePercent: REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
 ];
 
 /** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */
@@ -99,6 +106,8 @@ export interface FloorItems {
 	readonly items: readonly Item[];
 	readonly goldPiles: readonly GoldPile[];
 	readonly traps: readonly Trap[];
+	/** `nextItemId` after this floor's sword/armor/ring spawns each consumed one — see heldItemFactory.ts's buildFloorItem. */
+	readonly nextItemId: number;
 }
 
 /**
@@ -109,7 +118,9 @@ export interface FloorItems {
  * piles (random amount each), TRAP_COUNT_PER_FLOOR dart traps, and the
  * chance-rolled trapdoor (never on GOAL_FLOOR — it would generate a floor
  * beyond it) and teleport trap (allowed on GOAL_FLOOR — it only relocates
- * the player within the floor).
+ * the player within the floor). A spawned sword/armor/ring also gets its
+ * identity (curse, starting bonus, itemId) rolled here, once, from
+ * `nextItemId` — see heldItemFactory.ts's buildFloorItem.
  *
  * Traps only land on tiles satisfying `isTrapTileEligible` (room interiors
  * away from doorways — see layout.ts): an invisible trap on a corridor or
@@ -121,7 +132,9 @@ export const drawFloorItems = (
 	rng: Rng,
 	floor: number,
 	isTrapTileEligible: (position: Position) => boolean,
+	nextItemId: number,
 ): FloorItems => {
+	let itemId = nextItemId;
 	const items: Item[] = [];
 	for (let i = 0; i < POTION_COUNT_PER_FLOOR && remaining.length > 0; i++) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "heal-potion" });
@@ -134,7 +147,11 @@ export const drawFloorItems = (
 			remaining.length > 0 &&
 			rng.getUniformInt(0, 99) < spawn.chancePercent
 		) {
-			items.push({ ...drawSpawnTile(remaining, rng), kind: spawn.kind });
+			const position = drawSpawnTile(remaining, rng);
+			items.push(buildFloorItem(spawn.kind, itemId, position, rng));
+			if (isEquipmentItemKind(spawn.kind)) {
+				itemId += 1;
+			}
 		}
 	}
 
@@ -174,5 +191,5 @@ export const drawFloorItems = (
 		}
 	}
 
-	return { items, goldPiles, traps };
+	return { items, goldPiles, traps, nextItemId: itemId };
 };

@@ -59,6 +59,7 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"sustenance-ring",
 	"striking-wand",
 	"slow-wand",
+	"remove-curse-scroll",
 ];
 
 describe("drawFloorItems", () => {
@@ -68,6 +69,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(
 			drawn.items.filter((item) => item.kind === "heal-potion").length,
@@ -92,6 +94,7 @@ describe("drawFloorItems", () => {
 			createAlwaysMissRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(drawn.items.length).toBe(
 			POTION_COUNT_PER_FLOOR + FOOD_COUNT_PER_FLOOR,
@@ -109,6 +112,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(generous.goldPiles.length).toBe(GOLD_PILES_PER_FLOOR);
 		for (const pile of generous.goldPiles) {
@@ -119,6 +123,7 @@ describe("drawFloorItems", () => {
 			createAlwaysMissRng(),
 			1,
 			() => true,
+			1,
 		);
 		for (const pile of stingy.goldPiles) {
 			expect(pile.amount).toBe(GOLD_AMOUNT_MAX); /* upper bound of the roll */
@@ -131,6 +136,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(drawn.traps.filter((trap) => trap.kind === "dart").length).toBe(
 			TRAP_COUNT_PER_FLOOR,
@@ -149,6 +155,7 @@ describe("drawFloorItems", () => {
 			createAlwaysMissRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(drawn.traps.length).toBe(TRAP_COUNT_PER_FLOOR);
 		expect(drawn.traps.every((trap) => trap.kind === "dart")).toBe(true);
@@ -160,6 +167,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			GOAL_FLOOR,
 			() => true,
+			1,
 		);
 		expect(drawn.traps.some((trap) => trap.kind === "trapdoor")).toBe(false);
 		/* the teleport trap is still allowed there — it stays within the floor */
@@ -172,6 +180,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			(position) => position.x >= 50,
+			1,
 		);
 		expect(restricted.traps.length).toBeGreaterThan(0);
 		for (const trap of restricted.traps) {
@@ -183,6 +192,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => false,
+			1,
 		);
 		expect(none.traps.length).toBe(0);
 		/* items and gold ignore the trap predicate */

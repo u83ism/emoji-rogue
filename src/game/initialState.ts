@@ -21,18 +21,15 @@ const INITIAL_RUN_STATE = {
 	playerMaxHp: PLAYER_MAX_HP,
 	playerLevel: 1,
 	playerExperience: 0,
-	playerAttackDamage: PLAYER_ATTACK_DAMAGE,
-	playerDefense: 0,
+	playerPower: PLAYER_ATTACK_DAMAGE,
 	playerFood: PLAYER_MAX_FOOD,
-	hasRingOfRegeneration: false,
-	hasRingOfSustenance: false,
 	confusedTurnsRemaining: 0,
 	levitationTurnsRemaining: 0,
-	armorProtected: false,
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
 	detectMonstersTurnsRemaining: 0,
 	inventory: [],
+	nextItemId: 1,
 	identifiedPotionKinds: [],
 	goldCollected: 0,
 	floor: 1,
@@ -121,7 +118,14 @@ export const buildDungeonGameState = (
 	seed: number,
 ): GameState => {
 	const rng = createRng(seed);
-	const layout = buildFloorLayout(width, height, rng, 1, "down");
+	const layout = buildFloorLayout(
+		width,
+		height,
+		rng,
+		1,
+		"down",
+		INITIAL_RUN_STATE.nextItemId,
+	);
 
 	return deriveExploredState({
 		...INITIAL_RUN_STATE,
@@ -137,5 +141,6 @@ export const buildDungeonGameState = (
 		stairs: layout.stairs,
 		amulet: layout.amulet,
 		rng: rng.getState(),
+		nextItemId: layout.nextItemId,
 	});
 };

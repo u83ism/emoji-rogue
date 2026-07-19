@@ -11,8 +11,13 @@ import {
 import { isAdjacent } from "./combat.js";
 import { stepTowardPlayer, stepWandering } from "./enemyMovement.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import { removeOneFromInventory } from "./items/inventory.js";
-import type { Enemy, GameState, Position } from "./state.js";
+import {
+	applyArmorRust,
+	calculatePlayerDefense,
+	canRustEquippedArmor,
+} from "./items/equipment.js";
+import { removeHeldItemAtIndex } from "./items/inventory.js";
+import type { Enemy, GameState, HeldItem, Position } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /**
@@ -26,19 +31,21 @@ import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
  * enemies act
  * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
  * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts by kind, reduced by the (locally
- * accumulated) playerDefense but never below MIN_DAMAGE_TAKEN) — except a
- * thief, which steals up to THIEF_STEAL_AMOUNT gold instead of dealing
- * damage, and a nymph, which steals one random held item stack instead
- * (rng-picked when more than one kind is held; item-stolen fires with kind:
- * undefined if the inventory was empty). Both flee the board for good
- * afterward (never rejoin `nextEnemies`, killed or not). An aquator instead
- * stands its ground: every landed hit additionally rolls
- * AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off playerDefense
- * (armor-rusted), so its later hits in the same fight — this turn's or a
- * future one's — land harder, unless armorProtected is set (see the protect
- * armor scroll), in which case the rust roll is skipped entirely — no rng
- * consumed, no chance of it landing. An awake enemy with slowedTurnsRemaining > 0
+ * in place (damage from balance.ts by kind, reduced by
+ * calculatePlayerDefense(inventory) but never below MIN_DAMAGE_TAKEN) —
+ * except a thief, which steals up to THIEF_STEAL_AMOUNT gold instead of
+ * dealing damage, and a nymph, which steals one random *unequipped* held
+ * item instead (equipped items are never stolen; rng-picked among the rest;
+ * item-stolen fires with kind: undefined if nothing unequipped was held).
+ * Both flee the board for good afterward (never rejoin `nextEnemies`, killed
+ * or not). An aquator instead stands its ground: every landed hit
+ * additionally rolls AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off the
+ * equipped armor's own defenseBonus (armor-rusted, floored at 0), so its
+ * later hits in the same fight — this turn's or a future one's — land
+ * harder, unless canRustEquippedArmor is false (no armor equipped, or it's
+ * rustProtected — see the protect armor scroll), in which case the rust
+ * roll is skipped entirely — no rng consumed, no chance of it landing. An
+ * awake enemy with slowedTurnsRemaining > 0
  * (see the slow wand) skips this turn's action entirely — no movement, no
  * attack — while the counter ticks down, checked right after the sleep
  * check above. Non-adjacent
@@ -64,8 +71,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 	let rng = state.rng;
 	let playerHp = state.playerHp;
 	let goldCollected = state.goldCollected;
-	let inventory = state.inventory;
-	let playerDefense = state.playerDefense;
+	let inventory: readonly HeldItem[] = state.inventory;
 	let died = false;
 	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
@@ -114,36 +120,42 @@ export const advanceEnemies = (state: GameState): GameState => {
 					continue;
 				}
 				if (enemy.kind === "nymph") {
-					if (inventory.length === 0) {
+					// Only unequipped items are up for grabs — what's worn stays worn.
+					const stealable = inventory
+						.map((item, itemIndex) => ({ item, itemIndex }))
+						.filter(({ item }) => !("equipped" in item && item.equipped));
+					if (stealable.length === 0) {
 						events.push({ type: "item-stolen", payload: { kind: undefined } });
 					} else {
 						const pick = stepUniform(rng);
 						rng = pick.state;
-						const index = Math.floor(pick.value * inventory.length);
-						const stolenKind = inventory[index];
-						if (stolenKind === undefined) {
-							throw new Error("unreachable: index is within inventory bounds");
+						const picked = stealable[Math.floor(pick.value * stealable.length)];
+						if (picked === undefined) {
+							throw new Error("unreachable: pick is within stealable bounds");
 						}
-						inventory = removeOneFromInventory(inventory, index);
-						events.push({ type: "item-stolen", payload: { kind: stolenKind } });
+						inventory = removeHeldItemAtIndex(inventory, picked.itemIndex);
+						events.push({
+							type: "item-stolen",
+							payload: { kind: picked.item.kind },
+						});
 					}
 					fled = true;
 					continue;
 				}
 				const damage = Math.max(
 					MIN_DAMAGE_TAKEN,
-					ENEMY_ATTACK_DAMAGE[enemy.kind] - playerDefense,
+					ENEMY_ATTACK_DAMAGE[enemy.kind] - calculatePlayerDefense(inventory),
 				);
 				playerHp -= damage;
 				events.push({
 					type: "player-hit",
 					payload: { by: enemy.kind, damage },
 				});
-				if (enemy.kind === "aquator" && !state.armorProtected) {
+				if (enemy.kind === "aquator" && canRustEquippedArmor(inventory)) {
 					const rustRoll = stepUniform(rng);
 					rng = rustRoll.state;
 					if (rustRoll.value < AQUATOR_RUST_CHANCE_PERCENT / 100) {
-						playerDefense -= 1;
+						inventory = applyArmorRust(inventory);
 						events.push({ type: "armor-rusted", payload: { amount: 1 } });
 					}
 				}
@@ -173,7 +185,6 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: Math.max(0, playerHp),
 		goldCollected,
 		inventory,
-		playerDefense,
 		enemies: nextEnemies,
 		events: buildEventLog(state.events, events),
 		rng,

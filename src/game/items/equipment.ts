@@ -1,74 +1,172 @@
-import { createRng, type RngState } from "../../rng.js";
-import {
-	ARMOR_CURSE_CHANCE_PERCENT,
-	ARMOR_DEFENSE_BONUS,
-	MIN_PLAYER_ATTACK_DAMAGE,
-	SWORD_ATTACK_BONUS,
-	SWORD_CURSE_CHANCE_PERCENT,
-} from "../balance.js";
-import { buildEventLog } from "../events.js";
-import type { GameState } from "../state.js";
+import { buildEventLog, type GameEvent } from "../events.js";
+import type { GameState, HeldItem } from "../state.js";
+import { replaceHeldItem } from "./inventory.js";
 
-/**
- * Whether an equipped sword/armor turns out cursed, rolled fresh at use
- * time (see SWORD_CURSE_CHANCE_PERCENT's comment for why not at spawn),
- * consuming (and advancing) the rng in the same temporary-stateful-Rng
- * pattern floor.ts's descendStairs and the teleport scroll both use.
- */
-const rollCurse = (
-	rngState: RngState,
-	chancePercent: number,
-): { readonly cursed: boolean; readonly rng: RngState } => {
-	const rng = createRng(1).setState(rngState);
-	return {
-		cursed: rng.getUniformInt(0, 99) < chancePercent,
-		rng: rng.getState(),
-	};
-};
+type SwordItem = Extract<HeldItem, { kind: "sword" }>;
+type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
+type EquippableItem = Extract<HeldItem, { equipped: boolean }>;
 
-/**
- * A sword permanently raises playerAttackDamage — stacking, no cap — unless
- * the curse roll lands, which lowers it instead (clamped at
- * MIN_PLAYER_ATTACK_DAMAGE so attacks never hit for zero). Consumption from
- * inventory happens in the dispatcher (items/use.ts), not here.
- */
-export const applyUseSword = (state: GameState): GameState => {
-	const { cursed, rng } = rollCurse(state.rng, SWORD_CURSE_CHANCE_PERCENT);
-	const rawBonus = cursed ? -SWORD_ATTACK_BONUS : SWORD_ATTACK_BONUS;
-	const playerAttackDamage = Math.max(
-		MIN_PLAYER_ATTACK_DAMAGE,
-		state.playerAttackDamage + rawBonus,
+export type { ArmorItem, EquippableItem };
+
+const findEquippedArmor = (
+	inventory: readonly HeldItem[],
+): ArmorItem | undefined =>
+	inventory.find(
+		(item): item is ArmorItem => item.kind === "armor" && item.equipped,
 	);
-	return {
-		...state,
-		playerAttackDamage,
-		rng,
-		events: buildEventLog(state.events, [
-			{
-				type: "weapon-equipped",
-				payload: {
-					kind: "sword",
-					bonus: playerAttackDamage - state.playerAttackDamage,
-				},
-			},
-		]),
-	};
+
+const isEquippableItem = (item: HeldItem): item is EquippableItem =>
+	"equipped" in item;
+
+/** The player's actual attack total: playerPower plus the equipped sword's own attackBonus, or 0 unarmed. */
+export const calculatePlayerAttackDamage = (state: GameState): number => {
+	const equippedSword = state.inventory.find(
+		(item): item is SwordItem => item.kind === "sword" && item.equipped,
+	);
+	return state.playerPower + (equippedSword?.attackBonus ?? 0);
+};
+
+/** The player's actual defense: the equipped armor's own defenseBonus, or 0 with nothing worn. */
+export const calculatePlayerDefense = (
+	inventory: readonly HeldItem[],
+): number => findEquippedArmor(inventory)?.defenseBonus ?? 0;
+
+/** Whether an aquator's rust attack should even attempt a roll — only meaningful with an equipped, unprotected armor to degrade. */
+export const canRustEquippedArmor = (
+	inventory: readonly HeldItem[],
+): boolean => {
+	const equippedArmor = findEquippedArmor(inventory);
+	return equippedArmor !== undefined && !equippedArmor.rustProtected;
+};
+
+/** Reduces the equipped armor's defenseBonus by 1 (floored at 0) — a no-op if none is equipped. */
+export const applyArmorRust = (
+	inventory: readonly HeldItem[],
+): readonly HeldItem[] => {
+	const equippedArmor = findEquippedArmor(inventory);
+	if (equippedArmor === undefined) {
+		return inventory;
+	}
+	return replaceHeldItem(inventory, equippedArmor.itemId, {
+		...equippedArmor,
+		defenseBonus: Math.max(0, equippedArmor.defenseBonus - 1),
+	});
 };
 
 /**
- * Armor permanently raises playerDefense — stacking, no cap — unless the
- * curse roll lands, which lowers it instead (allowed to go negative; see
- * MIN_DAMAGE_TAKEN for why no clamp is needed on the damage side).
+ * Unequips whichever other held item among `otherKinds` (a second sword; for
+ * rings, the other ring kind — regeneration and sustenance share one slot)
+ * is currently equipped, if any.
  */
-export const applyUseArmor = (state: GameState): GameState => {
-	const { cursed, rng } = rollCurse(state.rng, ARMOR_CURSE_CHANCE_PERCENT);
-	const bonus = cursed ? -ARMOR_DEFENSE_BONUS : ARMOR_DEFENSE_BONUS;
-	return {
-		...state,
-		playerDefense: state.playerDefense + bonus,
-		rng,
-		events: buildEventLog(state.events, [
-			{ type: "armor-equipped", payload: { kind: "armor", bonus } },
-		]),
-	};
+export const unequipOthers = (
+	inventory: readonly HeldItem[],
+	keepItemId: number,
+	otherKinds: readonly EquippableItem["kind"][],
+): readonly HeldItem[] => {
+	const previouslyEquipped = inventory.find(
+		(item): item is EquippableItem =>
+			item.itemId !== keepItemId &&
+			isEquippableItem(item) &&
+			otherKinds.includes(item.kind) &&
+			item.equipped,
+	);
+	if (previouslyEquipped === undefined) {
+		return inventory;
+	}
+	return replaceHeldItem(inventory, previouslyEquipped.itemId, {
+		...previouslyEquipped,
+		equipped: false,
+	});
+};
+
+/**
+ * Toggles a held sword's equip state. Equipping unequips any other held
+ * sword first and reveals the curse rolled at pickup (see items/pickups.ts).
+ * Unequipping a cursed sword is refused (logs equip-blocked-cursed, no
+ * other state change).
+ */
+export const applyToggleSwordEquip = (
+	state: GameState,
+	item: SwordItem,
+): GameState => {
+	if (item.equipped) {
+		if (item.cursed) {
+			return {
+				...state,
+				events: buildEventLog(state.events, [
+					{ type: "equip-blocked-cursed", payload: { kind: "sword" } },
+				]),
+			};
+		}
+		return {
+			...state,
+			inventory: replaceHeldItem(state.inventory, item.itemId, {
+				...item,
+				equipped: false,
+			}),
+			events: buildEventLog(state.events, [
+				{ type: "item-unequipped", payload: { kind: "sword" } },
+			]),
+		};
+	}
+	const inventory = replaceHeldItem(
+		unequipOthers(state.inventory, item.itemId, ["sword"]),
+		item.itemId,
+		{ ...item, equipped: true },
+	);
+	const events: GameEvent[] = [
+		{
+			type: "weapon-equipped",
+			payload: { kind: "sword", bonus: item.attackBonus },
+		},
+	];
+	if (item.cursed) {
+		events.push({ type: "curse-revealed", payload: { kind: "sword" } });
+	}
+	return { ...state, inventory, events: buildEventLog(state.events, events) };
+};
+
+/**
+ * Toggles a held armor's equip state — same shape as applyToggleSwordEquip,
+ * for the defenseBonus/rustProtected fields instead.
+ */
+export const applyToggleArmorEquip = (
+	state: GameState,
+	item: ArmorItem,
+): GameState => {
+	if (item.equipped) {
+		if (item.cursed) {
+			return {
+				...state,
+				events: buildEventLog(state.events, [
+					{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
+				]),
+			};
+		}
+		return {
+			...state,
+			inventory: replaceHeldItem(state.inventory, item.itemId, {
+				...item,
+				equipped: false,
+			}),
+			events: buildEventLog(state.events, [
+				{ type: "item-unequipped", payload: { kind: "armor" } },
+			]),
+		};
+	}
+	const inventory = replaceHeldItem(
+		unequipOthers(state.inventory, item.itemId, ["armor"]),
+		item.itemId,
+		{ ...item, equipped: true },
+	);
+	const events: GameEvent[] = [
+		{
+			type: "armor-equipped",
+			payload: { kind: "armor", bonus: item.defenseBonus },
+		},
+	];
+	if (item.cursed) {
+		events.push({ type: "curse-revealed", payload: { kind: "armor" } });
+	}
+	return { ...state, inventory, events: buildEventLog(state.events, events) };
 };

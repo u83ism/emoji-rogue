@@ -70,9 +70,21 @@ describe("applyPlayerAttack", () => {
 		expect(next.terrain).toBe(state.terrain);
 	});
 
-	it("deals playerAttackDamage, not a hardcoded amount (a sword raises it)", () => {
+	it("deals calculatePlayerAttackDamage's total, not a hardcoded amount (an equipped sword raises it)", () => {
 		const target = zombie(5, 4, 10);
-		const boosted = { ...state, playerAttackDamage: 3, enemies: [target] };
+		const boosted = {
+			...state,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword" as const,
+					equipped: true,
+					cursed: false,
+					attackBonus: 2,
+				},
+			],
+			enemies: [target],
+		};
 		const next = applyPlayerAttack(boosted, target);
 		expect(next.enemies).toEqual([zombie(5, 4, 7)]);
 		expect(next.events).toEqual([

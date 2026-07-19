@@ -8,7 +8,9 @@ const VALID_REPLAY = {
 	actions: [
 		{ type: "move", payload: { direction: "north" } },
 		{ type: "wait" },
-		{ type: "use-item", payload: { kind: "heal-potion" } },
+		{ type: "use-item", payload: { itemId: 1 } },
+		{ type: "use-item", payload: { itemId: 2, targetItemId: 3 } },
+		{ type: "drop-item", payload: { itemId: 4 } },
 		{ type: "save" },
 		{ type: "quit" },
 	],
@@ -65,7 +67,21 @@ describe("validateReplay", () => {
 		expect(
 			validateReplay({
 				...VALID_REPLAY,
-				actions: [{ type: "use-item", payload: { kind: "bow" } }],
+				actions: [{ type: "use-item", payload: { itemId: "1" } }],
+			}),
+		).toEqual({ ok: false, error: "actions" });
+		expect(
+			validateReplay({
+				...VALID_REPLAY,
+				actions: [
+					{ type: "use-item", payload: { itemId: 1, targetItemId: "x" } },
+				],
+			}),
+		).toEqual({ ok: false, error: "actions" });
+		expect(
+			validateReplay({
+				...VALID_REPLAY,
+				actions: [{ type: "drop-item", payload: { itemId: "1" } }],
 			}),
 		).toEqual({ ok: false, error: "actions" });
 	});

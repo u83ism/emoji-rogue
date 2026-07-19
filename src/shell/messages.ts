@@ -1,4 +1,3 @@
-import { INVENTORY_CAPACITY } from "../game/balance.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import {
 	ENEMY_NAMES,
@@ -6,11 +5,6 @@ import {
 	resolveItemDisplayName,
 	TRAP_NAMES,
 } from "./gameNames.js";
-import { INVENTORY_TITLE } from "./systemMessages.js";
-
-/** The inventory overlay's title line, with the fill level appended (e.g. "持ち物(iかEscで閉じる) 3/20"). */
-export const formatInventoryTitle = (heldCount: number): string =>
-	`${INVENTORY_TITLE} ${heldCount}/${INVENTORY_CAPACITY}`;
 
 /** The one-line run summary shown once the game ends — see calculateScore in game/score.ts. */
 export const formatScoreSummary = (
@@ -86,19 +80,19 @@ export const formatEvent = (
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":
-			if (event.payload.bonus > 0) {
-				return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力が${event.payload.bonus}上がった!`;
-			}
-			return event.payload.bonus < 0
-				? `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……攻撃力が${-event.payload.bonus}下がった`
-				: `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……攻撃力は変わらなかった`;
+			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力+${event.payload.bonus}`;
 		case "armor-equipped":
-			if (event.payload.bonus > 0) {
-				return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力が${event.payload.bonus}上がった!`;
-			}
-			return event.payload.bonus < 0
-				? `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……防御力が${-event.payload.bonus}下がった`
-				: `${ITEM_NAMES[event.payload.kind]}を装備したが、呪われていた……防御力は変わらなかった`;
+			return event.payload.bonus > 0
+				? `${ITEM_NAMES[event.payload.kind]}を装備した。防御力+${event.payload.bonus}`
+				: `${ITEM_NAMES[event.payload.kind]}を装備したが、錆びついていて防御力は上がらなかった`;
+		case "item-unequipped":
+			return `${ITEM_NAMES[event.payload.kind]}を外した`;
+		case "equip-blocked-cursed":
+			return `${ITEM_NAMES[event.payload.kind]}は呪われていて外せない!`;
+		case "curse-revealed":
+			return `${ITEM_NAMES[event.payload.kind]}は呪われていた……外せなくなってしまった!`;
+		case "items-decursed":
+			return `${ITEM_NAMES["remove-curse-scroll"]}を読んだ。呪いが解け、${event.payload.count}個のアイテムを外せるようになった!`;
 		case "player-hungry":
 			return "空腹を感じてきた";
 		case "player-starved":
@@ -142,11 +136,11 @@ export const formatEvent = (
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
 		case "weapon-enchanted":
-			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。攻撃力が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した剣の攻撃力が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":
-			return `${ITEM_NAMES["enchant-armor"]}を読んだ。防御力が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES["enchant-armor"]}を読んだ。指定した防具の防御力が${event.payload.bonus}上がった!`;
 		case "armor-rusted":
-			return `防具が錆びついた!防御力が${event.payload.amount}下がった`;
+			return `装備中の防具が錆びついた!防御力が${event.payload.amount}下がった`;
 		case "wand-struck":
 			return `杖から放たれた力が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
 		case "player-confused":
@@ -160,7 +154,7 @@ export const formatEvent = (
 		case "levitation-faded":
 			return "浮遊の効果が切れた";
 		case "armor-protected":
-			return `${ITEM_NAMES["protect-armor"]}を読んだ。防具が錆びなくなった!`;
+			return `${ITEM_NAMES["protect-armor"]}を読んだ。指定した防具が錆びなくなった!`;
 		case "player-blinded":
 			return `${ITEM_NAMES.blindness}を飲んだ。目の前が真っ暗になった!`;
 		case "blindness-faded":

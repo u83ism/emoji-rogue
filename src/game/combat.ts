@@ -5,6 +5,7 @@ import {
 } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
+import { calculatePlayerAttackDamage } from "./items/equipment.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
 /** Orthogonal adjacency — the melee reach, matching 4-direction movement. */
@@ -49,18 +50,20 @@ const applyEnemyHit = (
 
 /**
  * The player's bump attack resolved against one enemy: damage comes from
- * `state.playerAttackDamage` (base plus any swords used so far), multiplied
- * by SNEAK_ATTACK_MULTIPLIER when the target is still asleep. The player
- * does not move — attacking is what the movement turn was spent on.
+ * calculatePlayerAttackDamage (playerPower plus the equipped sword's own
+ * attackBonus, if any), multiplied by SNEAK_ATTACK_MULTIPLIER when the
+ * target is still asleep. The player does not move — attacking is what the
+ * movement turn was spent on.
  */
 export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
 	const isSneakAttack = !target.awake;
+	const attackDamage = calculatePlayerAttackDamage(state);
 	const damage = isSneakAttack
-		? state.playerAttackDamage * SNEAK_ATTACK_MULTIPLIER
-		: state.playerAttackDamage;
+		? attackDamage * SNEAK_ATTACK_MULTIPLIER
+		: attackDamage;
 	return applyEnemyHit(
 		state,
 		target,
@@ -73,7 +76,7 @@ export const applyPlayerAttack = (
 
 /**
  * A wand of striking's fixed-damage ranged hit against `target`:
- * WAND_STRIKE_DAMAGE is flat regardless of state.playerAttackDamage or
+ * WAND_STRIKE_DAMAGE is flat regardless of the player's own attack damage or
  * whether `target` was asleep (no sneak-attack multiplier at range). The
  * player does not move; only the caller decides whether the target was even
  * reachable (visible) to aim at.

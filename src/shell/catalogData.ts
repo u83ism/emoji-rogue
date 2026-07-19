@@ -66,7 +66,7 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	},
 	aquator: {
 		spawn: { type: "chance", percent: AQUATOR_SPAWN_CHANCE_PERCENT },
-		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で防具を錆びさせ、防御力を1下げる(防具保護の巻物で無効化)`,
+		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)`,
 	},
 };
 

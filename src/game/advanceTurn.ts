@@ -1,3 +1,4 @@
+/* file-size-exception: リデューサ本体(applyMove/applyTurnEndTicks/applyItemAction/advanceTurn)の一体性を優先(2026-07-19裁可) */
 import { stepUniform } from "../rng.js";
 import { applyPlayerAttack } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
@@ -180,11 +181,15 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				: state;
 		case "use-item":
 			return applyItemAction(state, (current) =>
-				applyUseItem(current, action.payload.kind),
+				applyUseItem(
+					current,
+					action.payload.itemId,
+					action.payload.targetItemId,
+				),
 			);
 		case "drop-item":
 			return applyItemAction(state, (current) =>
-				applyItemDrop(current, action.payload.kind),
+				applyItemDrop(current, action.payload.itemId),
 			);
 		case "save":
 			/* Only mark the intent — the shell performs the actual file write

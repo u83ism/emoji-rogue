@@ -12,7 +12,21 @@ import {
 } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { Enemy, GameState } from "./state.js";
+import { calculatePlayerDefense } from "./items/equipment.js";
+import type { Enemy, GameState, HeldItem } from "./state.js";
+
+/** An equipped armor HeldItem with the given defenseBonus — the new stand-in for the old playerDefense field. */
+const equippedArmor = (
+	defenseBonus: number,
+	rustProtected = false,
+): HeldItem => ({
+	itemId: 1,
+	kind: "armor",
+	equipped: true,
+	cursed: false,
+	defenseBonus,
+	rustProtected,
+});
 
 const zombie = (x: number, y: number, awake = true): Enemy => ({
 	x,
@@ -144,20 +158,17 @@ describe("advanceEnemies", () => {
 			playerMaxHp: PLAYER_MAX_HP,
 			playerLevel: 1,
 			playerExperience: 0,
-			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
-			playerDefense: 0,
+			playerPower: PLAYER_ATTACK_DAMAGE,
 			playerFood: 100,
-			hasRingOfRegeneration: false,
-			hasRingOfSustenance: false,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
-			armorProtected: false,
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],
+			nextItemId: 1,
 			identifiedPotionKinds: [],
 			goldPiles: [],
 			goldCollected: 0,
@@ -212,10 +223,10 @@ describe("advanceEnemies", () => {
 		]);
 	});
 
-	it("playerDefense reduces incoming damage", () => {
+	it("the equipped armor's defenseBonus reduces incoming damage", () => {
 		const state = {
 			...buildCorridorState([zombie(5, 1)]),
-			playerDefense: 1,
+			inventory: [equippedArmor(1)],
 			playerHp: 5,
 		};
 		const next = advanceEnemies(state);
@@ -223,10 +234,10 @@ describe("advanceEnemies", () => {
 		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
 	});
 
-	it("however high playerDefense climbs, damage never drops below MIN_DAMAGE_TAKEN", () => {
+	it("however high the equipped armor's defenseBonus climbs, damage never drops below MIN_DAMAGE_TAKEN", () => {
 		const state = {
 			...buildCorridorState([zombie(5, 1)]),
-			playerDefense: 100,
+			inventory: [equippedArmor(100)],
 			playerHp: 5,
 		};
 		const next = advanceEnemies(state);
@@ -296,7 +307,7 @@ describe("advanceEnemies", () => {
 	it("an adjacent nymph steals the only held item slot and flees", () => {
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
-			inventory: ["heal-potion" as const],
+			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]); /* the nymph is gone for good */
@@ -310,10 +321,17 @@ describe("advanceEnemies", () => {
 	it("an adjacent nymph steals one slot when several of the same kind are held, leaving the rest", () => {
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
-			inventory: ["food" as const, "food" as const, "food" as const],
+			inventory: [
+				{ itemId: 1, kind: "food" } as const,
+				{ itemId: 2, kind: "food" } as const,
+				{ itemId: 3, kind: "food" } as const,
+			],
 		};
 		const next = advanceEnemies(state);
-		expect(next.inventory).toEqual(["food", "food"]);
+		/* which itemId is picked depends on the rng roll, but every candidate
+		 * is a "food" entry, so the observable result is the same either way */
+		expect(next.inventory.length).toBe(2);
+		expect(next.inventory.every((item) => item.kind === "food")).toBe(true);
 		expect(next.events).toEqual([
 			{ type: "item-stolen", payload: { kind: "food" } },
 		]);
@@ -322,7 +340,16 @@ describe("advanceEnemies", () => {
 	it("an adjacent nymph steals exactly one slot total when several kinds are held", () => {
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
-			inventory: ["heal-potion" as const, "sword" as const],
+			inventory: [
+				{ itemId: 1, kind: "heal-potion" } as const,
+				{
+					itemId: 2,
+					kind: "sword",
+					equipped: false,
+					cursed: false,
+					attackBonus: 1,
+				} as const,
+			],
 		};
 		const next = advanceEnemies(state);
 		expect(next.inventory.length).toBe(1); /* one slot consumed */
@@ -332,8 +359,39 @@ describe("advanceEnemies", () => {
 		}
 		expect(["heal-potion", "sword"]).toContain(stolenEvent.payload.kind);
 		expect(
-			next.inventory.some((kind) => kind === stolenEvent.payload.kind),
+			next.inventory.some((item) => item.kind === stolenEvent.payload.kind),
 		).toBe(false);
+	});
+
+	it("an adjacent nymph never steals an equipped item, even alongside unequipped ones", () => {
+		/* the only unequipped candidate is the heal-potion — the equipped sword
+		 * must never be picked, however the rng roll lands */
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword",
+					equipped: true,
+					cursed: false,
+					attackBonus: 1,
+				} as const,
+				{ itemId: 2, kind: "heal-potion" } as const,
+			],
+		};
+		const next = advanceEnemies(state);
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "sword",
+				equipped: true,
+				cursed: false,
+				attackBonus: 1,
+			},
+		]);
+		expect(next.events).toEqual([
+			{ type: "item-stolen", payload: { kind: "heal-potion" } },
+		]);
 	});
 
 	it("an adjacent nymph still flees with an empty inventory, stealing nothing", () => {
@@ -349,10 +407,23 @@ describe("advanceEnemies", () => {
 		]);
 	});
 
+	it("an adjacent nymph steals nothing when every held item is equipped", () => {
+		const state = {
+			...buildCorridorState([nymph(5, 1)]),
+			inventory: [equippedArmor(1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([]);
+		expect(next.inventory).toEqual([equippedArmor(1)]);
+		expect(next.events).toEqual([
+			{ type: "item-stolen", payload: { kind: undefined } },
+		]);
+	});
+
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
 		const state = {
 			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
-			inventory: ["heal-potion" as const],
+			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
@@ -369,9 +440,10 @@ describe("advanceEnemies", () => {
 	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 1's first
 	 * roll succeeds, seed 1000's fails.
 	 */
-	it("an adjacent aquator deals damage, stands its ground, and may rust armor", () => {
+	it("an adjacent aquator deals damage, stands its ground, and may rust the equipped armor", () => {
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1),
+			inventory: [equippedArmor(2)],
 			enemies: [aquator(5, 1)],
 		};
 		const next = advanceEnemies(state);
@@ -379,21 +451,38 @@ describe("advanceEnemies", () => {
 			aquator(5, 1),
 		]); /* stays, unlike thief/nymph */
 		expect(next.playerHp).toBe(state.playerHp - 1);
-		expect(next.playerDefense).toBe(state.playerDefense - 1);
+		expect(calculatePlayerDefense(next.inventory)).toBe(
+			calculatePlayerDefense(state.inventory) - 1,
+		);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 			{ type: "armor-rusted", payload: { amount: 1 } },
 		]);
 	});
 
-	it("armorProtected skips the rust roll entirely, even on seed 1 which always rusts unprotected", () => {
+	it("a rustProtected equipped armor skips the rust roll entirely, even on seed 1 which always rusts unprotected armor", () => {
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1),
-			armorProtected: true,
+			inventory: [equippedArmor(2, true)],
 			enemies: [aquator(5, 1)],
 		};
 		const next = advanceEnemies(state);
-		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(calculatePlayerDefense(next.inventory)).toBe(
+			calculatePlayerDefense(state.inventory),
+		);
+		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
+		]);
+	});
+
+	it("no armor equipped at all skips the rust roll entirely — nothing to degrade", () => {
+		const state: GameState = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [aquator(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.inventory).toEqual([]);
 		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
@@ -403,10 +492,13 @@ describe("advanceEnemies", () => {
 	it("an aquator hit that fails its rust roll only deals damage", () => {
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1000),
+			inventory: [equippedArmor(2)],
 			enemies: [aquator(5, 1)],
 		};
 		const next = advanceEnemies(state);
-		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(calculatePlayerDefense(next.inventory)).toBe(
+			calculatePlayerDefense(state.inventory),
+		);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 		]);
@@ -415,10 +507,13 @@ describe("advanceEnemies", () => {
 	it("only an aquator's hits can rust armor — a zombie never does", () => {
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1),
+			inventory: [equippedArmor(2)],
 			enemies: [zombie(5, 1)],
 		};
 		const next = advanceEnemies(state);
-		expect(next.playerDefense).toBe(state.playerDefense);
+		expect(calculatePlayerDefense(next.inventory)).toBe(
+			calculatePlayerDefense(state.inventory),
+		);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
 		]);
@@ -428,7 +523,7 @@ describe("advanceEnemies", () => {
 		/* at seed 1, only the first of these two aquators' rolls succeeds */
 		const state: GameState = {
 			...buildArenaGameState(9, 3, 1),
-			playerDefense: 5,
+			inventory: [equippedArmor(5)],
 			enemies: [aquator(5, 1), aquator(3, 1)],
 		};
 		const next = advanceEnemies(state);
@@ -436,7 +531,7 @@ describe("advanceEnemies", () => {
 			(event) => event.type === "armor-rusted",
 		);
 		expect(rustedEvents.length).toBe(1);
-		expect(next.playerDefense).toBe(
+		expect(calculatePlayerDefense(next.inventory)).toBe(
 			4,
 		); /* 5 - 1, from the one successful roll */
 	});
@@ -488,20 +583,17 @@ describe("advanceEnemies", () => {
 			playerMaxHp: PLAYER_MAX_HP,
 			playerLevel: 1,
 			playerExperience: 0,
-			playerAttackDamage: PLAYER_ATTACK_DAMAGE,
-			playerDefense: 0,
+			playerPower: PLAYER_ATTACK_DAMAGE,
 			playerFood: 100,
-			hasRingOfRegeneration: false,
-			hasRingOfSustenance: false,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
-			armorProtected: false,
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
 			enemies: [zombie(5, 1, false)],
 			items: [],
 			inventory: [],
+			nextItemId: 1,
 			identifiedPotionKinds: [],
 			goldPiles: [],
 			goldCollected: 0,

@@ -1,6 +1,7 @@
 import { INVENTORY_CAPACITY } from "../balance.js";
-import { buildEventLog } from "../events.js";
+import { buildEventLog, isEquipmentItemKind } from "../events.js";
 import type { GameState } from "../state.js";
+import { toHeldItem } from "./heldItemFactory.js";
 import { addToInventory } from "./inventory.js";
 
 /**
@@ -8,7 +9,11 @@ import { addToInventory } from "./inventory.js";
  * longer used immediately (that's the "use-item" action's job). Refused
  * (item stays on the floor) once the inventory is already at
  * INVENTORY_CAPACITY: every pickup takes its own slot, even of a kind
- * already held (no stacking — see GameState.inventory).
+ * already held (no stacking — see GameState.inventory). A sword/armor/ring's
+ * identity was already rolled at floor generation (see
+ * heldItemFactory.ts's buildFloorItem) — toHeldItem just reads it back,
+ * consuming no rng and no itemId. Only a consumable, which has no identity
+ * concept, consumes a fresh itemId here.
  */
 export const applyItemPickup = (state: GameState): GameState => {
 	const item = state.items.find(
@@ -26,9 +31,14 @@ export const applyItemPickup = (state: GameState): GameState => {
 			]),
 		};
 	}
+	const isFreshConsumable = !isEquipmentItemKind(item.kind);
 	return {
 		...state,
-		inventory: addToInventory(state.inventory, item.kind),
+		inventory: addToInventory(
+			state.inventory,
+			toHeldItem(item, state.nextItemId),
+		),
+		nextItemId: isFreshConsumable ? state.nextItemId + 1 : state.nextItemId,
 		items: state.items.filter((candidate) => candidate !== item),
 		events: buildEventLog(state.events, [
 			{ type: "item-picked-up", payload: { kind: item.kind } },

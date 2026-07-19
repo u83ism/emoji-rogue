@@ -1,25 +1,34 @@
-import type { ItemKind } from "../events.js";
+import type { HeldItem } from "../state.js";
 
-/** The inventory with `kind` appended as a new slot — every pickup, even of an already-held kind, takes its own slot (no stacking). */
+/** The inventory with a freshly built HeldItem appended — see applyItemPickup, which builds it. */
 export const addToInventory = (
-	inventory: readonly ItemKind[],
-	kind: ItemKind,
-): readonly ItemKind[] => [...inventory, kind];
+	inventory: readonly HeldItem[],
+	item: HeldItem,
+): readonly HeldItem[] => [...inventory, item];
 
-/** The inventory with the first slot holding `kind` removed, or unchanged if `kind` is not held. */
-export const removeFromInventory = (
-	inventory: readonly ItemKind[],
-	kind: ItemKind,
-): readonly ItemKind[] => {
-	const index = inventory.indexOf(kind);
-	return index === -1 ? inventory : removeOneFromInventory(inventory, index);
-};
+/** The inventory with the held item matching `itemId` removed, or unchanged if not held. */
+export const removeHeldItem = (
+	inventory: readonly HeldItem[],
+	itemId: number,
+): readonly HeldItem[] => inventory.filter((item) => item.itemId !== itemId);
 
-/** The inventory with the slot at `index` removed — the nymph's rng-picked steal. */
-export const removeOneFromInventory = (
-	inventory: readonly ItemKind[],
+/**
+ * The inventory with the held item matching `itemId` replaced by `nextItem`
+ * — used to toggle equip state or bump an enchantment value in place, never
+ * to change which item an id refers to.
+ */
+export const replaceHeldItem = (
+	inventory: readonly HeldItem[],
+	itemId: number,
+	nextItem: HeldItem,
+): readonly HeldItem[] =>
+	inventory.map((item) => (item.itemId === itemId ? nextItem : item));
+
+/** The held item at `index`, or undefined out of range — the nymph's rng-picked steal. */
+export const removeHeldItemAtIndex = (
+	inventory: readonly HeldItem[],
 	index: number,
-): readonly ItemKind[] => [
+): readonly HeldItem[] => [
 	...inventory.slice(0, index),
 	...inventory.slice(index + 1),
 ];

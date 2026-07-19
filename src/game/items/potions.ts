@@ -77,8 +77,7 @@ export const applyUsePotion = (
 		case "strength":
 			return {
 				...state,
-				playerAttackDamage:
-					state.playerAttackDamage + STRENGTH_POTION_ATTACK_BONUS,
+				playerPower: state.playerPower + STRENGTH_POTION_ATTACK_BONUS,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{

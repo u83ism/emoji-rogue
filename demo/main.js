@@ -11,22 +11,27 @@ import {
 	buildFrameGrid,
 	buildSaveFileContent,
 	CONFUSION_GLYPH,
+	calculatePlayerAttackDamage,
+	calculatePlayerDefense,
 	DETECT_MONSTER_GLYPH,
 	formatEvent,
+	formatHeldItemLabel,
 	formatInventoryTitle,
 	GOAL_FLOOR,
 	INVENTORY_EMPTY_MESSAGE,
-	ITEM_VERB_PROMPT,
+	ITEM_TARGET_PROMPT,
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 	parseSaveFileContent,
-	resolveItemDisplayName,
+	resolveItemVerbPrompt,
+	resolveTargetKind,
 	SAVE_LOAD_WARNING_MESSAGE,
 	toInventoryLetter,
 	toItemVerbAction,
-	toSelectedItemKind,
+	toSelectedHeldItem,
+	toTargetedUseAction,
 } from "../dist/game/index.mjs";
 
 const WIDTH = 40;
@@ -106,7 +111,12 @@ let state =
 let isInventoryOpen = false;
 /* The row picked inside the overlay, awaiting its use/drop verb — display
  * state like isInventoryOpen, reset whenever the overlay closes. */
-let selectedItemKind;
+let selectedItem;
+/* Set only for a targeted scroll (enchant-weapon, enchant-armor,
+ * protect-armor) once "use" is pressed on it — the shell then shows a
+ * second, filtered row list (resolveTargetKind) instead of dispatching
+ * immediately. Also display state, same lifetime as selectedItem. */
+let pendingTargetFor;
 let showSaveLoadWarning = savedOutcome.kind === "corrupted";
 
 const mapElement = document.getElementById("map");
@@ -199,7 +209,7 @@ const renderStatus = () => {
 				: undefined,
 	);
 	appendStatusSegment(
-		` 💪 ${state.playerAttackDamage} 🦺 ${state.playerDefense}`,
+		` 💪 ${calculatePlayerAttackDamage(state)} 🦺 ${calculatePlayerDefense(state.inventory)}`,
 	);
 	appendStatusSegment(` 💰 ${state.goldCollected}`, "#fd6");
 	for (const chip of STATUS_CHIPS) {
@@ -224,24 +234,40 @@ const renderLog = () => {
 	}
 };
 
+const appendHeldItemRow = (item, index) => {
+	const row = document.createElement("div");
+	row.textContent = `${toInventoryLetter(index)}) ${formatHeldItemLabel(item, state.identifiedPotionKinds)}`;
+	inventoryElement.appendChild(row);
+};
+
 const renderInventory = () => {
 	inventoryElement.hidden = !isInventoryOpen;
 	if (!isInventoryOpen) {
 		return;
 	}
 	inventoryElement.textContent = "";
+	if (pendingTargetFor !== undefined) {
+		const prompt = document.createElement("div");
+		prompt.textContent = ITEM_TARGET_PROMPT;
+		inventoryElement.appendChild(prompt);
+		const targetKind = resolveTargetKind(pendingTargetFor.kind);
+		state.inventory
+			.filter((item) => item.kind === targetKind)
+			.forEach(appendHeldItemRow);
+		return;
+	}
 	const title = document.createElement("div");
 	title.textContent = formatInventoryTitle(state.inventory.length);
 	inventoryElement.appendChild(title);
-	if (selectedItemKind !== undefined) {
+	if (selectedItem !== undefined) {
 		const selected = document.createElement("div");
-		selected.textContent = resolveItemDisplayName(
-			selectedItemKind,
+		selected.textContent = formatHeldItemLabel(
+			selectedItem,
 			state.identifiedPotionKinds,
 		);
 		inventoryElement.appendChild(selected);
 		const prompt = document.createElement("div");
-		prompt.textContent = ITEM_VERB_PROMPT;
+		prompt.textContent = resolveItemVerbPrompt(selectedItem);
 		inventoryElement.appendChild(prompt);
 		return;
 	}
@@ -251,11 +277,7 @@ const renderInventory = () => {
 		inventoryElement.appendChild(empty);
 		return;
 	}
-	state.inventory.forEach((kind, index) => {
-		const row = document.createElement("div");
-		row.textContent = `${toInventoryLetter(index)}) ${resolveItemDisplayName(kind, state.identifiedPotionKinds)}`;
-		inventoryElement.appendChild(row);
-	});
+	state.inventory.forEach(appendHeldItemRow);
 };
 
 const render = () => {
@@ -271,19 +293,50 @@ const render = () => {
 		seed === undefined ? "再開したセーブデータ" : `seed: ${seed}`;
 };
 
+const closeInventory = () => {
+	isInventoryOpen = false;
+	selectedItem = undefined;
+	pendingTargetFor = undefined;
+};
+
 window.addEventListener("keydown", (event) => {
 	if (isInventoryOpen) {
-		if (selectedItemKind !== undefined) {
+		if (pendingTargetFor !== undefined) {
 			if (event.key === "i" || event.key === "Escape") {
-				isInventoryOpen = false;
-				selectedItemKind = undefined;
+				closeInventory();
 				render();
 				return;
 			}
-			const action = toItemVerbAction(event.key, selectedItemKind);
+			const candidates = state.inventory.filter(
+				(item) => item.kind === resolveTargetKind(pendingTargetFor.kind),
+			);
+			const target = toSelectedHeldItem(event.key, candidates);
+			if (target !== undefined) {
+				const action = toTargetedUseAction(pendingTargetFor, target);
+				closeInventory();
+				state = advanceTurn(state, action);
+				persistSaveState(state);
+			}
+			render();
+			return;
+		}
+		if (selectedItem !== undefined) {
+			if (event.key === "i" || event.key === "Escape") {
+				closeInventory();
+				render();
+				return;
+			}
+			const targetKind = resolveTargetKind(selectedItem.kind);
+			if (event.key === "u" && targetKind !== undefined) {
+				if (state.inventory.some((item) => item.kind === targetKind)) {
+					pendingTargetFor = selectedItem;
+					render();
+				}
+				return;
+			}
+			const action = toItemVerbAction(event.key, selectedItem);
 			if (action !== undefined) {
-				isInventoryOpen = false;
-				selectedItemKind = undefined;
+				closeInventory();
 				state = advanceTurn(state, action);
 				persistSaveState(state);
 			}
@@ -291,13 +344,13 @@ window.addEventListener("keydown", (event) => {
 			return;
 		}
 		if (event.key === "i" || event.key === "Escape") {
-			isInventoryOpen = false;
+			closeInventory();
 			render();
 			return;
 		}
-		const kind = toSelectedItemKind(event.key, state.inventory);
-		if (kind !== undefined) {
-			selectedItemKind = kind;
+		const item = toSelectedHeldItem(event.key, state.inventory);
+		if (item !== undefined) {
+			selectedItem = item;
 			render();
 		}
 		return;

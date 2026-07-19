@@ -217,11 +217,11 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
 			paralyzedTurnsRemaining: 3,
-			inventory: ["heal-potion" as const],
+			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.paralyzedTurnsRemaining).toBe(2);
@@ -232,11 +232,11 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
 			paralyzedTurnsRemaining: 3,
-			inventory: ["heal-potion" as const],
+			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 		};
 		const next = advanceTurn(state, {
 			type: "drop-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.paralyzedTurnsRemaining).toBe(2);
@@ -246,11 +246,11 @@ describe("advanceTurn", () => {
 	it("dropping a held item moves it from inventory onto the player's tile and spends a turn", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
-			inventory: ["heal-potion" as const],
+			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 		};
 		const next = advanceTurn(state, {
 			type: "drop-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual([]);
 		expect(next.items).toEqual([
@@ -259,11 +259,11 @@ describe("advanceTurn", () => {
 		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
 	});
 
-	it("dropping a kind not held spends no turn", () => {
+	it("dropping an itemId not held spends no turn", () => {
 		const state = { ...buildArenaGameState(9, 9, 1), inventory: [] };
 		const next = advanceTurn(state, {
 			type: "drop-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next).toBe(state);
 	});
@@ -363,9 +363,9 @@ describe("advanceTurn", () => {
 		const usedItem = advanceTurn(
 			{
 				...buildArenaGameState(9, 3, 1),
-				inventory: ["heal-potion" as const],
+				inventory: [{ itemId: 1, kind: "heal-potion" } as const],
 			},
-			{ type: "use-item", payload: { kind: "heal-potion" } },
+			{ type: "use-item", payload: { itemId: 1 } },
 		);
 		expect(usedItem.playerFood).toBe(PLAYER_MAX_FOOD - 1);
 	});

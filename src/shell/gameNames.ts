@@ -43,6 +43,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"raise-level": "レベルアップの薬",
 	"detect-monster": "索敵の薬",
 	life: "生命の薬",
+	"remove-curse-scroll": "解呪の巻物",
 };
 
 /** Shown for any potion-family item not yet identified this run. */

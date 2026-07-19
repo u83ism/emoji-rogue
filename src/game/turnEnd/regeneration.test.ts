@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { PLAYER_MAX_HP } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import type { GameState } from "../state.js";
+import type { GameState, HeldItem } from "../state.js";
 import { applyRegenerationTick } from "./regeneration.js";
+
+/** An equipped ring of regeneration — the new stand-in for the old hasRingOfRegeneration flag. */
+const equippedRegenerationRing: HeldItem = {
+	itemId: 1,
+	kind: "regeneration-ring",
+	equipped: true,
+	cursed: false,
+};
 
 describe("applyRegenerationTick", () => {
 	it("is a no-op (same reference) without a ring of regeneration", () => {
@@ -13,7 +21,7 @@ describe("applyRegenerationTick", () => {
 	it("is a no-op (same reference) at full HP even with a ring equipped", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 1),
-			hasRingOfRegeneration: true,
+			inventory: [equippedRegenerationRing],
 		};
 		expect(applyRegenerationTick(state)).toBe(state);
 	});
@@ -25,7 +33,7 @@ describe("applyRegenerationTick", () => {
 	it("heals 1 HP and logs player-regenerated when the roll succeeds", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 1),
-			hasRingOfRegeneration: true,
+			inventory: [equippedRegenerationRing],
 			playerHp: PLAYER_MAX_HP - 3,
 		};
 		const next = applyRegenerationTick(state);
@@ -39,7 +47,7 @@ describe("applyRegenerationTick", () => {
 	it("advances the rng but changes nothing else when the roll fails", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 411),
-			hasRingOfRegeneration: true,
+			inventory: [equippedRegenerationRing],
 			playerHp: PLAYER_MAX_HP - 3,
 		};
 		const next = applyRegenerationTick(state);
@@ -51,7 +59,7 @@ describe("applyRegenerationTick", () => {
 	it("is a no-op once the run is no longer playing", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 1),
-			hasRingOfRegeneration: true,
+			inventory: [equippedRegenerationRing],
 			playerHp: PLAYER_MAX_HP - 3,
 			status: "dead",
 		};

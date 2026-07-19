@@ -7,10 +7,15 @@
 export type { Cell } from "../renderer/index.js";
 export { buildCatalogMarkdown } from "../shell/catalog.js";
 export { resolveItemDisplayName } from "../shell/gameNames.js";
-export { formatEvent, formatInventoryTitle } from "../shell/messages.js";
+export {
+	formatHeldItemLabel,
+	formatInventoryTitle,
+	resolveItemVerbPrompt,
+} from "../shell/inventoryLabels.js";
+export { formatEvent } from "../shell/messages.js";
 export {
 	INVENTORY_EMPTY_MESSAGE,
-	ITEM_VERB_PROMPT,
+	ITEM_TARGET_PROMPT,
 	SAVE_LOAD_WARNING_MESSAGE,
 } from "../shell/systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
@@ -40,10 +45,16 @@ export {
 } from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export {
+	resolveTargetKind,
 	toInventoryLetter,
 	toItemVerbAction,
-	toSelectedItemKind,
+	toSelectedHeldItem,
+	toTargetedUseAction,
 } from "./inventoryKeymap.js";
+export {
+	calculatePlayerAttackDamage,
+	calculatePlayerDefense,
+} from "./items/equipment.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,
@@ -51,6 +62,7 @@ export type {
 	Enemy,
 	GameState,
 	GameStatus,
+	HeldItem,
 	Item,
 	Position,
 } from "./state.js";

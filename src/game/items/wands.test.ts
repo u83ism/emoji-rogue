@@ -24,11 +24,11 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: ["striking-wand" as const],
+			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "striking-wand" },
+			payload: { itemId: 1 },
 		});
 		expect(next.player).toEqual(state.player); /* the player does not move */
 		expect(next.enemies).toEqual([]);
@@ -48,11 +48,11 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [far, near],
-			inventory: ["striking-wand" as const],
+			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "striking-wand" },
+			payload: { itemId: 1 },
 		});
 		/* the near zombie is the one killed; the far one is untouched */
 		expect(next.enemies).toEqual([far]);
@@ -61,11 +61,11 @@ describe("items/wands", () => {
 	it("using a held wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["striking-wand" as const],
+			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "striking-wand" },
+			payload: { itemId: 1 },
 		});
 		expect(next).toBe(state);
 	});
@@ -75,11 +75,11 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: ["slow-wand" as const],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "slow-wand" },
+			payload: { itemId: 1 },
 		});
 		expect(next.player).toEqual(state.player); /* the player does not move */
 		/* advanceEnemies runs as part of the same turn-consuming action, so the
@@ -99,11 +99,11 @@ describe("items/wands", () => {
 	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: ["slow-wand" as const],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "slow-wand" },
+			payload: { itemId: 1 },
 		});
 		expect(next).toBe(state);
 	});

@@ -191,6 +191,77 @@ functional-style.mdの「`const`+アロー優先」はゲーム層・シェル�
 
 **マイルストーン80完了(2026-07-19)。**
 
+## マイルストーン81 — 装備概念の導入(着脱可能な剣・防具・指輪、個体強化)
+
+剣・防具・指輪が「使うと消費されキャラ全体に恒久加算される」方式だったのを、本物の**着脱可能な装備**に作り替える。発端は「装備という概念を避けたのはルール(関数型・状態最小化)の間接的な影響では」という指摘(2026-07-19の会話)。結論としてルールは装備を禁じていないが、リデューサで扱いやすい「変化しない値」への実装上のバイアスが実際に働いていたと判断し、着手した。
+
+設計判断(会話で決定、詳細は本エントリの各チェック項目に反映):
+
+- **スロット構成**: 武器1・防具1・指輪1。装備専用の別スロットは持たず、**持ち物の各エントリ自体が装備状態を持つ**(装備してもインベントリ容量を占有し続ける)
+- **個体差**: 「シンプルタイプでまず進める」の想定だったが、既存の強化の巻物2種・防具保護の巻物がキャラ全体への恒久バフだったため、着脱を許すと矛盾する(持ち替えると強化が消える)ことが判明。**強化値・防錆フラグ・呪いはアイテム個体に紐づく永続状態**に落ち着いた(「錆びない鎧+99」が成立する形)
+- **ダメージ/防御の分離**(不思議のダンジョンシリーズの「ちから」概念に倣う): `playerAttackDamage`を`playerPower`(怪力の薬のみが上げる恒久キャラ値、素手でも意味を持つ)に改名し、実際の攻撃力は`playerPower + 装備中の剣.attackBonus(無ければ0)`で導出。防御力は装備中の防具の`defenseBonus`のみ(素の防御力は0)。武器強化の巻物は「今装備中」ではなく「持ち物内の好きな剣」に対象を指定してかけられる(対象選択の仕様は下記)
+- **呪いの再定義**: 数値ペナルティを廃止し、**着脱防止のみ**の効果にする。判定は拾った瞬間(spawn時)に1回だけ行い隠しておき、装備した時に判明する(装備のたびに再抽選しない)。指輪にも呪いを新規導入(現行は指輪に呪い自体が無い)
+- **錆**: 現行の`armorProtected`(キャラ全体の恒久フラグ)は廃止し、**装備中の防具自身が持つ`rustProtected`**に。アクアターの錆攻撃は装備中防具の`defenseBonus`を直接削る(0未満にはならない)
+- **解呪の巻物(新規アイテム)**: 装備中で呪われているものを一括で全て解呪する(不思議のダンジョン準拠)。持ち物内の未装備・未鑑定の呪いには触れない
+- **対象選択UI**: カーソル方式への全面移行(バックログ記載の別件)は今回は見送り、**既存のレター選択(a〜z)の仕組みをもう1段重ねる**形にする。「使う」を選んだ時点でそのkindが対象指定を要る(武器強化・防具強化・防具保護)場合のみ、対象候補(該当kindの持ち物)だけに絞った行一覧をレターで選ばせてから発行する。解呪の巻物は一括処理なので対象選択を経由しない。shell state(GameStateには入れない)は「選んだアイテム」に加えて「選んだアイテムの対象」がこの3kindの時だけ発生する2段構成
+- **アイテムの指定方式(2026-07-19、実装中に方針転換)**: 当初`use-item`に「対象のインベントリindex」を持たせる案だったが、バックログの既存決定「`Action`はkindベース維持(スロットindex参照はリプレイが並び順に依存して脆くなる)」と衝突すると判明。同kind内で個体差が生まれる以上kindだけでは対象を一意に特定できないため、**拾った時点で恒久的な`itemId`(連番、`GameState.nextItemId`で採番)を振り、`use-item`/`drop-item`はkindではなく`itemId`で対象を指定する**方式に統一した。indexより一段ロバスト(配列上の位置に依存しない)なため、バックログの懸念にもより強く応える
+
+### 実装チェックリスト
+
+**ゲーム層コア(コミット1想定)**
+- [x] `src/game/state.ts`: `HeldItem`型を新設(全メンバー共通の`itemId`+ 剣/防具/指輪は`equipped`・`cursed`・`attackBonus`or`defenseBonus`(+`rustProtected`)を持つ判別可能union、それ以外の消費アイテムは`kind`のみ)。`GameState.inventory`を`readonly HeldItem[]`に変更、`nextItemId`を新設。`playerAttackDamage`→`playerPower`に改名、`playerDefense`・`hasRingOfRegeneration`・`hasRingOfSustenance`・`armorProtected`を削除。`Action`の`use-item`/`drop-item`を`kind`ではなく`itemId`(+`targetItemId`)指定に変更
+- [x] `src/game/balance.ts`: `RING_CURSE_CHANCE_PERCENT`・`REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT`新設。`MIN_PLAYER_ATTACK_DAMAGE`(呪いの数値ペナルティ廃止で不要化)を削除
+- [x] `src/game/events.ts`: `ItemKind`に`"remove-curse-scroll"`追加、`EquipmentItemKind`(sword/armor/regeneration-ring/sustenance-ring)を新設。`item-unequipped`・`equip-blocked-cursed`・`curse-revealed`・`items-decursed`の`GameEvent`を追加(`weapon-equipped`等の既存イベントは装備側で流用)
+- [x] `src/game/items/equipment.ts`: 剣・防具の「使う」を消費でなく装備トグルに書き替え。呪いが立っていれば解除不可でno-op。実際の攻撃力/防御力を導出する純粋関数(`calculatePlayerAttackDamage`/`calculatePlayerDefense`)をここに置く
+- [x] `src/game/items/rings.ts`: 指輪も装備トグル化、呪い導入。`turnEnd/regeneration.ts`・`turnEnd/hunger.ts`の判定を「装備中の指輪」ベースに変更
+- [x] `src/game/items/pickups.ts`: 剣・防具・指輪を拾った時点で呪い判定(隠し)と初期`attackBonus`/`defenseBonus`(`SWORD_ATTACK_BONUS`/`ARMOR_DEFENSE_BONUS`)を確定
+- [x] `src/game/items/inventory.ts`・`drop.ts`・`use.ts`: `HeldItem`前提に書き替え。`use-item`は剣/防具/指輪なら装備トグル、それ以外は従来通り消費
+- [x] `src/game/combat.ts`: `state.playerAttackDamage`直読みを`calculatePlayerAttackDamage(state)`呼び出しに変更
+- [x] `src/game/enemies.ts`: アクアターの錆処理を装備中防具の`defenseBonus`減算に変更(`rustProtected`または防具未装備ならスキップ)。nymphの盗みロジックを`HeldItem`対応にし、**装備中のアイテムは盗みの対象から除外**する仕様を追加(不思議のダンジョン準拠、実装中の判断)
+- [x] `src/game/initialState.ts`: `INITIAL_RUN_STATE`を新フィールドに合わせて更新
+- [x] `src/game/format/saveFormat.ts`・`validateGameState.ts`・`validateReplay.ts`・`replayFormat.ts`: `HeldItem`のシリアライズ・検証に対応、`SAVE_FORMAT_VERSION`を28、`REPLAY_FORMAT_VERSION`を4にbump(`drop-item`のreplay検証が実は存在しなかった既存バグも合わせて修正)
+- [x] 上記変更に追従する既存テスト一式の更新(`items/*.test.ts`・`combat.test.ts`・`enemies.test.ts`・`format/*.test.ts`・`advanceTurn.test.ts`ほか。並行するバックグラウンドAgent2体+本セッションで分担)
+
+**巻物と対象選択**
+- [x] `src/game/items/scrolls.ts`: 武器強化・防具強化・防具保護の巻物を「`targetItemId`必須、対象は該当kindなら未装備でも可」に書き替え。解呪の巻物(新規)を追加、装備中の呪われた`HeldItem`を全て`cursed: false`にする
+- [x] `src/game/state.ts`の`Action`: `use-item`/`drop-item`を`kind`ではなく`itemId`(+`targetItemId`)指定に変更(設計転換の経緯は上記参照)
+- [x] `src/game/balance.ts`: `REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT`等の出現率定数を追加。`src/game/floor/items.ts`のスポーンテーブルに追加(末尾に追加し既存シードのrng消費順を保存)
+- [x] `src/game/glyphs.ts`: `remove-curse-scroll`に📜(巻物共通)を割り当て
+- [x] `src/shell/gameNames.ts`・`itemCatalog.ts`・`catalogData.ts`: 表示名・図鑑データに新アイテムを追加、`npm run docs:catalog`で`docs/catalog.md`再生成
+- [x] 対応テスト追加・更新
+
+**シェル/UI**
+- [x] `src/game/inventoryKeymap.ts`: `toSelectedItemKind`を`toSelectedHeldItem`に置き換え、`resolveTargetKind`(対象が要るkind→対象kind)・`toTargetedUseAction`を新設
+- [x] `src/main.tsx`: 肥大化(200行超)したため、持ち物オーバーレイの状態機械(選んだアイテム/対象)を`src/shell/inventoryInteraction.ts`(`useInventoryInteraction`フック)に分離。main.tsxはこのフックを呼ぶだけに縮小(マイルストーン79のsession.ts分離と同じ理由)
+- [x] `src/shell/inventoryOverlay.tsx`: 装備中の行に区別表示(強化値・装備中・呪いのタグ)、対象選択フェーズの行一覧表示を追加
+- [x] `src/shell/messages.ts`・`systemMessages.ts`: 新イベント・新プロンプト文言の追加。`messages.ts`も200行超のため、持ち物行表示系(`formatHeldItemLabel`・`formatInventoryTitle`)を`src/shell/inventoryLabels.ts`に分離
+- [x] `demo/main.js`: 同内容をミラー
+- [ ] 実機スモークテスト: この環境にはtmux/PTYもPlaywright用ブラウザも無く、対話的な実機確認は未実施(マイルストーン79・80と同じ制約)。自動テスト(Vitest・ink実描画テスト)でのカバーのみ。次回実機確認時に、装備/解除/呪いロック/対象選択/解呪の一連の流れをWindows Terminal/ブラウザで確認すること
+
+**構造lint対応(実装中に発生)**
+- [x] `src/game/state.ts`(232行)・`src/game/advanceTurn.ts`(203行): いずれも「ゲームの全語彙/リデューサ本体を1箇所で読める価値」を理由に、本人裁可を得て`file-size-exception`コメントで容認
+- [x] `src/shell/messages.ts`(213行): 本人裁可を得て`formatHeldItemLabel`/`formatInventoryTitle`を`src/shell/inventoryLabels.ts`に分割
+
+自動テスト(Vitest 806件)・typecheck・lint(構造lint含む)・knip・buildの通過を確認して完了。
+
+**追記(同日、完了後のUX調整)**: 装備品の「使う」表記が実態と合っていない指摘を受け、`u`の表示を対象に応じて動的に変更(消費アイテムは「つかう」のまま、未装備の剣/防具/指輪は「装備する」、装備中は「はずす」— `src/shell/inventoryLabels.ts`の`resolveItemVerbPrompt`)。あわせて持ち物一覧の「装備中」テキストを絵文字✅に置き換え(`EQUIPPED_GLYPH`、`src/game/glyphs.ts`)。Vitest 810件・typecheck・lint・knip・build再確認済み。
+
+**追記2(同日、バグ修正)**: 上記の作業中に発覚 — 呪われた装備は「外す」操作(`u`)だけを拒否する実装で、「捨てる」(`d`)は呪い状態を一切見ておらず、装備中の呪われたアイテムをそのまま捨てられる抜け道になっていた。`src/game/items/drop.ts`の`applyItemDrop`に「装備中かつ呪われているアイテムは`equip-blocked-cursed`をログして拒否」のチェックを追加して解消。Vitest 813件・typecheck・lint・knip・build再確認済み。
+
+**追記3(同日、バグ修正 → 本人指摘で設計を上流に是正)**: 本人のプレイで発覚 — 指輪を装備して床に捨て、拾い直したら別の呪いが発生した。原因は床の`Item`型が`{x,y,kind}`しか持たず、`HeldItem`が持つ個体状態(itemId・呪い・強化値)を捨てた瞬間に消失させていたため、拾い直すたびに`applyItemPickup`が完全に新規の個体として呪い・強化値を再抽選していた。
+
+当初は`Item`型に`identity`(任意フィールド)を追加し、`applyItemDrop`が装備の個体状態を床に持たせ、`applyItemPickup`が`identity`があれば復元・無ければ拾得時に新規抽選、という対症療法で修正した。しかし本人から「そもそも呪い判定はマップ配置(生成)時にすべきでは」という指摘があり、根本原因(**呪い・強化値の確定タイミングが拾得時になっていたこと自体**)まで遡って設計を是正:
+
+- 剣・防具・指輪の`identity`(itemId・呪い・強化値)は**フロア生成時**(`src/game/floor/items.ts`の`drawFloorItems`)に確定するよう変更。`Item`型の`identity`は(消費アイテム以外は)必須フィールドに変更 — 「拾うまで個体が存在しない」という不自然な遅延評価が型レベルでも無くなった
+- `nextItemId`を`rng`と同じようにフロア生成の呼び出し連鎖(`floor/layout.ts`→`floor/transitions.ts`/`initialState.ts`)に通す形に変更
+- `applyItemPickup`は「床のidentityをそのまま持ち物にコピーする」だけの単純な処理になり、剣・防具・指輪の拾得は乱数を一切消費しなくなった(消費アイテムのitemId発行のみ拾得時に残る)
+- `src/game/items/heldItemFactory.ts`: `buildHeldItem`/`restoreHeldItem`の二重経路を`buildFloorItem`(生成時、`Rng`を直接消費)+`toHeldItem`(拾得時、純粋)の1本に整理
+- `SAVE_FORMAT_VERSION`を29にbump(据え置き — `identity`必須化も同じ29の範囲内の変更として扱う)
+
+Vitest 823件・typecheck・lint・knip・build再確認済み。
+
+**マイルストーン81完了(2026-07-19)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

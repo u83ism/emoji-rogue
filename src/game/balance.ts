@@ -171,25 +171,24 @@ export const calculateEnemyCountForFloor = (
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
-/** Permanent boost to playerAttackDamage per sword used. Stacks — no cap. */
+/** A freshly picked-up sword's own attackBonus (see HeldItem) — raised further by enchant-weapon scrolls targeting it. */
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
 export const SWORD_SPAWN_CHANCE_PERCENT = 15;
 /**
- * Chance (out of 100) that a sword turns out cursed the moment it's used —
- * rolled fresh at use time, not at spawn (see docs/tasks/game-history.md milestone
- * 29: inventory stacks lose per-item identity, so there is nowhere to pin a
- * curse flag onto a specific sword ahead of time).
+ * Chance (out of 100) that a sword turns out cursed — rolled once at pickup
+ * (see items/pickups.ts) and hidden until equipped. A cursed item is exactly
+ * as effective as an uncursed one; the only effect is that it cannot be
+ * unequipped until a remove-curse scroll is read (milestone 81 dropped the
+ * older "curse subtracts from the stat" design).
  */
 export const SWORD_CURSE_CHANCE_PERCENT = 20;
-/** However cursed a sword, playerAttackDamage never drops below this. */
-export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 
-/** Permanent boost to playerDefense per armor used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
+/** A freshly picked-up armor's own defenseBonus (see HeldItem) — raised further by enchant-armor scrolls targeting it. */
 export const ARMOR_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that armor spawns. */
 export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
-/** Chance (out of 100) that armor turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
+/** Chance (out of 100) that armor turns out cursed — same idiom and timing as SWORD_CURSE_CHANCE_PERCENT. */
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 
 export const POISON_DAMAGE = 4;
@@ -205,7 +204,7 @@ export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
 export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
-/** Permanent boost to playerAttackDamage per strength potion drunk. Same magnitude as a sword. */
+/** Permanent boost to playerPower per strength potion drunk — meaningful even with no sword equipped. */
 export const STRENGTH_POTION_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
@@ -260,6 +259,8 @@ export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
 export const RING_SPAWN_CHANCE_PERCENT = 8;
+/** Chance (out of 100) that a ring turns out cursed — same pickup-time-roll, hidden-until-equipped idiom as SWORD_CURSE_CHANCE_PERCENT. */
+export const RING_CURSE_CHANCE_PERCENT = 20;
 /**
  * Chance (out of 100), rolled independently every turn a ring of
  * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it
@@ -279,17 +280,18 @@ export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 
 /**
- * Permanent boost to playerAttackDamage per scroll read — same magnitude as
- * a sword, but unlike a found sword this is never cursed (scrolls have no
- * curse mechanic in this game, see docs/tasks/game-history.md milestone 36).
+ * Permanent boost to a targeted sword's own attackBonus per scroll read
+ * (see items/scrolls.ts — the player picks which held sword, equipped or
+ * not; no-op with no sword held). Same magnitude as a freshly found sword,
+ * but the scroll itself is never cursed.
  */
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
 export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
- * Permanent boost to playerDefense per scroll read — same magnitude as
- * armor, but (like enchant-weapon) never cursed.
+ * Permanent boost to a targeted armor's own defenseBonus per scroll read —
+ * same targeting and never-cursed rules as ENCHANT_WEAPON_BONUS.
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
@@ -319,8 +321,11 @@ export const LEVITATION_POTION_DURATION = 15;
 /** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
 export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
-/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. */
+/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. Sets rustProtected on a targeted held armor (see items/scrolls.ts). */
 export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
+/** Chance (out of 100), independently rolled per floor, that a remove-curse scroll spawns. No-op (not consumed) if nothing currently equipped is cursed. */
+export const REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a blindness potion shrinks the player's field of view for. */
 export const BLIND_POTION_DURATION = 20;

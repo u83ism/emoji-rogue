@@ -77,6 +77,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"identify-scroll": { glyph: "📜" },
 	"enchant-weapon": { glyph: "📜" },
 	"enchant-armor": { glyph: "📜" },
+	"remove-curse-scroll": { glyph: "📜" },
 	/* Ring: single-codepoint, Unicode 6.0. */
 	"regeneration-ring": { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
@@ -102,6 +103,17 @@ export const LEVITATION_GLYPH = "🪽";
 export const BLINDNESS_GLYPH = "🙈";
 export const PARALYSIS_GLYPH = "⚡";
 export const DETECT_MONSTER_GLYPH = "🔭";
+
+/**
+ * Marks a currently-equipped sword/armor/ring row in the inventory overlay
+ * (src/shell/inventoryLabels.ts, demo/main.js) — same shared-glyph reasoning
+ * as the status chips above. Single codepoint, no VS16, Unicode 6.0 (well
+ * under the docs/emoji-policy.md ceiling); EAW Wide per Unicode's East Asian
+ * Width data. Added 2026-07-19 (milestone 81) — still pending the real
+ * Windows Terminal check the policy's step 5 calls for (this environment has
+ * no tmux/PTY, same constraint noted in milestones 79/80).
+ */
+export const EQUIPPED_GLYPH = "✅";
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on

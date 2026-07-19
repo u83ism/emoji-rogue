@@ -1,14 +1,11 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
-import type { GameEvent, ItemKind } from "./game/events.js";
+import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
-import {
-	toItemVerbAction,
-	toSelectedItemKind,
-} from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
 import { GameScreen } from "./renderer/index.js";
+import { useInventoryInteraction } from "./shell/inventoryInteraction.js";
 import { InventoryOverlay } from "./shell/inventoryOverlay.js";
 import {
 	formatConducts,
@@ -55,45 +52,22 @@ const App = () => {
 	const [showSaveLoadWarning, setShowSaveLoadWarning] = useState(
 		() => session.saveWasCorrupted,
 	);
-	/* Whether the inventory overlay is open. Purely a display concern (which
-	 * panel is showing), not part of the simulated world, so it lives here
-	 * instead of in GameState — it must never end up in a save file. */
-	const [isInventoryOpen, setIsInventoryOpen] = useState(false);
-	/* The row picked inside the overlay, awaiting its use/drop verb — also
-	 * shell display state, reset whenever the overlay closes. */
-	const [selectedItemKind, setSelectedItemKind] = useState<
-		ItemKind | undefined
-	>(undefined);
+	/* The inventory overlay's open/selected-row/pending-target state machine —
+	 * purely a display concern, not part of the simulated world, so it lives
+	 * here (via the hook) instead of in GameState. See inventoryInteraction.ts. */
+	const inventory = useInventoryInteraction();
 
 	useInput((input, key) => {
-		if (isInventoryOpen) {
-			if (selectedItemKind !== undefined) {
-				if (input === "i" || key.escape) {
-					setIsInventoryOpen(false);
-					setSelectedItemKind(undefined);
-					return;
-				}
-				const action = toItemVerbAction(input, selectedItemKind);
-				if (action !== undefined) {
-					setIsInventoryOpen(false);
-					setSelectedItemKind(undefined);
-					setSession((current) => recordAction(current, action));
-				}
-				return;
-			}
-			if (input === "i" || key.escape) {
-				setIsInventoryOpen(false);
-				return;
-			}
-			const kind = toSelectedItemKind(input, state.inventory);
-			if (kind !== undefined) {
-				setSelectedItemKind(kind);
+		if (inventory.isOpen) {
+			const action = inventory.handleInput(input, key.escape, state.inventory);
+			if (action !== undefined) {
+				setSession((current) => recordAction(current, action));
 			}
 			return;
 		}
 		if (input === "i") {
 			if (state.status === "playing") {
-				setIsInventoryOpen(true);
+				inventory.open();
 			}
 			return;
 		}
@@ -134,13 +108,17 @@ const App = () => {
 			 * while open (milestone 70), pinned to the map's height so the
 			 * status bar and log lines never shift. */}
 			<StatusBar state={state} />
-			{isInventoryOpen ? (
+			{inventory.isOpen ? (
 				/* Pinned to the map's exact footprint (width AND height): a
 				 * full-terminal-width border row is exactly as wide as the
 				 * viewport, and one mis-measured column there wraps the line
 				 * and scrolls the status bar off the top. */
 				<Box height={MAP_HEIGHT} width={MAP_WIDTH * 2} flexDirection="column">
-					<InventoryOverlay state={state} selectedItemKind={selectedItemKind} />
+					<InventoryOverlay
+						state={state}
+						selectedItem={inventory.selectedItem}
+						pendingTargetFor={inventory.pendingTargetFor}
+					/>
 				</Box>
 			) : (
 				<GameScreen grid={buildFrameGrid(state)} />

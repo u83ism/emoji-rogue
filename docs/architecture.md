@@ -88,6 +88,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使わない)
 - **座標キー**: `src/pointkey.ts` の `encodePointKey/decodePointKey`(`"x,y"`形式)。直書き禁止
 - **構造lint(正当化ベース)**: `scripts/check-structure.mjs` が`npm run lint`で、ファイル200行(目安150)とフォルダ15ファイル(目安10、非テスト)を強制。hint→error→justifiedの3段で、超過の容認は**人間裁可の正当化**(ファイル=先頭の`file-size-exception:`コメント、フォルダ=`scripts/structure-exceptions.json`)のみ。フォルダ分割=ドメインモデリングはAIが提案し人間が命名を裁可する(`.claude/rules/file-structure.md`)
+- **構造lintの逆方向(監査hint)**: 上記2チェックは肥大化→分割の一方向にしか反応しない。軸の切り直し・過剰分割の集約はサイズでは検出できないため、`scripts/structure-audit-state.json`の最終監査コミットからの差分規模(ファイル数/行数)に応じてhintのみを出す第3チェックがある(常にhint止まり、errorには昇格しない)。hint発火時や依頼時は`structure-audit`スキルで人間主導のレビューを行う(`.claude/rules/file-structure.md`「The reverse direction」節)
 - テストはソースと同居(`foo.ts` → `foo.test.ts`)。横断テストは `map/generators.test.ts`・`map/invariants.test.ts` と `advanceTurn.test.ts` のファズテスト
 
 ## 検証コマンド

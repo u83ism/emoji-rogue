@@ -12,6 +12,13 @@
 // 2. Folder granularity — every folder under src/. hint > HINT_FILES,
 //    error > MAX_FILES non-test source files. Justify declaratively in
 //    scripts/structure-exceptions.json ({"folders": {"src/game": "<reason>"}}).
+// 3. Structural drift since last audit — hint-only, never blocks. Checks 1-2
+//    only ever detect monotonic growth (a file/folder got too big). They
+//    can't detect the reverse: a split along the wrong axis, or small files
+//    that should be aggregated back. That judgment call needs a human-led
+//    audit (.claude/skills/structure-audit), not a lint rule — this check
+//    only nudges "it might be time for one" once enough of src/ has churned
+//    since scripts/structure-audit-state.json's recorded checkpoint.
 //
 // Scope notes (deliberate):
 // - The modernized rot.js fork layer (src/map/, src/fov/, src/color.ts, ...)
@@ -21,6 +28,7 @@
 // - *.test.ts files are exempt from both checks: the one-test-file-per-source
 //   rule pins their granularity to the source's.
 
+import { execSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,6 +37,8 @@ const HINT_LINES = 150;
 const MAX_LINES = 200;
 const HINT_FILES = 10;
 const MAX_FILES = 15;
+const DRIFT_HINT_FILES = 60;
+const DRIFT_HINT_LINES = 3000;
 const PRAGMA = "file-size-exception:";
 const PRAGMA_SEARCH_LINES = 5;
 
@@ -112,6 +122,32 @@ for (const folder of collectFolders("src")) {
 		);
 	} else {
 		hints.push(`${normalized}/: ${count} source files (aim ≤${HINT_FILES})`);
+	}
+}
+
+/* --- Check 3: structural drift since last audit (hint-only) --- */
+const auditStatePath = join(scriptDirectory, "structure-audit-state.json");
+if (existsSync(auditStatePath)) {
+	const auditState = JSON.parse(readFileSync(auditStatePath, "utf8"));
+	try {
+		const diffStat = execSync(
+			`git diff --stat ${auditState.lastAuditCommit}..HEAD -- src`,
+			{ encoding: "utf8" },
+		);
+		const summary = diffStat.trim().split("\n").at(-1) ?? "";
+		const filesChanged = Number(
+			summary.match(/(\d+) files? changed/)?.[1] ?? 0,
+		);
+		const linesChanged =
+			Number(summary.match(/(\d+) insertions?\(\+\)/)?.[1] ?? 0) +
+			Number(summary.match(/(\d+) deletions?\(-\)/)?.[1] ?? 0);
+		if (filesChanged > DRIFT_HINT_FILES || linesChanged > DRIFT_HINT_LINES) {
+			hints.push(
+				`structure audit: ${filesChanged} files / ${linesChanged} lines changed in src/ since last audit (${auditState.lastAuditDate}, ${auditState.lastAuditCommit.slice(0, 7)}) — consider running the structure-audit skill`,
+			);
+		}
+	} catch {
+		/* baseline commit unreachable (e.g. shallow clone) — advisory only, skip silently */
 	}
 }
 

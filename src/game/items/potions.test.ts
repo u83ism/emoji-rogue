@@ -27,14 +27,14 @@ describe("items/potions", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
-			inventory: [{ kind: "heal-potion" as const, quantity: 2 }],
+			inventory: ["heal-potion" as const, "heal-potion" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { kind: "heal-potion" },
 		});
 		expect(next.playerHp).toBe(PLAYER_MAX_HP);
-		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
+		expect(next.inventory).toEqual(["heal-potion"]);
 		expect(next.events).toEqual([
 			{ type: "player-healed", payload: { by: "heal-potion", amount: 3 } },
 		]);
@@ -43,7 +43,7 @@ describe("items/potions", () => {
 	it("using the last potion at full health wastes it (amount 0) and empties the stack", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: ["heal-potion" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -60,14 +60,14 @@ describe("items/potions", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: PLAYER_MAX_HP,
-			inventory: [{ kind: "poison" as const, quantity: 2 }],
+			inventory: ["poison" as const, "poison" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { kind: "poison" },
 		});
 		expect(next.playerHp).toBe(PLAYER_MAX_HP - 4);
-		expect(next.inventory).toEqual([{ kind: "poison", quantity: 1 }]);
+		expect(next.inventory).toEqual(["poison"]);
 		expect(next.identifiedPotionKinds).toEqual(["poison"]);
 		expect(next.events).toEqual([
 			{ type: "player-poisoned", payload: { damage: 4 } },
@@ -78,7 +78,7 @@ describe("items/potions", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: 3,
-			inventory: [{ kind: "poison" as const, quantity: 1 }],
+			inventory: ["poison" as const],
 			enemies: [zombie(5, 1)] /* adjacent to the player at (4,1) */,
 		};
 		const next = advanceTurn(state, {
@@ -96,14 +96,14 @@ describe("items/potions", () => {
 	it("using a held strength potion permanently raises playerAttackDamage and identifies that kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "strength" as const, quantity: 2 }],
+			inventory: ["strength" as const, "strength" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { kind: "strength" },
 		});
 		expect(next.playerAttackDamage).toBe(state.playerAttackDamage + 1);
-		expect(next.inventory).toEqual([{ kind: "strength", quantity: 1 }]);
+		expect(next.inventory).toEqual(["strength"]);
 		expect(next.identifiedPotionKinds).toEqual(["strength"]);
 		expect(next.events).toEqual([
 			{ type: "player-strengthened", payload: { bonus: 1 } },
@@ -113,7 +113,7 @@ describe("items/potions", () => {
 	it("drinking either potion kind only identifies that kind, not the other", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: ["heal-potion" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -125,7 +125,7 @@ describe("items/potions", () => {
 	it("using a held confusion potion sets confusedTurnsRemaining and logs player-confused", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "confusion" as const, quantity: 1 }],
+			inventory: ["confusion" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -148,7 +148,7 @@ describe("items/potions", () => {
 	it("using a held levitation potion sets levitationTurnsRemaining and logs player-levitated", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "levitation" as const, quantity: 1 }],
+			inventory: ["levitation" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -170,7 +170,7 @@ describe("items/potions", () => {
 	it("using a held blindness potion sets blindTurnsRemaining and logs player-blinded", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "blindness" as const, quantity: 1 }],
+			inventory: ["blindness" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -192,7 +192,7 @@ describe("items/potions", () => {
 	it("using a held paralysis potion sets paralyzedTurnsRemaining and logs player-paralyzed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "paralysis" as const, quantity: 1 }],
+			inventory: ["paralysis" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -214,7 +214,7 @@ describe("items/potions", () => {
 	it("using a held raise-level potion levels up without touching playerExperience", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "raise-level" as const, quantity: 1 }],
+			inventory: ["raise-level" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -235,7 +235,7 @@ describe("items/potions", () => {
 	it("using a held detect-monster potion sets detectMonstersTurnsRemaining and logs player-detected-monsters", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "detect-monster" as const, quantity: 1 }],
+			inventory: ["detect-monster" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -260,7 +260,7 @@ describe("items/potions", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: 3,
-			inventory: [{ kind: "life" as const, quantity: 1 }],
+			inventory: ["life" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

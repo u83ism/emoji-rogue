@@ -1,10 +1,14 @@
+import { INVENTORY_CAPACITY } from "../balance.js";
 import { buildEventLog } from "../events.js";
 import type { GameState } from "../state.js";
 import { addToInventory } from "./inventory.js";
 
 /**
  * Picks up the item under the player's feet into inventory, if any — no
- * longer used immediately (that's the "use-item" action's job).
+ * longer used immediately (that's the "use-item" action's job). Refused
+ * (item stays on the floor) once the inventory is already at
+ * INVENTORY_CAPACITY: every pickup takes its own slot, even of a kind
+ * already held (no stacking — see GameState.inventory).
  */
 export const applyItemPickup = (state: GameState): GameState => {
 	const item = state.items.find(
@@ -13,6 +17,14 @@ export const applyItemPickup = (state: GameState): GameState => {
 	);
 	if (item === undefined) {
 		return state;
+	}
+	if (state.inventory.length >= INVENTORY_CAPACITY) {
+		return {
+			...state,
+			events: buildEventLog(state.events, [
+				{ type: "inventory-full", payload: { kind: item.kind } },
+			]),
+		};
 	}
 	return {
 		...state,

@@ -73,8 +73,7 @@ const applyItemEffect = (state: GameState, kind: ItemKind): GameState => {
  * nothing consumed).
  */
 export const applyUseItem = (state: GameState, kind: ItemKind): GameState => {
-	const held = state.inventory.find((entry) => entry.kind === kind);
-	if (held === undefined) {
+	if (!state.inventory.includes(kind)) {
 		return state;
 	}
 	const afterEffect = applyItemEffect(state, kind);

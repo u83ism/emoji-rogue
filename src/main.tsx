@@ -1,8 +1,11 @@
 import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
-import type { GameEvent } from "./game/events.js";
+import type { GameEvent, ItemKind } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
-import { toUseItemAction } from "./game/inventoryKeymap.js";
+import {
+	toItemVerbAction,
+	toSelectedItemKind,
+} from "./game/inventoryKeymap.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
 import { GameScreen } from "./renderer/index.js";
@@ -56,17 +59,35 @@ const App = () => {
 	 * panel is showing), not part of the simulated world, so it lives here
 	 * instead of in GameState — it must never end up in a save file. */
 	const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+	/* The row picked inside the overlay, awaiting its use/drop verb — also
+	 * shell display state, reset whenever the overlay closes. */
+	const [selectedItemKind, setSelectedItemKind] = useState<
+		ItemKind | undefined
+	>(undefined);
 
 	useInput((input, key) => {
 		if (isInventoryOpen) {
+			if (selectedItemKind !== undefined) {
+				if (input === "i" || key.escape) {
+					setIsInventoryOpen(false);
+					setSelectedItemKind(undefined);
+					return;
+				}
+				const action = toItemVerbAction(input, selectedItemKind);
+				if (action !== undefined) {
+					setIsInventoryOpen(false);
+					setSelectedItemKind(undefined);
+					setSession((current) => recordAction(current, action));
+				}
+				return;
+			}
 			if (input === "i" || key.escape) {
 				setIsInventoryOpen(false);
 				return;
 			}
-			const action = toUseItemAction(input, state.inventory);
-			setIsInventoryOpen(false);
-			if (action !== undefined) {
-				setSession((current) => recordAction(current, action));
+			const kind = toSelectedItemKind(input, state.inventory);
+			if (kind !== undefined) {
+				setSelectedItemKind(kind);
 			}
 			return;
 		}
@@ -119,7 +140,7 @@ const App = () => {
 				 * viewport, and one mis-measured column there wraps the line
 				 * and scrolls the status bar off the top. */
 				<Box height={MAP_HEIGHT} width={MAP_WIDTH * 2} flexDirection="column">
-					<InventoryOverlay state={state} />
+					<InventoryOverlay state={state} selectedItemKind={selectedItemKind} />
 				</Box>
 			) : (
 				<GameScreen grid={buildFrameGrid(state)} />

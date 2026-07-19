@@ -16,7 +16,6 @@ import type {
 	Enemy,
 	GameState,
 	GoldPile,
-	InventoryEntry,
 	Item,
 	Position,
 	Stairs,
@@ -122,15 +121,6 @@ const isItemArray = (
 			isRecord(item) && standsOnFloor(item, terrain) && isItemKind(item.kind),
 	);
 
-const isInventoryArray = (value: unknown): value is readonly InventoryEntry[] =>
-	Array.isArray(value) &&
-	value.every(
-		(entry) =>
-			isRecord(entry) &&
-			isItemKind(entry.kind) &&
-			isPositiveInteger(entry.quantity),
-	);
-
 const isGoldPileArray = (
 	value: unknown,
 	terrain: readonly (readonly number[])[],
@@ -183,6 +173,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-healed": (payload) =>
 		isItemKind(payload.by) && isNonNegativeInteger(payload.amount),
 	"item-picked-up": (payload) => isItemKind(payload.kind),
+	"inventory-full": (payload) => isItemKind(payload.kind),
+	"item-dropped": (payload) => isItemKind(payload.kind),
 	"game-won": emptyPayload,
 	"weapon-equipped": (payload) =>
 		isItemKind(payload.kind) && isInteger(payload.bonus),
@@ -414,7 +406,7 @@ export const validateGameState = (
 		return err("items");
 	}
 	const inventory = value.inventory;
-	if (!isInventoryArray(inventory)) {
+	if (!isItemKindArray(inventory)) {
 		return err("inventory");
 	}
 	const identifiedPotionKinds = value.identifiedPotionKinds;
@@ -482,10 +474,7 @@ export const validateGameState = (
 			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
 		})),
 		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
-		inventory: inventory.map((entry) => ({
-			kind: entry.kind,
-			quantity: entry.quantity,
-		})),
+		inventory: [...inventory],
 		identifiedPotionKinds: [...identifiedPotionKinds],
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,

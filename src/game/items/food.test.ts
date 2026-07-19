@@ -8,7 +8,7 @@ describe("items/food", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerFood: 70 /* missing 30, a ration restores 50: the cap must win */,
-			inventory: [{ kind: "food" as const, quantity: 2 }],
+			inventory: ["food" as const, "food" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -16,7 +16,7 @@ describe("items/food", () => {
 		});
 		/* restored to the cap (100), then the same turn's hunger tick takes one back */
 		expect(next.playerFood).toBe(PLAYER_MAX_FOOD - 1);
-		expect(next.inventory).toEqual([{ kind: "food", quantity: 1 }]);
+		expect(next.inventory).toEqual(["food"]);
 		expect(next.events).toEqual([
 			{ type: "player-ate", payload: { amount: 30 } },
 		]);
@@ -26,7 +26,7 @@ describe("items/food", () => {
 	it("using the last food ration at full satiety wastes it (amount 0) and empties the stack", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "food" as const, quantity: 1 }],
+			inventory: ["food" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

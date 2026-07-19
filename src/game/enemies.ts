@@ -120,12 +120,12 @@ export const advanceEnemies = (state: GameState): GameState => {
 						const pick = stepUniform(rng);
 						rng = pick.state;
 						const index = Math.floor(pick.value * inventory.length);
-						const entry = inventory[index];
-						if (entry === undefined) {
+						const stolenKind = inventory[index];
+						if (stolenKind === undefined) {
 							throw new Error("unreachable: index is within inventory bounds");
 						}
 						inventory = removeOneFromInventory(inventory, index);
-						events.push({ type: "item-stolen", payload: { kind: entry.kind } });
+						events.push({ type: "item-stolen", payload: { kind: stolenKind } });
 					}
 					fled = true;
 					continue;

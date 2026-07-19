@@ -13,18 +13,20 @@ import {
 	CONFUSION_GLYPH,
 	DETECT_MONSTER_GLYPH,
 	formatEvent,
-	formatInventoryEntry,
+	formatInventoryTitle,
 	GOAL_FLOOR,
 	INVENTORY_EMPTY_MESSAGE,
-	INVENTORY_TITLE,
+	ITEM_VERB_PROMPT,
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 	parseSaveFileContent,
+	resolveItemDisplayName,
 	SAVE_LOAD_WARNING_MESSAGE,
 	toInventoryLetter,
-	toUseItemAction,
+	toItemVerbAction,
+	toSelectedItemKind,
 } from "../dist/game/index.mjs";
 
 const WIDTH = 40;
@@ -102,6 +104,9 @@ let state =
 		? savedOutcome.state
 		: buildDungeonGameState(WIDTH, HEIGHT, seed);
 let isInventoryOpen = false;
+/* The row picked inside the overlay, awaiting its use/drop verb — display
+ * state like isInventoryOpen, reset whenever the overlay closes. */
+let selectedItemKind;
 let showSaveLoadWarning = savedOutcome.kind === "corrupted";
 
 const mapElement = document.getElementById("map");
@@ -226,17 +231,29 @@ const renderInventory = () => {
 	}
 	inventoryElement.textContent = "";
 	const title = document.createElement("div");
-	title.textContent = INVENTORY_TITLE;
+	title.textContent = formatInventoryTitle(state.inventory.length);
 	inventoryElement.appendChild(title);
+	if (selectedItemKind !== undefined) {
+		const selected = document.createElement("div");
+		selected.textContent = resolveItemDisplayName(
+			selectedItemKind,
+			state.identifiedPotionKinds,
+		);
+		inventoryElement.appendChild(selected);
+		const prompt = document.createElement("div");
+		prompt.textContent = ITEM_VERB_PROMPT;
+		inventoryElement.appendChild(prompt);
+		return;
+	}
 	if (state.inventory.length === 0) {
 		const empty = document.createElement("div");
 		empty.textContent = INVENTORY_EMPTY_MESSAGE;
 		inventoryElement.appendChild(empty);
 		return;
 	}
-	state.inventory.forEach((entry, index) => {
+	state.inventory.forEach((kind, index) => {
 		const row = document.createElement("div");
-		row.textContent = `${toInventoryLetter(index)}) ${formatInventoryEntry(entry, state.identifiedPotionKinds)}`;
+		row.textContent = `${toInventoryLetter(index)}) ${resolveItemDisplayName(kind, state.identifiedPotionKinds)}`;
 		inventoryElement.appendChild(row);
 	});
 };
@@ -256,18 +273,33 @@ const render = () => {
 
 window.addEventListener("keydown", (event) => {
 	if (isInventoryOpen) {
+		if (selectedItemKind !== undefined) {
+			if (event.key === "i" || event.key === "Escape") {
+				isInventoryOpen = false;
+				selectedItemKind = undefined;
+				render();
+				return;
+			}
+			const action = toItemVerbAction(event.key, selectedItemKind);
+			if (action !== undefined) {
+				isInventoryOpen = false;
+				selectedItemKind = undefined;
+				state = advanceTurn(state, action);
+				persistSaveState(state);
+			}
+			render();
+			return;
+		}
 		if (event.key === "i" || event.key === "Escape") {
 			isInventoryOpen = false;
 			render();
 			return;
 		}
-		const action = toUseItemAction(event.key, state.inventory);
-		isInventoryOpen = false;
-		if (action !== undefined) {
-			state = advanceTurn(state, action);
-			persistSaveState(state);
+		const kind = toSelectedItemKind(event.key, state.inventory);
+		if (kind !== undefined) {
+			selectedItemKind = kind;
+			render();
 		}
-		render();
 		return;
 	}
 	if (event.key === "i") {

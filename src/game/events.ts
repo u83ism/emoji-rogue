@@ -125,6 +125,16 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
+			/** Stepping onto a new kind while at INVENTORY_CAPACITY — the item stays on the floor. */
+			readonly type: "inventory-full";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** The "drop" verb — one unit of `kind` leaves the inventory and lands under the player. */
+			readonly type: "item-dropped";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
 			/** Winning always means the same thing now: surfacing with the amulet. */
 			readonly type: "game-won";
 			readonly payload: Record<string, never>;

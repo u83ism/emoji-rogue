@@ -3,7 +3,7 @@ import type { GameEvent } from "../game/events.js";
 import {
 	formatConducts,
 	formatEvent,
-	formatInventoryEntry,
+	formatInventoryTitle,
 	formatScoreSummary,
 } from "./messages.js";
 
@@ -49,6 +49,14 @@ describe("formatEvent", () => {
 				"回復薬を飲んだが、HPは満タンだった",
 			],
 			[{ type: "item-picked-up", payload: { kind: "sword" } }, "剣を拾った"],
+			[
+				{ type: "inventory-full", payload: { kind: "sword" } },
+				"剣を持てなかった。持ち物がいっぱいだ",
+			],
+			[
+				{ type: "item-dropped", payload: { kind: "sword" } },
+				"剣を足元に置いた",
+			],
 			[
 				{ type: "game-won", payload: {} },
 				"イェンダーの魔除けを手に地上に帰還した!",
@@ -275,6 +283,17 @@ describe("formatEvent", () => {
 		).toBe("未鑑定の薬を拾った");
 	});
 
+	it("respects identification state for inventory-full and item-dropped too", () => {
+		expect(
+			formatEvent({ type: "inventory-full", payload: { kind: "poison" } }, []),
+		).toBe("未鑑定の薬を持てなかった。持ち物がいっぱいだ");
+		expect(
+			formatEvent({ type: "item-dropped", payload: { kind: "poison" } }, [
+				"poison",
+			]),
+		).toBe("毒薬を足元に置いた");
+	});
+
 	it("respects identification state for a stolen potion-family item too", () => {
 		expect(
 			formatEvent({ type: "item-stolen", payload: { kind: "poison" } }, []),
@@ -287,57 +306,10 @@ describe("formatEvent", () => {
 	});
 });
 
-describe("formatInventoryEntry", () => {
-	it("formats a stack as name and quantity", () => {
-		expect(
-			formatInventoryEntry({ kind: "heal-potion", quantity: 2 }, [
-				"heal-potion",
-			]),
-		).toBe("回復薬 x2");
-		expect(formatInventoryEntry({ kind: "sword", quantity: 1 }, [])).toBe(
-			"剣 x1",
-		);
-		expect(formatInventoryEntry({ kind: "armor", quantity: 1 }, [])).toBe(
-			"鎧 x1",
-		);
-		expect(formatInventoryEntry({ kind: "food", quantity: 3 }, [])).toBe(
-			"食料 x3",
-		);
-		expect(
-			formatInventoryEntry({ kind: "teleport-scroll", quantity: 1 }, []),
-		).toBe("巻物 x1");
-		expect(
-			formatInventoryEntry({ kind: "mapping-scroll", quantity: 1 }, []),
-		).toBe("地図の巻物 x1");
-		expect(
-			formatInventoryEntry({ kind: "identify-scroll", quantity: 1 }, []),
-		).toBe("識別の巻物 x1");
-		expect(
-			formatInventoryEntry({ kind: "raise-level", quantity: 1 }, [
-				"raise-level",
-			]),
-		).toBe("レベルアップの薬 x1");
-	});
-
-	it("shows the generic unidentified name for an unidentified potion-family stack", () => {
-		expect(formatInventoryEntry({ kind: "heal-potion", quantity: 2 }, [])).toBe(
-			"未鑑定の薬 x2",
-		);
-		expect(formatInventoryEntry({ kind: "poison", quantity: 1 }, [])).toBe(
-			"未鑑定の薬 x1",
-		);
-		expect(formatInventoryEntry({ kind: "strength", quantity: 1 }, [])).toBe(
-			"未鑑定の薬 x1",
-		);
-	});
-
-	it("reveals the real name once that potion kind is identified", () => {
-		expect(
-			formatInventoryEntry({ kind: "poison", quantity: 1 }, ["poison"]),
-		).toBe("毒薬 x1");
-		expect(
-			formatInventoryEntry({ kind: "strength", quantity: 1 }, ["strength"]),
-		).toBe("怪力の薬 x1");
+describe("formatInventoryTitle", () => {
+	it("appends the held count over capacity to the title", () => {
+		expect(formatInventoryTitle(0)).toBe("持ち物(iかEscで閉じる) 0/20");
+		expect(formatInventoryTitle(3)).toBe("持ち物(iかEscで閉じる) 3/20");
 	});
 });
 

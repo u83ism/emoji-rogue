@@ -1,5 +1,6 @@
 import { at } from "../indexing.js";
-import type { Action, InventoryEntry } from "./state.js";
+import type { ItemKind } from "./events.js";
+import type { Action } from "./state.js";
 
 /**
  * Selection letters for inventory rows, in assignment order. `i` is
@@ -14,18 +15,35 @@ export const toInventoryLetter = (index: number): string =>
 	INVENTORY_LETTERS[index] ?? "?";
 
 /**
- * The `use-item` action for a keypress inside the open inventory overlay, or
- * undefined when the key doesn't match any listed row.
+ * The item kind selected by a keypress inside the open inventory row list,
+ * or undefined when the key doesn't match any listed row. Selecting a row
+ * only picks it — see toItemVerbAction for the use/drop choice that follows.
  */
-export const toUseItemAction = (
+export const toSelectedItemKind = (
 	input: string,
-	inventory: readonly InventoryEntry[],
-): Action | undefined => {
+	inventory: readonly ItemKind[],
+): ItemKind | undefined => {
 	const index = inventory.findIndex(
-		(_entry, entryIndex) => toInventoryLetter(entryIndex) === input,
+		(_kind, entryIndex) => toInventoryLetter(entryIndex) === input,
 	);
-	if (index === -1) {
-		return undefined;
+	return index === -1 ? undefined : at(inventory, index);
+};
+
+/**
+ * The action for a keypress inside the verb prompt shown after a row is
+ * selected: `u` uses the held kind, `d` drops one unit of it onto the
+ * player's tile. Any other key answers undefined so the shell can treat it
+ * as "cancel back to the row list".
+ */
+export const toItemVerbAction = (
+	input: string,
+	kind: ItemKind,
+): Action | undefined => {
+	if (input === "u") {
+		return { type: "use-item", payload: { kind } };
 	}
-	return { type: "use-item", payload: { kind: at(inventory, index).kind } };
+	if (input === "d") {
+		return { type: "drop-item", payload: { kind } };
+	}
+	return undefined;
 };

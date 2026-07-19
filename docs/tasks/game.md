@@ -165,13 +165,38 @@ functional-style.mdの「`const`+アロー優先」はゲーム層・シェル�
 自動テスト(Vitest 772件)・typecheck・knip・構造lint・build通過を確認して完了。
 **マイルストーン79完了(2026-07-19)。**
 
+## マイルストーン80 — 持ち物のスタック廃止・スロット制容量上限と「使う/捨てる」動詞選択(2026-07-19)
+
+バックログにあった「持ち物の容量上限」に着手。当初は既存の`{kind, quantity}`スタック方式(同種は数量で積み増し)を維持したまま種類数に上限を設ける実装で着手したが、本人から「スタック自体を無くしたい、2つ持てば2スロット占有する形にしたい」という訂正が入り、`GameState.inventory`を`readonly InventoryEntry[]`(`{kind, quantity}`の配列)から`readonly ItemKind[]`(1保持=1要素の配列)へ全面的に作り直した。同種を2個拾えば配列に同じkindが2要素並ぶ——上限20はその要素数(=真の意味でのスロット数)にかかる。上限値は本人裁可で不思議のダンジョンシリーズ随一の知名度を持つ『不思議のダンジョン 風来のシレン』初代のどうぐ袋基準値(20、後に巻物で40まで拡張可能——本作はまだ拡張非対応)を採用。既存の文字選択UI(a〜z、iを除く25文字)の上限とも矛盾しない値。`InventoryEntry`型はスタックが無くなったことで存在意義を失ったため削除。
+
+あわせて本人からの追加依頼で、アイテムを選んだ後に「使う/捨てる」を選ぶ2段階UIと、「捨てる」(足元に置く)コマンドを実装。カーソルUIへの本格移行(バックログの「インベントリ/コマンドUXの拡充」テーマ)を待たず、既存の文字選択インフラの上に軽量な動詞サブメニューを乗せる形にした。
+
+- [x] `src/game/balance.ts`: `INVENTORY_CAPACITY = 20`
+- [x] `src/game/state.ts`: `InventoryEntry`型を削除、`GameState.inventory`を`readonly ItemKind[]`に変更(スタックが無いので容量=配列長がそのままスロット占有数)。`Action`に`drop-item`を追加
+- [x] `src/game/items/inventory.ts`: `addToInventory`は常に末尾へ1要素追加(同種でも新しいスロットを消費)。`removeFromInventory`は該当kindの最初の1要素を`indexOf`で探して削除。`removeOneFromInventory`(nymphの盗み用、index指定削除)はそのまま流用
+- [x] `src/game/items/pickups.ts`: `applyItemPickup`は`inventory.length >= INVENTORY_CAPACITY`なら(kindを問わず)拒否して`inventory-full`イベントのみ発火。スタック廃止により「既に持っている種類だけ上限を無視できる」という旧ロジックの分岐が丸ごと不要になり単純化
+- [x] `src/game/items/use.ts`・`drop.ts`: 保持チェックを`inventory.find((entry) => entry.kind === kind)`から`inventory.includes(kind)`に簡略化
+- [x] `src/game/enemies.ts`: nymphの盗みロジックを`entry.kind`から配列要素(ItemKind直値)参照に変更
+- [x] `src/game/inventoryKeymap.ts`: `toSelectedItemKind`・`toItemVerbAction`の引数型を`readonly InventoryEntry[]`から`readonly ItemKind[]`に更新
+- [x] `src/game/events.ts`: `inventory-full`・`item-dropped`イベントを追加、`src/game/format/validateGameState.ts`のペイロード検証テーブルにも追加。`isInventoryArray`(`{kind,quantity}`検証)を削除し、既存の`isItemKindArray`(元は`identifiedPotionKinds`用)を`inventory`にも流用——形が同じになったため
+- [x] `src/game/format/saveFormat.ts`: セーブ形式の`inventory`の型が変わるため`SAVE_FORMAT_VERSION`を26→27にbump(旧セーブは非対応版として扱われ新規開始になる)
+- [x] `src/game/advanceTurn.ts`: `use-item`/`drop-item`の共通フローを`applyItemAction`ヘルパーに集約(重複除去。200行制限ちょうどに収める副次効果もあり)
+- [x] `src/shell/messages.ts`: `formatInventoryEntry`(スタック表示`x2`用)を削除——1行1保持になったので`resolveItemDisplayName`を直接使えば足りる。`formatInventoryTitle`(タイトルに`保持数/上限`を付加)を追加。`formatEvent`に`inventory-full`・`item-dropped`を追加
+- [x] `src/shell/systemMessages.ts`: `ITEM_VERB_PROMPT`(「u: つかう  d: すてる (Escで戻る)」)を追加
+- [x] `src/shell/inventoryOverlay.tsx`・`src/main.tsx`: `selectedItemKind`(シェル側の表示状態、GameStateには入れない)を追加。オーバーレイは選択前=行一覧(1保持1行、同種は同じ表示が複数行並ぶ)、選択後=選択中アイテム名+動詞プロンプトの2表示を切り替え。行のReactキーは同種重複がありうるため`entry.kind`から配列indexに変更(biome-ignoreコメント付き)
+- [x] `demo/main.js`: 同じ2段階状態機械をミラー。`src/game/index.ts`から`formatInventoryTitle`・`ITEM_VERB_PROMPT`・`resolveItemDisplayName`・`toSelectedItemKind`・`toItemVerbAction`を新規再エクスポート、`formatInventoryEntry`は削除に伴い re-export からも撤去
+- [x] テスト: `inventory.test.ts`(スタックなしの追加/削除/index指定削除に全面書き換え)・`pickups.test.ts`(容量到達時は既保持kindでも拒否するテストに訂正)・`drop.test.ts`・`use.test.ts`・`advanceTurn.test.ts`・`enemies.test.ts`(nymphの「複数スタック分割吸収」テストを「同種複数スロットのうち1つを盗む」テストに書き換え)・`teleport.test.ts`・`potions.test.ts`/`scrolls.test.ts`/`equipment.test.ts`/`wands.test.ts`/`rings.test.ts`/`food.test.ts`(`{kind,quantity:2}`形式の「スタック2→1」テストを「同kind2要素→1要素」に機械変換)・`inventoryKeymap.test.ts`・`messages.test.ts`(`formatInventoryEntry`のdescribeブロックを削除)・`inventoryOverlay.test.tsx`・`validateGameState.test.ts`(`quantity`絡みの十数箇所を配列直値に書き換え、`quantity:0`拒否テストは概念ごと消滅のため削除)を更新
+- [x] 自動テスト(Vitest 787件)・typecheck・lint(構造lint含む)・knip・build、すべて通過
+- [x] 実機スモークテスト: この環境にはtmux/PTYもPlaywright用ブラウザも無く、CLI(Ink TUI)・ブラウザデモとも対話的な実機確認は未実施(マイルストーン79のCLI側と同じ制約)。代わりに`inventoryOverlay.test.tsx`でのink実描画確認と、ビルド後の`dist/game/index.mjs`をNodeから直接importしての新規export・戻り値確認で代替。次回実機確認時に、同種複数保持時の行表示・容量超過時の拾えない挙動・使う/捨て2段階UIの見た目をWindows Terminal/ブラウザで確認すること
+
+**マイルストーン80完了(2026-07-19)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)
-  - **毒薬の出口問題**(2026-07-18テストプレイの指摘): 毒薬は「未鑑定ギャンブルの毒針」という飲む前の役割しかなく、鑑定後は何の使い道もなくインベントリに居座る。③「投げる」の筆頭ユースケース(視界内最近敵への自動照準で毒ダメージ、杖と同じ骨格が流用可能)
-  - **指輪2個目問題**(同日指摘): 再生/満腹の指輪はON/OFFフラグのため2個目は消費されるだけで完全に無駄。鑑定済み2個目の指輪も毒薬と同じ出口なし状態になる — 置く/投げる/売る等の動詞、または重複入手時の扱いの設計が必要
-  - **カーソル方式の採用を決定(2026-07-18)**: レターショートカット方式(a,b,c...)は廃止し、オーバーレイ内は↑↓(＋vi文化のj/k)＋決定キーのカーソル選択に統一する。理由: ①動詞サブメニュー(使う/投げる/置く)・識別の対象選択・杖のターゲット選択が全部「選択UI」1部品に乗る ②UX基準の不思議のダンジョン系はカーソルメニュー文化 ③アイテムスロット制(容量上限)と自然に接続 ④レター方式は`i`衝突(マイルストーン66)のようなキー割当パッチの温床。設計上の留意: `docs/design.md`の「1キー1操作」原則の意識的な改訂とセットで行う(マップ上は1キー1操作、オーバーレイ内はカーソル、と再定義)。`Action`は`kind`ベース維持(スロットindex参照にするとリプレイがインベントリ並び順に依存して脆くなる)。カーソル位置はシェル側の表示状態でGameStateに入れない。レターの補助併存は最初はしない(二重系統は事故の温床、遅ければ後付け)
-- 持ち物の容量上限(マイルストーン10では無制限スタック。アイテム種が増えて意味を持つ段階になったら検討)
+  - **毒薬の出口問題**(2026-07-18テストプレイの指摘): 毒薬は「未鑑定ギャンブルの毒針」という飲む前の役割しかなく、鑑定後は何の使い道もなくインベントリに居座る。マイルストーン80で「捨てる」は解決したが、③「投げる」(視界内最近敵への自動照準で毒ダメージ、杖と同じ骨格が流用可能)は依然未実装
+  - **指輪2個目問題**(同日指摘): 再生/満腹の指輪はON/OFFフラグのため2個目は消費されるだけで完全に無駄。マイルストーン80の「捨てる」で出口はできたが、鑑定済み2個目の指輪を積極的に活用する動詞(売る等)や重複入手時の扱いの設計は未検討のまま
+  - **カーソル方式の採用を決定(2026-07-18)**: レターショートカット方式(a,b,c...)は廃止し、オーバーレイ内は↑↓(＋vi文化のj/k)＋決定キーのカーソル選択に統一する。理由: ①動詞サブメニュー(使う/投げる/置く)・識別の対象選択・杖のターゲット選択が全部「選択UI」1部品に乗る ②UX基準の不思議のダンジョン系はカーソルメニュー文化 ③アイテムスロット制(容量上限)と自然に接続 ④レター方式は`i`衝突(マイルストーン66)のようなキー割当パッチの温床。設計上の留意: `docs/design.md`の「1キー1操作」原則の意識的な改訂とセットで行う(マップ上は1キー1操作、オーバーレイ内はカーソル、と再定義)。`Action`は`kind`ベース維持(スロットindex参照にするとリプレイがインベントリ並び順に依存して脆くなる)。カーソル位置はシェル側の表示状態でGameStateに入れない。レターの補助併存は最初はしない(二重系統は事故の温床、遅ければ後付け)。**マイルストーン80**でスロット制容量上限と「使う/捨てる」の2段階選択を先行実装したが、まだレター方式のまま(カーソル方式への本格移行はこのバックログの範囲として残っている) — 移行時はレター版の`toSelectedItemKind`/`toItemVerbAction`(`src/game/inventoryKeymap.ts`)を置き換える形になる見込み
 - ポーションのフレーバーテキストのランダム割り当て(マイルストーン23では見送り。`GameState`に人間向け文字列を直接持たせずに実現する方法——例えば`messages.ts`側でシードから決定的に導出する、または`GameState`にはフレーバー"インデックス"のみを整数で持たせ文字列プールへの変換は`messages.ts`に閉じ込める——が固まったら再検討)
 - `formatEvent`が描画のたびに現在の鑑定状態で評価されるため、鑑定済みになった潜在的アイテムの過去ログ行の表示が遡って変わる件(マイルストーン23で確認・許容と判断)。気になる場合はイベント発生時点の鑑定状態をpayloadに焼き込む設計に変更する
 - 他の指輪効果の追加(マイルストーン31で再生の指輪、マイルストーン33で満腹の指輪=遅消化を実装。原作Rogueには他に怪力・耐久・索敵・透明視・瞬間移動・敵召喚・敏捷・防御・隠密などがある。マイルストーン33では「拾った時点では汎用名`指輪`のまま、効果は装備した瞬間に明かされる」という簡略化で決着した——鑑定リスト化はまだ不要)

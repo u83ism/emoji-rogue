@@ -24,7 +24,7 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: [{ kind: "striking-wand" as const, quantity: 1 }],
+			inventory: ["striking-wand" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -48,7 +48,7 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [far, near],
-			inventory: [{ kind: "striking-wand" as const, quantity: 1 }],
+			inventory: ["striking-wand" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -61,7 +61,7 @@ describe("items/wands", () => {
 	it("using a held wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "striking-wand" as const, quantity: 1 }],
+			inventory: ["striking-wand" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -75,7 +75,7 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: [{ kind: "slow-wand" as const, quantity: 1 }],
+			inventory: ["slow-wand" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -99,7 +99,7 @@ describe("items/wands", () => {
 	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "slow-wand" as const, quantity: 1 }],
+			inventory: ["slow-wand" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

@@ -13,7 +13,7 @@ describe("items/equipment", () => {
 	it("using a held sword permanently raises playerAttackDamage when blessed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),
-			inventory: [{ kind: "sword" as const, quantity: 1 }],
+			inventory: ["sword" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -31,7 +31,7 @@ describe("items/equipment", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),
 			playerAttackDamage: 2 /* as if a first sword was already used */,
-			inventory: [{ kind: "sword" as const, quantity: 1 }],
+			inventory: ["sword" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -43,7 +43,7 @@ describe("items/equipment", () => {
 	it("using a cursed sword lowers playerAttackDamage, clamped at MIN_PLAYER_ATTACK_DAMAGE", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "sword" as const, quantity: 1 }],
+			inventory: ["sword" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -59,7 +59,7 @@ describe("items/equipment", () => {
 	it("using held armor permanently raises playerDefense when blessed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),
-			inventory: [{ kind: "armor" as const, quantity: 1 }],
+			inventory: ["armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -77,7 +77,7 @@ describe("items/equipment", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 411),
 			playerDefense: 1 /* as if a first armor was already used */,
-			inventory: [{ kind: "armor" as const, quantity: 1 }],
+			inventory: ["armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -89,7 +89,7 @@ describe("items/equipment", () => {
 	it("using cursed armor lowers playerDefense, which can go negative", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "armor" as const, quantity: 1 }],
+			inventory: ["armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

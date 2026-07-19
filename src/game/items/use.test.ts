@@ -17,7 +17,7 @@ describe("applyUseItem dispatch", () => {
 	it("using an item spends a turn: adjacent enemies still get to act", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: ["heal-potion" as const],
 			enemies: [zombie(5, 1)] /* adjacent to the player */,
 		};
 		const next = advanceTurn(state, {

@@ -6,10 +6,11 @@
 
 export type { Cell } from "../renderer/index.js";
 export { buildCatalogMarkdown } from "../shell/catalog.js";
-export { formatEvent, formatInventoryEntry } from "../shell/messages.js";
+export { resolveItemDisplayName } from "../shell/gameNames.js";
+export { formatEvent, formatInventoryTitle } from "../shell/messages.js";
 export {
 	INVENTORY_EMPTY_MESSAGE,
-	INVENTORY_TITLE,
+	ITEM_VERB_PROMPT,
 	SAVE_LOAD_WARNING_MESSAGE,
 } from "../shell/systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
@@ -38,7 +39,11 @@ export {
 	PARALYSIS_GLYPH,
 } from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
-export { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
+export {
+	toInventoryLetter,
+	toItemVerbAction,
+	toSelectedItemKind,
+} from "./inventoryKeymap.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,
@@ -46,7 +51,6 @@ export type {
 	Enemy,
 	GameState,
 	GameStatus,
-	InventoryEntry,
 	Item,
 	Position,
 } from "./state.js";

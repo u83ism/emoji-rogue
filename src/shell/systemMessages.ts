@@ -19,3 +19,6 @@ export const INVENTORY_TITLE = "持ち物(iかEscで閉じる)";
 
 /** Shown inside the inventory overlay when nothing is held. */
 export const INVENTORY_EMPTY_MESSAGE = "何も持っていません";
+
+/** Shown after selecting a row in the inventory overlay, prompting for the use/drop verb. */
+export const ITEM_VERB_PROMPT = "u: つかう  d: すてる (Escで戻る)";

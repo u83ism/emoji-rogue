@@ -19,6 +19,16 @@ export const MIN_DAMAGE_TAKEN = 1;
  */
 export const DAMAGE_VARIANCE_STDDEV = 0.5;
 
+/**
+ * Max distinct item kinds the player can hold at once — one slot per held
+ * kind (stacking more of an already-held kind never costs a slot). Picking
+ * up a new kind is refused once at capacity — see applyItemPickup. Matches
+ * the base どうぐ袋 capacity of Fushigi no Dungeon: Shiren the Wanderer (the
+ * series this project's inventory UX takes its cues from); that series lets
+ * the capacity grow via found items, which this project does not (yet).
+ */
+export const INVENTORY_CAPACITY = 20;
+
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;
 export const ZOMBIE_ACTIONS_PER_TURN = 1;

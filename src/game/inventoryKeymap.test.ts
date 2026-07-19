@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
-import type { InventoryEntry } from "./state.js";
+import type { ItemKind } from "./events.js";
+import {
+	toInventoryLetter,
+	toItemVerbAction,
+	toSelectedItemKind,
+} from "./inventoryKeymap.js";
 
 describe("toInventoryLetter", () => {
 	it("assigns a, b, c, ... in order", () => {
@@ -16,39 +20,51 @@ describe("toInventoryLetter", () => {
 	});
 });
 
-describe("toUseItemAction", () => {
-	const inventory: readonly InventoryEntry[] = [
-		{ kind: "heal-potion", quantity: 2 },
-	];
+describe("toSelectedItemKind", () => {
+	const inventory: readonly ItemKind[] = ["heal-potion", "heal-potion"];
 
-	it("maps the row's letter to a use-item action for that kind", () => {
-		expect(toUseItemAction("a", inventory)).toEqual({
+	it("maps the row's letter to the held kind", () => {
+		expect(toSelectedItemKind("a", inventory)).toBe("heal-potion");
+	});
+
+	it("returns undefined for a letter with no matching row", () => {
+		expect(toSelectedItemKind("c", inventory)).toBeUndefined();
+		expect(toSelectedItemKind("a", [])).toBeUndefined();
+	});
+
+	it("never maps i to a row — the 9th entry answers to j instead", () => {
+		const nineKinds: readonly ItemKind[] = [
+			"heal-potion",
+			"poison",
+			"food",
+			"sword",
+			"armor",
+			"teleport-scroll",
+			"mapping-scroll",
+			"identify-scroll",
+			"striking-wand",
+		];
+		expect(toSelectedItemKind("i", nineKinds)).toBeUndefined();
+		expect(toSelectedItemKind("j", nineKinds)).toBe("striking-wand");
+	});
+});
+
+describe("toItemVerbAction", () => {
+	it("maps u to a use-item action for the selected kind", () => {
+		expect(toItemVerbAction("u", "heal-potion")).toEqual({
 			type: "use-item",
 			payload: { kind: "heal-potion" },
 		});
 	});
 
-	it("returns undefined for a letter with no matching row", () => {
-		expect(toUseItemAction("b", inventory)).toBeUndefined();
-		expect(toUseItemAction("a", [])).toBeUndefined();
+	it("maps d to a drop-item action for the selected kind", () => {
+		expect(toItemVerbAction("d", "heal-potion")).toEqual({
+			type: "drop-item",
+			payload: { kind: "heal-potion" },
+		});
 	});
 
-	it("never maps i to a row — the 9th entry answers to j instead", () => {
-		const nineKinds: readonly InventoryEntry[] = [
-			{ kind: "heal-potion", quantity: 1 },
-			{ kind: "poison", quantity: 1 },
-			{ kind: "food", quantity: 1 },
-			{ kind: "sword", quantity: 1 },
-			{ kind: "armor", quantity: 1 },
-			{ kind: "teleport-scroll", quantity: 1 },
-			{ kind: "mapping-scroll", quantity: 1 },
-			{ kind: "identify-scroll", quantity: 1 },
-			{ kind: "striking-wand", quantity: 1 },
-		];
-		expect(toUseItemAction("i", nineKinds)).toBeUndefined();
-		expect(toUseItemAction("j", nineKinds)).toEqual({
-			type: "use-item",
-			payload: { kind: "striking-wand" },
-		});
+	it("returns undefined for any other key", () => {
+		expect(toItemVerbAction("x", "heal-potion")).toBeUndefined();
 	});
 });

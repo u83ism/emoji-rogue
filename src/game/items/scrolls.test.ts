@@ -8,7 +8,7 @@ describe("items/scrolls", () => {
 		 * enchant scroll must still succeed unconditionally from the same rng state */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "enchant-weapon" as const, quantity: 1 }],
+			inventory: ["enchant-weapon" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -27,7 +27,7 @@ describe("items/scrolls", () => {
 		 * enchant scroll must still succeed unconditionally from the same rng state */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "enchant-armor" as const, quantity: 1 }],
+			inventory: ["enchant-armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -44,7 +44,7 @@ describe("items/scrolls", () => {
 	it("using a held protect armor scroll sets armorProtected and logs armor-protected", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "protect-armor" as const, quantity: 1 }],
+			inventory: ["protect-armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -59,7 +59,7 @@ describe("items/scrolls", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			armorProtected: true,
-			inventory: [{ kind: "protect-armor" as const, quantity: 1 }],
+			inventory: ["protect-armor" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -72,13 +72,13 @@ describe("items/scrolls", () => {
 	it("using a held scroll teleports the player, consumes the scroll, and consumes rng", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "teleport-scroll" as const, quantity: 2 }],
+			inventory: ["teleport-scroll" as const, "teleport-scroll" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { kind: "teleport-scroll" },
 		});
-		expect(next.inventory).toEqual([{ kind: "teleport-scroll", quantity: 1 }]);
+		expect(next.inventory).toEqual(["teleport-scroll"]);
 		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{
@@ -92,7 +92,7 @@ describe("items/scrolls", () => {
 		const state = buildDungeonGameState(40, 20, 7);
 		const withScroll = {
 			...state,
-			inventory: [{ kind: "mapping-scroll" as const, quantity: 1 }],
+			inventory: ["mapping-scroll" as const],
 		};
 		const next = advanceTurn(withScroll, {
 			type: "use-item",
@@ -113,7 +113,7 @@ describe("items/scrolls", () => {
 	it("using a held identify scroll identifies the first unidentified potion kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "identify-scroll" as const, quantity: 1 }],
+			inventory: ["identify-scroll" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -129,7 +129,11 @@ describe("items/scrolls", () => {
 	it("identifying repeatedly reveals one potion kind per scroll, in order", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "identify-scroll" as const, quantity: 3 }],
+			inventory: [
+				"identify-scroll" as const,
+				"identify-scroll" as const,
+				"identify-scroll" as const,
+			],
 		};
 		const afterFirst = advanceTurn(state, {
 			type: "use-item",
@@ -172,7 +176,7 @@ describe("items/scrolls", () => {
 				"detect-monster",
 				"life",
 			] as const,
-			inventory: [{ kind: "identify-scroll" as const, quantity: 1 }],
+			inventory: ["identify-scroll" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

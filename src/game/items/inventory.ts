@@ -1,38 +1,25 @@
 import type { ItemKind } from "../events.js";
-import type { InventoryEntry } from "../state.js";
 
-/** The inventory with one more `kind`: stacked onto an existing entry, or appended as a new one. */
+/** The inventory with `kind` appended as a new slot — every pickup, even of an already-held kind, takes its own slot (no stacking). */
 export const addToInventory = (
-	inventory: readonly InventoryEntry[],
+	inventory: readonly ItemKind[],
 	kind: ItemKind,
-): readonly InventoryEntry[] => {
-	const held = inventory.find((entry) => entry.kind === kind);
-	if (held === undefined) {
-		return [...inventory, { kind, quantity: 1 }];
-	}
-	return inventory.map((entry) =>
-		entry.kind === kind ? { ...entry, quantity: entry.quantity + 1 } : entry,
-	);
+): readonly ItemKind[] => [...inventory, kind];
+
+/** The inventory with the first slot holding `kind` removed, or unchanged if `kind` is not held. */
+export const removeFromInventory = (
+	inventory: readonly ItemKind[],
+	kind: ItemKind,
+): readonly ItemKind[] => {
+	const index = inventory.indexOf(kind);
+	return index === -1 ? inventory : removeOneFromInventory(inventory, index);
 };
 
-/** The inventory with one `kind` removed, dropping the stack entirely once it hits zero. */
-export const removeFromInventory = (
-	inventory: readonly InventoryEntry[],
-	kind: ItemKind,
-): readonly InventoryEntry[] =>
-	inventory
-		.map((entry) =>
-			entry.kind === kind ? { ...entry, quantity: entry.quantity - 1 } : entry,
-		)
-		.filter((entry) => entry.quantity > 0);
-
-/** Decrements the stack at `index` by one, dropping it entirely once it hits zero — the nymph's rng-picked steal. */
+/** The inventory with the slot at `index` removed — the nymph's rng-picked steal. */
 export const removeOneFromInventory = (
-	inventory: readonly InventoryEntry[],
+	inventory: readonly ItemKind[],
 	index: number,
-): readonly InventoryEntry[] =>
-	inventory
-		.map((entry, entryIndex) =>
-			entryIndex === index ? { ...entry, quantity: entry.quantity - 1 } : entry,
-		)
-		.filter((entry) => entry.quantity > 0);
+): readonly ItemKind[] => [
+	...inventory.slice(0, index),
+	...inventory.slice(index + 1),
+];

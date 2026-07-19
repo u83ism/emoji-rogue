@@ -17,6 +17,10 @@ export type Action =
 			readonly type: "use-item";
 			readonly payload: { readonly kind: ItemKind };
 	  }
+	| {
+			readonly type: "drop-item";
+			readonly payload: { readonly kind: ItemKind };
+	  }
 	| { readonly type: "save" }
 	| { readonly type: "quit" };
 
@@ -78,12 +82,6 @@ export type Trap = Position & {
 	readonly kind: TrapKind;
 };
 
-/** One stack of a held item kind. No capacity limit (yet) — see the backlog. */
-export interface InventoryEntry {
-	readonly kind: ItemKind;
-	readonly quantity: number;
-}
-
 /**
  * The complete, serializable game state. Contains only data — no functions —
  * so a save file is just `JSON.stringify(state)` and a replay is the initial
@@ -140,8 +138,13 @@ export interface GameState {
 	readonly detectMonstersTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
-	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */
-	readonly inventory: readonly InventoryEntry[];
+	/**
+	 * Items picked up but not yet used — stepping on an item no longer uses it
+	 * immediately. One entry per held item (no stacking): two heal potions are
+	 * two entries and cost two of INVENTORY_CAPACITY's (balance.ts) slots, not
+	 * one stack of quantity 2. See applyItemPickup.
+	 */
+	readonly inventory: readonly ItemKind[];
 	/** Potion kinds identified this run (by drinking one) — see POTION_KINDS. */
 	readonly identifiedPotionKinds: readonly ItemKind[];
 	readonly goldPiles: readonly GoldPile[];

@@ -1,21 +1,16 @@
+import { INVENTORY_CAPACITY } from "../game/balance.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
-import type { InventoryEntry } from "../game/state.js";
 import {
 	ENEMY_NAMES,
 	ITEM_NAMES,
 	resolveItemDisplayName,
 	TRAP_NAMES,
 } from "./gameNames.js";
+import { INVENTORY_TITLE } from "./systemMessages.js";
 
-/**
- * One inventory row, e.g. "回復薬 x2" — or "未鑑定の薬 x2" for a potion-family
- * kind not yet identified this run (see identifiedPotionKinds).
- */
-export const formatInventoryEntry = (
-	entry: InventoryEntry,
-	identifiedPotionKinds: readonly ItemKind[],
-): string =>
-	`${resolveItemDisplayName(entry.kind, identifiedPotionKinds)} x${entry.quantity}`;
+/** The inventory overlay's title line, with the fill level appended (e.g. "持ち物(iかEscで閉じる) 3/20"). */
+export const formatInventoryTitle = (heldCount: number): string =>
+	`${INVENTORY_TITLE} ${heldCount}/${INVENTORY_CAPACITY}`;
 
 /** The one-line run summary shown once the game ends — see calculateScore in game/score.ts. */
 export const formatScoreSummary = (
@@ -84,6 +79,10 @@ export const formatEvent = (
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 		case "item-picked-up":
 			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を拾った`;
+		case "inventory-full":
+			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を持てなかった。持ち物がいっぱいだ`;
+		case "item-dropped":
+			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を足元に置いた`;
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":

@@ -217,7 +217,7 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
 			paralyzedTurnsRemaining: 3,
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: ["heal-potion" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -226,6 +226,46 @@ describe("advanceTurn", () => {
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.paralyzedTurnsRemaining).toBe(2);
 		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
+	});
+
+	it("a paralyzed player cannot drop an item — inventory is untouched but the turn still passes", () => {
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			paralyzedTurnsRemaining: 3,
+			inventory: ["heal-potion" as const],
+		};
+		const next = advanceTurn(state, {
+			type: "drop-item",
+			payload: { kind: "heal-potion" },
+		});
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.paralyzedTurnsRemaining).toBe(2);
+		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
+	});
+
+	it("dropping a held item moves it from inventory onto the player's tile and spends a turn", () => {
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			inventory: ["heal-potion" as const],
+		};
+		const next = advanceTurn(state, {
+			type: "drop-item",
+			payload: { kind: "heal-potion" },
+		});
+		expect(next.inventory).toEqual([]);
+		expect(next.items).toEqual([
+			{ x: state.player.x, y: state.player.y, kind: "heal-potion" },
+		]);
+		expect(next.playerFood).toBe(state.playerFood - 1); /* a turn passed */
+	});
+
+	it("dropping a kind not held spends no turn", () => {
+		const state = { ...buildArenaGameState(9, 9, 1), inventory: [] };
+		const next = advanceTurn(state, {
+			type: "drop-item",
+			payload: { kind: "heal-potion" },
+		});
+		expect(next).toBe(state);
 	});
 
 	it("enemies still act while the player is paralyzed", () => {
@@ -323,7 +363,7 @@ describe("advanceTurn", () => {
 		const usedItem = advanceTurn(
 			{
 				...buildArenaGameState(9, 3, 1),
-				inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+				inventory: ["heal-potion" as const],
 			},
 			{ type: "use-item", payload: { kind: "heal-potion" } },
 		);

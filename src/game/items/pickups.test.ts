@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { at } from "../../indexing.js";
 import { advanceTurn } from "../advanceTurn.js";
+import { INVENTORY_CAPACITY } from "../balance.js";
+import { ITEM_KIND_VALUES, type ItemKind } from "../events.js";
 import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
 import type { Action, Direction } from "../state.js";
 
@@ -20,7 +23,7 @@ describe("pickups", () => {
 		expect(next.player).toEqual({ x: 5, y: 1 });
 		expect(next.playerHp).toBe(7); /* unchanged — picking up does not heal */
 		expect(next.items).toEqual([]);
-		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
+		expect(next.inventory).toEqual(["heal-potion"]);
 		expect(next.events).toEqual([
 			{ type: "item-picked-up", payload: { kind: "heal-potion" } },
 		]);
@@ -49,17 +52,59 @@ describe("pickups", () => {
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.goldCollected).toBe(3);
-		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 1 }]);
+		expect(next.inventory).toEqual(["heal-potion"]);
 	});
 
-	it("picking up a second potion of the same kind stacks the quantity", () => {
+	it("picking up a second potion of the same kind takes its own slot — no stacking", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			items: [{ x: 5, y: 1, kind: "heal-potion" as const }],
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: ["heal-potion" as const],
 		};
 		const next = advanceTurn(state, move("east"));
-		expect(next.inventory).toEqual([{ kind: "heal-potion", quantity: 2 }]);
+		expect(next.inventory).toEqual(["heal-potion", "heal-potion"]);
+	});
+
+	it("refuses to pick up any item once the inventory is at capacity — the item stays on the floor", () => {
+		const fullInventory: readonly ItemKind[] = ITEM_KIND_VALUES.slice(
+			0,
+			INVENTORY_CAPACITY,
+		);
+		const newKindItem = {
+			x: 5,
+			y: 1,
+			kind: at(ITEM_KIND_VALUES, INVENTORY_CAPACITY),
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [newKindItem],
+			inventory: fullInventory,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory).toEqual(fullInventory);
+		expect(next.items).toEqual([newKindItem]);
+		expect(next.events).toEqual([
+			{ type: "inventory-full", payload: { kind: newKindItem.kind } },
+		]);
+	});
+
+	it("refuses to pick up even an already-held kind once at capacity — every slot costs one", () => {
+		const heldKind = at(ITEM_KIND_VALUES, 0);
+		const fullInventory: readonly ItemKind[] = ITEM_KIND_VALUES.slice(
+			0,
+			INVENTORY_CAPACITY,
+		);
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [{ x: 5, y: 1, kind: heldKind }],
+			inventory: fullInventory,
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.items).toEqual([{ x: 5, y: 1, kind: heldKind }]);
+		expect(next.inventory).toEqual(fullInventory);
+		expect(next.events).toEqual([
+			{ type: "inventory-full", payload: { kind: heldKind } },
+		]);
 	});
 
 	it("stepping onto the amulet's tile picks it up automatically", () => {

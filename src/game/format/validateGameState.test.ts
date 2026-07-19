@@ -752,37 +752,23 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords, armor and food) and rejects a broken one", () => {
+	it("accepts a well-formed inventory (including swords, armor and food, each its own slot) and rejects a broken one", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
-			inventory: [
-				{ kind: "heal-potion", quantity: 3 },
-				{ kind: "sword", quantity: 1 },
-				{ kind: "armor", quantity: 1 },
-				{ kind: "food", quantity: 2 },
-			],
+			inventory: ["heal-potion", "heal-potion", "sword", "armor", "food"],
 		});
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
 			expect(accepted.value.inventory).toEqual([
-				{ kind: "heal-potion", quantity: 3 },
-				{ kind: "sword", quantity: 1 },
-				{ kind: "armor", quantity: 1 },
-				{ kind: "food", quantity: 2 },
+				"heal-potion",
+				"heal-potion",
+				"sword",
+				"armor",
+				"food",
 			]);
 		}
 
-		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "bow", quantity: 1 }] },
-			"inventory",
-		);
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "heal-potion", quantity: 0 }],
-			},
-			"inventory",
-		);
+		expectRejected({ ...buildValidState(), inventory: ["bow"] }, "inventory");
 	});
 
 	it("accepts a well-formed hunger-related event set and rejects broken ones", () => {
@@ -935,7 +921,7 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "poison", quantity: 1 }],
+			inventory: ["poison"],
 			identifiedPotionKinds: ["poison"],
 			events: [
 				{ type: "player-poisoned", payload: { damage: 4 } },
@@ -947,10 +933,6 @@ describe("validateGameState", () => {
 			expect(accepted.value.identifiedPotionKinds).toEqual(["poison"]);
 		}
 
-		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "poison", quantity: 0 }] },
-			"inventory",
-		);
 		expectRejected(
 			{ ...buildValidState(), identifiedPotionKinds: ["dragon"] },
 			"identifiedPotionKinds",
@@ -968,18 +950,11 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "teleport-scroll", quantity: 1 }],
+			inventory: ["teleport-scroll"],
 			events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "teleport-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 		expectRejected(
 			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "amulet" }] },
 			"items",
@@ -997,36 +972,21 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "mapping-scroll", quantity: 1 }],
+			inventory: ["mapping-scroll"],
 			events: [{ type: "floor-mapped", payload: {} }],
 		});
 		expect(accepted.ok).toBe(true);
-
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "mapping-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 	});
 
 	it("accepts an identify item kind and a potion-identified event, rejects broken ones", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "identify-scroll", quantity: 1 }],
+			inventory: ["identify-scroll"],
 			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "identify-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 		expectRejected(
 			{
 				...buildValidState(),
@@ -1040,15 +1000,11 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "strength", quantity: 1 }],
+			inventory: ["strength"],
 			events: [{ type: "player-strengthened", payload: { bonus: 1 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "strength", quantity: 0 }] },
-			"inventory",
-		);
 		expectRejected(
 			{
 				...buildValidState(),

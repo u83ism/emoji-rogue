@@ -7,7 +7,7 @@ describe("items/rings", () => {
 	it("using a held ring sets hasRingOfRegeneration and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "regeneration-ring" as const, quantity: 1 }],
+			inventory: ["regeneration-ring" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -24,7 +24,7 @@ describe("items/rings", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			hasRingOfRegeneration: true,
-			inventory: [{ kind: "regeneration-ring" as const, quantity: 1 }],
+			inventory: ["regeneration-ring" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -37,7 +37,7 @@ describe("items/rings", () => {
 	it("using a held sustenance ring sets hasRingOfSustenance and logs ring-equipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "sustenance-ring" as const, quantity: 1 }],
+			inventory: ["sustenance-ring" as const],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

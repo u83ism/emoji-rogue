@@ -53,6 +53,7 @@ export const ITEM_KIND_VALUES = [
 	"hallucination",
 	"hold-monster-scroll",
 	"aggravate-monster-ring",
+	"sleep-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -403,6 +404,11 @@ export type GameEvent =
 			/** A hold monster scroll freezing one visible enemy — same shape as enemy-slowed, independent flavor text (it's the scroll, not a wand). */
 			readonly type: "enemy-held";
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+	  }
+	| {
+			/** A sleep wand forcing its target back to sleep — see items/wands.ts's applyUseSleepWand. */
+			readonly type: "enemy-slept";
+			readonly payload: { readonly target: EnemyKind };
 	  };
 
 /**

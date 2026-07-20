@@ -19,6 +19,7 @@ import {
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
+	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	SWORD_ATTACK_BONUS,
@@ -141,6 +142,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			percent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 		},
 		effect: `視界内の最も近い敵に${MAGIC_MISSILE_WAND_DAMAGE}ダメージ(攻撃の杖より高威力・低頻度)。1回使い切り`,
+	},
+	"sleep-wand": {
+		catalogName: "眠りの杖",
+		category: "杖",
+		spawn: { type: "chance", percent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
+		effect: "視界内の最も近い敵を強制的に眠らせる。1回使い切り",
 	},
 	sword: {
 		catalogName: "剣",

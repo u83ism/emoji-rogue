@@ -67,3 +67,26 @@ export const applyUseMagicMissileWand = (state: GameState): GameState => {
 	}
 	return applyMagicMissileWandStrike(state, target);
 };
+
+/**
+ * A sleep wand forces the nearest visible enemy back to `awake: false` — the
+ * inverse of a ring of aggravate monster. The target's next wake roll (see
+ * advanceEnemies) starts fresh, so it is not guaranteed to stay asleep for
+ * any particular number of turns. Same no-visible-target no-op as the other
+ * wands.
+ */
+export const applyUseSleepWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target ? { ...enemy, awake: false } : enemy,
+		),
+		events: buildEventLog(state.events, [
+			{ type: "enemy-slept", payload: { target: target.kind } },
+		]),
+	};
+};

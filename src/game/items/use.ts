@@ -20,6 +20,7 @@ import {
 } from "./scrolls.js";
 import {
 	applyUseMagicMissileWand,
+	applyUseSleepWand,
 	applyUseSlowWand,
 	applyUseStrikingWand,
 	applyUseTeleportWand,
@@ -81,6 +82,8 @@ const applyItemEffect = (
 			return applyUseTeleportWand(state);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state);
+		case "sleep-wand":
+			return applyUseSleepWand(state);
 		case "heal-potion":
 		case "poison":
 		case "strength":

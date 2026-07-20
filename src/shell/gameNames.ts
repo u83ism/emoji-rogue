@@ -60,6 +60,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	hallucination: "幻覚の薬",
 	"hold-monster-scroll": "束縛の巻物",
 	"aggravate-monster-ring": "指輪",
+	"sleep-wand": "杖",
 };
 
 /**

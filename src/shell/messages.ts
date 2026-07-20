@@ -193,5 +193,7 @@ export const formatEvent = (
 			return "幻覚がおさまった";
 		case "enemy-held":
 			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
+		case "enemy-slept":
+			return `杖の力で${ENEMY_NAMES[event.payload.target]}を眠らせた!`;
 	}
 };

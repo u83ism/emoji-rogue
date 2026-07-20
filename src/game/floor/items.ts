@@ -28,6 +28,7 @@ import {
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
+	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
@@ -129,6 +130,7 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "aggravate-monster-ring",
 		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	},
+	{ kind: "sleep-wand", chancePercent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
 ];
 
 /** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */

@@ -716,6 +716,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-slept", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-slept", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-held event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

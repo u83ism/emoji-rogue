@@ -107,6 +107,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"aggravate-monster-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
+	"sleep-wand": { glyph: "🪄" },
 	/* Same scroll glyph as every other scroll kind — see the comment above. */
 	"confuse-monster-scroll": { glyph: "📜" },
 	"hold-monster-scroll": { glyph: "📜" },

@@ -526,6 +526,24 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン95完了(2026-07-21)。**
 
+## マイルストーン96 — 眠りの杖(5種類目の杖、視界内最近接の敵を強制的に眠らせる)
+
+未反映ブランチの内容の再実装、第14弾(方針はマイルストーン83を参照)。原作Rogueの"wand of sleep"に着想を得た、命中・鈍足・テレポート・魔法の矢に続く5種類目の杖。効果は視界内最近接の敵(既存の`findNearestVisibleEnemy`をそのまま再利用)を強制的に`awake: false`へ戻すだけ——新規の状態フィールドは不要(既存の`Enemy.awake`をそのまま利用)。警報の指輪(装備した瞬間に全敵を強制覚醒)の対極に位置する効果で、対象は次にプレイヤーへ隣接/視界に入った時点から`WAKE_CHANCE_PERCENT`の目覚め判定をやり直す。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"sleep-wand"`を追加。`GameEvent`に`enemy-slept`(payload: `target: EnemyKind`)を追加
+- [x] `src/game/balance.ts`: `SLEEP_WAND_SPAWN_CHANCE_PERCENT = 8`(他の杖と同じ希少度)を追加
+- [x] `src/game/items/wands.ts`: `applyUseSleepWand(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一。対象が見つかれば`awake: false`に戻し`enemy-slept`を記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "sleep-wand"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalog/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: `enemy-slept`イベントの検証ケース(`target`が`isEnemyKind`)を追加。`ItemKind`列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/items/wands.test.ts`: `advanceTurn`経由のテストでは、杖で寝かせた直後に同じターンの`advanceEnemies`が(視界内にいるため)即座に目覚め判定をやり直してしまい、最終的な`awake`状態を直接アサートできない——`applyUseSleepWand`を直接呼ぶユニットテストを追加し、`advanceEnemies`の介入なしに効果そのものを検証する形で対応した(マイルストーン90の`enemy-confused`/`enemy-slowed`系テストが最終状態でなくイベントの有無だけを見ているのも同じ理由だったと理解した——元ブランチのマイルストーン77で踏んだのと同じ落とし穴)
+- [x] `src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、眠りの杖を使うと`enemy-slept`イベントが記録され杖が消費されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 876件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン96完了(2026-07-21)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

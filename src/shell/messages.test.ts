@@ -278,6 +278,10 @@ describe("formatEvent", () => {
 				},
 				"指輪を身につけた。敵の気配に気づかれてしまった!",
 			],
+			[
+				{ type: "enemy-slept", payload: { target: "zombie" } },
+				"杖の力でゾンビを眠らせた!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

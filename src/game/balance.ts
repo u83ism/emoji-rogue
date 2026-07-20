@@ -403,6 +403,9 @@ export const HOLD_MONSTER_SCROLL_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
 export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
+/** Chance (out of 100), independently rolled per floor, that a sleep wand spawns — same rarity as the other wands. */
+export const SLEEP_WAND_SPAWN_CHANCE_PERCENT = 8;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

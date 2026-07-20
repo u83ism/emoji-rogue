@@ -4,7 +4,10 @@ import {
 	DART_TRAP_DAMAGE,
 	ENEMY_COUNT_SCALING,
 	GOAL_FLOOR,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
 	NYMPH_SPAWN_CHANCE_PERCENT,
+	ORC_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
@@ -67,6 +70,10 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	aquator: {
 		spawn: { type: "chance", percent: AQUATOR_SPAWN_CHANCE_PERCENT },
 		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)`,
+	},
+	orc: {
+		spawn: { type: "chance", percent: ORC_SPAWN_CHANCE_PERCENT },
+		behavior: `頑丈な近接アタッカー。倒すと${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールドをその場で落とす`,
 	},
 };
 

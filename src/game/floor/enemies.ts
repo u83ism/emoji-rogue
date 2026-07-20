@@ -8,6 +8,7 @@ import {
 	MONSTER_HOUSE_ENEMY_COUNT,
 	MONSTER_HOUSE_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
+	ORC_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
 import type { EnemyKind } from "../events.js";
@@ -28,6 +29,7 @@ const ENEMY_SPAWN_TABLE: readonly SpawnChance<EnemyKind>[] = [
 	{ kind: "thief", chancePercent: THIEF_SPAWN_CHANCE_PERCENT },
 	{ kind: "nymph", chancePercent: NYMPH_SPAWN_CHANCE_PERCENT },
 	{ kind: "aquator", chancePercent: AQUATOR_SPAWN_CHANCE_PERCENT },
+	{ kind: "orc", chancePercent: ORC_SPAWN_CHANCE_PERCENT },
 ];
 
 /**

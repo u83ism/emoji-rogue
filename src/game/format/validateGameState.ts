@@ -290,6 +290,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
 	"curse-revealed": (payload) => isItemKind(payload.kind),
 	"items-decursed": (payload) => isPositiveInteger(payload.count),
+	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

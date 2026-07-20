@@ -11,6 +11,7 @@ export const ENEMY_KIND_VALUES = [
 	"thief",
 	"nymph",
 	"aquator",
+	"orc",
 ] as const;
 
 /** Events carry it so the shell can name the attacker. */
@@ -352,6 +353,11 @@ export type GameEvent =
 			/** A remove-curse scroll freeing every currently-equipped cursed item at once. */
 			readonly type: "items-decursed";
 			readonly payload: { readonly count: number };
+	  }
+	| {
+			/** An orc defeated by any means (melee or wand) drops a gold bonus on the spot — see combat.ts's applyEnemyHit. */
+			readonly type: "orc-gold-drop";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

@@ -277,6 +277,26 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン82完了(2026-07-19)。**
 
+## マイルストーン83 — オーク(撃破時に追加の金貨をドロップする、頑丈な近接アタッカー)
+
+`/goal`による自律開発が別ブランチ(`claude/tengu-class-classification-kgjioa`)で敵5種・杖3種・指輪3種・巻物2種・わな2種・状態異常1種(マイルストーン64〜79相当)を実装していたが、developへ一度もマージされないまま残っていた(発見・整理は2026-07-20)。developはその間に独自にマイルストーン64〜82(絵文字ADR化・装備システム導入・持ち物スロット制・`items`/`floor`/`format`/`turnEnd`へのフォルダ再編など)を進めており、両者は番号だけでなくファイル配置・アイテムモデルまで食い違っていたため、単純なmerge/rebase/cherry-pickではなく、該当ブランチの設計ログ(値・イベント形・エッジケース)を仕様として読み、現行developのアーキテクチャに合わせて再実装する方針にした(番号は83から振り直し)。
+
+本マイルストーンはその第1弾。原作Rogueのオーク(Orc)に着想を得た敵を追加する。ゾンビ・コウモリより頑丈(HP・攻撃力とも高め)でまっすぐ殴り合う近接アタッカーだが、原作のオークが金への執着で知られる特徴を、「撃破すると金貨と同じ乱数範囲(`GOLD_AMOUNT_MIN`〜`GOLD_AMOUNT_MAX`)でボーナス金貨をその場でドロップし、自動的に`goldCollected`へ加算する」という形で簡略再現する(個体に金貨を持たせて床に落とすのではなく、撃破の瞬間に直接加算する——`GoldPile`エンティティを経由しない、既存の`gold-collected`とは独立した専用イベント)。深さスケーリングはせず、盗賊・ニンフ・アクエーターと同じ独立per-floor抽選とする。`advanceEnemies`側の行動原理はゾンビ・コウモリと同一(隣接すれば通常攻撃、それ以外はA*追跡/徘徊)のため`enemies.ts`への変更は不要——変更が要るのは撃破処理を担う`combat.ts`の`applyEnemyHit`だけで、プレイヤーの近接攻撃・杖のどちらで倒しても同じくドロップする。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"orc"`を追加。`GameEvent`に`orc-gold-drop`(payload: 実ドロップ量`amount`)を追加
+- [x] `src/game/balance.ts`: `ORC_MAX_HP = 4`・`ORC_ATTACK_DAMAGE = 2`・`ORC_ACTIONS_PER_TURN = 1`・`ORC_SPAWN_CHANCE_PERCENT = 20`を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`orc`のエントリを追加(経験値はアクエーターと同格の3)
+- [x] `src/game/combat.ts`: `applyEnemyHit`が撃破時に`target.kind === "orc"`なら`state.rng`を一時的にステートフルな`Rng`に起こし(`teleport.ts`の`applyRandomTeleport`と同じ既存パターン)ボーナス額を抽選、`goldCollected`に加算し`orc-gold-drop`を記録
+- [x] `src/game/floor/enemies.ts`: `ENEMY_SPAWN_TABLE`の末尾に追加(配列順=rng消費順の規約どおり) + テスト(`floor/enemies.test.ts`のkindループにorcを追加)
+- [x] `src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: `ENEMY_GLYPHS`/`ENEMY_NAMES`/`ENEMY_CATALOG`にエントリを追加(`ENEMY_CATALOG`は`Record<EnemyKind, ...>`の網羅型のため追加漏れはコンパイルエラーになる)
+- [x] `src/shell/messages.ts`: `orc-gold-drop`の文言(「オークが金貨を落とした!◯ゴールド手に入れた」) + テスト
+- [x] `src/game/format/validateGameState.ts`: `orc-gold-drop`イベントの検証ケース(`amount`が正の整数)を追加。`EnemyKind`列挙値追加のみのためセーブ形式の構造変更なし(`SAVE_FORMAT_VERSION`据え置き)
+- [x] `src/game/combat.test.ts`: 近接・杖どちらの撃破でもドロップすること、決定性、非オークの撃破ではドロップしないこと、非致死ヒットではドロップしないことを確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、`advanceTurn`のバンプ攻撃でオークを撃破すると`goldCollected`が増え`orc-gold-drop`イベントが記録されること、同条件のゾンビ撃破では変化しないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 829件・knip・build)が通過し、上記パイプライン確認が済んだところで完了とする。`npm run docs:catalog`で`docs/catalog.md`にオークの行を追加した。
+
+**マイルストーン83完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

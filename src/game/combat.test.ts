@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	ENEMY_EXPERIENCE_REWARD,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
+	ORC_MAX_HP,
 	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
@@ -17,6 +20,15 @@ const zombie = (
 	x,
 	y,
 	kind: "zombie",
+	hp,
+	awake,
+	slowedTurnsRemaining: 0,
+});
+
+const orc = (x: number, y: number, hp = ORC_MAX_HP, awake = true): Enemy => ({
+	x,
+	y,
+	kind: "orc",
 	hp,
 	awake,
 	slowedTurnsRemaining: 0,
@@ -201,5 +213,52 @@ describe("applyWandStrike", () => {
 		const target = zombie(5, 4);
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
 		expect(next.hasAttacked).toBe(true);
+	});
+});
+
+describe("orc gold drop", () => {
+	const state = buildArenaGameState(9, 9, 1);
+
+	it("drops a bonus between GOLD_AMOUNT_MIN and GOLD_AMOUNT_MAX into goldCollected on a melee kill", () => {
+		const target = orc(5, 4, 1);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		const dropped = next.goldCollected - state.goldCollected;
+		expect(dropped).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
+		expect(dropped).toBeLessThanOrEqual(GOLD_AMOUNT_MAX);
+		expect(next.events).toContainEqual({
+			type: "orc-gold-drop",
+			payload: { amount: dropped },
+		});
+	});
+
+	it("also drops gold on a wand kill", () => {
+		const target = orc(5, 4, WAND_STRIKE_DAMAGE);
+		const next = applyWandStrike({ ...state, enemies: [target] }, target);
+		expect(next.goldCollected).toBeGreaterThan(state.goldCollected);
+		expect(next.events.some((event) => event.type === "orc-gold-drop")).toBe(
+			true,
+		);
+	});
+
+	it("is deterministic for a given rng state", () => {
+		const target = orc(5, 4, 1);
+		const first = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		const second = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(first.goldCollected).toBe(second.goldCollected);
+	});
+
+	it("does not drop gold when a non-orc is killed", () => {
+		const target = zombie(5, 4, 1);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.goldCollected).toBe(state.goldCollected);
+		expect(next.events.some((event) => event.type === "orc-gold-drop")).toBe(
+			false,
+		);
+	});
+
+	it("does not drop gold on a non-lethal hit", () => {
+		const target = orc(5, 4);
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.goldCollected).toBe(state.goldCollected);
 	});
 });

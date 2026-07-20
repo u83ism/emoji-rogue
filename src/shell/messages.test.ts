@@ -242,6 +242,10 @@ describe("formatEvent", () => {
 				{ type: "winds-of-kron-eviction", payload: {} },
 				"クロンの風に吹き飛ばされた!",
 			],
+			[
+				{ type: "orc-gold-drop", payload: { amount: 7 } },
+				"オークが金貨を落とした!7ゴールド手に入れた",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

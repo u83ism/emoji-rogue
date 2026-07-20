@@ -672,6 +672,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed orc-gold-drop event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "orc-gold-drop", payload: { amount: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "orc-gold-drop", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed armor-rusted event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

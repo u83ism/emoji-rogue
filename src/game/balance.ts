@@ -69,6 +69,17 @@ export const AQUATOR_ACTIONS_PER_TURN = 1;
 export const AQUATOR_RUST_CHANCE_PERCENT = 33;
 export const AQUATOR_SPAWN_CHANCE_PERCENT = 20;
 
+// A sturdier straight-up melee attacker than aquator — no special behavior of
+// its own in advanceEnemies (same "attack if adjacent, otherwise chase/wander"
+// as zombie/bat); its distinguishing trait is combat.ts's applyEnemyHit
+// dropping a bonus gold pile on death (see GOLD_AMOUNT_MIN/MAX), echoing
+// original Rogue's gold-hoarding orc. Independent per-floor spawn, no depth
+// scaling — same idiom as thief/nymph/aquator.
+export const ORC_MAX_HP = 4;
+export const ORC_ATTACK_DAMAGE = 2;
+export const ORC_ACTIONS_PER_TURN = 1;
+export const ORC_SPAWN_CHANCE_PERCENT = 20;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -98,6 +109,7 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_MAX_HP,
 	nymph: NYMPH_MAX_HP,
 	aquator: AQUATOR_MAX_HP,
+	orc: ORC_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -105,6 +117,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_ATTACK_DAMAGE,
 	nymph: NYMPH_ATTACK_DAMAGE,
 	aquator: AQUATOR_ATTACK_DAMAGE,
+	orc: ORC_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -117,6 +130,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_ACTIONS_PER_TURN,
 	nymph: NYMPH_ACTIONS_PER_TURN,
 	aquator: AQUATOR_ACTIONS_PER_TURN,
+	orc: ORC_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -125,6 +139,7 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	thief: 2,
 	nymph: 1,
 	aquator: 3,
+	orc: 3,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

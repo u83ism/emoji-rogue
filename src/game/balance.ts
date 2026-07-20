@@ -290,11 +290,19 @@ export const TELEPORT_TRAP_DAMAGE = 0;
  */
 export const TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20;
 
+/** No damage — the penalty is the paralysis itself, see PARALYZED_TURNS_REMAINING handling in trapTrigger.ts. */
+export const BEAR_TRAP_DAMAGE = 0;
+/** How many turns a bear trap paralyzes the player for — same length as the paralysis potion. */
+export const BEAR_TRAP_PARALYSIS_DURATION = 3;
+/** Chance (out of 100), independently rolled per floor, that a bear trap spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, allowed on GOAL_FLOOR too (it never generates a floor beyond it). */
+export const BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15;
+
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 	trapdoor: TRAPDOOR_DAMAGE,
 	teleport: TELEPORT_TRAP_DAMAGE,
+	bear: BEAR_TRAP_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */

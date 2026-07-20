@@ -430,6 +430,23 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン90完了(2026-07-20)。**
 
+## マイルストーン91 — 捕獲のわな(4種類目のわな、プレイヤーを一時麻痺させる)
+
+未反映ブランチの内容の再実装、第9弾(方針はマイルストーン83を参照)。原作Rogueの熊わな(bear trap)に着想を得た、矢・落とし穴・テレポートに続く4種類目のわな。ダメージは0固定(トラップドア・テレポートの罠と同じ「一撃の脅威ではなく行動の制約そのものが罰則」という位置づけ)で、代わりに麻痺の薬と同じ`paralyzedTurnsRemaining`をセットする——新規の状態フィールドは追加せず、既存の`paralyzedTurnsRemaining`ティック・ステータスバー表示チップをそのまま再利用する。`trapTrigger.ts`の`applyTrapTrigger`が既に確立している「`trap.kind === "X" && status === "playing"`なら追加の副作用を返す」という分岐パターンに3件目として合流する(4件目(マイルストーン97の錆びわな)でこのif連鎖が`functional-style.md`の許容上限に触れる見込み——そのときにルックアップテーブルへ置き換える)。kindの内部識別子は原作Rogueの用語のまま`"bear"`とした(プレイヤー向け表示名は`TRAP_NAMES`経由で「捕獲のわな」)。
+
+- [x] `src/game/events.ts`: `TRAP_KIND_VALUES`に`"bear"`を追加(新規`GameEvent`は不要——既存の`trap-triggered`をそのまま再利用。麻痺状態自体は`player-paralyzed`ではなく`paralyzedTurnsRemaining`を直接セットするだけなので、こちらも新規イベント不要)
+- [x] `src/game/balance.ts`: `BEAR_TRAP_DAMAGE = 0`・`BEAR_TRAP_PARALYSIS_DURATION = 3`(`PARALYSIS_POTION_DURATION`と同じ長さ)・`BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15`を追加し、`TRAP_DAMAGE`に`bear`のエントリを追加
+- [x] `src/game/trapTrigger.ts`: `applyTrapTrigger`に`trap.kind === "bear" && afterTrap.status === "playing"`の分岐を追加し`paralyzedTurnsRemaining`をセット
+- [x] `src/game/floor/traps.ts`: `BEAR_TRAP_SPAWN_CHANCE_PERCENT`による独立per-floor抽選を追加(GOAL_FLOOR除外なし——同一フロア内で完結する効果のため)
+- [x] `src/shell/gameNames.ts`・`src/shell/catalogData.ts`: `TRAP_NAMES`/`TRAP_CATALOG`にエントリを追加(ダメージ0なので既存の「◯を踏んでしまった!」分岐がそのまま適用され、新規文言は不要)
+- [x] `src/game/format/validateGameState.ts`: `trap-triggered`イベント検証の「ダメージ0系」判定に`"bear"`を追加。`isTrapKind`は自動導出のため変更不要
+- [x] `src/game/trapTrigger.test.ts`・`src/game/floor/traps.test.ts`・`format/validateGameState.test.ts`: 各パターンのテスト(麻痺すること・移動できなくなること・レビテーション中は無効化されることを含む)を追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、捕獲のわなを踏むとダメージなしで`paralyzedTurnsRemaining`がセットされ、以後の移動アクションが実際に無効化されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 854件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン91完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

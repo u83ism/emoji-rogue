@@ -97,7 +97,12 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
  */
 export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
 
-export const TRAP_KIND_VALUES = ["dart", "trapdoor", "teleport"] as const;
+export const TRAP_KIND_VALUES = [
+	"dart",
+	"trapdoor",
+	"teleport",
+	"bear",
+] as const;
 
 /** Hidden until stepped on — see trapTrigger.ts. */
 export type TrapKind = (typeof TRAP_KIND_VALUES)[number];

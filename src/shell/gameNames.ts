@@ -81,6 +81,7 @@ export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	dart: "矢のわな",
 	trapdoor: "落とし穴",
 	teleport: "テレポートの罠",
+	bear: "捕獲のわな",
 };
 
 /**

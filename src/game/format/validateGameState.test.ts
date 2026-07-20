@@ -1072,6 +1072,24 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+
+		const bearTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "bear" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "bear", damage: 0 } },
+			],
+		});
+		expect(bearTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "bear", damage: -1 } },
+				],
+			},
+			"events",
+		);
 		expectRejected(
 			{
 				...buildValidState(),

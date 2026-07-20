@@ -1,6 +1,8 @@
 import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	AQUATOR_SPAWN_CHANCE_PERCENT,
+	BEAR_TRAP_PARALYSIS_DURATION,
+	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
 	DART_TRAP_DAMAGE,
 	DRAGON_SPAWN_CHANCE_PERCENT,
 	ENEMY_COUNT_SCALING,
@@ -106,5 +108,9 @@ export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	teleport: {
 		spawn: { type: "chance", percent: TELEPORT_TRAP_SPAWN_CHANCE_PERCENT },
 		effect: "フロア内のランダムな床へ飛ばされる",
+	},
+	bear: {
+		spawn: { type: "chance", percent: BEAR_TRAP_SPAWN_CHANCE_PERCENT },
+		effect: `ダメージはないが${BEAR_TRAP_PARALYSIS_DURATION}ターン動けなくなる`,
 	},
 };

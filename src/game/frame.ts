@@ -17,8 +17,35 @@ import {
 	WON_PLAYER_CELL,
 } from "./glyphs.js";
 import { hasEquippedRing } from "./items/rings.js";
-import type { GameState, GameStatus } from "./state.js";
+import type { Enemy, GameState, GameStatus } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
+
+/** Fixed iteration order (object literal insertion order) — deterministic across calls. */
+const ENEMY_GLYPH_VALUES: readonly Cell[] = Object.values(ENEMY_GLYPHS);
+
+/**
+ * The decoy glyph shown for `enemy` while hallucinating: a deterministic
+ * pseudo-random pick from ENEMY_GLYPH_VALUES, derived from the enemy's
+ * position and turnsOnCurrentFloor rather than Math.random() — buildFrameGrid
+ * must stay a pure function of state, so "looks different each render" comes
+ * from turnsOnCurrentFloor changing every turn, not from actual randomness.
+ * Real kind/hp/behavior are untouched; this only ever affects what gets drawn.
+ */
+const resolveHallucinatedGlyph = (
+	enemy: Enemy,
+	turnsOnCurrentFloor: number,
+): Cell => {
+	const index =
+		(enemy.x * 7 + enemy.y * 13 + turnsOnCurrentFloor) %
+		ENEMY_GLYPH_VALUES.length;
+	const glyph = ENEMY_GLYPH_VALUES[index];
+	if (glyph === undefined) {
+		throw new Error(
+			"unreachable: index is derived modulo ENEMY_GLYPH_VALUES.length",
+		);
+	}
+	return glyph;
+};
 
 const toCell = (
 	state: GameState,
@@ -118,6 +145,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	const detectingMonsters =
 		state.detectMonstersTurnsRemaining > 0 ||
 		hasEquippedRing(state.inventory, "awareness-ring");
+	const hallucinating = state.hallucinatingTurnsRemaining > 0;
 	for (const enemy of state.enemies) {
 		if (
 			!detectingMonsters &&
@@ -127,7 +155,9 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 		const enemyRow = grid[enemy.y];
 		if (enemyRow !== undefined) {
-			enemyRow[enemy.x] = ENEMY_GLYPHS[enemy.kind];
+			enemyRow[enemy.x] = hallucinating
+				? resolveHallucinatedGlyph(enemy, state.turnsOnCurrentFloor)
+				: ENEMY_GLYPHS[enemy.kind];
 		}
 	}
 

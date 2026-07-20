@@ -85,6 +85,7 @@ const applyItemEffect = (
 		case "raise-level":
 		case "detect-monster":
 		case "life":
+		case "hallucination":
 			return applyUsePotion(state, item.kind);
 	}
 };

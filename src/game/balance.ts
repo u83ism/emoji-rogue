@@ -390,6 +390,11 @@ export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
 /** Chance (out of 100), independently rolled per floor, that a confuse monster scroll spawns. */
 export const CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
+/** How many turns a hallucination potion swaps displayed enemy glyphs for decoys — purely cosmetic, see frame.ts. */
+export const HALLUCINATION_POTION_DURATION = 20;
+/** Chance (out of 100), independently rolled per floor, that a hallucination potion spawns. */
+export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

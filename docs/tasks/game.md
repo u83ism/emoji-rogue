@@ -462,6 +462,31 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン92完了(2026-07-20)。**
 
+## マイルストーン93 — 幻覚の薬(敵の見た目を惑わす、純粋に見た目だけの一時状態)
+
+未反映ブランチの内容の再実装、第11弾(方針はマイルストーン83を参照)。原作Rogueの"potion of hallucination"に着想を得た、未鑑定ポーション11種類目の一時状態異常。効果はゲームロジックには一切触れず、`buildFrameGrid`が描画する敵の見た目(絵文字)だけを惑わす——実際の`kind`・行動・戦闘結果は変わらない。`buildFrameGrid`は乱数を持たない純粋関数という制約があるため、「毎回ランダムに変わって見える」演出は`Math.random()`ではなく`(enemy.x, enemy.y, state.turnsOnCurrentFloor)`から決定的に導出する擬似ランダムindexで実現する。混乱・浮遊・盲目・麻痺・索敵と同じ「専用ファイル1つ(`turnEnd/hallucination.ts`)+`applyTurnEndTicks`に1エントリ」の型を踏襲する。`GameState`に`hallucinatingTurnsRemaining`が増える構造変更のため`SAVE_FORMAT_VERSION`を31に。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"hallucination"`を追加し`POTION_KIND_VALUES`にも追加。`GameEvent`に`player-hallucinated`(payload: 継続ターン数`turns`)・`hallucination-faded`(payloadなし)を追加
+- [x] `src/game/state.ts`: `GameState`に`hallucinatingTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `HALLUCINATION_POTION_DURATION = 20`・`HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12`を追加
+- [x] `src/game/turnEnd/hallucination.ts`(新規): `applyHallucinationTick(state)`——`hallucinatingTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`hallucination-faded`を記録する純粋関数(rng不使用)
+- [x] `src/game/advanceTurn.ts`: `applyTurnEndTicks`に`applyHallucinationTick`を追加(既存の呼び出し全箇所に自動的に効く)
+- [x] `src/game/items/potions.ts`・`items/use.ts`: `applyUsePotion`に`hallucination`分岐を追加
+- [x] `src/game/frame.ts`: `resolveHallucinatedGlyph(enemy, turnsOnCurrentFloor)`(`ENEMY_GLYPHS`の値配列から`(x*7 + y*13 + turnsOnCurrentFloor) % 種類数`で決定的に1つ選ぶ純粋関数)を追加し、`hallucinatingTurnsRemaining > 0`の間は実際の`kind`の絵文字の代わりにこちらを描画
+- [x] `src/game/glyphs.ts`: `ITEM_GLYPHS`に`hallucination: "💊"`(未鑑定のため回復薬等と同一)、状態異常チップ用の`HALLUCINATION_GLYPH = "🥴"`(既存の`CONFUSION_GLYPH`が💫を使用中のため別絵文字、Unicode 11.0の例外——`ENEMY_GLYPHS`のヴァンパイア同様の前例に倣う)を追加
+- [x] `src/shell/gameNames.ts`・`src/shell/potionCatalog.ts`: `ITEM_NAMES`/`POTION_CATALOG`にエントリを追加
+- [x] `src/shell/statusBar.tsx`・`demo/main.js`・`src/game/index.ts`(公開バレル): 幻覚中の表示を`STATUS_CHIPS`に追加し、`HALLUCINATION_GLYPH`を両シェルから参照できるようバレルに追加(マイルストーン63の「demoはCLIに追随」方針の継続)
+- [x] `src/game/floor/items.ts`: `ITEM_SPAWN_TABLE`に追加
+- [x] `src/game/format/validateGameState.ts`: `hallucinatingTurnsRemaining`(0以上の整数)の検証、`player-hallucinated`/`hallucination-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を31に**
+- [x] `src/game/format/saveFormat.ts`・`saveFormat.test.ts`: バージョン変更履歴コメント更新、shape guardに`hallucinatingTurnsRemaining: "number"`を追記
+- [x] 実装中に気づいた副次対応: 既存の`items/scrolls.test.ts`の「識別の巻物は全種鑑定済みなら無効果」テストの固定リストが、新規ポーション追加のたびに更新が必要な既知のパターン(マイルストーン23以来毎回発生)どおり今回も追従漏れで一度失敗し、修正した
+- [x] `src/game/turnEnd/hallucination.test.ts`(新規)・`src/game/items/potions.test.ts`・`src/game/frame.test.ts`(決定性・`turnsOnCurrentFloor`変化での見た目変化・実際の`kind`が不変であることを含む)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、幻覚中は`buildFrameGrid`が返す敵の絵文字が実際の`kind`と異なること・幻覚していない場合は実際の`kind`どおりであること・状態(`Enemy.kind`)自体は変化しないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 865件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン93完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

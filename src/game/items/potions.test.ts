@@ -4,6 +4,7 @@ import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
 	DETECT_MONSTER_POTION_DURATION,
+	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
@@ -286,5 +287,29 @@ describe("items/potions", () => {
 				payload: { maxHpBonus: LIFE_POTION_MAX_HP_BONUS },
 			},
 		]);
+	});
+
+	it("using a held hallucination potion sets hallucinatingTurnsRemaining and logs player-hallucinated", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ itemId: 1, kind: "hallucination" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		/* applyHallucinationTick runs as part of the same turn-consuming action */
+		expect(next.hallucinatingTurnsRemaining).toBe(
+			HALLUCINATION_POTION_DURATION - 1,
+		);
+		expect(next.inventory).toEqual([]);
+		expect(next.identifiedPotionKinds).toEqual(["hallucination"]);
+		expect(
+			next.events.some(
+				(event) =>
+					event.type === "player-hallucinated" &&
+					event.payload.turns === HALLUCINATION_POTION_DURATION,
+			),
+		).toBe(true);
 	});
 });

@@ -6,6 +6,8 @@ import {
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
 	DETECT_MONSTER_POTION_DURATION,
 	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
+	HALLUCINATION_POTION_DURATION,
+	HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
 	LEVITATION_POTION_DURATION,
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	LIFE_POTION_MAX_HP_BONUS,
@@ -94,5 +96,14 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		category: "薬",
 		spawn: { type: "chance", percent: LIFE_POTION_SPAWN_CHANCE_PERCENT },
 		effect: `最大HPが${LIFE_POTION_MAX_HP_BONUS}恒久的に上がり、全回復する`,
+	},
+	hallucination: {
+		catalogName: "幻覚の薬",
+		category: "薬",
+		spawn: {
+			type: "chance",
+			percent: HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `${HALLUCINATION_POTION_DURATION}ターンの間、敵の見た目だけが惑わされる(実際の種類・強さ・行動は変わらない)`,
 	},
 };

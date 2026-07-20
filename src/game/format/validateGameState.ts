@@ -297,6 +297,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-teleported": (payload) => isEnemyKind(payload.target),
 	"enemy-confused": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
+	"hallucination-faded": emptyPayload,
 };
 
 /** The same table widened for lookup by an untrusted string key. */
@@ -412,6 +414,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
 		return err("detectMonstersTurnsRemaining");
 	}
+	const hallucinatingTurnsRemaining = value.hallucinatingTurnsRemaining;
+	if (!isNonNegativeInteger(hallucinatingTurnsRemaining)) {
+		return err("hallucinatingTurnsRemaining");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -517,6 +523,7 @@ export const validateGameState = (
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		detectMonstersTurnsRemaining,
+		hallucinatingTurnsRemaining,
 		floor,
 		turnsOnCurrentFloor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },

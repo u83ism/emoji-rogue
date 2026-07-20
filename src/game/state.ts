@@ -241,6 +241,8 @@ export interface GameState {
 	readonly paralyzedTurnsRemaining: number;
 	/** Turns left of seeing every enemy regardless of FOV — see applyDetectMonstersTick and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
+	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/hallucination.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */
+	readonly hallucinatingTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/**

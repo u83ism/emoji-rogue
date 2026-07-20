@@ -50,6 +50,7 @@ export const ITEM_KIND_VALUES = [
 	"awareness-ring",
 	"magic-missile-wand",
 	"confuse-monster-scroll",
+	"hallucination",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -85,6 +86,7 @@ const POTION_KIND_VALUES = [
 	"raise-level",
 	"detect-monster",
 	"life",
+	"hallucination",
 ] as const satisfies readonly ItemKind[];
 
 /** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
@@ -383,6 +385,16 @@ export type GameEvent =
 			/** A confuse monster scroll — see advanceEnemies's confusedTurnsRemaining handling. */
 			readonly type: "enemy-confused";
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+	  }
+	| {
+			/** Drinking a hallucination potion — see turnEnd/hallucination.ts. Cosmetic only, no mechanical effect. */
+			readonly type: "player-hallucinated";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn hallucinatingTurnsRemaining reaches 0 — see turnEnd/hallucination.ts. */
+			readonly type: "hallucination-faded";
+			readonly payload: Record<string, never>;
 	  };
 
 /**

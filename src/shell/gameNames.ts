@@ -57,6 +57,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"magic-missile-wand": "杖",
 	/* Scrolls show their real name immediately, unlike wands/rings — no generic placeholder. */
 	"confuse-monster-scroll": "混乱の巻物",
+	hallucination: "幻覚の薬",
 };
 
 /**

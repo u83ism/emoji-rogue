@@ -692,6 +692,30 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts well-formed hallucination events and rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			hallucinatingTurnsRemaining: 5,
+			events: [
+				{ type: "player-hallucinated", payload: { turns: 20 } },
+				{ type: "hallucination-faded", payload: {} },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), hallucinatingTurnsRemaining: -1 },
+			"hallucinatingTurnsRemaining",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-hallucinated", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-confused event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

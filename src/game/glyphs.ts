@@ -73,6 +73,8 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"detect-monster": { glyph: "💊" },
 	/* Same glyph again — life is unidentified until drunk too. */
 	life: { glyph: "💊" },
+	/* Same glyph again — hallucination is unidentified until drunk too. */
+	hallucination: { glyph: "💊" },
 	/* Scroll: single-codepoint, Unicode 6.0. Every scroll kind shares this
 	 * glyph — genre convention (Mystery Dungeon et al.) is that item art is
 	 * fixed per category, and identity is conveyed by the name shown on
@@ -120,6 +122,12 @@ export const LEVITATION_GLYPH = "🪽";
 export const BLINDNESS_GLYPH = "🙈";
 export const PARALYSIS_GLYPH = "⚡";
 export const DETECT_MONSTER_GLYPH = "🔭";
+/* Woozy face: single-codepoint, no VS16, Unicode 11.0 — CONFUSION_GLYPH(💫)
+ * is already taken, and this project's other status chips are all
+ * Unicode ≤10; kept anyway since no lower-Unicode glyph reads as "things
+ * look wrong" without colliding with an existing chip (same exception
+ * rationale as the vampire glyph in ENEMY_GLYPHS). */
+export const HALLUCINATION_GLYPH = "🥴";
 
 /**
  * Marks a currently-equipped sword/armor/ring row in the inventory overlay

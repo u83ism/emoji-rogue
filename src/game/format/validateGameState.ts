@@ -98,7 +98,8 @@ const isEnemyArray = (
 			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp) &&
 			isBooleanValue(enemy.awake) &&
-			isNonNegativeInteger(enemy.slowedTurnsRemaining),
+			isNonNegativeInteger(enemy.slowedTurnsRemaining) &&
+			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -248,9 +249,12 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-starved": (payload) => isPositiveInteger(payload.damage),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
-	/* trapdoor and teleport are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE */
+	/* trapdoor, teleport, bear and rust are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE */
 	"trap-triggered": (payload) =>
-		payload.kind === "trapdoor" || payload.kind === "teleport"
+		payload.kind === "trapdoor" ||
+		payload.kind === "teleport" ||
+		payload.kind === "bear" ||
+		payload.kind === "rust"
 			? isNonNegativeInteger(payload.damage)
 			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
 	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
@@ -290,6 +294,16 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
 	"curse-revealed": (payload) => isItemKind(payload.kind),
 	"items-decursed": (payload) => isPositiveInteger(payload.count),
+	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
+	"enemy-teleported": (payload) => isEnemyKind(payload.target),
+	"enemy-confused": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
+	"hallucination-faded": emptyPayload,
+	"enemy-held": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"enemy-slept": (payload) => isEnemyKind(payload.target),
+	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
 };
 
 /** The same table widened for lookup by an untrusted string key. */
@@ -405,6 +419,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
 		return err("detectMonstersTurnsRemaining");
 	}
+	const hallucinatingTurnsRemaining = value.hallucinatingTurnsRemaining;
+	if (!isNonNegativeInteger(hallucinatingTurnsRemaining)) {
+		return err("hallucinatingTurnsRemaining");
+	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
@@ -510,6 +528,7 @@ export const validateGameState = (
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		detectMonstersTurnsRemaining,
+		hallucinatingTurnsRemaining,
 		floor,
 		turnsOnCurrentFloor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
@@ -524,6 +543,7 @@ export const validateGameState = (
 			hp: enemy.hp,
 			awake: enemy.awake,
 			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
+			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
 		items: items.map((item): Item => {
 			const position = { x: item.x, y: item.y };
@@ -534,6 +554,9 @@ export const validateGameState = (
 					return { ...position, kind: "armor", identity: item.identity };
 				case "regeneration-ring":
 				case "sustenance-ring":
+				case "stealth-ring":
+				case "awareness-ring":
+				case "aggravate-monster-ring":
 					return {
 						...position,
 						kind: item.kind,

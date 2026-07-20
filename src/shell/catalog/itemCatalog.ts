@@ -2,41 +2,46 @@ import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_DEFENSE_BONUS,
 	ARMOR_SPAWN_CHANCE_PERCENT,
+	CONFUSE_MONSTER_SCROLL_DURATION,
+	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_BONUS,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	FOOD_COUNT_PER_FLOOR,
 	FOOD_RATION_RESTORE_AMOUNT,
+	HOLD_MONSTER_SCROLL_DURATION,
+	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
+	MAGIC_MISSILE_WAND_DAMAGE,
+	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
-	RING_CURSE_CHANCE_PERCENT,
-	RING_REGEN_CHANCE_PERCENT,
-	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
+	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
-	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
-	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
+	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
-} from "../game/balance.js";
-import type { ItemKind } from "../game/events.js";
+} from "../../game/balance.js";
+import type { ItemKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
 import { POTION_CATALOG } from "./potionCatalog.js";
+import { RING_CATALOG } from "./ringCatalog.js";
 
-// The non-potion rows of the item catalog, composed with POTION_CATALOG into
-// the full Record<ItemKind, ...> — the annotation makes a kind missing from
-// both halves a compile error. Same rules as catalogData.ts: numbers always
-// interpolated from balance.ts.
+// The scroll/wand/sword/armor/food rows of the item catalog, composed with
+// POTION_CATALOG and RING_CATALOG into the full Record<ItemKind, ...> — the
+// annotation makes a kind missing from any of the three a compile error.
+// Same rules as catalogData.ts: numbers always interpolated from balance.ts.
 
 export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 	...POTION_CATALOG,
+	...RING_CATALOG,
 	"teleport-scroll": {
 		catalogName: "テレポートの巻物",
 		category: "巻物",
@@ -54,6 +59,24 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "巻物",
 		spawn: { type: "chance", percent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT },
 		effect: "未鑑定のポーション1種の正体が判明する(固定順)",
+	},
+	"confuse-monster-scroll": {
+		catalogName: "混乱の巻物",
+		category: "巻物",
+		spawn: {
+			type: "chance",
+			percent: CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の最も近い敵を${CONFUSE_MONSTER_SCROLL_DURATION}ターン混乱させる(以後は視界内でも追跡してこず徘徊するようになる。隣接時の攻撃は変わらず行う)`,
+	},
+	"hold-monster-scroll": {
+		catalogName: "束縛の巻物",
+		category: "巻物",
+		spawn: {
+			type: "chance",
+			percent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の敵全員を${HOLD_MONSTER_SCROLL_DURATION}ターン行動不能にする(鈍足の杖の範囲版)`,
 	},
 	"enchant-weapon": {
 		catalogName: "武器強化の巻物",
@@ -104,17 +127,27 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: { type: "chance", percent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
 		effect: `視界内の最も近い敵を${SLOW_WAND_DURATION}ターン行動不能にする。1回使い切り`,
 	},
-	"regeneration-ring": {
-		catalogName: "再生の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${RING_REGEN_CHANCE_PERCENT}%でHPが1回復する(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
+	"teleport-wand": {
+		catalogName: "テレポートの杖",
+		category: "杖",
+		spawn: { type: "chance", percent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT },
+		effect:
+			"視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。1回使い切り",
 	},
-	"sustenance-ring": {
-		catalogName: "満腹の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT}%で空腹の進行が止まる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
+	"magic-missile-wand": {
+		catalogName: "魔法の矢の杖",
+		category: "杖",
+		spawn: {
+			type: "chance",
+			percent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の最も近い敵に${MAGIC_MISSILE_WAND_DAMAGE}ダメージ(攻撃の杖より高威力・低頻度)。1回使い切り`,
+	},
+	"sleep-wand": {
+		catalogName: "眠りの杖",
+		category: "杖",
+		spawn: { type: "chance", percent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
+		effect: "視界内の最も近い敵を強制的に眠らせる。1回使い切り",
 	},
 	sword: {
 		catalogName: "剣",

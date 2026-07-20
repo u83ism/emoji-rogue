@@ -1,126 +1,17 @@
-import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
-import { buildEventLog, POTION_KINDS } from "../events.js";
-import type { GameState, HeldItem } from "../state.js";
+import {
+	CONFUSE_MONSTER_SCROLL_DURATION,
+	HOLD_MONSTER_SCROLL_DURATION,
+} from "../balance.js";
+import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
+import type { GameState } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
-import { replaceHeldItem } from "./inventory.js";
+import { findNearestVisibleEnemy, findVisibleEnemies } from "../vision.js";
 
-// Consumption from inventory happens in the dispatcher (items/use.ts),
-// never in the handlers here — a handler only applies its effect.
-
-type SwordItem = Extract<HeldItem, { kind: "sword" }>;
-type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
-
-/**
- * Raises a targeted held sword's own attackBonus — equipped or not (see
- * HeldItem). No-op (same reference, not consumed) with no matching sword
- * held, same convention as an identify scroll with nothing left to identify.
- */
-export const applyUseEnchantWeaponScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is SwordItem =>
-			item.kind === "sword" && item.itemId === targetItemId,
-	);
-	if (target === undefined) {
-		return state;
-	}
-	const attackBonus = target.attackBonus + ENCHANT_WEAPON_BONUS;
-	return {
-		...state,
-		inventory: replaceHeldItem(state.inventory, target.itemId, {
-			...target,
-			attackBonus,
-		}),
-		events: buildEventLog(state.events, [
-			{ type: "weapon-enchanted", payload: { bonus: ENCHANT_WEAPON_BONUS } },
-		]),
-	};
-};
-
-/** Raises a targeted held armor's own defenseBonus — same targeting/no-op rules as applyUseEnchantWeaponScroll. */
-export const applyUseEnchantArmorScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is ArmorItem =>
-			item.kind === "armor" && item.itemId === targetItemId,
-	);
-	if (target === undefined) {
-		return state;
-	}
-	const defenseBonus = target.defenseBonus + ENCHANT_ARMOR_BONUS;
-	return {
-		...state,
-		inventory: replaceHeldItem(state.inventory, target.itemId, {
-			...target,
-			defenseBonus,
-		}),
-		events: buildEventLog(state.events, [
-			{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
-		]),
-	};
-};
-
-/**
- * Sets rustProtected on a targeted held armor for good — aquator rust never
- * degrades that specific armor again. No-op with no matching armor held, or
- * with the target already protected.
- */
-export const applyUseProtectArmorScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is ArmorItem =>
-			item.kind === "armor" && item.itemId === targetItemId,
-	);
-	if (target === undefined || target.rustProtected) {
-		return state;
-	}
-	return {
-		...state,
-		inventory: replaceHeldItem(state.inventory, target.itemId, {
-			...target,
-			rustProtected: true,
-		}),
-		events: buildEventLog(state.events, [
-			{ type: "armor-protected", payload: {} },
-		]),
-	};
-};
-
-/**
- * Frees every currently-equipped cursed item at once (sword/armor/ring
- * slots — up to three). Held-but-unequipped items keep whatever hidden
- * curse they rolled at pickup untouched. No-op with nothing to free.
- */
-export const applyUseRemoveCurseScroll = (state: GameState): GameState => {
-	const cursedEquipped = state.inventory.filter(
-		(item): item is Extract<HeldItem, { equipped: boolean }> =>
-			"equipped" in item && item.equipped && item.cursed,
-	);
-	if (cursedEquipped.length === 0) {
-		return state;
-	}
-	const inventory = cursedEquipped.reduce(
-		(currentInventory, item) =>
-			replaceHeldItem(currentInventory, item.itemId, {
-				...item,
-				cursed: false,
-			}),
-		state.inventory,
-	);
-	return {
-		...state,
-		inventory,
-		events: buildEventLog(state.events, [
-			{ type: "items-decursed", payload: { count: cursedEquipped.length } },
-		]),
-	};
-};
+// The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
+// the sword/armor-targeting ones, split out once this file passed the
+// 200-line structure-lint limit (milestone 94 follow-up). Consumption from
+// inventory happens in the dispatcher (items/use.ts), never in the handlers
+// here — a handler only applies its effect.
 
 /** A teleport scroll relocates the player exactly like a teleport trap does. */
 export const applyUseTeleportScroll = (state: GameState): GameState =>
@@ -152,5 +43,63 @@ export const applyUseIdentifyScroll = (state: GameState): GameState => {
 		events: buildEventLog(state.events, [
 			{ type: "potion-identified", payload: { kind: target } },
 		]),
+	};
+};
+
+/**
+ * A confuse monster scroll sets the nearest visible enemy's
+ * confusedTurnsRemaining — see advanceEnemies for what that does to its
+ * chase decision. Same no-visible-target no-op as the wands.
+ */
+export const applyUseConfuseMonsterScroll = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target
+				? {
+						...enemy,
+						confusedTurnsRemaining: CONFUSE_MONSTER_SCROLL_DURATION,
+					}
+				: enemy,
+		),
+		events: buildEventLog(state.events, [
+			{
+				type: "enemy-confused",
+				payload: {
+					target: target.kind,
+					turns: CONFUSE_MONSTER_SCROLL_DURATION,
+				},
+			},
+		]),
+	};
+};
+
+/**
+ * A hold monster scroll freezes every currently visible enemy at once
+ * (reusing the slow wand's Enemy.slowedTurnsRemaining — no new state field),
+ * unlike the single-target wands/scrolls above. No-op with nothing visible.
+ */
+export const applyUseHoldMonsterScroll = (state: GameState): GameState => {
+	const targets = findVisibleEnemies(state);
+	if (targets.length === 0) {
+		return state;
+	}
+	const targetSet = new Set(targets);
+	const events: GameEvent[] = targets.map((target) => ({
+		type: "enemy-held",
+		payload: { target: target.kind, turns: HOLD_MONSTER_SCROLL_DURATION },
+	}));
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			targetSet.has(enemy)
+				? { ...enemy, slowedTurnsRemaining: HOLD_MONSTER_SCROLL_DURATION }
+				: enemy,
+		),
+		events: buildEventLog(state.events, events),
 	};
 };

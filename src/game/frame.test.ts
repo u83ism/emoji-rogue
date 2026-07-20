@@ -38,6 +38,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = {
 			...wide,
@@ -59,10 +60,35 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const detecting = {
 			...wide,
 			detectMonstersTurnsRemaining: 5,
+			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12, normally hidden */,
+		};
+		expect(buildFrameGrid(detecting)[2]?.[27]?.glyph).toBe("🧟");
+	});
+
+	it("draws enemies outside FOV too while an awareness ring is equipped", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		} as const;
+		const detecting = {
+			...wide,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "awareness-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+			],
 			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12, normally hidden */,
 		};
 		expect(buildFrameGrid(detecting)[2]?.[27]?.glyph).toBe("🧟");
@@ -75,6 +101,7 @@ describe("buildFrameGrid", () => {
 			hp: 1,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
@@ -87,6 +114,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
@@ -226,6 +254,7 @@ describe("buildFrameGrid", () => {
 					hp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
+					confusedTurnsRemaining: 0,
 				},
 			],
 		};
@@ -273,6 +302,7 @@ describe("buildFrameGrid", () => {
 					hp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
+					confusedTurnsRemaining: 0,
 				},
 			],
 		};
@@ -302,5 +332,85 @@ describe("buildFrameGrid", () => {
 		).toEqual({
 			glyph: "　",
 		});
+	});
+
+	it("draws the enemy's real glyph while not hallucinating", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = { ...wide, enemies: [zombie] };
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe("🧟");
+	});
+
+	it("draws a decoy glyph while hallucinating, without touching the enemy's real kind", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = {
+			...wide,
+			enemies: [zombie],
+			hallucinatingTurnsRemaining: 5,
+		};
+		const glyph = buildFrameGrid(state)[2]?.[20]?.glyph;
+		expect(glyph).not.toBe("🧟");
+		expect(state.enemies[0]?.kind).toBe("zombie"); /* unchanged in state */
+	});
+
+	it("hallucination decoy glyphs are deterministic for the same state", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = {
+			...wide,
+			enemies: [zombie],
+			hallucinatingTurnsRemaining: 5,
+		};
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe(
+			buildFrameGrid(state)[2]?.[20]?.glyph,
+		);
+	});
+
+	it("hallucination decoy glyphs change as turnsOnCurrentFloor advances", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const base = {
+			...wide,
+			enemies: [zombie],
+			hallucinatingTurnsRemaining: 5,
+		};
+		const first = buildFrameGrid({ ...base, turnsOnCurrentFloor: 0 })[2]?.[20]
+			?.glyph;
+		const second = buildFrameGrid({ ...base, turnsOnCurrentFloor: 1 })[2]?.[20]
+			?.glyph;
+		expect(first).not.toBe(second);
 	});
 });

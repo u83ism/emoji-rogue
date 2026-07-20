@@ -5,13 +5,10 @@ import { buildFrameGrid } from "./game/frame.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
 import { GameScreen } from "./renderer/index.js";
+import { formatEvent } from "./shell/eventMessages.js";
 import { useInventoryInteraction } from "./shell/inventoryInteraction.js";
 import { InventoryOverlay } from "./shell/inventoryOverlay.js";
-import {
-	formatConducts,
-	formatEvent,
-	formatScoreSummary,
-} from "./shell/messages.js";
+import { formatConducts, formatScoreSummary } from "./shell/messages.js";
 import { saveReplay } from "./shell/replayFile.js";
 import { saveGameState } from "./shell/saveFile.js";
 import { createSession, recordAction } from "./shell/session.js";

@@ -60,6 +60,9 @@ export const buildFloorItem = (
 			};
 		case "regeneration-ring":
 		case "sustenance-ring":
+		case "stealth-ring":
+		case "awareness-ring":
+		case "aggravate-monster-ring":
 			return {
 				...position,
 				kind,
@@ -86,6 +89,9 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 			return { kind: "armor", equipped: false, ...item.identity };
 		case "regeneration-ring":
 		case "sustenance-ring":
+		case "stealth-ring":
+		case "awareness-ring":
+		case "aggravate-monster-ring":
 			return { kind: item.kind, equipped: false, ...item.identity };
 		default:
 			return { itemId: freshItemId, kind: item.kind };

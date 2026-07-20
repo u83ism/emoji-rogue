@@ -1,5 +1,9 @@
+import { createRng } from "../rng.js";
 import {
 	ENEMY_EXPERIENCE_REWARD,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
+	MAGIC_MISSILE_WAND_DAMAGE,
 	SNEAK_ATTACK_MULTIPLIER,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
@@ -7,6 +11,25 @@ import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
 import { calculatePlayerAttackDamage } from "./items/equipment.js";
 import type { Enemy, GameState, Position } from "./state.js";
+
+/**
+ * An orc's gold hoard, dropped straight into goldCollected the instant it
+ * dies — no GoldPile entity involved, unlike gold found on the floor.
+ * Consumes state.rng via the same "temporarily wake a stateful Rng" pattern
+ * as teleport.ts's applyRandomTeleport.
+ */
+const applyOrcGoldDrop = (state: GameState): GameState => {
+	const rng = createRng(1).setState(state.rng);
+	const amount = rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX);
+	return {
+		...state,
+		goldCollected: state.goldCollected + amount,
+		rng: rng.getState(),
+		events: buildEventLog(state.events, [
+			{ type: "orc-gold-drop", payload: { amount } },
+		]),
+	};
+};
 
 /** Orthogonal adjacency — the melee reach, matching 4-direction movement. */
 export const isAdjacent = (left: Position, right: Position): boolean =>
@@ -43,9 +66,16 @@ const applyEnemyHit = (
 		hasAttacked: true,
 		events: buildEventLog(state.events, events),
 	};
-	return remainingHp <= 0
-		? applyExperienceGain(next, ENEMY_EXPERIENCE_REWARD[target.kind])
-		: next;
+	if (remainingHp > 0) {
+		return next;
+	}
+	const withExperience = applyExperienceGain(
+		next,
+		ENEMY_EXPERIENCE_REWARD[target.kind],
+	);
+	return target.kind === "orc"
+		? applyOrcGoldDrop(withExperience)
+		: withExperience;
 };
 
 /**
@@ -85,4 +115,18 @@ export const applyWandStrike = (state: GameState, target: Enemy): GameState =>
 	applyEnemyHit(state, target, WAND_STRIKE_DAMAGE, {
 		type: "wand-struck",
 		payload: { target: target.kind, damage: WAND_STRIKE_DAMAGE },
+	});
+
+/**
+ * A wand of magic missile's fixed-damage ranged hit — same shape as
+ * applyWandStrike (shared applyEnemyHit core, no sneak-attack multiplier),
+ * just a higher flat MAGIC_MISSILE_WAND_DAMAGE.
+ */
+export const applyMagicMissileWandStrike = (
+	state: GameState,
+	target: Enemy,
+): GameState =>
+	applyEnemyHit(state, target, MAGIC_MISSILE_WAND_DAMAGE, {
+		type: "wand-struck",
+		payload: { target: target.kind, damage: MAGIC_MISSILE_WAND_DAMAGE },
 	});

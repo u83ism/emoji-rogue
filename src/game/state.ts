@@ -63,6 +63,8 @@ export type Enemy = Position & {
 	readonly awake: boolean;
 	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */
 	readonly slowedTurnsRemaining: number;
+	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
+	readonly confusedTurnsRemaining: number;
 };
 
 /**
@@ -79,7 +81,17 @@ type ArmorIdentity = Omit<
 	"kind" | "equipped"
 >;
 type RingIdentity = Omit<
-	Extract<HeldItem, { kind: "regeneration-ring" | "sustenance-ring" }>,
+	Extract<
+		HeldItem,
+		{
+			kind:
+				| "regeneration-ring"
+				| "sustenance-ring"
+				| "stealth-ring"
+				| "awareness-ring"
+				| "aggravate-monster-ring";
+		}
+	>,
 	"kind" | "equipped"
 >;
 
@@ -99,7 +111,12 @@ export type Item = Position &
 		| { readonly kind: "sword"; readonly identity: SwordIdentity }
 		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
 		| {
-				readonly kind: "regeneration-ring" | "sustenance-ring";
+				readonly kind:
+					| "regeneration-ring"
+					| "sustenance-ring"
+					| "stealth-ring"
+					| "awareness-ring"
+					| "aggravate-monster-ring";
 				readonly identity: RingIdentity;
 		  }
 	);
@@ -141,7 +158,12 @@ export type HeldItem =
 	  }
 	| {
 			readonly itemId: number;
-			readonly kind: "regeneration-ring" | "sustenance-ring";
+			readonly kind:
+				| "regeneration-ring"
+				| "sustenance-ring"
+				| "stealth-ring"
+				| "awareness-ring"
+				| "aggravate-monster-ring";
 			readonly equipped: boolean;
 			readonly cursed: boolean;
 	  };
@@ -222,6 +244,8 @@ export interface GameState {
 	readonly paralyzedTurnsRemaining: number;
 	/** Turns left of seeing every enemy regardless of FOV — see applyDetectMonstersTick and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
+	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/hallucination.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */
+	readonly hallucinatingTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
 	/**

@@ -7,10 +7,11 @@ import {
 	PLAYER_MAX_HP,
 } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { GameState } from "./state.js";
+import type { Enemy, GameState } from "./state.js";
 import {
 	computeVisiblePoints,
 	deriveExploredState,
+	findVisibleEnemies,
 	resolveViewRadius,
 	VIEW_RADIUS,
 } from "./vision.js";
@@ -119,6 +120,7 @@ describe("deriveExploredState", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
+			hallucinatingTurnsRemaining: 0,
 			enemies: [],
 			items: [],
 			inventory: [],
@@ -165,6 +167,7 @@ describe("deriveExploredState", () => {
 			blindTurnsRemaining: 5,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
+			hallucinatingTurnsRemaining: 0,
 			enemies: [],
 			items: [],
 			inventory: [],
@@ -193,5 +196,29 @@ describe("deriveExploredState", () => {
 		expect(next.explored[3]?.[1]).toBe(
 			false,
 		); /* two tiles away, too far while blind */
+	});
+});
+
+describe("findVisibleEnemies", () => {
+	const zombie = (x: number, y: number): Enemy => ({
+		x,
+		y,
+		kind: "zombie",
+		hp: 2,
+		awake: true,
+		slowedTurnsRemaining: 0,
+		confusedTurnsRemaining: 0,
+	});
+
+	it("returns every enemy inside the player's field of view", () => {
+		const near = zombie(6, 4);
+		const far = zombie(7, 4);
+		const state = { ...buildArenaGameState(9, 9, 1), enemies: [near, far] };
+		expect(findVisibleEnemies(state)).toEqual([near, far]);
+	});
+
+	it("returns an empty array when no enemies are visible", () => {
+		const state = buildArenaGameState(9, 9, 1);
+		expect(findVisibleEnemies(state)).toEqual([]);
 	});
 });

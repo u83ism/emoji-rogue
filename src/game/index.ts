@@ -5,14 +5,14 @@
 // internals or past it into the shell-facing i18n module.
 
 export type { Cell } from "../renderer/index.js";
-export { buildCatalogMarkdown } from "../shell/catalog.js";
+export { buildCatalogMarkdown } from "../shell/catalog/catalog.js";
+export { formatEvent } from "../shell/eventMessages.js";
 export { resolveItemDisplayName } from "../shell/gameNames.js";
 export {
 	formatHeldItemLabel,
 	formatInventoryTitle,
 	resolveItemVerbPrompt,
 } from "../shell/inventoryLabels.js";
-export { formatEvent } from "../shell/messages.js";
 export {
 	INVENTORY_EMPTY_MESSAGE,
 	ITEM_TARGET_PROMPT,
@@ -40,6 +40,7 @@ export {
 	BLINDNESS_GLYPH,
 	CONFUSION_GLYPH,
 	DETECT_MONSTER_GLYPH,
+	HALLUCINATION_GLYPH,
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 } from "./glyphs.js";

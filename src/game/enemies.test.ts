@@ -8,6 +8,8 @@ import {
 	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
 	THIEF_MAX_HP,
+	VAMPIRE_ATTACK_DAMAGE,
+	VAMPIRE_MAX_HP,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
@@ -35,6 +37,7 @@ const zombie = (x: number, y: number, awake = true): Enemy => ({
 	hp: ZOMBIE_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const bat = (x: number, y: number, awake = true): Enemy => ({
@@ -44,6 +47,7 @@ const bat = (x: number, y: number, awake = true): Enemy => ({
 	hp: BAT_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const thief = (x: number, y: number, awake = true): Enemy => ({
@@ -53,6 +57,7 @@ const thief = (x: number, y: number, awake = true): Enemy => ({
 	hp: THIEF_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const nymph = (x: number, y: number, awake = true): Enemy => ({
@@ -62,6 +67,7 @@ const nymph = (x: number, y: number, awake = true): Enemy => ({
 	hp: NYMPH_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const aquator = (x: number, y: number, awake = true): Enemy => ({
@@ -71,6 +77,17 @@ const aquator = (x: number, y: number, awake = true): Enemy => ({
 	hp: AQUATOR_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const vampire = (x: number, y: number, hp = VAMPIRE_MAX_HP): Enemy => ({
+	x,
+	y,
+	kind: "vampire",
+	hp,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -165,6 +182,7 @@ describe("advanceEnemies", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
+			hallucinatingTurnsRemaining: 0,
 			enemies: [zombie(5, 1)],
 			items: [],
 			inventory: [],
@@ -590,6 +608,7 @@ describe("advanceEnemies", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			detectMonstersTurnsRemaining: 0,
+			hallucinatingTurnsRemaining: 0,
 			enemies: [zombie(5, 1, false)],
 			items: [],
 			inventory: [],
@@ -651,5 +670,104 @@ describe("advanceEnemies", () => {
 			state.playerHp,
 		); /* no attack despite adjacency */
 		expect(next.events).toEqual([]);
+	});
+
+	/*
+	 * A structural property that holds for any rng stream, not just a lucky
+	 * seed: STEALTH_RING_WAKE_CHANCE_PERCENT < WAKE_CHANCE_PERCENT, so
+	 * `roll.value < stealth/100` implies `roll.value < normal/100` — whenever
+	 * an equipped stealth ring's lower threshold wakes a sleeping enemy, the
+	 * unringed (higher-threshold) run on the exact same rng stream must also
+	 * wake it.
+	 */
+	it("an equipped stealth ring only ever lowers (never raises) the wake chance, for every seed", () => {
+		const stealthRing: HeldItem = {
+			itemId: 1,
+			kind: "stealth-ring",
+			equipped: true,
+			cursed: false,
+		};
+		for (let seed = 0; seed < 200; seed++) {
+			const base = {
+				...buildArenaGameState(9, 3, 1),
+				rng: seedToState(seed),
+				enemies: [zombie(5, 1, false)],
+			};
+			const withRing = advanceEnemies({
+				...base,
+				inventory: [stealthRing],
+			});
+			if (withRing.enemies[0]?.awake) {
+				const withoutRing = advanceEnemies({ ...base, inventory: [] });
+				expect(withoutRing.enemies[0]?.awake).toBe(true);
+			}
+		}
+	});
+
+	it("a confused visible enemy wanders (consuming rng) instead of chasing via A*", () => {
+		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 3 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		/* A* pursuit would step to (6,1) deterministically, consuming no rng —
+		 * wandering instead consumes rng and may or may not land there. */
+		expect(next.rng).not.toEqual(state.rng);
+	});
+
+	it("a confused enemy still attacks when adjacent", () => {
+		const confused = { ...zombie(5, 1), confusedTurnsRemaining: 3 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([{ ...confused, confusedTurnsRemaining: 2 }]);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+	});
+
+	it("confusedTurnsRemaining ticks down by one per turn and stops at zero", () => {
+		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 1 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		expect(next.enemies[0]?.confusedTurnsRemaining).toBe(0);
+	});
+
+	it("an unconfused enemy still chases deterministically (confusedTurnsRemaining at 0 is a no-op)", () => {
+		const state = buildCorridorState([zombie(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(6, 1)]);
+		expect(next.rng).toEqual(state.rng);
+	});
+
+	it("an adjacent vampire heals itself off its own landed hit and logs vampire-healed", () => {
+		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP - 2)]);
+		const next = advanceEnemies(state);
+		const healedAmount = Math.floor(VAMPIRE_ATTACK_DAMAGE * 0.5);
+		expect(next.enemies).toEqual([
+			vampire(5, 1, VAMPIRE_MAX_HP - 2 + healedAmount),
+		]);
+		expect(next.events).toEqual([
+			{
+				type: "player-hit",
+				payload: { by: "vampire", damage: VAMPIRE_ATTACK_DAMAGE },
+			},
+			{ type: "vampire-healed", payload: { amount: healedAmount } },
+		]);
+	});
+
+	it("a vampire already at max HP does not overheal and logs no vampire-healed event", () => {
+		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
+			false,
+		);
+	});
+
+	it("a non-vampire adjacent enemy never heals off its own hit", () => {
+		const state = buildCorridorState([zombie(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
+			false,
+		);
 	});
 });

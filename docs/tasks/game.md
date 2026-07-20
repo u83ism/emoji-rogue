@@ -277,6 +277,310 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン82完了(2026-07-19)。**
 
+## マイルストーン83 — オーク(撃破時に追加の金貨をドロップする、頑丈な近接アタッカー)
+
+`/goal`による自律開発が別ブランチ(`claude/tengu-class-classification-kgjioa`)で敵5種・杖3種・指輪3種・巻物2種・わな2種・状態異常1種(マイルストーン64〜79相当)を実装していたが、developへ一度もマージされないまま残っていた(発見・整理は2026-07-20)。developはその間に独自にマイルストーン64〜82(絵文字ADR化・装備システム導入・持ち物スロット制・`items`/`floor`/`format`/`turnEnd`へのフォルダ再編など)を進めており、両者は番号だけでなくファイル配置・アイテムモデルまで食い違っていたため、単純なmerge/rebase/cherry-pickではなく、該当ブランチの設計ログ(値・イベント形・エッジケース)を仕様として読み、現行developのアーキテクチャに合わせて再実装する方針にした(番号は83から振り直し)。
+
+本マイルストーンはその第1弾。原作Rogueのオーク(Orc)に着想を得た敵を追加する。ゾンビ・コウモリより頑丈(HP・攻撃力とも高め)でまっすぐ殴り合う近接アタッカーだが、原作のオークが金への執着で知られる特徴を、「撃破すると金貨と同じ乱数範囲(`GOLD_AMOUNT_MIN`〜`GOLD_AMOUNT_MAX`)でボーナス金貨をその場でドロップし、自動的に`goldCollected`へ加算する」という形で簡略再現する(個体に金貨を持たせて床に落とすのではなく、撃破の瞬間に直接加算する——`GoldPile`エンティティを経由しない、既存の`gold-collected`とは独立した専用イベント)。深さスケーリングはせず、盗賊・ニンフ・アクエーターと同じ独立per-floor抽選とする。`advanceEnemies`側の行動原理はゾンビ・コウモリと同一(隣接すれば通常攻撃、それ以外はA*追跡/徘徊)のため`enemies.ts`への変更は不要——変更が要るのは撃破処理を担う`combat.ts`の`applyEnemyHit`だけで、プレイヤーの近接攻撃・杖のどちらで倒しても同じくドロップする。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"orc"`を追加。`GameEvent`に`orc-gold-drop`(payload: 実ドロップ量`amount`)を追加
+- [x] `src/game/balance.ts`: `ORC_MAX_HP = 4`・`ORC_ATTACK_DAMAGE = 2`・`ORC_ACTIONS_PER_TURN = 1`・`ORC_SPAWN_CHANCE_PERCENT = 20`を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`orc`のエントリを追加(経験値はアクエーターと同格の3)
+- [x] `src/game/combat.ts`: `applyEnemyHit`が撃破時に`target.kind === "orc"`なら`state.rng`を一時的にステートフルな`Rng`に起こし(`teleport.ts`の`applyRandomTeleport`と同じ既存パターン)ボーナス額を抽選、`goldCollected`に加算し`orc-gold-drop`を記録
+- [x] `src/game/floor/enemies.ts`: `ENEMY_SPAWN_TABLE`の末尾に追加(配列順=rng消費順の規約どおり) + テスト(`floor/enemies.test.ts`のkindループにorcを追加)
+- [x] `src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: `ENEMY_GLYPHS`/`ENEMY_NAMES`/`ENEMY_CATALOG`にエントリを追加(`ENEMY_CATALOG`は`Record<EnemyKind, ...>`の網羅型のため追加漏れはコンパイルエラーになる)
+- [x] `src/shell/messages.ts`: `orc-gold-drop`の文言(「オークが金貨を落とした!◯ゴールド手に入れた」) + テスト
+- [x] `src/game/format/validateGameState.ts`: `orc-gold-drop`イベントの検証ケース(`amount`が正の整数)を追加。`EnemyKind`列挙値追加のみのためセーブ形式の構造変更なし(`SAVE_FORMAT_VERSION`据え置き)
+- [x] `src/game/combat.test.ts`: 近接・杖どちらの撃破でもドロップすること、決定性、非オークの撃破ではドロップしないこと、非致死ヒットではドロップしないことを確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、`advanceTurn`のバンプ攻撃でオークを撃破すると`goldCollected`が増え`orc-gold-drop`イベントが記録されること、同条件のゾンビ撃破では変化しないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 829件・knip・build)が通過し、上記パイプライン確認が済んだところで完了とする。`npm run docs:catalog`で`docs/catalog.md`にオークの行を追加した。
+
+**マイルストーン83完了(2026-07-20)。**
+
+## マイルストーン84 — ドラゴン(希少な最強格の近接アタッカー)
+
+未反映ブランチの内容の再実装、第2弾(方針はマイルストーン83を参照)。原作Rogueのドラゴン(Dragon)に着想を得た、既存のどの敵よりも頑丈で攻撃力も高い、ボス格の近接アタッカーを追加する。特殊能力は持たせない——ゾンビ・コウモリ・オークが`ENEMY_ACTIONS_PER_TURN`等のテーブルの数値差だけで、`advanceEnemies`に専用分岐を持たないのと同じ「パラメータだけで差別化する」パターンをドラゴンにも踏襲する。深さスケーリングはせず盗賊・ニンフ・アクエーター・オークと同じ独立per-floor抽選だが、出現率は指輪・杖と同等の低頻度(希少)にする。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"dragon"`を追加(新規`GameEvent`は不要——既存の`enemy-hit`/`enemy-defeated`/`sneak-attack`/`wand-struck`/`player-hit`/`player-died`がすべて`EnemyKind`をpayloadに持つ汎用イベントなのでそのまま横展開される)
+- [x] `src/game/balance.ts`: `DRAGON_MAX_HP = 8`・`DRAGON_ATTACK_DAMAGE = 4`・`DRAGON_ACTIONS_PER_TURN = 1`・`DRAGON_SPAWN_CHANCE_PERCENT = 8`(希少)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`dragon`のエントリを追加(経験値6、アクエーターの3を上回る)
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(`isEnemyKind`は`ENEMY_KIND_VALUES`から自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/format/validateGameState.test.ts`: 「存在しない敵種」の無効値プレースホルダとして`"dragon"`を使っていた4箇所(enemies配列・enemy-slowed・wand-struck・sneak-attackの各イベント検証)が、`"dragon"`の実装により意図せず正当な値になり偽陽性で落ちるところだった——元ブランチのマイルストーン65が同じ理由で踏んだ落とし穴と同一なので、同じ対処(未実装のまま残る原作Rogueモンスター`"griffin"`に差し替え)を先回りして適用した
+- [x] `src/game/combat.test.ts`・`src/game/floor/enemies.test.ts`: 経験値がアクエーターより高いこと、スポーンテーブルへの参加を確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、ドラゴンを`advanceTurn`のバンプ攻撃で撃破でき、経験値6(アクエーター撃破の3を上回る)が入ることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 830件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン84完了(2026-07-20)。**
+
+## マイルストーン85 — テレポートの杖(3種類目の杖、敵を強制テレポートさせる)
+
+未反映ブランチの内容の再実装、第3弾(方針はマイルストーン83を参照)。原作Rogueの"wand of teleportation"に着想を得た、命中の杖・鈍足の杖に続く3種類目の杖。効果は視界内最近接の敵(既存の`findNearestVisibleEnemy`をそのまま再利用)をフロア内のランダムな床マスへ強制的にテレポートさせる——プレイヤー自身のテレポート(巻物・わな)で確立済みの移動先選定ロジック(`teleport.ts`の`collectTeleportTargets`、自分の座標・他の敵の座標を除外)をそのまま流用し、対象を敵に差し替えるだけの新規`applyEnemyTeleport`を追加する。対象は移動後に必ず覚醒する。視界内に敵がいなければ他の杖と同じ無効果(ターン消費なし・杖も消費しない)。既存の🔮・「杖」をそのまま共有する。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"teleport-wand"`を追加。`GameEvent`に`enemy-teleported`(payload: `target: EnemyKind`)を追加
+- [x] `src/game/balance.ts`: `TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8`(他の杖と同じ希少度)を追加
+- [x] `src/game/teleport.ts`: 新規`applyEnemyTeleport(state, target)`——`collectTeleportTargets`(既存)から乱数で1マス選び対象を移動、`awake: true`にし`enemy-teleported`を記録
+- [x] `src/game/items/wands.ts`: `applyUseTeleportWand(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "teleport-wand"`を追加(網羅switchのため追加漏れはコンパイルエラーになる)
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/shell/messages.ts`: `enemy-teleported`の文言(「杖の力で◯をどこかへ飛ばした!」)
+- [x] `src/game/format/validateGameState.ts`: `enemy-teleported`イベントの検証ケースを追加。`ItemKind`列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/teleport.test.ts`・`src/game/items/wands.test.ts`(のかわりに`teleport.test.ts`側にwand越しの結合テストを追加)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] `src/game/floor/items.ts`が201行に達し行数ゲート(200行)に抵触したため、わな抽選ロジック(ダーツ確定湧き+落とし穴/テレポートの確率抽選)を新規`src/game/floor/traps.ts`の`drawFloorTraps`に切り出した(rng消費順は既存コードをそのまま移動しただけなので不変)。対応するテストも`floor/traps.test.ts`へ移設した
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内の敵にテレポートの杖を使うと座標が変わり覚醒し`enemy-teleported`イベントが記録されること、視界内に敵がいなければ無効果であることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 836件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン85完了(2026-07-20)。**
+
+## マイルストーン86 — 隠密の指輪(3種類目の指輪、敵の目覚め確率を下げる)
+
+未反映ブランチの内容の再実装、第4弾(方針はマイルストーン83を参照)。原作Rogueの"ring of stealth"に着想を得た、再生の指輪・満腹の指輪に続く3種類目の指輪。効果は`advanceEnemies`の`WAKE_CHANCE_PERCENT`毎ターン判定を、装備中は`STEALTH_RING_WAKE_CHANCE_PERCENT`(約半分)に差し替えるだけ。
+
+元ブランチはこの効果を`GameState.hasRingOfStealth`という恒久フラグで実装していたが、現行developの指輪は装備システム(マイルストーン81)導入後、`inventory`内の`HeldItem`の`equipped`を`hasEquippedRing(inventory, kind)`で都度読む方式に変わっており、恒久フラグという概念自体が存在しない——効果側の実装は「読み出し箇所(`enemies.ts`の目覚め判定)で`hasEquippedRing`を呼ぶだけ」に単純化された。新規`GameState`フィールドが不要なため、元ブランチでは必要だった`SAVE_FORMAT_VERSION`の更新も不要。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"stealth-ring"`を追加し`EQUIPMENT_ITEM_KIND_VALUES`にも追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: `HeldItem`・`Item`の指輪バリアントのkind unionに`"stealth-ring"`を追加(`RingIdentity`は既存の`{itemId, cursed}`のまま、追加フィールド不要)
+- [x] `src/game/balance.ts`: `STEALTH_RING_SPAWN_CHANCE_PERCENT = 8`・`STEALTH_RING_WAKE_CHANCE_PERCENT = 15`(`WAKE_CHANCE_PERCENT`(33)の約半分)を追加
+- [x] `src/game/items/rings.ts`: `RingItem`型・`RING_KINDS`・`hasEquippedRing`の対象kindを3種に拡張(`applyToggleRingEquip`自体はkind非依存のため無改造)
+- [x] `src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/format/validateGameState.ts`: 指輪3種を扱う各switchに`"stealth-ring"`のcaseを追加(いずれも`identity`の組み立てが既存2種と同一パターン)
+- [x] `src/game/items/use.ts`: `applyItemEffect`の指輪ケースに`"stealth-ring"`を追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`の目覚め判定で`hasEquippedRing(inventory, "stealth-ring") ? STEALTH_RING_WAKE_CHANCE_PERCENT : WAKE_CHANCE_PERCENT`を参照するよう変更(kind別分岐ではなく状態依存の数値差し替えのみ)
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/messages.ts`: `ring-equipped`の2値ternaryを3分岐if-chainに変更(`functional-style.md`の許容上限どおり——4種類目(マイルストーン87)でルックアップテーブルへの切り替えが必要になる見込み)
+- [x] `src/game/items/rings.test.ts`・`src/game/enemies.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`: 各パターンのテストを追加。`enemies.test.ts`には特定seedに頼らない構造的性質のテスト(「同じ乱数列に対し隠密の指輪の閾値のほうが目覚めにくい、またはタイ」を200 seed分検証)を追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、隠密の指輪を装備すると`equipped`が立ち`ring-equipped`イベントが記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 838件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン86完了(2026-07-20)。**
+
+## マイルストーン87 — 千里眼の指輪(4種類目の指輪、敵の位置を常時察知する)
+
+未反映ブランチの内容の再実装、第5弾(方針はマイルストーン83を参照)。索敵の薬(一定ターンだけ敵の位置を視界外・未探索領域含めて可視化する)の恒久版を、再生・満腹・隠密に続く4種類目の指輪として追加する。`frame.ts`の敵描画条件は既に`state.detectMonstersTurnsRemaining > 0`という状態依存の条件分岐になっているため、`|| hasEquippedRing(state.inventory, "awareness-ring")`を足すだけで実現できる。
+
+- [x] `src/game/events.ts`: `ItemKind`/`EQUIPMENT_ITEM_KIND_VALUES`に`"awareness-ring"`を追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: 指輪バリアントのkind unionに`"awareness-ring"`を追加(4種目)
+- [x] `src/game/balance.ts`: `AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8`を追加
+- [x] `src/game/items/rings.ts`・`src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/items/use.ts`・`src/game/format/validateGameState.ts`: 指輪4種を扱う各所に`"awareness-ring"`のcase/型を追加(マイルストーン86で確立したパターンの横展開)
+- [x] `src/game/frame.ts`: 敵描画条件を`state.detectMonstersTurnsRemaining > 0 || hasEquippedRing(state.inventory, "awareness-ring")`に変更
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/messages.ts`・`src/shell/gameNames.ts`: `ring-equipped`のメッセージ分岐が指輪4種目でif-chain 4分岐になり`functional-style.md`の許容上限(3分岐)を超えるため、`gameNames.ts`に`RING_EQUIPPED_EFFECT`(`Partial<Record<ItemKind, string>>`)ルックアップテーブルを新設し、`messages.ts`側は対応エントリがなければ`throw`(非リング種でring-equippedが発火するのは真のバグなので`error-handling.md`のthrow対象)
+- [x] `src/game/items/rings.test.ts`・`src/game/frame.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界外・未探索の敵が指輪なしでは非表示・装備時のみ`buildFrameGrid`に表示されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 840件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン87完了(2026-07-20)。**
+
+## マイルストーン88 — 雪男(頑丈だが低頻度に出現する近接アタッカー)
+
+未反映ブランチの内容の再実装、第6弾(方針はマイルストーン83を参照)。原作Rogueの雪男(Yeti)に着想を得た敵。雪男そのものを描く単一コードポイントの安定絵文字は存在しないため、雪山の獣という近い代替として🐻(熊、Unicode 6.0)を採用する。オーク・ドラゴンと同じ「パラメータだけで差別化する」パターンを踏襲し、HP・攻撃力・出現率ともオーク(HP4)とドラゴン(HP8)の中間に位置づける。深さスケーリングはせず独立per-floor抽選。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"yeti"`を追加(新規`GameEvent`は不要)
+- [x] `src/game/balance.ts`: `YETI_MAX_HP = 5`・`YETI_ATTACK_DAMAGE = 3`・`YETI_ACTIONS_PER_TURN = 1`・`YETI_SPAWN_CHANCE_PERCENT = 15`(オークの20とドラゴンの8の中間)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`yeti`のエントリを追加(経験値はオークの3とドラゴンの6の中間で4)
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(`isEnemyKind`は自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/floor/enemies.test.ts`: スポーンテーブルへの参加を確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、雪男を`advanceTurn`のバンプ攻撃で撃破でき、経験値4(オークとドラゴンの中間)が入ることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 840件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン88完了(2026-07-20)。**
+
+## マイルストーン89 — 魔法の矢の杖(4種類目の杖、命中の杖より高威力・低頻度)
+
+未反映ブランチの内容の再実装、第7弾(方針はマイルストーン83を参照)。原作Rogueの"wand of magic missile"に着想を得た、命中の杖・鈍足の杖・テレポートの杖に続く4種類目の杖。効果は命中の杖と同じ(視界内最近接の敵に固定ダメージ、不意打ち倍率なし)だが、ダメージが高い代わりに出現率が低い。既存の`wand-struck`イベントをそのまま再利用する(新規イベント不要)。`combat.ts`の`applyWandStrike`(固定`WAND_STRIKE_DAMAGE`)には手を入れず、共有コア`applyEnemyHit`を使う新規`applyMagicMissileWandStrike`を並べて追加するだけに留める。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"magic-missile-wand"`を追加(新規`GameEvent`は不要——既存の`wand-struck`をそのまま再利用)
+- [x] `src/game/balance.ts`: `MAGIC_MISSILE_WAND_DAMAGE = 5`(`WAND_STRIKE_DAMAGE`の3より高い)・`MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6`(`WAND_SPAWN_CHANCE_PERCENT`の8より低い)を追加
+- [x] `src/game/combat.ts`: `applyMagicMissileWandStrike(state, target)`(`applyWandStrike`と同型、`applyEnemyHit`を`MAGIC_MISSILE_WAND_DAMAGE`で呼ぶだけ)を追加
+- [x] `src/game/items/wands.ts`: `applyUseMagicMissileWand(state)`——`findNearestVisibleEnemy`で対象を選ぶ、他の杖と同じ無効果パターン
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "magic-missile-wand"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(新規イベントなし、`ItemKind`は自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/combat.test.ts`・`src/game/items/wands.test.ts`・`src/game/floor/items.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、魔法の矢の杖が視界内最近接の敵に`MAGIC_MISSILE_WAND_DAMAGE`(5)のダメージを与えることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 844件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン89完了(2026-07-20)。**
+
+## マイルストーン90 — 混乱の巻物(敵を混乱させ、ランダムに動かす)
+
+未反映ブランチの内容の再実装、第8弾(方針はマイルストーン83を参照)。原作Rogueの"scroll of confuse monster"に着想を得た巻物。視界内最近接の敵を一定ターン混乱させ、その間はプレイヤーへの追跡(A*)を止めてランダムに徘徊させる——隣接していれば通常どおり攻撃/窃盗はする。鈍足の杖が確立した`Enemy.slowedTurnsRemaining`と対になる`Enemy.confusedTurnsRemaining`を`state.ts`に新設する(構造変更のため`SAVE_FORMAT_VERSION`を30に)。杖4種が共有していた「視界内最近接の敵を自動選択する」`findNearestVisibleEnemy`を、巻物からも使えるよう`items/wands.ts`から`vision.ts`へ移設して共有する。
+
+- [x] `src/game/vision.ts`: `items/wands.ts`にあった`findNearestVisibleEnemy(state)`をここへ移設しexportする(視界判定ロジックという責務が本来の置き場と一致するため)
+- [x] `src/game/items/wands.ts`: ローカル定義を削除し`vision.ts`からimportするよう変更(4種の杖の呼び出し側は無改造)
+- [x] `src/game/events.ts`: `ItemKind`に`"confuse-monster-scroll"`を追加。`GameEvent`に`enemy-confused`(payload: `target: EnemyKind`・継続ターン数`turns`)を追加
+- [x] `src/game/state.ts`: `Enemy`に`confusedTurnsRemaining: number`(`slowedTurnsRemaining`と対称、構造変更)を追加
+- [x] `src/game/balance.ts`: `CONFUSE_MONSTER_SCROLL_DURATION = 8`・`CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10`を追加
+- [x] `src/game/floor/enemies.ts`: 敵生成の全3箇所(ゾンビ・コウモリのスケーリング湧き・`ENEMY_SPAWN_TABLE`の各種・モンスターハウス)に`confusedTurnsRemaining: 0`を追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`に、眠り判定の直後で`confusedTurnsRemaining`を1減らした値を`nextEnemies`用に保持しつつ、今回のターンの追跡判定を「混乱していなければ(このターン開始時点の値で判定)視界内でA*追跡、そうでなければランダム徘徊」に変更。`slowedTurnsRemaining`による行動スキップ分岐でも`confusedTurnsRemaining`を減衰させて`nextEnemies`に積む
+- [x] `src/game/items/scrolls.ts`: `applyUseConfuseMonsterScroll(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一。対象が見つかれば`confusedTurnsRemaining`をセットし`enemy-confused`を記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "confuse-monster-scroll"`を追加
+- [x] `src/game/floor/items.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 追加(現行develop方式では巻物は全種`📜`共有・実名即時表示のため、元ブランチの専用アイコン`💫`案は採らず既存の共有絵文字規約に合わせた)
+- [x] `src/game/format/validateGameState.ts`: `enemies`の各要素に`confusedTurnsRemaining`(0以上の整数)の検証を追加。`enemy-confused`イベントの検証ケースを追加。`Enemy`の構造変更のため**`SAVE_FORMAT_VERSION`を30に**
+- [x] `src/game/format/saveFormat.ts`・`saveFormat.test.ts`: バージョン変更履歴コメント更新、shape guardに`confusedTurnsRemaining: "number"`を追記
+- [x] 実装中に`enemies.ts`が201行に達し行数ゲート(200行)に抵触したため、盗賊/ニンフの「隣接時に盗んで逃げる」ロジックを新規`enemyFlee.ts`の`resolveFleeingTheft`に切り出し、あわせて`advanceEnemies`の巨大docコメントを圧縮して185行まで削減した(`enemies.ts`側は`enemy.kind === "thief" || "nymph"`の1分岐+関数呼び出しに縮小)
+- [x] `src/game/items/scrolls.test.ts`・`src/game/enemies.test.ts`(混乱中は視界内でも追跡せず徘徊すること・隣接していれば混乱中でも攻撃すること・ターン経過で減衰し0で通常の追跡に戻ることを含む)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、混乱の巻物を使うと視界内の敵の`confusedTurnsRemaining`が立ち`enemy-confused`イベントが記録されること、以後その敵が視界内でも直線的なA*追跡から外れて徘徊することを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 851件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン90完了(2026-07-20)。**
+
+## マイルストーン91 — 捕獲のわな(4種類目のわな、プレイヤーを一時麻痺させる)
+
+未反映ブランチの内容の再実装、第9弾(方針はマイルストーン83を参照)。原作Rogueの熊わな(bear trap)に着想を得た、矢・落とし穴・テレポートに続く4種類目のわな。ダメージは0固定(トラップドア・テレポートの罠と同じ「一撃の脅威ではなく行動の制約そのものが罰則」という位置づけ)で、代わりに麻痺の薬と同じ`paralyzedTurnsRemaining`をセットする——新規の状態フィールドは追加せず、既存の`paralyzedTurnsRemaining`ティック・ステータスバー表示チップをそのまま再利用する。`trapTrigger.ts`の`applyTrapTrigger`が既に確立している「`trap.kind === "X" && status === "playing"`なら追加の副作用を返す」という分岐パターンに3件目として合流する(4件目(マイルストーン97の錆びわな)でこのif連鎖が`functional-style.md`の許容上限に触れる見込み——そのときにルックアップテーブルへ置き換える)。kindの内部識別子は原作Rogueの用語のまま`"bear"`とした(プレイヤー向け表示名は`TRAP_NAMES`経由で「捕獲のわな」)。
+
+- [x] `src/game/events.ts`: `TRAP_KIND_VALUES`に`"bear"`を追加(新規`GameEvent`は不要——既存の`trap-triggered`をそのまま再利用。麻痺状態自体は`player-paralyzed`ではなく`paralyzedTurnsRemaining`を直接セットするだけなので、こちらも新規イベント不要)
+- [x] `src/game/balance.ts`: `BEAR_TRAP_DAMAGE = 0`・`BEAR_TRAP_PARALYSIS_DURATION = 3`(`PARALYSIS_POTION_DURATION`と同じ長さ)・`BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15`を追加し、`TRAP_DAMAGE`に`bear`のエントリを追加
+- [x] `src/game/trapTrigger.ts`: `applyTrapTrigger`に`trap.kind === "bear" && afterTrap.status === "playing"`の分岐を追加し`paralyzedTurnsRemaining`をセット
+- [x] `src/game/floor/traps.ts`: `BEAR_TRAP_SPAWN_CHANCE_PERCENT`による独立per-floor抽選を追加(GOAL_FLOOR除外なし——同一フロア内で完結する効果のため)
+- [x] `src/shell/gameNames.ts`・`src/shell/catalogData.ts`: `TRAP_NAMES`/`TRAP_CATALOG`にエントリを追加(ダメージ0なので既存の「◯を踏んでしまった!」分岐がそのまま適用され、新規文言は不要)
+- [x] `src/game/format/validateGameState.ts`: `trap-triggered`イベント検証の「ダメージ0系」判定に`"bear"`を追加。`isTrapKind`は自動導出のため変更不要
+- [x] `src/game/trapTrigger.test.ts`・`src/game/floor/traps.test.ts`・`format/validateGameState.test.ts`: 各パターンのテスト(麻痺すること・移動できなくなること・レビテーション中は無効化されることを含む)を追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、捕獲のわなを踏むとダメージなしで`paralyzedTurnsRemaining`がセットされ、以後の移動アクションが実際に無効化されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 854件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン91完了(2026-07-20)。**
+
+## マイルストーン92 — 蛇(素早くはないが噛みつきが強い近接アタッカー)
+
+未反映ブランチの内容の再実装、第10弾(方針はマイルストーン83を参照)。原作Rogueの蛇(Snake/Rattlesnake)に着想を得た敵。🐍(単一コードポイント、Unicode 6.0)が安定絵文字として使えるため、オーク・ドラゴン・雪男と同じ「パラメータだけで差別化する」パターンをそのまま踏襲する——HPは控えめだが噛みつきのダメージはゾンビ・コウモリより高い。深さスケーリングはせず独立per-floor抽選。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"snake"`を追加(新規`GameEvent`は不要)
+- [x] `src/game/balance.ts`: `SNAKE_MAX_HP = 2`・`SNAKE_ATTACK_DAMAGE = 2`・`SNAKE_ACTIONS_PER_TURN = 1`・`SNAKE_SPAWN_CHANCE_PERCENT = 20`(オークと同格)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`snake`のエントリを追加(経験値はオークと同格の3——HPは低いがダメージが高いぶんの釣り合い)
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(`isEnemyKind`は自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/floor/enemies.test.ts`: スポーンテーブルへの参加を確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、蛇を`advanceTurn`のバンプ攻撃で撃破でき、経験値3(オークと同格)が入ることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 854件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン92完了(2026-07-20)。**
+
+## マイルストーン93 — 幻覚の薬(敵の見た目を惑わす、純粋に見た目だけの一時状態)
+
+未反映ブランチの内容の再実装、第11弾(方針はマイルストーン83を参照)。原作Rogueの"potion of hallucination"に着想を得た、未鑑定ポーション11種類目の一時状態異常。効果はゲームロジックには一切触れず、`buildFrameGrid`が描画する敵の見た目(絵文字)だけを惑わす——実際の`kind`・行動・戦闘結果は変わらない。`buildFrameGrid`は乱数を持たない純粋関数という制約があるため、「毎回ランダムに変わって見える」演出は`Math.random()`ではなく`(enemy.x, enemy.y, state.turnsOnCurrentFloor)`から決定的に導出する擬似ランダムindexで実現する。混乱・浮遊・盲目・麻痺・索敵と同じ「専用ファイル1つ(`turnEnd/hallucination.ts`)+`applyTurnEndTicks`に1エントリ」の型を踏襲する。`GameState`に`hallucinatingTurnsRemaining`が増える構造変更のため`SAVE_FORMAT_VERSION`を31に。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"hallucination"`を追加し`POTION_KIND_VALUES`にも追加。`GameEvent`に`player-hallucinated`(payload: 継続ターン数`turns`)・`hallucination-faded`(payloadなし)を追加
+- [x] `src/game/state.ts`: `GameState`に`hallucinatingTurnsRemaining: number`(構造変更)を追加
+- [x] `src/game/balance.ts`: `HALLUCINATION_POTION_DURATION = 20`・`HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12`を追加
+- [x] `src/game/turnEnd/hallucination.ts`(新規): `applyHallucinationTick(state)`——`hallucinatingTurnsRemaining`を1減らし(下限0)、1→0に落ちた瞬間だけ`hallucination-faded`を記録する純粋関数(rng不使用)
+- [x] `src/game/advanceTurn.ts`: `applyTurnEndTicks`に`applyHallucinationTick`を追加(既存の呼び出し全箇所に自動的に効く)
+- [x] `src/game/items/potions.ts`・`items/use.ts`: `applyUsePotion`に`hallucination`分岐を追加
+- [x] `src/game/frame.ts`: `resolveHallucinatedGlyph(enemy, turnsOnCurrentFloor)`(`ENEMY_GLYPHS`の値配列から`(x*7 + y*13 + turnsOnCurrentFloor) % 種類数`で決定的に1つ選ぶ純粋関数)を追加し、`hallucinatingTurnsRemaining > 0`の間は実際の`kind`の絵文字の代わりにこちらを描画
+- [x] `src/game/glyphs.ts`: `ITEM_GLYPHS`に`hallucination: "💊"`(未鑑定のため回復薬等と同一)、状態異常チップ用の`HALLUCINATION_GLYPH = "🥴"`(既存の`CONFUSION_GLYPH`が💫を使用中のため別絵文字、Unicode 11.0の例外——`ENEMY_GLYPHS`のヴァンパイア同様の前例に倣う)を追加
+- [x] `src/shell/gameNames.ts`・`src/shell/potionCatalog.ts`: `ITEM_NAMES`/`POTION_CATALOG`にエントリを追加
+- [x] `src/shell/statusBar.tsx`・`demo/main.js`・`src/game/index.ts`(公開バレル): 幻覚中の表示を`STATUS_CHIPS`に追加し、`HALLUCINATION_GLYPH`を両シェルから参照できるようバレルに追加(マイルストーン63の「demoはCLIに追随」方針の継続)
+- [x] `src/game/floor/items.ts`: `ITEM_SPAWN_TABLE`に追加
+- [x] `src/game/format/validateGameState.ts`: `hallucinatingTurnsRemaining`(0以上の整数)の検証、`player-hallucinated`/`hallucination-faded`イベントの検証ケースを追加。構造変更のため**`SAVE_FORMAT_VERSION`を31に**
+- [x] `src/game/format/saveFormat.ts`・`saveFormat.test.ts`: バージョン変更履歴コメント更新、shape guardに`hallucinatingTurnsRemaining: "number"`を追記
+- [x] 実装中に気づいた副次対応: 既存の`items/scrolls.test.ts`の「識別の巻物は全種鑑定済みなら無効果」テストの固定リストが、新規ポーション追加のたびに更新が必要な既知のパターン(マイルストーン23以来毎回発生)どおり今回も追従漏れで一度失敗し、修正した
+- [x] `src/game/turnEnd/hallucination.test.ts`(新規)・`src/game/items/potions.test.ts`・`src/game/frame.test.ts`(決定性・`turnsOnCurrentFloor`変化での見た目変化・実際の`kind`が不変であることを含む)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、幻覚中は`buildFrameGrid`が返す敵の絵文字が実際の`kind`と異なること・幻覚していない場合は実際の`kind`どおりであること・状態(`Enemy.kind`)自体は変化しないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 865件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン93完了(2026-07-20)。**
+
+## マイルストーン94 — 束縛の巻物(視界内の敵を全て凍結する範囲効果)
+
+未反映ブランチの内容の再実装、最終弾直前(方針はマイルストーン83を参照)。原作Rogueの"scroll of hold monster"に着想を得た巻物。鈍足の杖(単体・最近接のみ)と対になる範囲効果——視界内の**全ての**敵を`HOLD_MONSTER_SCROLL_DURATION`ターン凍結させる。既存の`Enemy.slowedTurnsRemaining`(鈍足の杖で確立済み)をそのまま再利用するため、`GameState`/`Enemy`の構造変更は不要(`SAVE_FORMAT_VERSION`据え置き)。`vision.ts`の`findNearestVisibleEnemy`が内部で使っていた「視界内の敵を絞り込む」ロジックを`findVisibleEnemies`として独立させ、単体版はその上に最近接選択を重ねる薄い実装に整理した。凍結の文言は鈍足の杖の`enemy-slowed`をそのまま流用すると出処が巻物なのに杖のせいになってしまうため、新規`enemy-held`イベント(巻物の文言)を独立して用意する。
+
+- [x] `src/game/vision.ts`: `findVisibleEnemies(state)`(視界内の敵配列を返す)を新設し、既存の`findNearestVisibleEnemy`をこの上に最近接選択を重ねる形に整理(挙動は無変更)
+- [x] `src/game/events.ts`: `ItemKind`に`"hold-monster-scroll"`を追加。`GameEvent`に`enemy-held`(payload: `target: EnemyKind`・継続ターン数`turns`——`enemy-slowed`と同形だが巻物用に独立させた自身の文言を持つ)を追加
+- [x] `src/game/balance.ts`: `HOLD_MONSTER_SCROLL_DURATION = 5`(`SLOW_WAND_DURATION`と同じ長さ)・`HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10`を追加
+- [x] `src/game/items/scrolls.ts`: `applyUseHoldMonsterScroll(state)`——`findVisibleEnemies`で対象を全て選び、視界内に敵が1体もいなければ無効果。対象全員の`slowedTurnsRemaining`をセットし、対象ごとに`enemy-held`を1件ずつ記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "hold-monster-scroll"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 追加(巻物は他と同じく`📜`共有・実名即時表示)
+- [x] `src/game/format/validateGameState.ts`: `enemy-held`イベントの検証ケース(`enemy-slowed`と同じ形)を追加。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] 実装中に`items/scrolls.ts`が221行に達し行数ゲート(200行)に抵触したため、剣・防具を対象とする巻物(武器/防具強化・防具保護・解呪)を新規`items/equipmentScrolls.ts`に切り出した(環境/敵に作用する巻物 vs 装備を対象とする巻物、という責務の軸で分割)。対応するテストも`items/equipmentScrolls.test.ts`へ移設した
+- [x] `src/game/vision.test.ts`(`findVisibleEnemies`)・`src/game/items/scrolls.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内に複数の敵がいる状態で束縛の巻物を使うと全員の`slowedTurnsRemaining`がセットされ`enemy-held`イベントが敵の数だけ記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 870件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン94完了(2026-07-20)。**
+
+## マイルストーン95 — 警報の指輪(5種類目の指輪、装備した瞬間にフロア中の敵を起こす「はずれ」枠)
+
+未反映ブランチの内容の再実装、第13弾(方針はマイルストーン83を参照)。原作Rogueの"ring of aggravate monster"に着想を得た、再生・満腹・隠密・千里眼に続く5種類目の指輪。これまでの4種はいずれも装備中ずっと効き続ける継続効果(`hasEquippedRing`での都度参照)だったが、これは初めて**装備した瞬間の一度きりの効果**(そのフロアの全敵を強制的に覚醒させる)を持つ指輪——新規の`GameState`フィールドは不要(`state.enemies`を直接書き換えるだけ)。原作でも「はずれ」指輪の代表格であり、指輪という枠組みに初めて「良い効果とは限らない」というリスクを持ち込む。
+
+- [x] `src/game/events.ts`: `ItemKind`/`EQUIPMENT_ITEM_KIND_VALUES`に`"aggravate-monster-ring"`を追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: 指輪バリアントのkind unionに`"aggravate-monster-ring"`を追加(5種目)
+- [x] `src/game/balance.ts`: `AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8`を追加
+- [x] `src/game/items/rings.ts`: `RingItem`型・`RING_KINDS`を5種に拡張。`applyToggleRingEquip`に`item.kind === "aggravate-monster-ring"`の一箇所だけの特別分岐(既存4種の継続効果とは異なり、装備した瞬間に`state.enemies`を全て`awake: true`へ書き換える一度きりの効果)を追加——恒久フラグ方式ではない現行アーキテクチャでは唯一の「equip自体に副作用を持つ指輪」
+- [x] `src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/items/use.ts`・`src/game/format/validateGameState.ts`: 指輪5種を扱う各所に`"aggravate-monster-ring"`のcase/型を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/gameNames.ts`: `RING_EQUIPPED_EFFECT`に`"aggravate-monster-ring": "敵の気配に気づかれてしまった!"`を追加(既存のルックアップテーブルに1エントリ足すだけ、`messages.ts`側の変更は不要)
+- [x] `src/shell/itemCatalog.ts`: 実装中に205行に達し行数ゲート(200行)に抵触したため、指輪5種のカタログエントリを新規`src/shell/catalog/ringCatalog.ts`に切り出した(`potionCatalog.ts`と同じ「カテゴリ別に分割してItemCatalogへcomposeする」パターン)
+- [x] **`src/shell/`フォルダが16ファイルに達し構造lintのフォルダ上限(15)に抵触**——`file-structure.md`の規律どおりAIが単独で分割・正当化はせず、ユーザーに提案の上で承認を得た。カタログ生成に関わる5ファイル(`catalog.ts`・`catalogData.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`、および各テスト)を新設`src/shell/catalog/`サブフォルダへ移動し、`src/shell/`は11ファイルに削減。相対import(`../game/...`→`../../game/...`、`./gameNames.js`→`../gameNames.js`)と`src/game/index.ts`の再公開パスを追従修正した
+- [x] `src/game/items/rings.test.ts`(装備した瞬間に全敵が覚醒すること、解除時には再度起こさないことを含む——後者は`advanceTurn`経由だと同ターンの`advanceEnemies`が別途目覚め判定を回してテストが不安定になるため`applyToggleRingEquip`を直接呼ぶ形にした)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`src/game/items/pickups.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、眠っている敵がいる状態で警報の指輪を装備すると全敵が`awake: true`になり`ring-equipped`イベントが記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 872件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン95完了(2026-07-21)。**
+
+## マイルストーン96 — 眠りの杖(5種類目の杖、視界内最近接の敵を強制的に眠らせる)
+
+未反映ブランチの内容の再実装、第14弾(方針はマイルストーン83を参照)。原作Rogueの"wand of sleep"に着想を得た、命中・鈍足・テレポート・魔法の矢に続く5種類目の杖。効果は視界内最近接の敵(既存の`findNearestVisibleEnemy`をそのまま再利用)を強制的に`awake: false`へ戻すだけ——新規の状態フィールドは不要(既存の`Enemy.awake`をそのまま利用)。警報の指輪(装備した瞬間に全敵を強制覚醒)の対極に位置する効果で、対象は次にプレイヤーへ隣接/視界に入った時点から`WAKE_CHANCE_PERCENT`の目覚め判定をやり直す。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"sleep-wand"`を追加。`GameEvent`に`enemy-slept`(payload: `target: EnemyKind`)を追加
+- [x] `src/game/balance.ts`: `SLEEP_WAND_SPAWN_CHANCE_PERCENT = 8`(他の杖と同じ希少度)を追加
+- [x] `src/game/items/wands.ts`: `applyUseSleepWand(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一。対象が見つかれば`awake: false`に戻し`enemy-slept`を記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "sleep-wand"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalog/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: `enemy-slept`イベントの検証ケース(`target`が`isEnemyKind`)を追加。`ItemKind`列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/items/wands.test.ts`: `advanceTurn`経由のテストでは、杖で寝かせた直後に同じターンの`advanceEnemies`が(視界内にいるため)即座に目覚め判定をやり直してしまい、最終的な`awake`状態を直接アサートできない——`applyUseSleepWand`を直接呼ぶユニットテストを追加し、`advanceEnemies`の介入なしに効果そのものを検証する形で対応した(マイルストーン90の`enemy-confused`/`enemy-slowed`系テストが最終状態でなくイベントの有無だけを見ているのも同じ理由だったと理解した——元ブランチのマイルストーン77で踏んだのと同じ落とし穴)
+- [x] `src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、眠りの杖を使うと`enemy-slept`イベントが記録され杖が消費されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 876件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン96完了(2026-07-21)。**
+
+## マイルストーン97 — 錆びわな(5種類目のわな、既存のarmor-rustedイベントを再利用)
+
+未反映ブランチの内容の再実装、第15弾(方針はマイルストーン83を参照)。原作Rogueの錆びわな(rust trap)に着想を得た5種類目のわな。踏むとダメージなしで即座に装備中の防具の`defenseBonus`を1下げる——アクエーターの錆び効果と同じ副作用だが、戦闘中の確率ではなく足元の一撃なので確定発動。アクエーターの`armor-rusted`イベントはメッセージが発生源を特定しない汎用文言(「防具が錆びついた!防御力が◯下がった」)なので、新規イベントを起こさずそのまま再利用できる。防具保護の巻物(`rustProtected`)はアクエーターの錆びと同様にこのわなも無効化する。`trapTrigger.ts`の`applyTrapTrigger`はこれまで`if (trap.kind === "X" && ...)`という個別分岐をトラップドア・テレポート・捕獲わなの3件積み上げていたが、錆びわなで4件目になると`functional-style.md`のif連鎖上限に触れるため、`Record<TrapKind, ...>`の副作用ルックアップテーブル(`TRAP_SIDE_EFFECTS`)に置き換える。
+
+- [x] `src/game/events.ts`: `TRAP_KIND_VALUES`に`"rust"`を追加(新規`GameEvent`は不要——既存の`armor-rusted`をそのまま再利用)
+- [x] `src/game/balance.ts`: `RUST_TRAP_DAMAGE = 0`・`RUST_TRAP_SPAWN_CHANCE_PERCENT = 15`(他のわなと同じ独立per-floor判定)を追加し、`TRAP_DAMAGE`に`rust`のエントリを追加
+- [x] `src/game/trapTrigger.ts`: `if`連鎖3件(トラップドア・テレポート・捕獲わな)を`TRAP_SIDE_EFFECTS: Readonly<Partial<Record<TrapKind, (state: GameState) => GameState>>>`ルックアップテーブルに置き換え、`rust`の副作用(`rustProtected`でなければ`items/equipment.ts`の`applyArmorRust`/`canRustEquippedArmor`を使って`defenseBonus`を1減らし`armor-rusted`を記録)を追加(挙動は既存3種とも不変)
+- [x] `src/game/floor/traps.ts`: `RUST_TRAP_SPAWN_CHANCE_PERCENT`による独立per-floor抽選を追加(GOAL_FLOOR除外なし——ダメージなしの単発効果のため落とし穴のような制約は不要)
+- [x] `src/shell/gameNames.ts`・`src/shell/catalog/catalogData.ts`: `TRAP_NAMES`/`TRAP_CATALOG`にエントリを追加
+- [x] `src/game/format/validateGameState.ts`: `trap-triggered`イベント検証の「ダメージ0系」判定に`"rust"`を追加
+- [x] `src/game/trapTrigger.test.ts`(錆びわな専用テスト3件——通常発動・`rustProtected`による無効化・レビテーションでの回避、および既存トラップドア/テレポート/捕獲わなの回帰確認)・`src/game/floor/traps.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、錆びわなを踏むと`playerHp`が変化せず装備中の防具の`defenseBonus`が1下がり`armor-rusted`イベントが記録されること、`rustProtected: true`のときは無効化されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 880件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン97完了(2026-07-21)。**
+
+## マイルストーン98 — ヴァンパイア(命中ダメージの一部を自己回復する敵)
+
+未反映ブランチの内容の再実装、最終弾(方針はマイルストーン83を参照)。原作Rogueの吸血鬼(vampire)に着想を得た敵。アクエーターと同様に盗んで逃げず居座るタイプだが、隣接攻撃が命中するたびそのダメージの`VAMPIRE_LIFESTEAL_PERCENT`(切り捨て)を自分のHPとして回復する——`ENEMY_MAX_HP.vampire`で頭打ちになり、すでに満タンなら回復もイベントも起きない。この回復計算は`enemies.ts`に直接書くとif分岐が増えて読みにくくなるため、`enemyFlee.ts`の`resolveFleeingTheft`と同じ「純粋関数として切り出す」idiomで`vampireLifesteal.ts`に分離した。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"vampire"`を追加、新規`GameEvent`として`vampire-healed`(payload: `{ amount: number }`)を追加
+- [x] `src/game/balance.ts`: `VAMPIRE_MAX_HP = 4`・`VAMPIRE_ATTACK_DAMAGE = 2`・`VAMPIRE_ACTIONS_PER_TURN = 1`・`VAMPIRE_LIFESTEAL_PERCENT = 50`・`VAMPIRE_SPAWN_CHANCE_PERCENT = 15`(thief/nymph/aquator/orc/snakeと同じ独立per-floor抽選)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`各テーブルに`vampire`エントリを追加(経験値5、オーク/蛇の3とドラゴンの6の間)
+- [x] `src/game/vampireLifesteal.ts`(新規): `resolveVampireLifesteal(currentHp, maxHp, damageDealt)`——回復後のhpと(回復が0なら`undefined`の)イベントを返す純粋関数(rng不使用)
+- [x] `src/game/enemies.ts`: 攻撃ループにローカル`currentHp`を導入し、隣接攻撃が命中した敵がvampireなら`resolveVampireLifesteal`を適用、ターン終了時の`nextEnemies.push`に`hp: currentHp`を反映
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`(`vampire: "🧛"`、Unicode 11.0——docs/design.mdの推奨より新しいが、zombieの🧟同様これより古い適切な絵文字が存在しないための例外)・`src/shell/gameNames.ts`・`src/shell/catalog/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: `vampire-healed`イベントの検証ケース(`amount`が`isPositiveInteger`)を追加。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/shell/messages.ts`: `vampire-healed`の文言を追加する際、既存の`GameEvent`網羅switch(`formatEvent`)がこの1件で202行に達し行数ゲート(200行)に抵触したため、`formatEvent`本体を新規`src/shell/eventMessages.ts`に切り出した(公開APIは変えず、`src/game/index.ts`・`src/main.tsx`の`formatEvent`import元を追従修正)。同時に`src/game/enemies.ts`も202行に達したため、docコメントをさらに圧縮して200行に収めた
+- [x] `src/game/vampireLifesteal.test.ts`(新規)・`src/game/enemies.test.ts`(通常回復・満タン時の無効化・他種は回復しないことを含む)・`src/game/floor/enemies.test.ts`・`src/shell/eventMessages.test.ts`(`messages.test.ts`から分離): 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、HPを削ったヴァンパイアが隣接攻撃命中でHPを回復し`vampire-healed`イベントが記録されること、満タン時は回復もイベントも起きないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 888件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+これで未反映ブランチ(`claude/tengu-class-classification-kgjioa`)の全16機能(敵5種・杖5種・指輪5種・巻物2種・わな2種・状態異常1種)の再実装が完了した。次はREADME/architecture.mdの更新(元ブランチの`9503e48`相当)。
+
+**マイルストーン98完了(2026-07-21)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

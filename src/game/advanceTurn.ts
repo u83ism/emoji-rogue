@@ -15,6 +15,7 @@ import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyBlindnessTick } from "./turnEnd/blindness.js";
 import { applyConfusionTick } from "./turnEnd/confusion.js";
 import { applyDetectMonstersTick } from "./turnEnd/detectMonsters.js";
+import { applyHallucinationTick } from "./turnEnd/hallucination.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
 import { applyLevitationTick } from "./turnEnd/levitation.js";
 import { applyParalysisTick } from "./turnEnd/paralysis.js";
@@ -100,17 +101,19 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 /**
  * Every status-tick that runs at the end of a turn-consuming action, in a
  * fixed order (hunger, regeneration, confusion, levitation, blindness,
- * paralysis, detect monsters, winds of Kron). Each tick is independently a
- * no-op unless its own field/condition is active, so the order among them
- * does not affect the result.
+ * paralysis, detect monsters, hallucination, winds of Kron). Each tick is
+ * independently a no-op unless its own field/condition is active, so the
+ * order among them does not affect the result.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
 	applyWindsOfKronTick(
-		applyDetectMonstersTick(
-			applyParalysisTick(
-				applyBlindnessTick(
-					applyLevitationTick(
-						applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+		applyHallucinationTick(
+			applyDetectMonstersTick(
+				applyParalysisTick(
+					applyBlindnessTick(
+						applyLevitationTick(
+							applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
+						),
 					),
 				),
 			),

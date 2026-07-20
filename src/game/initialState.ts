@@ -28,6 +28,7 @@ const INITIAL_RUN_STATE = {
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
 	detectMonstersTurnsRemaining: 0,
+	hallucinatingTurnsRemaining: 0,
 	inventory: [],
 	nextItemId: 1,
 	identifiedPotionKinds: [],

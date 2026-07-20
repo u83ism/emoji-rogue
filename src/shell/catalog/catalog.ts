@@ -3,24 +3,24 @@ import {
 	ENEMY_ATTACK_DAMAGE,
 	ENEMY_EXPERIENCE_REWARD,
 	ENEMY_MAX_HP,
-} from "../game/balance.js";
+} from "../../game/balance.js";
 import {
 	ENEMY_KIND_VALUES,
 	ITEM_KIND_VALUES,
 	TRAP_KIND_VALUES,
-} from "../game/events.js";
-import { ENEMY_GLYPHS, ITEM_GLYPHS } from "../game/glyphs.js";
+} from "../../game/events.js";
+import { ENEMY_GLYPHS, ITEM_GLYPHS } from "../../game/glyphs.js";
+import {
+	ENEMY_NAMES,
+	resolveItemDisplayName,
+	TRAP_NAMES,
+} from "../gameNames.js";
 import {
 	ENEMY_CATALOG,
 	type ItemCategory,
 	type SpawnInfo,
 	TRAP_CATALOG,
 } from "./catalogData.js";
-import {
-	ENEMY_NAMES,
-	resolveItemDisplayName,
-	TRAP_NAMES,
-} from "./gameNames.js";
 import { ITEM_CATALOG } from "./itemCatalog.js";
 
 // Builds docs/catalog.md from the same tables the game runs on (balance.ts,

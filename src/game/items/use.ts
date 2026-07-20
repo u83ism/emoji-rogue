@@ -1,20 +1,30 @@
 import { EQUIPMENT_ITEM_KINDS } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleSwordEquip } from "./equipment.js";
+import {
+	applyUseEnchantArmorScroll,
+	applyUseEnchantWeaponScroll,
+	applyUseProtectArmorScroll,
+	applyUseRemoveCurseScroll,
+} from "./equipmentScrolls.js";
 import { applyUseFood } from "./food.js";
 import { removeHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
 import { applyToggleRingEquip } from "./rings.js";
 import {
-	applyUseEnchantArmorScroll,
-	applyUseEnchantWeaponScroll,
+	applyUseConfuseMonsterScroll,
+	applyUseHoldMonsterScroll,
 	applyUseIdentifyScroll,
 	applyUseMappingScroll,
-	applyUseProtectArmorScroll,
-	applyUseRemoveCurseScroll,
 	applyUseTeleportScroll,
 } from "./scrolls.js";
-import { applyUseSlowWand, applyUseStrikingWand } from "./wands.js";
+import {
+	applyUseMagicMissileWand,
+	applyUseSleepWand,
+	applyUseSlowWand,
+	applyUseStrikingWand,
+	applyUseTeleportWand,
+} from "./wands.js";
 
 /**
  * The per-item effect. Deliberately exhaustive with no default: adding an
@@ -40,6 +50,9 @@ const applyItemEffect = (
 			return applyToggleArmorEquip(state, item);
 		case "regeneration-ring":
 		case "sustenance-ring":
+		case "stealth-ring":
+		case "awareness-ring":
+		case "aggravate-monster-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state, targetItemId);
@@ -55,12 +68,22 @@ const applyItemEffect = (
 			return applyUseMappingScroll(state);
 		case "identify-scroll":
 			return applyUseIdentifyScroll(state);
+		case "confuse-monster-scroll":
+			return applyUseConfuseMonsterScroll(state);
+		case "hold-monster-scroll":
+			return applyUseHoldMonsterScroll(state);
 		case "food":
 			return applyUseFood(state);
 		case "striking-wand":
 			return applyUseStrikingWand(state);
 		case "slow-wand":
 			return applyUseSlowWand(state);
+		case "teleport-wand":
+			return applyUseTeleportWand(state);
+		case "magic-missile-wand":
+			return applyUseMagicMissileWand(state);
+		case "sleep-wand":
+			return applyUseSleepWand(state);
 		case "heal-potion":
 		case "poison":
 		case "strength":
@@ -71,6 +94,7 @@ const applyItemEffect = (
 		case "raise-level":
 		case "detect-monster":
 		case "life":
+		case "hallucination":
 			return applyUsePotion(state, item.kind);
 	}
 };

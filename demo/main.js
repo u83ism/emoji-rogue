@@ -18,6 +18,7 @@ import {
 	formatHeldItemLabel,
 	formatInventoryTitle,
 	GOAL_FLOOR,
+	HALLUCINATION_GLYPH,
 	INVENTORY_EMPTY_MESSAGE,
 	ITEM_TARGET_PROMPT,
 	LEVITATION_GLYPH,
@@ -178,6 +179,12 @@ const STATUS_CHIPS = [
 		glyph: DETECT_MONSTER_GLYPH,
 		color: "#6f6",
 		remaining: (s) => s.detectMonstersTurnsRemaining,
+	},
+	{
+		label: "幻覚中",
+		glyph: HALLUCINATION_GLYPH,
+		color: "#f6c",
+		remaining: (s) => s.hallucinatingTurnsRemaining,
 	},
 ];
 

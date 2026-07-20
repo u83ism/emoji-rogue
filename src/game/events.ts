@@ -11,6 +11,11 @@ export const ENEMY_KIND_VALUES = [
 	"thief",
 	"nymph",
 	"aquator",
+	"orc",
+	"dragon",
+	"yeti",
+	"snake",
+	"vampire",
 ] as const;
 
 /** Events carry it so the shell can name the attacker. */
@@ -41,6 +46,15 @@ export const ITEM_KIND_VALUES = [
 	"detect-monster",
 	"life",
 	"remove-curse-scroll",
+	"teleport-wand",
+	"stealth-ring",
+	"awareness-ring",
+	"magic-missile-wand",
+	"confuse-monster-scroll",
+	"hallucination",
+	"hold-monster-scroll",
+	"aggravate-monster-ring",
+	"sleep-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -50,6 +64,9 @@ const EQUIPMENT_ITEM_KIND_VALUES = [
 	"armor",
 	"regeneration-ring",
 	"sustenance-ring",
+	"stealth-ring",
+	"awareness-ring",
+	"aggravate-monster-ring",
 ] as const satisfies readonly ItemKind[];
 
 /** The equippable subset of ItemKind — held as a HeldItem with equip/curse state (see GameState.inventory). */
@@ -74,6 +91,7 @@ const POTION_KIND_VALUES = [
 	"raise-level",
 	"detect-monster",
 	"life",
+	"hallucination",
 ] as const satisfies readonly ItemKind[];
 
 /** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
@@ -87,7 +105,13 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
  */
 export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
 
-export const TRAP_KIND_VALUES = ["dart", "trapdoor", "teleport"] as const;
+export const TRAP_KIND_VALUES = [
+	"dart",
+	"trapdoor",
+	"teleport",
+	"bear",
+	"rust",
+] as const;
 
 /** Hidden until stepped on — see trapTrigger.ts. */
 export type TrapKind = (typeof TRAP_KIND_VALUES)[number];
@@ -352,6 +376,46 @@ export type GameEvent =
 			/** A remove-curse scroll freeing every currently-equipped cursed item at once. */
 			readonly type: "items-decursed";
 			readonly payload: { readonly count: number };
+	  }
+	| {
+			/** An orc defeated by any means (melee or wand) drops a gold bonus on the spot — see combat.ts's applyEnemyHit. */
+			readonly type: "orc-gold-drop";
+			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** A teleport wand forcibly relocating its target — see teleport.ts's applyEnemyTeleport. */
+			readonly type: "enemy-teleported";
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A confuse monster scroll — see advanceEnemies's confusedTurnsRemaining handling. */
+			readonly type: "enemy-confused";
+			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+	  }
+	| {
+			/** Drinking a hallucination potion — see turnEnd/hallucination.ts. Cosmetic only, no mechanical effect. */
+			readonly type: "player-hallucinated";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn hallucinatingTurnsRemaining reaches 0 — see turnEnd/hallucination.ts. */
+			readonly type: "hallucination-faded";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A hold monster scroll freezing one visible enemy — same shape as enemy-slowed, independent flavor text (it's the scroll, not a wand). */
+			readonly type: "enemy-held";
+			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+	  }
+	| {
+			/** A sleep wand forcing its target back to sleep — see items/wands.ts's applyUseSleepWand. */
+			readonly type: "enemy-slept";
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A vampire healing itself off a landed hit — see vampireLifesteal.ts. Fired only when the heal is nonzero (already at max HP is silent). */
+			readonly type: "vampire-healed";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

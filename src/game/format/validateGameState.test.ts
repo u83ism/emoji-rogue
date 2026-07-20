@@ -156,7 +156,7 @@ describe("validateGameState", () => {
 			throw new Error("unreachable: the dungeon state spawns enemies");
 		}
 		expectRejected(
-			{ ...valid, enemies: [{ ...enemies[0], kind: "dragon" }] },
+			{ ...valid, enemies: [{ ...enemies[0], kind: "griffin" }] },
 			"enemies",
 		);
 		expectRejected(
@@ -165,6 +165,10 @@ describe("validateGameState", () => {
 		);
 		expectRejected(
 			{ ...valid, enemies: [{ ...enemies[0], awake: "true" }] },
+			"enemies",
+		);
+		expectRejected(
+			{ ...valid, enemies: [{ ...enemies[0], confusedTurnsRemaining: -1 }] },
 			"enemies",
 		);
 		expectRejected(
@@ -391,7 +395,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-slowed", payload: { target: "dragon", turns: 5 } },
+					{ type: "enemy-slowed", payload: { target: "griffin", turns: 5 } },
 				],
 			},
 			"events",
@@ -656,7 +660,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "wand-struck", payload: { target: "dragon", damage: 3 } },
+					{ type: "wand-struck", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",
@@ -667,6 +671,132 @@ describe("validateGameState", () => {
 				events: [
 					{ type: "wand-struck", payload: { target: "zombie", damage: 0 } },
 				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-teleported event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-teleported", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-teleported", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts well-formed hallucination events and rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			hallucinatingTurnsRemaining: 5,
+			events: [
+				{ type: "player-hallucinated", payload: { turns: 20 } },
+				{ type: "hallucination-faded", payload: {} },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), hallucinatingTurnsRemaining: -1 },
+			"hallucinatingTurnsRemaining",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-hallucinated", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed vampire-healed event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "vampire-healed", payload: { amount: 1 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "vampire-healed", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-slept", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-slept", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-held event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-held", payload: { target: "zombie", turns: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-held", payload: { target: "griffin", turns: 5 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-confused event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-confused", payload: { target: "griffin", turns: 8 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed orc-gold-drop event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "orc-gold-drop", payload: { amount: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "orc-gold-drop", payload: { amount: 0 } }],
 			},
 			"events",
 		);
@@ -738,7 +868,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "sneak-attack", payload: { target: "dragon", damage: 3 } },
+					{ type: "sneak-attack", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",
@@ -1012,6 +1142,42 @@ describe("validateGameState", () => {
 				...buildValidState(),
 				events: [
 					{ type: "trap-triggered", payload: { kind: "teleport", damage: -1 } },
+				],
+			},
+			"events",
+		);
+
+		const bearTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "bear" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "bear", damage: 0 } },
+			],
+		});
+		expect(bearTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "bear", damage: -1 } },
+				],
+			},
+			"events",
+		);
+
+		const rustTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "rust" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+			],
+		});
+		expect(rustTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "rust", damage: -1 } },
 				],
 			},
 			"events",

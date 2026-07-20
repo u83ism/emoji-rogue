@@ -7,6 +7,7 @@ import {
 	BLINDNESS_GLYPH,
 	CONFUSION_GLYPH,
 	DETECT_MONSTER_GLYPH,
+	HALLUCINATION_GLYPH,
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 } from "../game/glyphs.js";
@@ -81,6 +82,12 @@ const STATUS_CHIPS: readonly {
 		glyph: DETECT_MONSTER_GLYPH,
 		color: "green",
 		resolveRemaining: (state) => state.detectMonstersTurnsRemaining,
+	},
+	{
+		label: "幻覚中",
+		glyph: HALLUCINATION_GLYPH,
+		color: "magentaBright",
+		resolveRemaining: (state) => state.hallucinatingTurnsRemaining,
 	},
 ];
 

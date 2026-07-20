@@ -1148,6 +1148,24 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+
+		const rustTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "rust" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+			],
+		});
+		expect(rustTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "rust", damage: -1 } },
+				],
+			},
+			"events",
+		);
 		expectRejected(
 			{
 				...buildValidState(),

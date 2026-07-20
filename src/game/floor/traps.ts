@@ -2,6 +2,7 @@ import type { Rng } from "../../rng.js";
 import {
 	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
 	GOAL_FLOOR,
+	RUST_TRAP_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
@@ -64,6 +65,15 @@ export const drawFloorTraps = (
 		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
 		if (tile !== undefined) {
 			traps.push({ ...tile, kind: "bear" });
+		}
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < RUST_TRAP_SPAWN_CHANCE_PERCENT
+	) {
+		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
+		if (tile !== undefined) {
+			traps.push({ ...tile, kind: "rust" });
 		}
 	}
 	return traps;

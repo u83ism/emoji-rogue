@@ -173,4 +173,94 @@ describe("applyTrapTrigger", () => {
 		});
 		expect(next.traps).toEqual(state.traps);
 	});
+
+	it("stepping onto a rust trap degrades the equipped armor's defenseBonus without damage", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: true,
+					cursed: false,
+					defenseBonus: 2,
+					rustProtected: false,
+				},
+			],
+			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp); /* no damage */
+		expect(next.traps).toEqual([]); /* consumed */
+		expect(next.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "armor",
+				equipped: true,
+				cursed: false,
+				defenseBonus: 1,
+				rustProtected: false,
+			},
+		]);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+			{ type: "armor-rusted", payload: { amount: 1 } },
+		]);
+	});
+
+	it("a rust trap is a no-op beyond the trap-triggered event when the equipped armor is protected", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: true,
+					cursed: false,
+					defenseBonus: 2,
+					rustProtected: true,
+				},
+			],
+			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+		]);
+	});
+
+	it("a rust trap with no armor equipped is a no-op beyond the trap-triggered event", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+		]);
+	});
+
+	it("levitating floats over a rust trap: no rust, trap left armed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			levitationTurnsRemaining: 5,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "armor" as const,
+					equipped: true,
+					cursed: false,
+					defenseBonus: 2,
+					rustProtected: false,
+				},
+			],
+			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.traps).toEqual(state.traps);
+	});
 });

@@ -109,6 +109,7 @@ export const TRAP_KIND_VALUES = [
 	"trapdoor",
 	"teleport",
 	"bear",
+	"rust",
 ] as const;
 
 /** Hidden until stepped on — see trapTrigger.ts. */

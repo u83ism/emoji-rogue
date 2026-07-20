@@ -309,12 +309,18 @@ export const BEAR_TRAP_PARALYSIS_DURATION = 3;
 /** Chance (out of 100), independently rolled per floor, that a bear trap spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, allowed on GOAL_FLOOR too (it never generates a floor beyond it). */
 export const BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15;
 
+/** No damage — the penalty is the armor degradation itself, see trapTrigger.ts's TRAP_SIDE_EFFECTS. */
+export const RUST_TRAP_DAMAGE = 0;
+/** Chance (out of 100), independently rolled per floor, that a rust trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
+export const RUST_TRAP_SPAWN_CHANCE_PERCENT = 15;
+
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 	trapdoor: TRAPDOOR_DAMAGE,
 	teleport: TELEPORT_TRAP_DAMAGE,
 	bear: BEAR_TRAP_DAMAGE,
+	rust: RUST_TRAP_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */

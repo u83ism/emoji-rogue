@@ -544,6 +544,23 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン96完了(2026-07-21)。**
 
+## マイルストーン97 — 錆びわな(5種類目のわな、既存のarmor-rustedイベントを再利用)
+
+未反映ブランチの内容の再実装、第15弾(方針はマイルストーン83を参照)。原作Rogueの錆びわな(rust trap)に着想を得た5種類目のわな。踏むとダメージなしで即座に装備中の防具の`defenseBonus`を1下げる——アクエーターの錆び効果と同じ副作用だが、戦闘中の確率ではなく足元の一撃なので確定発動。アクエーターの`armor-rusted`イベントはメッセージが発生源を特定しない汎用文言(「防具が錆びついた!防御力が◯下がった」)なので、新規イベントを起こさずそのまま再利用できる。防具保護の巻物(`rustProtected`)はアクエーターの錆びと同様にこのわなも無効化する。`trapTrigger.ts`の`applyTrapTrigger`はこれまで`if (trap.kind === "X" && ...)`という個別分岐をトラップドア・テレポート・捕獲わなの3件積み上げていたが、錆びわなで4件目になると`functional-style.md`のif連鎖上限に触れるため、`Record<TrapKind, ...>`の副作用ルックアップテーブル(`TRAP_SIDE_EFFECTS`)に置き換える。
+
+- [x] `src/game/events.ts`: `TRAP_KIND_VALUES`に`"rust"`を追加(新規`GameEvent`は不要——既存の`armor-rusted`をそのまま再利用)
+- [x] `src/game/balance.ts`: `RUST_TRAP_DAMAGE = 0`・`RUST_TRAP_SPAWN_CHANCE_PERCENT = 15`(他のわなと同じ独立per-floor判定)を追加し、`TRAP_DAMAGE`に`rust`のエントリを追加
+- [x] `src/game/trapTrigger.ts`: `if`連鎖3件(トラップドア・テレポート・捕獲わな)を`TRAP_SIDE_EFFECTS: Readonly<Partial<Record<TrapKind, (state: GameState) => GameState>>>`ルックアップテーブルに置き換え、`rust`の副作用(`rustProtected`でなければ`items/equipment.ts`の`applyArmorRust`/`canRustEquippedArmor`を使って`defenseBonus`を1減らし`armor-rusted`を記録)を追加(挙動は既存3種とも不変)
+- [x] `src/game/floor/traps.ts`: `RUST_TRAP_SPAWN_CHANCE_PERCENT`による独立per-floor抽選を追加(GOAL_FLOOR除外なし——ダメージなしの単発効果のため落とし穴のような制約は不要)
+- [x] `src/shell/gameNames.ts`・`src/shell/catalog/catalogData.ts`: `TRAP_NAMES`/`TRAP_CATALOG`にエントリを追加
+- [x] `src/game/format/validateGameState.ts`: `trap-triggered`イベント検証の「ダメージ0系」判定に`"rust"`を追加
+- [x] `src/game/trapTrigger.test.ts`(錆びわな専用テスト3件——通常発動・`rustProtected`による無効化・レビテーションでの回避、および既存トラップドア/テレポート/捕獲わなの回帰確認)・`src/game/floor/traps.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、錆びわなを踏むと`playerHp`が変化せず装備中の防具の`defenseBonus`が1下がり`armor-rusted`イベントが記録されること、`rustProtected: true`のときは無効化されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 880件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン97完了(2026-07-21)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

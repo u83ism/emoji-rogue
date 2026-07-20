@@ -11,6 +11,7 @@ import {
 	GOLD_AMOUNT_MIN,
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	ORC_SPAWN_CHANCE_PERCENT,
+	RUST_TRAP_SPAWN_CHANCE_PERCENT,
 	SNAKE_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
@@ -117,5 +118,10 @@ export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	bear: {
 		spawn: { type: "chance", percent: BEAR_TRAP_SPAWN_CHANCE_PERCENT },
 		effect: `ダメージはないが${BEAR_TRAP_PARALYSIS_DURATION}ターン動けなくなる`,
+	},
+	rust: {
+		spawn: { type: "chance", percent: RUST_TRAP_SPAWN_CHANCE_PERCENT },
+		effect:
+			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物で無効化)",
 	},
 };

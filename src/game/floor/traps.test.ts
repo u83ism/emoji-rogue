@@ -23,7 +23,7 @@ const buildPool = (size: number): Position[] =>
 	Array.from({ length: size }, (_, index) => ({ x: index, y: 0 }));
 
 describe("drawFloorTraps", () => {
-	it("with every roll hitting, spawns dart traps plus one each of trapdoor, teleport, and bear", () => {
+	it("with every roll hitting, spawns dart traps plus one each of trapdoor, teleport, bear, and rust", () => {
 		const traps = drawFloorTraps(
 			buildPool(100),
 			createAlwaysHitRng(),
@@ -36,6 +36,7 @@ describe("drawFloorTraps", () => {
 		expect(traps.filter((trap) => trap.kind === "trapdoor").length).toBe(1);
 		expect(traps.filter((trap) => trap.kind === "teleport").length).toBe(1);
 		expect(traps.filter((trap) => trap.kind === "bear").length).toBe(1);
+		expect(traps.filter((trap) => trap.kind === "rust").length).toBe(1);
 	});
 
 	it("with every roll missing, spawns only the guaranteed dart traps", () => {

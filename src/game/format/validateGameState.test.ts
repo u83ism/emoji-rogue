@@ -716,6 +716,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed vampire-healed event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "vampire-healed", payload: { amount: 1 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "vampire-healed", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

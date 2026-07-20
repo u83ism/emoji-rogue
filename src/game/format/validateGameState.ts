@@ -303,6 +303,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-held": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 	"enemy-slept": (payload) => isEnemyKind(payload.target),
+	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

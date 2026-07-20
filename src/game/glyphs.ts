@@ -34,6 +34,12 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	yeti: { glyph: "🐻" },
 	/* Snake: single-codepoint, Unicode 6.0. */
 	snake: { glyph: "🐍" },
+	/* Vampire: single-codepoint, no ZWJ/variation selector, but Unicode 11.0 —
+	 * newer than this project's usual Unicode 6.0 preference (see docs/design.md),
+	 * kept as an exception since no older glyph depicts a vampire (same
+	 * reasoning as the yeti/bear substitution, except here the glyph itself
+	 * is the best fit rather than a stand-in). */
+	vampire: { glyph: "🧛" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

@@ -15,6 +15,7 @@ export const ENEMY_KIND_VALUES = [
 	"dragon",
 	"yeti",
 	"snake",
+	"vampire",
 ] as const;
 
 /** Events carry it so the shell can name the attacker. */
@@ -410,6 +411,11 @@ export type GameEvent =
 			/** A sleep wand forcing its target back to sleep — see items/wands.ts's applyUseSleepWand. */
 			readonly type: "enemy-slept";
 			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A vampire healing itself off a landed hit — see vampireLifesteal.ts. Fired only when the heal is nonzero (already at max HP is silent). */
+			readonly type: "vampire-healed";
+			readonly payload: { readonly amount: number };
 	  };
 
 /**

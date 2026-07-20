@@ -83,6 +83,7 @@ describe("drawFloorEnemies", () => {
 			"dragon",
 			"yeti",
 			"snake",
+			"vampire",
 		] as const) {
 			expect(asleep.filter((enemy) => enemy.kind === kind).length).toBe(1);
 		}

@@ -561,6 +561,26 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン97完了(2026-07-21)。**
 
+## マイルストーン98 — ヴァンパイア(命中ダメージの一部を自己回復する敵)
+
+未反映ブランチの内容の再実装、最終弾(方針はマイルストーン83を参照)。原作Rogueの吸血鬼(vampire)に着想を得た敵。アクエーターと同様に盗んで逃げず居座るタイプだが、隣接攻撃が命中するたびそのダメージの`VAMPIRE_LIFESTEAL_PERCENT`(切り捨て)を自分のHPとして回復する——`ENEMY_MAX_HP.vampire`で頭打ちになり、すでに満タンなら回復もイベントも起きない。この回復計算は`enemies.ts`に直接書くとif分岐が増えて読みにくくなるため、`enemyFlee.ts`の`resolveFleeingTheft`と同じ「純粋関数として切り出す」idiomで`vampireLifesteal.ts`に分離した。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"vampire"`を追加、新規`GameEvent`として`vampire-healed`(payload: `{ amount: number }`)を追加
+- [x] `src/game/balance.ts`: `VAMPIRE_MAX_HP = 4`・`VAMPIRE_ATTACK_DAMAGE = 2`・`VAMPIRE_ACTIONS_PER_TURN = 1`・`VAMPIRE_LIFESTEAL_PERCENT = 50`・`VAMPIRE_SPAWN_CHANCE_PERCENT = 15`(thief/nymph/aquator/orc/snakeと同じ独立per-floor抽選)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`各テーブルに`vampire`エントリを追加(経験値5、オーク/蛇の3とドラゴンの6の間)
+- [x] `src/game/vampireLifesteal.ts`(新規): `resolveVampireLifesteal(currentHp, maxHp, damageDealt)`——回復後のhpと(回復が0なら`undefined`の)イベントを返す純粋関数(rng不使用)
+- [x] `src/game/enemies.ts`: 攻撃ループにローカル`currentHp`を導入し、隣接攻撃が命中した敵がvampireなら`resolveVampireLifesteal`を適用、ターン終了時の`nextEnemies.push`に`hp: currentHp`を反映
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`(`vampire: "🧛"`、Unicode 11.0——docs/design.mdの推奨より新しいが、zombieの🧟同様これより古い適切な絵文字が存在しないための例外)・`src/shell/gameNames.ts`・`src/shell/catalog/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: `vampire-healed`イベントの検証ケース(`amount`が`isPositiveInteger`)を追加。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/shell/messages.ts`: `vampire-healed`の文言を追加する際、既存の`GameEvent`網羅switch(`formatEvent`)がこの1件で202行に達し行数ゲート(200行)に抵触したため、`formatEvent`本体を新規`src/shell/eventMessages.ts`に切り出した(公開APIは変えず、`src/game/index.ts`・`src/main.tsx`の`formatEvent`import元を追従修正)。同時に`src/game/enemies.ts`も202行に達したため、docコメントをさらに圧縮して200行に収めた
+- [x] `src/game/vampireLifesteal.test.ts`(新規)・`src/game/enemies.test.ts`(通常回復・満タン時の無効化・他種は回復しないことを含む)・`src/game/floor/enemies.test.ts`・`src/shell/eventMessages.test.ts`(`messages.test.ts`から分離): 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、HPを削ったヴァンパイアが隣接攻撃命中でHPを回復し`vampire-healed`イベントが記録されること、満タン時は回復もイベントも起きないことを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 888件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+これで未反映ブランチ(`claude/tengu-class-classification-kgjioa`)の全16機能(敵5種・杖5種・指輪5種・巻物2種・わな2種・状態異常1種)の再実装が完了した。次はREADME/architecture.mdの更新(元ブランチの`9503e48`相当)。
+
+**マイルストーン98完了(2026-07-21)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

@@ -4,6 +4,7 @@ import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	ENEMY_ACTIONS_PER_TURN,
 	ENEMY_ATTACK_DAMAGE,
+	ENEMY_MAX_HP,
 	MIN_DAMAGE_TAKEN,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
@@ -19,25 +20,26 @@ import {
 } from "./items/equipment.js";
 import { hasEquippedRing } from "./items/rings.js";
 import type { Enemy, GameState, HeldItem, Position } from "./state.js";
+import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /**
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
  * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll
- * (STEALTH_RING_WAKE_CHANCE_PERCENT while the player wears a stealth ring) —
- * not guaranteed, leaving room for a sneak attack. Once awake it acts
+ * (STEALTH_RING_WAKE_CHANCE_PERCENT with a stealth ring worn) — not
+ * guaranteed, leaving room for a sneak attack. Once awake it acts
  * ENEMY_ACTIONS_PER_TURN[kind] times: adjacent attacks in place (damage from
  * balance.ts, reduced by calculatePlayerDefense but never below
  * MIN_DAMAGE_TAKEN) — except thief/nymph, which flee after stealing instead
- * (see enemyFlee.ts's resolveFleeingTheft), and aquator, whose landed hits
- * also roll AQUATOR_RUST_CHANCE_PERCENT to rust the equipped armor (skipped
- * entirely, no rng consumed, when canRustEquippedArmor is false). An awake
- * enemy with slowedTurnsRemaining > 0 (slow wand) skips its whole action,
- * just ticking down. Non-adjacent enemies chase via A* while visible and not
- * confused (confusedTurnsRemaining > 0 — confuse monster scroll — forces
- * wandering instead even when visible; adjacent attacks are unaffected), or
- * wander otherwise. The player's HP reaching zero ends the run and cuts
- * short any remaining actions.
+ * (enemyFlee.ts's resolveFleeingTheft); aquator, whose landed hits also roll
+ * AQUATOR_RUST_CHANCE_PERCENT to rust the equipped armor; and vampire, which
+ * heals off its own landed hits (vampireLifesteal.ts, capped at
+ * ENEMY_MAX_HP.vampire). A slowedTurnsRemaining > 0 enemy (slow wand) skips
+ * its whole action, just ticking down. Non-adjacent enemies chase via A*
+ * while visible and not confused (confusedTurnsRemaining > 0 — confuse
+ * monster scroll — forces wandering instead; adjacent attacks are
+ * unaffected), or wander otherwise. The player's HP reaching zero ends the
+ * run and cuts short any remaining actions.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -103,6 +105,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		}
 
 		let next: Position = enemy;
+		let currentHp = enemy.hp;
 		let fled = false;
 		for (
 			let action = 0;
@@ -141,6 +144,17 @@ export const advanceEnemies = (state: GameState): GameState => {
 						events.push({ type: "armor-rusted", payload: { amount: 1 } });
 					}
 				}
+				if (enemy.kind === "vampire") {
+					const lifesteal = resolveVampireLifesteal(
+						currentHp,
+						ENEMY_MAX_HP.vampire,
+						damage,
+					);
+					currentHp = lifesteal.hp;
+					if (lifesteal.event !== undefined) {
+						events.push(lifesteal.event);
+					}
+				}
 				if (playerHp <= 0) {
 					died = true;
 					events.push({ type: "player-died", payload: { by: enemy.kind } });
@@ -166,6 +180,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			...enemy,
 			x: next.x,
 			y: next.y,
+			hp: currentHp,
 			awake: true,
 			confusedTurnsRemaining,
 		});

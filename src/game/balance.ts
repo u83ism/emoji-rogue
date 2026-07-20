@@ -105,6 +105,16 @@ export const SNAKE_ATTACK_DAMAGE = 2;
 export const SNAKE_ACTIONS_PER_TURN = 1;
 export const SNAKE_SPAWN_CHANCE_PERCENT = 20;
 
+// Stands and fights like aquator rather than fleeing — every landed hit
+// heals it for a percentage of the damage dealt, capped at VAMPIRE_MAX_HP
+// (see vampireLifesteal.ts). Independent per-floor spawn, no depth scaling.
+export const VAMPIRE_MAX_HP = 4;
+export const VAMPIRE_ATTACK_DAMAGE = 2;
+export const VAMPIRE_ACTIONS_PER_TURN = 1;
+/** Percentage (floored) of landed damage a vampire heals itself for — see vampireLifesteal.ts's resolveVampireLifesteal. */
+export const VAMPIRE_LIFESTEAL_PERCENT = 50;
+export const VAMPIRE_SPAWN_CHANCE_PERCENT = 15;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -138,6 +148,7 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	dragon: DRAGON_MAX_HP,
 	yeti: YETI_MAX_HP,
 	snake: SNAKE_MAX_HP,
+	vampire: VAMPIRE_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -149,6 +160,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	dragon: DRAGON_ATTACK_DAMAGE,
 	yeti: YETI_ATTACK_DAMAGE,
 	snake: SNAKE_ATTACK_DAMAGE,
+	vampire: VAMPIRE_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -165,6 +177,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	dragon: DRAGON_ACTIONS_PER_TURN,
 	yeti: YETI_ACTIONS_PER_TURN,
 	snake: SNAKE_ACTIONS_PER_TURN,
+	vampire: VAMPIRE_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -177,6 +190,7 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	dragon: 6,
 	yeti: 4,
 	snake: 3,
+	vampire: 5,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

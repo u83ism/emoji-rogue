@@ -8,6 +8,8 @@ import {
 	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
 	THIEF_MAX_HP,
+	VAMPIRE_ATTACK_DAMAGE,
+	VAMPIRE_MAX_HP,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
@@ -74,6 +76,16 @@ const aquator = (x: number, y: number, awake = true): Enemy => ({
 	kind: "aquator",
 	hp: AQUATOR_MAX_HP,
 	awake,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const vampire = (x: number, y: number, hp = VAMPIRE_MAX_HP): Enemy => ({
+	x,
+	y,
+	kind: "vampire",
+	hp,
+	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
 });
@@ -724,5 +736,38 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(6, 1)]);
 		expect(next.rng).toEqual(state.rng);
+	});
+
+	it("an adjacent vampire heals itself off its own landed hit and logs vampire-healed", () => {
+		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP - 2)]);
+		const next = advanceEnemies(state);
+		const healedAmount = Math.floor(VAMPIRE_ATTACK_DAMAGE * 0.5);
+		expect(next.enemies).toEqual([
+			vampire(5, 1, VAMPIRE_MAX_HP - 2 + healedAmount),
+		]);
+		expect(next.events).toEqual([
+			{
+				type: "player-hit",
+				payload: { by: "vampire", damage: VAMPIRE_ATTACK_DAMAGE },
+			},
+			{ type: "vampire-healed", payload: { amount: healedAmount } },
+		]);
+	});
+
+	it("a vampire already at max HP does not overheal and logs no vampire-healed event", () => {
+		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
+			false,
+		);
+	});
+
+	it("a non-vampire adjacent enemy never heals off its own hit", () => {
+		const state = buildCorridorState([zombie(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
+			false,
+		);
 	});
 });

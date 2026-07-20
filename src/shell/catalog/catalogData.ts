@@ -17,6 +17,8 @@ import {
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
+	VAMPIRE_LIFESTEAL_PERCENT,
+	VAMPIRE_SPAWN_CHANCE_PERCENT,
 	YETI_SPAWN_CHANCE_PERCENT,
 } from "../../game/balance.js";
 import type { EnemyKind, TrapKind } from "../../game/events.js";
@@ -94,6 +96,10 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	snake: {
 		spawn: { type: "chance", percent: SNAKE_SPAWN_CHANCE_PERCENT },
 		behavior: "HPは低いが噛みつきのダメージが高い近接アタッカー",
+	},
+	vampire: {
+		spawn: { type: "chance", percent: VAMPIRE_SPAWN_CHANCE_PERCENT },
+		behavior: `逃げずに戦い続け、攻撃が命中するたびそのダメージの${VAMPIRE_LIFESTEAL_PERCENT}%を自分のHPとして回復する(最大HPが上限)`,
 	},
 };
 

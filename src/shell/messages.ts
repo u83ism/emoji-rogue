@@ -191,5 +191,7 @@ export const formatEvent = (
 			return `${ITEM_NAMES.hallucination}を飲んだ。景色が歪んで見える!`;
 		case "hallucination-faded":
 			return "幻覚がおさまった";
+		case "enemy-held":
+			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
 	}
 };

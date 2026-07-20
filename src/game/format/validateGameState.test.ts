@@ -716,6 +716,24 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed enemy-held event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-held", payload: { target: "zombie", turns: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-held", payload: { target: "griffin", turns: 5 } },
+				],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-confused event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

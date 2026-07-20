@@ -299,6 +299,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
+	"enemy-held": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

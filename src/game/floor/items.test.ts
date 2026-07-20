@@ -65,6 +65,7 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"magic-missile-wand",
 	"confuse-monster-scroll",
 	"hallucination",
+	"hold-monster-scroll",
 ];
 
 describe("drawFloorItems", () => {

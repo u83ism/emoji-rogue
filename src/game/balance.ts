@@ -395,6 +395,11 @@ export const HALLUCINATION_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a hallucination potion spawns. */
 export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
+/** How many turns a hold monster scroll freezes every visible enemy for — same length as SLOW_WAND_DURATION, its single-target counterpart. */
+export const HOLD_MONSTER_SCROLL_DURATION = 5;
+/** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
+export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

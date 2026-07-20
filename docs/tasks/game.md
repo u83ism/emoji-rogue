@@ -487,6 +487,25 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン93完了(2026-07-20)。**
 
+## マイルストーン94 — 束縛の巻物(視界内の敵を全て凍結する範囲効果)
+
+未反映ブランチの内容の再実装、最終弾直前(方針はマイルストーン83を参照)。原作Rogueの"scroll of hold monster"に着想を得た巻物。鈍足の杖(単体・最近接のみ)と対になる範囲効果——視界内の**全ての**敵を`HOLD_MONSTER_SCROLL_DURATION`ターン凍結させる。既存の`Enemy.slowedTurnsRemaining`(鈍足の杖で確立済み)をそのまま再利用するため、`GameState`/`Enemy`の構造変更は不要(`SAVE_FORMAT_VERSION`据え置き)。`vision.ts`の`findNearestVisibleEnemy`が内部で使っていた「視界内の敵を絞り込む」ロジックを`findVisibleEnemies`として独立させ、単体版はその上に最近接選択を重ねる薄い実装に整理した。凍結の文言は鈍足の杖の`enemy-slowed`をそのまま流用すると出処が巻物なのに杖のせいになってしまうため、新規`enemy-held`イベント(巻物の文言)を独立して用意する。
+
+- [x] `src/game/vision.ts`: `findVisibleEnemies(state)`(視界内の敵配列を返す)を新設し、既存の`findNearestVisibleEnemy`をこの上に最近接選択を重ねる形に整理(挙動は無変更)
+- [x] `src/game/events.ts`: `ItemKind`に`"hold-monster-scroll"`を追加。`GameEvent`に`enemy-held`(payload: `target: EnemyKind`・継続ターン数`turns`——`enemy-slowed`と同形だが巻物用に独立させた自身の文言を持つ)を追加
+- [x] `src/game/balance.ts`: `HOLD_MONSTER_SCROLL_DURATION = 5`(`SLOW_WAND_DURATION`と同じ長さ)・`HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10`を追加
+- [x] `src/game/items/scrolls.ts`: `applyUseHoldMonsterScroll(state)`——`findVisibleEnemies`で対象を全て選び、視界内に敵が1体もいなければ無効果。対象全員の`slowedTurnsRemaining`をセットし、対象ごとに`enemy-held`を1件ずつ記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "hold-monster-scroll"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 追加(巻物は他と同じく`📜`共有・実名即時表示)
+- [x] `src/game/format/validateGameState.ts`: `enemy-held`イベントの検証ケース(`enemy-slowed`と同じ形)を追加。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] 実装中に`items/scrolls.ts`が221行に達し行数ゲート(200行)に抵触したため、剣・防具を対象とする巻物(武器/防具強化・防具保護・解呪)を新規`items/equipmentScrolls.ts`に切り出した(環境/敵に作用する巻物 vs 装備を対象とする巻物、という責務の軸で分割)。対応するテストも`items/equipmentScrolls.test.ts`へ移設した
+- [x] `src/game/vision.test.ts`(`findVisibleEnemies`)・`src/game/items/scrolls.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内に複数の敵がいる状態で束縛の巻物を使うと全員の`slowedTurnsRemaining`がセットされ`enemy-held`イベントが敵の数だけ記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 870件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン94完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

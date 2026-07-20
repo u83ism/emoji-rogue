@@ -11,6 +11,8 @@ import {
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	FOOD_COUNT_PER_FLOOR,
 	FOOD_RATION_RESTORE_AMOUNT,
+	HOLD_MONSTER_SCROLL_DURATION,
+	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
 	MAGIC_MISSILE_WAND_DAMAGE,
 	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
@@ -72,6 +74,15 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			percent: CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
 		effect: `視界内の最も近い敵を${CONFUSE_MONSTER_SCROLL_DURATION}ターン混乱させる(以後は視界内でも追跡してこず徘徊するようになる。隣接時の攻撃は変わらず行う)`,
+	},
+	"hold-monster-scroll": {
+		catalogName: "束縛の巻物",
+		category: "巻物",
+		spawn: {
+			type: "chance",
+			percent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の敵全員を${HOLD_MONSTER_SCROLL_DURATION}ターン行動不能にする(鈍足の杖の範囲版)`,
 	},
 	"enchant-weapon": {
 		catalogName: "武器強化の巻物",

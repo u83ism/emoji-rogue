@@ -267,6 +267,10 @@ describe("formatEvent", () => {
 				"幻覚の薬を飲んだ。景色が歪んで見える!",
 			],
 			[{ type: "hallucination-faded", payload: {} }, "幻覚がおさまった"],
+			[
+				{ type: "enemy-held", payload: { target: "zombie", turns: 5 } },
+				"束縛の巻物を読んだ。ゾンビの動きを封じた!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

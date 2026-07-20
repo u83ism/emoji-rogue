@@ -51,6 +51,7 @@ export const ITEM_KIND_VALUES = [
 	"magic-missile-wand",
 	"confuse-monster-scroll",
 	"hallucination",
+	"hold-monster-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -395,6 +396,11 @@ export type GameEvent =
 			/** Fired the turn hallucinatingTurnsRemaining reaches 0 — see turnEnd/hallucination.ts. */
 			readonly type: "hallucination-faded";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A hold monster scroll freezing one visible enemy — same shape as enemy-slowed, independent flavor text (it's the scroll, not a wand). */
+			readonly type: "enemy-held";
+			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  };
 
 /**

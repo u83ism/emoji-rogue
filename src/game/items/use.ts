@@ -1,18 +1,21 @@
 import { EQUIPMENT_ITEM_KINDS } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleSwordEquip } from "./equipment.js";
+import {
+	applyUseEnchantArmorScroll,
+	applyUseEnchantWeaponScroll,
+	applyUseProtectArmorScroll,
+	applyUseRemoveCurseScroll,
+} from "./equipmentScrolls.js";
 import { applyUseFood } from "./food.js";
 import { removeHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
 import { applyToggleRingEquip } from "./rings.js";
 import {
 	applyUseConfuseMonsterScroll,
-	applyUseEnchantArmorScroll,
-	applyUseEnchantWeaponScroll,
+	applyUseHoldMonsterScroll,
 	applyUseIdentifyScroll,
 	applyUseMappingScroll,
-	applyUseProtectArmorScroll,
-	applyUseRemoveCurseScroll,
 	applyUseTeleportScroll,
 } from "./scrolls.js";
 import {
@@ -65,6 +68,8 @@ const applyItemEffect = (
 			return applyUseIdentifyScroll(state);
 		case "confuse-monster-scroll":
 			return applyUseConfuseMonsterScroll(state);
+		case "hold-monster-scroll":
+			return applyUseHoldMonsterScroll(state);
 		case "food":
 			return applyUseFood(state);
 		case "striking-wand":

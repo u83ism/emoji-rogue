@@ -59,6 +59,22 @@ export const deriveExploredState = (state: GameState): GameState => {
 };
 
 /**
+ * Every enemy currently in the player's field of view — the shared basis for
+ * both the single-target wands/scrolls (see findNearestVisibleEnemy) and the
+ * area-effect hold monster scroll (items/scrolls.ts).
+ */
+export const findVisibleEnemies = (state: GameState): readonly Enemy[] => {
+	const visiblePoints = computeVisiblePoints(
+		state.terrain,
+		state.player,
+		resolveViewRadius(state),
+	);
+	return state.enemies.filter((enemy) =>
+		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
+	);
+};
+
+/**
  * The closest (Manhattan distance) enemy currently in the player's field of
  * view, or undefined if none are visible — a wand's automatic aim, standing
  * in for a manual targeting UI this project deliberately doesn't have
@@ -69,14 +85,7 @@ export const deriveExploredState = (state: GameState): GameState => {
 export const findNearestVisibleEnemy = (
 	state: GameState,
 ): Enemy | undefined => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
-	const visibleEnemies = state.enemies.filter((enemy) =>
-		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
-	);
+	const visibleEnemies = findVisibleEnemies(state);
 	return visibleEnemies.reduce<Enemy | undefined>((closest, candidate) => {
 		if (closest === undefined) {
 			return candidate;

@@ -1,7 +1,7 @@
 import { createPreciseShadowcastingFov } from "../fov/index.js";
 import { encodePointKey } from "../pointkey.js";
 import { BLIND_VIEW_RADIUS } from "./balance.js";
-import type { GameState } from "./state.js";
+import type { Enemy, GameState } from "./state.js";
 
 /** How far the player can see, in grid rings (precise shadowcasting). */
 export const VIEW_RADIUS = 8;
@@ -56,4 +56,37 @@ export const deriveExploredState = (state: GameState): GameState => {
 			),
 		),
 	};
+};
+
+/**
+ * The closest (Manhattan distance) enemy currently in the player's field of
+ * view, or undefined if none are visible — a wand's automatic aim, standing
+ * in for a manual targeting UI this project deliberately doesn't have
+ * (docs/design.md's single-key interaction rule). Shared by items/wands.ts
+ * and items/scrolls.ts (moved here from wands.ts once scrolls needed it too
+ * — a visibility computation belongs with the rest of vision.ts's logic).
+ */
+export const findNearestVisibleEnemy = (
+	state: GameState,
+): Enemy | undefined => {
+	const visiblePoints = computeVisiblePoints(
+		state.terrain,
+		state.player,
+		resolveViewRadius(state),
+	);
+	const visibleEnemies = state.enemies.filter((enemy) =>
+		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
+	);
+	return visibleEnemies.reduce<Enemy | undefined>((closest, candidate) => {
+		if (closest === undefined) {
+			return candidate;
+		}
+		const candidateDistance =
+			Math.abs(candidate.x - state.player.x) +
+			Math.abs(candidate.y - state.player.y);
+		const closestDistance =
+			Math.abs(closest.x - state.player.x) +
+			Math.abs(closest.y - state.player.y);
+		return candidateDistance < closestDistance ? candidate : closest;
+	}, undefined);
 };

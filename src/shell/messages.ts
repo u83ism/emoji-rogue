@@ -185,5 +185,7 @@ export const formatEvent = (
 			return `オークが金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
 		case "enemy-teleported":
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
+		case "enemy-confused":
+			return `混乱の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}が混乱した!`;
 	}
 };

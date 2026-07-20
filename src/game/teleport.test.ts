@@ -46,6 +46,7 @@ describe("teleport wand", () => {
 			hp: 2,
 			awake: false,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),

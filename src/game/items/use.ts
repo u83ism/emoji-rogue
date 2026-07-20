@@ -6,6 +6,7 @@ import { removeHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
 import { applyToggleRingEquip } from "./rings.js";
 import {
+	applyUseConfuseMonsterScroll,
 	applyUseEnchantArmorScroll,
 	applyUseEnchantWeaponScroll,
 	applyUseIdentifyScroll,
@@ -62,6 +63,8 @@ const applyItemEffect = (
 			return applyUseMappingScroll(state);
 		case "identify-scroll":
 			return applyUseIdentifyScroll(state);
+		case "confuse-monster-scroll":
+			return applyUseConfuseMonsterScroll(state);
 		case "food":
 			return applyUseFood(state);
 		case "striking-wand":

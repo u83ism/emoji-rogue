@@ -3,6 +3,8 @@ import {
 	ARMOR_DEFENSE_BONUS,
 	ARMOR_SPAWN_CHANCE_PERCENT,
 	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
+	CONFUSE_MONSTER_SCROLL_DURATION,
+	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_BONUS,
@@ -61,6 +63,15 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "巻物",
 		spawn: { type: "chance", percent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT },
 		effect: "未鑑定のポーション1種の正体が判明する(固定順)",
+	},
+	"confuse-monster-scroll": {
+		catalogName: "混乱の巻物",
+		category: "巻物",
+		spawn: {
+			type: "chance",
+			percent: CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の最も近い敵を${CONFUSE_MONSTER_SCROLL_DURATION}ターン混乱させる(以後は視界内でも追跡してこず徘徊するようになる。隣接時の攻撃は変わらず行う)`,
 	},
 	"enchant-weapon": {
 		catalogName: "武器強化の巻物",

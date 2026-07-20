@@ -168,6 +168,10 @@ describe("validateGameState", () => {
 			"enemies",
 		);
 		expectRejected(
+			{ ...valid, enemies: [{ ...enemies[0], confusedTurnsRemaining: -1 }] },
+			"enemies",
+		);
+		expectRejected(
 			{ ...buildValidState(), events: [{ type: "player-hit", payload: {} }] },
 			"events",
 		);
@@ -683,6 +687,26 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [{ type: "enemy-teleported", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-confused event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-confused", payload: { target: "griffin", turns: 8 } },
+				],
 			},
 			"events",
 		);

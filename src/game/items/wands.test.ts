@@ -16,6 +16,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	hp: ZOMBIE_MAX_HP,
 	awake: true,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 describe("items/wands", () => {

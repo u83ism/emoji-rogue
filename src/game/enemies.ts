@@ -6,10 +6,10 @@ import {
 	ENEMY_ATTACK_DAMAGE,
 	MIN_DAMAGE_TAKEN,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
-	THIEF_STEAL_AMOUNT,
 	WAKE_CHANCE_PERCENT,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
+import { resolveFleeingTheft } from "./enemyFlee.js";
 import { stepTowardPlayer, stepWandering } from "./enemyMovement.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import {
@@ -17,44 +17,27 @@ import {
 	calculatePlayerDefense,
 	canRustEquippedArmor,
 } from "./items/equipment.js";
-import { removeHeldItemAtIndex } from "./items/inventory.js";
 import { hasEquippedRing } from "./items/rings.js";
 import type { Enemy, GameState, HeldItem, Position } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /**
- * One turn for every enemy, in array order. A still-sleeping enemy (see
- * Enemy.awake) takes no action at all unless it wakes this turn: while
- * adjacent to the player, or inside the player's field of view (the same
- * `visiblePoints` set used for the chase decision below, reused as a wake
- * check), it rolls WAKE_CHANCE_PERCENT (consuming the state's RNG) each turn
- * until it succeeds — not a guaranteed wake, so a fast enough attack can
- * still land a sneak attack. Once awake, an enemy never sleeps again. Awake
- * enemies act
- * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
- * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts by kind, reduced by
- * calculatePlayerDefense(inventory) but never below MIN_DAMAGE_TAKEN) —
- * except a thief, which steals up to THIEF_STEAL_AMOUNT gold instead of
- * dealing damage, and a nymph, which steals one random *unequipped* held
- * item instead (equipped items are never stolen; rng-picked among the rest;
- * item-stolen fires with kind: undefined if nothing unequipped was held).
- * Both flee the board for good afterward (never rejoin `nextEnemies`, killed
- * or not). An aquator instead stands its ground: every landed hit
- * additionally rolls AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off the
- * equipped armor's own defenseBonus (armor-rusted, floored at 0), so its
- * later hits in the same fight — this turn's or a future one's — land
- * harder, unless canRustEquippedArmor is false (no armor equipped, or it's
- * rustProtected — see the protect armor scroll), in which case the rust
- * roll is skipped entirely — no rng consumed, no chance of it landing. An
- * awake enemy with slowedTurnsRemaining > 0
- * (see the slow wand) skips this turn's action entirely — no movement, no
- * attack — while the counter ticks down, checked right after the sleep
- * check above. Non-adjacent
- * enemies chase via A* while inside the player's field of view, or wander
- * using (and advancing) the state's RNG. The player's HP reaching zero ends
- * the run and cuts short any remaining actions, this enemy's and the rest of
- * the array's alike.
+ * One turn for every enemy, in array order. A still-sleeping enemy wakes
+ * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll
+ * (STEALTH_RING_WAKE_CHANCE_PERCENT while the player wears a stealth ring) —
+ * not guaranteed, leaving room for a sneak attack. Once awake it acts
+ * ENEMY_ACTIONS_PER_TURN[kind] times: adjacent attacks in place (damage from
+ * balance.ts, reduced by calculatePlayerDefense but never below
+ * MIN_DAMAGE_TAKEN) — except thief/nymph, which flee after stealing instead
+ * (see enemyFlee.ts's resolveFleeingTheft), and aquator, whose landed hits
+ * also roll AQUATOR_RUST_CHANCE_PERCENT to rust the equipped armor (skipped
+ * entirely, no rng consumed, when canRustEquippedArmor is false). An awake
+ * enemy with slowedTurnsRemaining > 0 (slow wand) skips its whole action,
+ * just ticking down. Non-adjacent enemies chase via A* while visible and not
+ * confused (confusedTurnsRemaining > 0 — confuse monster scroll — forces
+ * wandering instead even when visible; adjacent attacks are unaffected), or
+ * wander otherwise. The player's HP reaching zero ends the run and cuts
+ * short any remaining actions.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -99,12 +82,22 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 
+		/* Decided from this turn's still-undecremented value (same idiom as
+		 * slowedTurnsRemaining below) — the scroll's own application turn
+		 * already wanders instead of chasing. */
+		const confused = enemy.confusedTurnsRemaining > 0;
+		const confusedTurnsRemaining = Math.max(
+			0,
+			enemy.confusedTurnsRemaining - 1,
+		);
+
 		if (enemy.slowedTurnsRemaining > 0) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
 			nextEnemies.push({
 				...enemy,
 				awake,
 				slowedTurnsRemaining: enemy.slowedTurnsRemaining - 1,
+				confusedTurnsRemaining,
 			});
 			continue;
 		}
@@ -117,33 +110,17 @@ export const advanceEnemies = (state: GameState): GameState => {
 			action++
 		) {
 			if (isAdjacent(next, state.player)) {
-				if (enemy.kind === "thief") {
-					const stolen = Math.min(THIEF_STEAL_AMOUNT, goldCollected);
-					goldCollected -= stolen;
-					events.push({ type: "gold-stolen", payload: { amount: stolen } });
-					fled = true;
-					continue;
-				}
-				if (enemy.kind === "nymph") {
-					// Only unequipped items are up for grabs — what's worn stays worn.
-					const stealable = inventory
-						.map((item, itemIndex) => ({ item, itemIndex }))
-						.filter(({ item }) => !("equipped" in item && item.equipped));
-					if (stealable.length === 0) {
-						events.push({ type: "item-stolen", payload: { kind: undefined } });
-					} else {
-						const pick = stepUniform(rng);
-						rng = pick.state;
-						const picked = stealable[Math.floor(pick.value * stealable.length)];
-						if (picked === undefined) {
-							throw new Error("unreachable: pick is within stealable bounds");
-						}
-						inventory = removeHeldItemAtIndex(inventory, picked.itemIndex);
-						events.push({
-							type: "item-stolen",
-							payload: { kind: picked.item.kind },
-						});
-					}
+				if (enemy.kind === "thief" || enemy.kind === "nymph") {
+					const result = resolveFleeingTheft(
+						enemy.kind,
+						rng,
+						goldCollected,
+						inventory,
+					);
+					rng = result.rng;
+					goldCollected = result.goldCollected;
+					inventory = result.inventory;
+					events.push(result.event);
 					fled = true;
 					continue;
 				}
@@ -168,7 +145,10 @@ export const advanceEnemies = (state: GameState): GameState => {
 					died = true;
 					events.push({ type: "player-died", payload: { by: enemy.kind } });
 				}
-			} else if (visiblePoints.has(encodePointKey(next.x, next.y))) {
+			} else if (
+				!confused &&
+				visiblePoints.has(encodePointKey(next.x, next.y))
+			) {
 				const step = stepTowardPlayer(state, next, occupied);
 				next = step ?? next;
 			} else {
@@ -182,7 +162,13 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 		occupied.add(encodePointKey(next.x, next.y));
-		nextEnemies.push({ ...enemy, x: next.x, y: next.y, awake: true });
+		nextEnemies.push({
+			...enemy,
+			x: next.x,
+			y: next.y,
+			awake: true,
+			confusedTurnsRemaining,
+		});
 	}
 
 	return {

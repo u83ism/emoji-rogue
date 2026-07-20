@@ -1,39 +1,9 @@
-import { encodePointKey } from "../../pointkey.js";
 import { SLOW_WAND_DURATION } from "../balance.js";
 import { applyMagicMissileWandStrike, applyWandStrike } from "../combat.js";
 import { buildEventLog } from "../events.js";
-import type { Enemy, GameState } from "../state.js";
+import type { GameState } from "../state.js";
 import { applyEnemyTeleport } from "../teleport.js";
-import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
-
-/**
- * The closest (Manhattan distance) enemy currently in the player's field of
- * view, or undefined if none are visible — a wand's automatic aim, standing
- * in for a manual targeting UI this project deliberately doesn't have
- * (docs/design.md's single-key interaction rule).
- */
-const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
-	const visibleEnemies = state.enemies.filter((enemy) =>
-		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
-	);
-	return visibleEnemies.reduce<Enemy | undefined>((closest, candidate) => {
-		if (closest === undefined) {
-			return candidate;
-		}
-		const candidateDistance =
-			Math.abs(candidate.x - state.player.x) +
-			Math.abs(candidate.y - state.player.y);
-		const closestDistance =
-			Math.abs(closest.x - state.player.x) +
-			Math.abs(closest.y - state.player.y);
-		return candidateDistance < closestDistance ? candidate : closest;
-	}, undefined);
-};
+import { findNearestVisibleEnemy } from "../vision.js";
 
 /**
  * A wand of striking hits the nearest visible enemy for flat damage. With no

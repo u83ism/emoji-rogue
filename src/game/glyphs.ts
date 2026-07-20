@@ -102,6 +102,8 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"awareness-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
+	/* Same scroll glyph as every other scroll kind — see the comment above. */
+	"confuse-monster-scroll": { glyph: "📜" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };

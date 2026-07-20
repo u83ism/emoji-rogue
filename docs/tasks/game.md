@@ -406,6 +406,30 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン89完了(2026-07-20)。**
 
+## マイルストーン90 — 混乱の巻物(敵を混乱させ、ランダムに動かす)
+
+未反映ブランチの内容の再実装、第8弾(方針はマイルストーン83を参照)。原作Rogueの"scroll of confuse monster"に着想を得た巻物。視界内最近接の敵を一定ターン混乱させ、その間はプレイヤーへの追跡(A*)を止めてランダムに徘徊させる——隣接していれば通常どおり攻撃/窃盗はする。鈍足の杖が確立した`Enemy.slowedTurnsRemaining`と対になる`Enemy.confusedTurnsRemaining`を`state.ts`に新設する(構造変更のため`SAVE_FORMAT_VERSION`を30に)。杖4種が共有していた「視界内最近接の敵を自動選択する」`findNearestVisibleEnemy`を、巻物からも使えるよう`items/wands.ts`から`vision.ts`へ移設して共有する。
+
+- [x] `src/game/vision.ts`: `items/wands.ts`にあった`findNearestVisibleEnemy(state)`をここへ移設しexportする(視界判定ロジックという責務が本来の置き場と一致するため)
+- [x] `src/game/items/wands.ts`: ローカル定義を削除し`vision.ts`からimportするよう変更(4種の杖の呼び出し側は無改造)
+- [x] `src/game/events.ts`: `ItemKind`に`"confuse-monster-scroll"`を追加。`GameEvent`に`enemy-confused`(payload: `target: EnemyKind`・継続ターン数`turns`)を追加
+- [x] `src/game/state.ts`: `Enemy`に`confusedTurnsRemaining: number`(`slowedTurnsRemaining`と対称、構造変更)を追加
+- [x] `src/game/balance.ts`: `CONFUSE_MONSTER_SCROLL_DURATION = 8`・`CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10`を追加
+- [x] `src/game/floor/enemies.ts`: 敵生成の全3箇所(ゾンビ・コウモリのスケーリング湧き・`ENEMY_SPAWN_TABLE`の各種・モンスターハウス)に`confusedTurnsRemaining: 0`を追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`に、眠り判定の直後で`confusedTurnsRemaining`を1減らした値を`nextEnemies`用に保持しつつ、今回のターンの追跡判定を「混乱していなければ(このターン開始時点の値で判定)視界内でA*追跡、そうでなければランダム徘徊」に変更。`slowedTurnsRemaining`による行動スキップ分岐でも`confusedTurnsRemaining`を減衰させて`nextEnemies`に積む
+- [x] `src/game/items/scrolls.ts`: `applyUseConfuseMonsterScroll(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一。対象が見つかれば`confusedTurnsRemaining`をセットし`enemy-confused`を記録
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "confuse-monster-scroll"`を追加
+- [x] `src/game/floor/items.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 追加(現行develop方式では巻物は全種`📜`共有・実名即時表示のため、元ブランチの専用アイコン`💫`案は採らず既存の共有絵文字規約に合わせた)
+- [x] `src/game/format/validateGameState.ts`: `enemies`の各要素に`confusedTurnsRemaining`(0以上の整数)の検証を追加。`enemy-confused`イベントの検証ケースを追加。`Enemy`の構造変更のため**`SAVE_FORMAT_VERSION`を30に**
+- [x] `src/game/format/saveFormat.ts`・`saveFormat.test.ts`: バージョン変更履歴コメント更新、shape guardに`confusedTurnsRemaining: "number"`を追記
+- [x] 実装中に`enemies.ts`が201行に達し行数ゲート(200行)に抵触したため、盗賊/ニンフの「隣接時に盗んで逃げる」ロジックを新規`enemyFlee.ts`の`resolveFleeingTheft`に切り出し、あわせて`advanceEnemies`の巨大docコメントを圧縮して185行まで削減した(`enemies.ts`側は`enemy.kind === "thief" || "nymph"`の1分岐+関数呼び出しに縮小)
+- [x] `src/game/items/scrolls.test.ts`・`src/game/enemies.test.ts`(混乱中は視界内でも追跡せず徘徊すること・隣接していれば混乱中でも攻撃すること・ターン経過で減衰し0で通常の追跡に戻ることを含む)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、混乱の巻物を使うと視界内の敵の`confusedTurnsRemaining`が立ち`enemy-confused`イベントが記録されること、以後その敵が視界内でも直線的なA*追跡から外れて徘徊することを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 851件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン90完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

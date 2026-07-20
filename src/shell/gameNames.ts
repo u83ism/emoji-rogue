@@ -54,6 +54,8 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"awareness-ring": "指輪",
 	/* Same generic display name as the other wands — which effect it grants only shows once used. */
 	"magic-missile-wand": "杖",
+	/* Scrolls show their real name immediately, unlike wands/rings — no generic placeholder. */
+	"confuse-monster-scroll": "混乱の巻物",
 };
 
 /**

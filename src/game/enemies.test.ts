@@ -35,6 +35,7 @@ const zombie = (x: number, y: number, awake = true): Enemy => ({
 	hp: ZOMBIE_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const bat = (x: number, y: number, awake = true): Enemy => ({
@@ -44,6 +45,7 @@ const bat = (x: number, y: number, awake = true): Enemy => ({
 	hp: BAT_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const thief = (x: number, y: number, awake = true): Enemy => ({
@@ -53,6 +55,7 @@ const thief = (x: number, y: number, awake = true): Enemy => ({
 	hp: THIEF_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const nymph = (x: number, y: number, awake = true): Enemy => ({
@@ -62,6 +65,7 @@ const nymph = (x: number, y: number, awake = true): Enemy => ({
 	hp: NYMPH_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const aquator = (x: number, y: number, awake = true): Enemy => ({
@@ -71,6 +75,7 @@ const aquator = (x: number, y: number, awake = true): Enemy => ({
 	hp: AQUATOR_MAX_HP,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
@@ -683,5 +688,39 @@ describe("advanceEnemies", () => {
 				expect(withoutRing.enemies[0]?.awake).toBe(true);
 			}
 		}
+	});
+
+	it("a confused visible enemy wanders (consuming rng) instead of chasing via A*", () => {
+		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 3 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		/* A* pursuit would step to (6,1) deterministically, consuming no rng —
+		 * wandering instead consumes rng and may or may not land there. */
+		expect(next.rng).not.toEqual(state.rng);
+	});
+
+	it("a confused enemy still attacks when adjacent", () => {
+		const confused = { ...zombie(5, 1), confusedTurnsRemaining: 3 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([{ ...confused, confusedTurnsRemaining: 2 }]);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		]);
+	});
+
+	it("confusedTurnsRemaining ticks down by one per turn and stops at zero", () => {
+		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 1 };
+		const state = buildCorridorState([confused]);
+		const next = advanceEnemies(state);
+		expect(next.enemies[0]?.confusedTurnsRemaining).toBe(0);
+	});
+
+	it("an unconfused enemy still chases deterministically (confusedTurnsRemaining at 0 is a no-op)", () => {
+		const state = buildCorridorState([zombie(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([zombie(6, 1)]);
+		expect(next.rng).toEqual(state.rng);
 	});
 });

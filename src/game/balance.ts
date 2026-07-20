@@ -365,6 +365,11 @@ export const MAGIC_MISSILE_WAND_DAMAGE = 5;
 /** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns — lower than WAND_SPAWN_CHANCE_PERCENT. */
 export const MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6;
 
+/** How many turns a confuse monster scroll makes an enemy wander instead of pathfinding toward the player (adjacent attacks still land). */
+export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
+/** Chance (out of 100), independently rolled per floor, that a confuse monster scroll spawns. */
+export const CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

@@ -98,7 +98,8 @@ const isEnemyArray = (
 			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp) &&
 			isBooleanValue(enemy.awake) &&
-			isNonNegativeInteger(enemy.slowedTurnsRemaining),
+			isNonNegativeInteger(enemy.slowedTurnsRemaining) &&
+			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -292,6 +293,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"items-decursed": (payload) => isPositiveInteger(payload.count),
 	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
 	"enemy-teleported": (payload) => isEnemyKind(payload.target),
+	"enemy-confused": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 };
 
 /** The same table widened for lookup by an untrusted string key. */
@@ -526,6 +529,7 @@ export const validateGameState = (
 			hp: enemy.hp,
 			awake: enemy.awake,
 			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
+			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
 		items: items.map((item): Item => {
 			const position = { x: item.x, y: item.y };

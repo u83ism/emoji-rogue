@@ -29,6 +29,7 @@ const zombie = (
 	hp,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 const orc = (x: number, y: number, hp = ORC_MAX_HP, awake = true): Enemy => ({
@@ -38,6 +39,7 @@ const orc = (x: number, y: number, hp = ORC_MAX_HP, awake = true): Enemy => ({
 	hp,
 	awake,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 describe("isAdjacent", () => {
@@ -318,6 +320,7 @@ describe("dragon", () => {
 			hp: 1,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.dragon);

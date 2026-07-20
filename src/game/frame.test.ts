@@ -38,6 +38,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = {
 			...wide,
@@ -59,6 +60,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const detecting = {
 			...wide,
@@ -75,6 +77,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const detecting = {
 			...wide,
@@ -98,6 +101,7 @@ describe("buildFrameGrid", () => {
 			hp: 1,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
@@ -110,6 +114,7 @@ describe("buildFrameGrid", () => {
 			hp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
@@ -249,6 +254,7 @@ describe("buildFrameGrid", () => {
 					hp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
+					confusedTurnsRemaining: 0,
 				},
 			],
 		};
@@ -296,6 +302,7 @@ describe("buildFrameGrid", () => {
 					hp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
+					confusedTurnsRemaining: 0,
 				},
 			],
 		};

@@ -1,7 +1,12 @@
-import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
+import {
+	CONFUSE_MONSTER_SCROLL_DURATION,
+	ENCHANT_ARMOR_BONUS,
+	ENCHANT_WEAPON_BONUS,
+} from "../balance.js";
 import { buildEventLog, POTION_KINDS } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
+import { findNearestVisibleEnemy } from "../vision.js";
 import { replaceHeldItem } from "./inventory.js";
 
 // Consumption from inventory happens in the dispatcher (items/use.ts),
@@ -151,6 +156,38 @@ export const applyUseIdentifyScroll = (state: GameState): GameState => {
 		identifiedPotionKinds: [...state.identifiedPotionKinds, target],
 		events: buildEventLog(state.events, [
 			{ type: "potion-identified", payload: { kind: target } },
+		]),
+	};
+};
+
+/**
+ * A confuse monster scroll sets the nearest visible enemy's
+ * confusedTurnsRemaining — see advanceEnemies for what that does to its
+ * chase decision. Same no-visible-target no-op as the wands.
+ */
+export const applyUseConfuseMonsterScroll = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target
+				? {
+						...enemy,
+						confusedTurnsRemaining: CONFUSE_MONSTER_SCROLL_DURATION,
+					}
+				: enemy,
+		),
+		events: buildEventLog(state.events, [
+			{
+				type: "enemy-confused",
+				payload: {
+					target: target.kind,
+					turns: CONFUSE_MONSTER_SCROLL_DURATION,
+				},
+			},
 		]),
 	};
 };

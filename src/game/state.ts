@@ -63,6 +63,8 @@ export type Enemy = Position & {
 	readonly awake: boolean;
 	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */
 	readonly slowedTurnsRemaining: number;
+	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
+	readonly confusedTurnsRemaining: number;
 };
 
 /**

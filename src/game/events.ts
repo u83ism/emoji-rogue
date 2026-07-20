@@ -48,6 +48,7 @@ export const ITEM_KIND_VALUES = [
 	"stealth-ring",
 	"awareness-ring",
 	"magic-missile-wand",
+	"confuse-monster-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -371,6 +372,11 @@ export type GameEvent =
 			/** A teleport wand forcibly relocating its target — see teleport.ts's applyEnemyTeleport. */
 			readonly type: "enemy-teleported";
 			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A confuse monster scroll — see advanceEnemies's confusedTurnsRemaining handling. */
+			readonly type: "enemy-confused";
+			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  };
 
 /**

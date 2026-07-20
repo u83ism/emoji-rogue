@@ -246,6 +246,10 @@ describe("formatEvent", () => {
 				{ type: "orc-gold-drop", payload: { amount: 7 } },
 				"オークが金貨を落とした!7ゴールド手に入れた",
 			],
+			[
+				{ type: "enemy-teleported", payload: { target: "zombie" } },
+				"杖の力でゾンビをどこかへ飛ばした!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

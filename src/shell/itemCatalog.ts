@@ -23,6 +23,7 @@ import {
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
+	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
 } from "../game/balance.js";
@@ -103,6 +104,13 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "杖",
 		spawn: { type: "chance", percent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
 		effect: `視界内の最も近い敵を${SLOW_WAND_DURATION}ターン行動不能にする。1回使い切り`,
+	},
+	"teleport-wand": {
+		catalogName: "テレポートの杖",
+		category: "杖",
+		spawn: { type: "chance", percent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT },
+		effect:
+			"視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。1回使い切り",
 	},
 	"regeneration-ring": {
 		catalogName: "再生の指輪",

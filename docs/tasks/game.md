@@ -313,6 +313,26 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン84完了(2026-07-20)。**
 
+## マイルストーン85 — テレポートの杖(3種類目の杖、敵を強制テレポートさせる)
+
+未反映ブランチの内容の再実装、第3弾(方針はマイルストーン83を参照)。原作Rogueの"wand of teleportation"に着想を得た、命中の杖・鈍足の杖に続く3種類目の杖。効果は視界内最近接の敵(既存の`findNearestVisibleEnemy`をそのまま再利用)をフロア内のランダムな床マスへ強制的にテレポートさせる——プレイヤー自身のテレポート(巻物・わな)で確立済みの移動先選定ロジック(`teleport.ts`の`collectTeleportTargets`、自分の座標・他の敵の座標を除外)をそのまま流用し、対象を敵に差し替えるだけの新規`applyEnemyTeleport`を追加する。対象は移動後に必ず覚醒する。視界内に敵がいなければ他の杖と同じ無効果(ターン消費なし・杖も消費しない)。既存の🔮・「杖」をそのまま共有する。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"teleport-wand"`を追加。`GameEvent`に`enemy-teleported`(payload: `target: EnemyKind`)を追加
+- [x] `src/game/balance.ts`: `TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8`(他の杖と同じ希少度)を追加
+- [x] `src/game/teleport.ts`: 新規`applyEnemyTeleport(state, target)`——`collectTeleportTargets`(既存)から乱数で1マス選び対象を移動、`awake: true`にし`enemy-teleported`を記録
+- [x] `src/game/items/wands.ts`: `applyUseTeleportWand(state)`——`findNearestVisibleEnemy`で対象を選び、無効果パターンは他の杖と同一
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "teleport-wand"`を追加(網羅switchのため追加漏れはコンパイルエラーになる)
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/shell/messages.ts`: `enemy-teleported`の文言(「杖の力で◯をどこかへ飛ばした!」)
+- [x] `src/game/format/validateGameState.ts`: `enemy-teleported`イベントの検証ケースを追加。`ItemKind`列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/teleport.test.ts`・`src/game/items/wands.test.ts`(のかわりに`teleport.test.ts`側にwand越しの結合テストを追加)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`format/validateGameState.test.ts`: 各パターンのテストを追加
+- [x] `src/game/floor/items.ts`が201行に達し行数ゲート(200行)に抵触したため、わな抽選ロジック(ダーツ確定湧き+落とし穴/テレポートの確率抽選)を新規`src/game/floor/traps.ts`の`drawFloorTraps`に切り出した(rng消費順は既存コードをそのまま移動しただけなので不変)。対応するテストも`floor/traps.test.ts`へ移設した
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界内の敵にテレポートの杖を使うと座標が変わり覚醒し`enemy-teleported`イベントが記録されること、視界内に敵がいなければ無効果であることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 836件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン85完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

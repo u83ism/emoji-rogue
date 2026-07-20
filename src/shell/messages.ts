@@ -177,5 +177,7 @@ export const formatEvent = (
 			return "クロンの風に吹き飛ばされた!";
 		case "orc-gold-drop":
 			return `オークが金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
+		case "enemy-teleported":
+			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
 	}
 };

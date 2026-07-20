@@ -43,6 +43,7 @@ export const ITEM_KIND_VALUES = [
 	"detect-monster",
 	"life",
 	"remove-curse-scroll",
+	"teleport-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -359,6 +360,11 @@ export type GameEvent =
 			/** An orc defeated by any means (melee or wand) drops a gold bonus on the spot — see combat.ts's applyEnemyHit. */
 			readonly type: "orc-gold-drop";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** A teleport wand forcibly relocating its target — see teleport.ts's applyEnemyTeleport. */
+			readonly type: "enemy-teleported";
+			readonly payload: { readonly target: EnemyKind };
 	  };
 
 /**

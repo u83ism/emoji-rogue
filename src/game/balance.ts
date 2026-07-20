@@ -334,6 +334,9 @@ export const WAND_STRIKE_DAMAGE = 3;
 /** Chance (out of 100), independently rolled per floor, that a wand spawns. */
 export const WAND_SPAWN_CHANCE_PERCENT = 8;
 
+/** Chance (out of 100), independently rolled per floor, that a teleport wand spawns — same rarity as the other wands. */
+export const TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

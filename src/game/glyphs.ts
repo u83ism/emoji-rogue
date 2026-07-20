@@ -93,6 +93,8 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"striking-wand": { glyph: "🪄" },
 	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */
 	"slow-wand": { glyph: "🪄" },
+	/* Same glyph again — every wand is just "a wand" on the ground. */
+	"teleport-wand": { glyph: "🪄" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };

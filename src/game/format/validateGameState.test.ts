@@ -672,6 +672,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed enemy-teleported event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-teleported", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-teleported", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed orc-gold-drop event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

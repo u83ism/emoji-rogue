@@ -3,6 +3,7 @@ import { SLOW_WAND_DURATION } from "../balance.js";
 import { applyWandStrike } from "../combat.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
+import { applyEnemyTeleport } from "../teleport.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
 
 /**
@@ -71,4 +72,16 @@ export const applyUseSlowWand = (state: GameState): GameState => {
 			},
 		]),
 	};
+};
+
+/**
+ * A teleport wand forcibly relocates the nearest visible enemy to a random
+ * floor tile and wakes it. Same no-visible-target no-op as the other wands.
+ */
+export const applyUseTeleportWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return applyEnemyTeleport(state, target);
 };

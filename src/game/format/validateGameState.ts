@@ -291,6 +291,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"curse-revealed": (payload) => isItemKind(payload.kind),
 	"items-decursed": (payload) => isPositiveInteger(payload.count),
 	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
+	"enemy-teleported": (payload) => isEnemyKind(payload.target),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

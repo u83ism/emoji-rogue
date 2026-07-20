@@ -14,7 +14,11 @@ import {
 	applyUseRemoveCurseScroll,
 	applyUseTeleportScroll,
 } from "./scrolls.js";
-import { applyUseSlowWand, applyUseStrikingWand } from "./wands.js";
+import {
+	applyUseSlowWand,
+	applyUseStrikingWand,
+	applyUseTeleportWand,
+} from "./wands.js";
 
 /**
  * The per-item effect. Deliberately exhaustive with no default: adding an
@@ -61,6 +65,8 @@ const applyItemEffect = (
 			return applyUseStrikingWand(state);
 		case "slow-wand":
 			return applyUseSlowWand(state);
+		case "teleport-wand":
+			return applyUseTeleportWand(state);
 		case "heal-potion":
 		case "poison":
 		case "strength":

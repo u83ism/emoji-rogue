@@ -46,6 +46,8 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"detect-monster": "索敵の薬",
 	life: "生命の薬",
 	"remove-curse-scroll": "解呪の巻物",
+	/* Same generic display name as the other wands — which effect it grants only shows once used. */
+	"teleport-wand": "杖",
 };
 
 /** Shown for any potion-family item not yet identified this run. */

@@ -11,6 +11,7 @@ import {
 	GOLD_AMOUNT_MIN,
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	ORC_SPAWN_CHANCE_PERCENT,
+	SNAKE_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
@@ -88,6 +89,10 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 		spawn: { type: "chance", percent: YETI_SPAWN_CHANCE_PERCENT },
 		behavior:
 			"頑丈だが低頻度に出現する近接アタッカー。オークとドラゴンの中間の強さ",
+	},
+	snake: {
+		spawn: { type: "chance", percent: SNAKE_SPAWN_CHANCE_PERCENT },
+		behavior: "HPは低いが噛みつきのダメージが高い近接アタッカー",
 	},
 };
 

@@ -97,6 +97,14 @@ export const YETI_ATTACK_DAMAGE = 3;
 export const YETI_ACTIONS_PER_TURN = 1;
 export const YETI_SPAWN_CHANCE_PERCENT = 15;
 
+// Low HP but a harder bite than zombie/bat — the balance point is the extra
+// damage offsetting how easily it dies. Independent per-floor spawn, no
+// depth scaling — same idiom as thief/nymph/aquator/orc/yeti.
+export const SNAKE_MAX_HP = 2;
+export const SNAKE_ATTACK_DAMAGE = 2;
+export const SNAKE_ACTIONS_PER_TURN = 1;
+export const SNAKE_SPAWN_CHANCE_PERCENT = 20;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -129,6 +137,7 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	orc: ORC_MAX_HP,
 	dragon: DRAGON_MAX_HP,
 	yeti: YETI_MAX_HP,
+	snake: SNAKE_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -139,6 +148,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	orc: ORC_ATTACK_DAMAGE,
 	dragon: DRAGON_ATTACK_DAMAGE,
 	yeti: YETI_ATTACK_DAMAGE,
+	snake: SNAKE_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -154,6 +164,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	orc: ORC_ACTIONS_PER_TURN,
 	dragon: DRAGON_ACTIONS_PER_TURN,
 	yeti: YETI_ACTIONS_PER_TURN,
+	snake: SNAKE_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -165,6 +176,7 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	orc: 3,
 	dragon: 6,
 	yeti: 4,
+	snake: 3,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

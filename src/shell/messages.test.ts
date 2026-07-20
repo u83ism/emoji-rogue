@@ -271,6 +271,13 @@ describe("formatEvent", () => {
 				{ type: "enemy-held", payload: { target: "zombie", turns: 5 } },
 				"束縛の巻物を読んだ。ゾンビの動きを封じた!",
 			],
+			[
+				{
+					type: "ring-equipped",
+					payload: { kind: "aggravate-monster-ring" },
+				},
+				"指輪を身につけた。敵の気配に気づかれてしまった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

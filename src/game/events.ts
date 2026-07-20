@@ -52,6 +52,7 @@ export const ITEM_KIND_VALUES = [
 	"confuse-monster-scroll",
 	"hallucination",
 	"hold-monster-scroll",
+	"aggravate-monster-ring",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -63,6 +64,7 @@ const EQUIPMENT_ITEM_KIND_VALUES = [
 	"sustenance-ring",
 	"stealth-ring",
 	"awareness-ring",
+	"aggravate-monster-ring",
 ] as const satisfies readonly ItemKind[];
 
 /** The equippable subset of ItemKind — held as a HeldItem with equip/curse state (see GameState.inventory). */

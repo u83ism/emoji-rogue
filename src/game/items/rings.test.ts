@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_MAX_HP } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import { hasEquippedRing } from "./rings.js";
+import { applyToggleRingEquip, hasEquippedRing } from "./rings.js";
 
 describe("items/rings", () => {
 	it("equipping a held regeneration ring flips its equipped flag and logs ring-equipped", () => {
@@ -174,6 +174,78 @@ describe("items/rings", () => {
 		expect(hasEquippedRing(next.inventory, "awareness-ring")).toBe(true);
 		expect(next.events).toEqual([
 			{ type: "ring-equipped", payload: { kind: "awareness-ring" } },
+		]);
+	});
+
+	it("equipping a ring of aggravate monster wakes every sleeping enemy on the floor at once", () => {
+		const asleepA = {
+			x: 6,
+			y: 1,
+			kind: "zombie" as const,
+			hp: 2,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const asleepB = {
+			x: 7,
+			y: 1,
+			kind: "bat" as const,
+			hp: 1,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [asleepA, asleepB],
+			inventory: [
+				{
+					itemId: 1,
+					kind: "aggravate-monster-ring" as const,
+					equipped: false,
+					cursed: false,
+				},
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.enemies.every((enemy) => enemy.awake)).toBe(true);
+		expect(next.events).toEqual([
+			{ type: "ring-equipped", payload: { kind: "aggravate-monster-ring" } },
+		]);
+	});
+
+	it("unequipping a ring of aggravate monster does not re-wake anything (one-time effect on equip only)", () => {
+		/* Calls applyToggleRingEquip directly — advanceTurn's use-item action
+		 * also runs a full enemy turn (advanceEnemies), which independently
+		 * rolls wake chances and would make this assertion flaky. */
+		const asleep = {
+			x: 6,
+			y: 1,
+			kind: "zombie" as const,
+			hp: 2,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const item = {
+			itemId: 1,
+			kind: "aggravate-monster-ring" as const,
+			equipped: true,
+			cursed: false,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [asleep],
+			inventory: [item],
+		};
+		const next = applyToggleRingEquip(state, item);
+		expect(next.enemies).toEqual([asleep]);
+		expect(next.events).toEqual([
+			{ type: "item-unequipped", payload: { kind: "aggravate-monster-ring" } },
 		]);
 	});
 

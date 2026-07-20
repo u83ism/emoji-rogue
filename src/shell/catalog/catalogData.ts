@@ -17,8 +17,8 @@ import {
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
 	YETI_SPAWN_CHANCE_PERCENT,
-} from "../game/balance.js";
-import type { EnemyKind, TrapKind } from "../game/events.js";
+} from "../../game/balance.js";
+import type { EnemyKind, TrapKind } from "../../game/events.js";
 
 // The enemy/trap half of docs/catalog.md's prose data (items live in
 // itemCatalog.ts). Numbers inside descriptions are ALWAYS interpolated from

@@ -10,7 +10,8 @@ type RingItem = Extract<
 			| "regeneration-ring"
 			| "sustenance-ring"
 			| "stealth-ring"
-			| "awareness-ring";
+			| "awareness-ring"
+			| "aggravate-monster-ring";
 	}
 >;
 
@@ -19,6 +20,7 @@ const RING_KINDS = [
 	"sustenance-ring",
 	"stealth-ring",
 	"awareness-ring",
+	"aggravate-monster-ring",
 ] as const;
 
 /** Whether a ring of `kind` is currently equipped — regeneration.ts/hunger.ts's turn-end ticks, enemies.ts's wake check, and frame.ts's detection check read this instead of a permanent flag. */
@@ -36,9 +38,12 @@ export const hasEquippedRing = (
 
 /**
  * Toggles a held ring's equip state. Only one ring can be equipped at a
- * time (regardless of regeneration/sustenance kind) — equipping unequips
- * whichever ring, of either kind, was equipped before. Same curse-reveal
- * and cursed-lock rules as swords/armor.
+ * time (regardless of kind) — equipping unequips whichever ring, of any
+ * kind, was equipped before. Same curse-reveal and cursed-lock rules as
+ * swords/armor. Equipping a ring of aggravate monster additionally wakes
+ * every enemy on the floor at once — its one-time "gotcha" effect (every
+ * other ring's effect is a continuous passive read elsewhere via
+ * hasEquippedRing, not something this toggle itself does).
  */
 export const applyToggleRingEquip = (
 	state: GameState,
@@ -75,5 +80,15 @@ export const applyToggleRingEquip = (
 	if (item.cursed) {
 		events.push({ type: "curse-revealed", payload: { kind: item.kind } });
 	}
-	return { ...state, inventory, events: buildEventLog(state.events, events) };
+	const next = {
+		...state,
+		inventory,
+		events: buildEventLog(state.events, events),
+	};
+	return item.kind === "aggravate-monster-ring"
+		? {
+				...next,
+				enemies: next.enemies.map((enemy) => ({ ...enemy, awake: true })),
+			}
+		: next;
 };

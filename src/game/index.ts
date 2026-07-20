@@ -5,7 +5,7 @@
 // internals or past it into the shell-facing i18n module.
 
 export type { Cell } from "../renderer/index.js";
-export { buildCatalogMarkdown } from "../shell/catalog.js";
+export { buildCatalogMarkdown } from "../shell/catalog/catalog.js";
 export { resolveItemDisplayName } from "../shell/gameNames.js";
 export {
 	formatHeldItemLabel,

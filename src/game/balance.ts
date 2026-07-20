@@ -350,6 +350,9 @@ export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
 /** Chance (out of 100), independently rolled per floor, that a ring of awareness spawns. */
 export const AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8;
 
+/** Chance (out of 100), independently rolled per floor, that a ring of aggravate monster spawns — the first ring with a downside rather than a benefit. */
+export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
+
 /**
  * Permanent boost to a targeted sword's own attackBonus per scroll read
  * (see items/scrolls.ts — the player picks which held sword, equipped or

@@ -21,8 +21,8 @@ import {
 	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_ATTACK_BONUS,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
-} from "../game/balance.js";
-import type { PotionKind } from "../game/events.js";
+} from "../../game/balance.js";
+import type { PotionKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
 
 // The potion rows of the item catalog — composed into ITEM_CATALOG in

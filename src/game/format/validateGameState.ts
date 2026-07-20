@@ -553,6 +553,7 @@ export const validateGameState = (
 				case "sustenance-ring":
 				case "stealth-ring":
 				case "awareness-ring":
+				case "aggravate-monster-ring":
 					return {
 						...position,
 						kind: item.kind,

@@ -88,7 +88,8 @@ type RingIdentity = Omit<
 				| "regeneration-ring"
 				| "sustenance-ring"
 				| "stealth-ring"
-				| "awareness-ring";
+				| "awareness-ring"
+				| "aggravate-monster-ring";
 		}
 	>,
 	"kind" | "equipped"
@@ -114,7 +115,8 @@ export type Item = Position &
 					| "regeneration-ring"
 					| "sustenance-ring"
 					| "stealth-ring"
-					| "awareness-ring";
+					| "awareness-ring"
+					| "aggravate-monster-ring";
 				readonly identity: RingIdentity;
 		  }
 	);
@@ -160,7 +162,8 @@ export type HeldItem =
 				| "regeneration-ring"
 				| "sustenance-ring"
 				| "stealth-ring"
-				| "awareness-ring";
+				| "awareness-ring"
+				| "aggravate-monster-ring";
 			readonly equipped: boolean;
 			readonly cursed: boolean;
 	  };

@@ -59,6 +59,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"confuse-monster-scroll": "混乱の巻物",
 	hallucination: "幻覚の薬",
 	"hold-monster-scroll": "束縛の巻物",
+	"aggravate-monster-ring": "指輪",
 };
 
 /**
@@ -75,6 +76,7 @@ export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
 		"sustenance-ring": "空腹の進みがゆるやかになった!",
 		"stealth-ring": "足音が忍びやかになった!",
 		"awareness-ring": "敵の気配を常に感じ取れるようになった!",
+		"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
 	};
 
 /** Shown for any potion-family item not yet identified this run. */

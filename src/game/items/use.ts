@@ -51,6 +51,7 @@ const applyItemEffect = (
 		case "sustenance-ring":
 		case "stealth-ring":
 		case "awareness-ring":
+		case "aggravate-monster-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state, targetItemId);

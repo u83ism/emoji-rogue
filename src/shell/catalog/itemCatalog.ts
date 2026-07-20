@@ -2,7 +2,6 @@ import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_DEFENSE_BONUS,
 	ARMOR_SPAWN_CHANCE_PERCENT,
-	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	CONFUSE_MONSTER_SCROLL_DURATION,
 	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
@@ -19,35 +18,29 @@ import {
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
-	RING_CURSE_CHANCE_PERCENT,
-	RING_REGEN_CHANCE_PERCENT,
-	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
-	STEALTH_RING_SPAWN_CHANCE_PERCENT,
-	STEALTH_RING_WAKE_CHANCE_PERCENT,
-	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
-	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
-	WAKE_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
-} from "../game/balance.js";
-import type { ItemKind } from "../game/events.js";
+} from "../../game/balance.js";
+import type { ItemKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
 import { POTION_CATALOG } from "./potionCatalog.js";
+import { RING_CATALOG } from "./ringCatalog.js";
 
-// The non-potion rows of the item catalog, composed with POTION_CATALOG into
-// the full Record<ItemKind, ...> — the annotation makes a kind missing from
-// both halves a compile error. Same rules as catalogData.ts: numbers always
-// interpolated from balance.ts.
+// The scroll/wand/sword/armor/food rows of the item catalog, composed with
+// POTION_CATALOG and RING_CATALOG into the full Record<ItemKind, ...> — the
+// annotation makes a kind missing from any of the three a compile error.
+// Same rules as catalogData.ts: numbers always interpolated from balance.ts.
 
 export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 	...POTION_CATALOG,
+	...RING_CATALOG,
 	"teleport-scroll": {
 		catalogName: "テレポートの巻物",
 		category: "巻物",
@@ -148,30 +141,6 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			percent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 		},
 		effect: `視界内の最も近い敵に${MAGIC_MISSILE_WAND_DAMAGE}ダメージ(攻撃の杖より高威力・低頻度)。1回使い切り`,
-	},
-	"regeneration-ring": {
-		catalogName: "再生の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${RING_REGEN_CHANCE_PERCENT}%でHPが1回復する(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
-	},
-	"sustenance-ring": {
-		catalogName: "満腹の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT}%で空腹の進行が止まる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
-	},
-	"stealth-ring": {
-		catalogName: "隠密の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
-	},
-	"awareness-ring": {
-		catalogName: "千里眼の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: AWARENESS_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、視界外・未探索領域を含め常に敵の位置を感知する(索敵の薬の恒久版、外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
 	},
 	sword: {
 		catalogName: "剣",

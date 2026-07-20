@@ -506,6 +506,26 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン94完了(2026-07-20)。**
 
+## マイルストーン95 — 警報の指輪(5種類目の指輪、装備した瞬間にフロア中の敵を起こす「はずれ」枠)
+
+未反映ブランチの内容の再実装、第13弾(方針はマイルストーン83を参照)。原作Rogueの"ring of aggravate monster"に着想を得た、再生・満腹・隠密・千里眼に続く5種類目の指輪。これまでの4種はいずれも装備中ずっと効き続ける継続効果(`hasEquippedRing`での都度参照)だったが、これは初めて**装備した瞬間の一度きりの効果**(そのフロアの全敵を強制的に覚醒させる)を持つ指輪——新規の`GameState`フィールドは不要(`state.enemies`を直接書き換えるだけ)。原作でも「はずれ」指輪の代表格であり、指輪という枠組みに初めて「良い効果とは限らない」というリスクを持ち込む。
+
+- [x] `src/game/events.ts`: `ItemKind`/`EQUIPMENT_ITEM_KIND_VALUES`に`"aggravate-monster-ring"`を追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: 指輪バリアントのkind unionに`"aggravate-monster-ring"`を追加(5種目)
+- [x] `src/game/balance.ts`: `AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8`を追加
+- [x] `src/game/items/rings.ts`: `RingItem`型・`RING_KINDS`を5種に拡張。`applyToggleRingEquip`に`item.kind === "aggravate-monster-ring"`の一箇所だけの特別分岐(既存4種の継続効果とは異なり、装備した瞬間に`state.enemies`を全て`awake: true`へ書き換える一度きりの効果)を追加——恒久フラグ方式ではない現行アーキテクチャでは唯一の「equip自体に副作用を持つ指輪」
+- [x] `src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/items/use.ts`・`src/game/format/validateGameState.ts`: 指輪5種を扱う各所に`"aggravate-monster-ring"`のcase/型を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/gameNames.ts`: `RING_EQUIPPED_EFFECT`に`"aggravate-monster-ring": "敵の気配に気づかれてしまった!"`を追加(既存のルックアップテーブルに1エントリ足すだけ、`messages.ts`側の変更は不要)
+- [x] `src/shell/itemCatalog.ts`: 実装中に205行に達し行数ゲート(200行)に抵触したため、指輪5種のカタログエントリを新規`src/shell/catalog/ringCatalog.ts`に切り出した(`potionCatalog.ts`と同じ「カテゴリ別に分割してItemCatalogへcomposeする」パターン)
+- [x] **`src/shell/`フォルダが16ファイルに達し構造lintのフォルダ上限(15)に抵触**——`file-structure.md`の規律どおりAIが単独で分割・正当化はせず、ユーザーに提案の上で承認を得た。カタログ生成に関わる5ファイル(`catalog.ts`・`catalogData.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`、および各テスト)を新設`src/shell/catalog/`サブフォルダへ移動し、`src/shell/`は11ファイルに削減。相対import(`../game/...`→`../../game/...`、`./gameNames.js`→`../gameNames.js`)と`src/game/index.ts`の再公開パスを追従修正した
+- [x] `src/game/items/rings.test.ts`(装備した瞬間に全敵が覚醒すること、解除時には再度起こさないことを含む——後者は`advanceTurn`経由だと同ターンの`advanceEnemies`が別途目覚め判定を回してテストが不安定になるため`applyToggleRingEquip`を直接呼ぶ形にした)・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`・`src/game/items/pickups.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、眠っている敵がいる状態で警報の指輪を装備すると全敵が`awake: true`になり`ring-equipped`イベントが記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 872件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン95完了(2026-07-21)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

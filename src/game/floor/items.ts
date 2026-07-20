@@ -1,5 +1,6 @@
 import type { Rng } from "../../rng.js";
 import {
+	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	ARMOR_SPAWN_CHANCE_PERCENT,
 	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	BLIND_POTION_SPAWN_CHANCE_PERCENT,
@@ -123,6 +124,10 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 	{
 		kind: "hold-monster-scroll",
 		chancePercent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "aggravate-monster-ring",
+		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	},
 ];
 

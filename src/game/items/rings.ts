@@ -5,15 +5,19 @@ import { replaceHeldItem } from "./inventory.js";
 
 type RingItem = Extract<
 	HeldItem,
-	{ kind: "regeneration-ring" | "sustenance-ring" }
+	{ kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring" }
 >;
 
-const RING_KINDS = ["regeneration-ring", "sustenance-ring"] as const;
+const RING_KINDS = [
+	"regeneration-ring",
+	"sustenance-ring",
+	"stealth-ring",
+] as const;
 
-/** Whether a ring of `kind` is currently equipped — regeneration.ts and hunger.ts's turn-end ticks read this instead of a permanent flag. */
+/** Whether a ring of `kind` is currently equipped — regeneration.ts/hunger.ts's turn-end ticks and enemies.ts's wake check read this instead of a permanent flag. */
 export const hasEquippedRing = (
 	inventory: readonly HeldItem[],
-	kind: "regeneration-ring" | "sustenance-ring",
+	kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring",
 ): boolean =>
 	inventory.some(
 		(item) => item.kind === kind && "equipped" in item && item.equipped,

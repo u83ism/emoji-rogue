@@ -44,6 +44,7 @@ export const ITEM_KIND_VALUES = [
 	"life",
 	"remove-curse-scroll",
 	"teleport-wand",
+	"stealth-ring",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -53,6 +54,7 @@ const EQUIPMENT_ITEM_KIND_VALUES = [
 	"armor",
 	"regeneration-ring",
 	"sustenance-ring",
+	"stealth-ring",
 ] as const satisfies readonly ItemKind[];
 
 /** The equippable subset of ItemKind — held as a HeldItem with equip/curse state (see GameState.inventory). */

@@ -33,6 +33,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 			};
 		case "regeneration-ring":
 		case "sustenance-ring":
+		case "stealth-ring":
 			return {
 				...position,
 				kind: item.kind,

@@ -35,7 +35,11 @@ const buildFullInventory = (): readonly HeldItem[] =>
 				rustProtected: false,
 			};
 		}
-		if (kind === "regeneration-ring" || kind === "sustenance-ring") {
+		if (
+			kind === "regeneration-ring" ||
+			kind === "sustenance-ring" ||
+			kind === "stealth-ring"
+		) {
 			return { itemId, kind, equipped: false, cursed: false };
 		}
 		return { itemId, kind };

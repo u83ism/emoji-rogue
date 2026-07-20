@@ -18,12 +18,15 @@ import {
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
+	STEALTH_RING_SPAWN_CHANCE_PERCENT,
+	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_ATTACK_BONUS,
 	SWORD_CURSE_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
+	WAKE_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
 } from "../game/balance.js";
@@ -123,6 +126,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "指輪",
 		spawn: { type: "chance", percent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT },
 		effect: `装備している間、毎ターン${SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT}%で空腹の進行が止まる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
+	},
+	"stealth-ring": {
+		catalogName: "隠密の指輪",
+		category: "指輪",
+		spawn: { type: "chance", percent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
+		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
 	},
 	sword: {
 		catalogName: "剣",

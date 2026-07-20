@@ -23,6 +23,7 @@ import {
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
+	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
@@ -97,6 +98,7 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "teleport-wand",
 		chancePercent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	},
+	{ kind: "stealth-ring", chancePercent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
 ];
 
 /** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */

@@ -250,6 +250,10 @@ describe("formatEvent", () => {
 				{ type: "enemy-teleported", payload: { target: "zombie" } },
 				"杖の力でゾンビをどこかへ飛ばした!",
 			],
+			[
+				{ type: "ring-equipped", payload: { kind: "stealth-ring" } },
+				"指輪を身につけた。足音が忍びやかになった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

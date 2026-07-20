@@ -333,6 +333,28 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン85完了(2026-07-20)。**
 
+## マイルストーン86 — 隠密の指輪(3種類目の指輪、敵の目覚め確率を下げる)
+
+未反映ブランチの内容の再実装、第4弾(方針はマイルストーン83を参照)。原作Rogueの"ring of stealth"に着想を得た、再生の指輪・満腹の指輪に続く3種類目の指輪。効果は`advanceEnemies`の`WAKE_CHANCE_PERCENT`毎ターン判定を、装備中は`STEALTH_RING_WAKE_CHANCE_PERCENT`(約半分)に差し替えるだけ。
+
+元ブランチはこの効果を`GameState.hasRingOfStealth`という恒久フラグで実装していたが、現行developの指輪は装備システム(マイルストーン81)導入後、`inventory`内の`HeldItem`の`equipped`を`hasEquippedRing(inventory, kind)`で都度読む方式に変わっており、恒久フラグという概念自体が存在しない——効果側の実装は「読み出し箇所(`enemies.ts`の目覚め判定)で`hasEquippedRing`を呼ぶだけ」に単純化された。新規`GameState`フィールドが不要なため、元ブランチでは必要だった`SAVE_FORMAT_VERSION`の更新も不要。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"stealth-ring"`を追加し`EQUIPMENT_ITEM_KIND_VALUES`にも追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: `HeldItem`・`Item`の指輪バリアントのkind unionに`"stealth-ring"`を追加(`RingIdentity`は既存の`{itemId, cursed}`のまま、追加フィールド不要)
+- [x] `src/game/balance.ts`: `STEALTH_RING_SPAWN_CHANCE_PERCENT = 8`・`STEALTH_RING_WAKE_CHANCE_PERCENT = 15`(`WAKE_CHANCE_PERCENT`(33)の約半分)を追加
+- [x] `src/game/items/rings.ts`: `RingItem`型・`RING_KINDS`・`hasEquippedRing`の対象kindを3種に拡張(`applyToggleRingEquip`自体はkind非依存のため無改造)
+- [x] `src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/format/validateGameState.ts`: 指輪3種を扱う各switchに`"stealth-ring"`のcaseを追加(いずれも`identity`の組み立てが既存2種と同一パターン)
+- [x] `src/game/items/use.ts`: `applyItemEffect`の指輪ケースに`"stealth-ring"`を追加
+- [x] `src/game/enemies.ts`: `advanceEnemies`の目覚め判定で`hasEquippedRing(inventory, "stealth-ring") ? STEALTH_RING_WAKE_CHANCE_PERCENT : WAKE_CHANCE_PERCENT`を参照するよう変更(kind別分岐ではなく状態依存の数値差し替えのみ)
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/messages.ts`: `ring-equipped`の2値ternaryを3分岐if-chainに変更(`functional-style.md`の許容上限どおり——4種類目(マイルストーン87)でルックアップテーブルへの切り替えが必要になる見込み)
+- [x] `src/game/items/rings.test.ts`・`src/game/enemies.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`: 各パターンのテストを追加。`enemies.test.ts`には特定seedに頼らない構造的性質のテスト(「同じ乱数列に対し隠密の指輪の閾値のほうが目覚めにくい、またはタイ」を200 seed分検証)を追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、隠密の指輪を装備すると`equipped`が立ち`ring-equipped`イベントが記録されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 838件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン86完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

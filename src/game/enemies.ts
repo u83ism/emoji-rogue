@@ -5,6 +5,7 @@ import {
 	ENEMY_ACTIONS_PER_TURN,
 	ENEMY_ATTACK_DAMAGE,
 	MIN_DAMAGE_TAKEN,
+	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	THIEF_STEAL_AMOUNT,
 	WAKE_CHANCE_PERCENT,
 } from "./balance.js";
@@ -17,6 +18,7 @@ import {
 	canRustEquippedArmor,
 } from "./items/equipment.js";
 import { removeHeldItemAtIndex } from "./items/inventory.js";
+import { hasEquippedRing } from "./items/rings.js";
 import type { Enemy, GameState, HeldItem, Position } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
@@ -84,9 +86,12 @@ export const advanceEnemies = (state: GameState): GameState => {
 			(isAdjacent(enemy, state.player) ||
 				visiblePoints.has(encodePointKey(enemy.x, enemy.y)))
 		) {
+			const wakeChancePercent = hasEquippedRing(inventory, "stealth-ring")
+				? STEALTH_RING_WAKE_CHANCE_PERCENT
+				: WAKE_CHANCE_PERCENT;
 			const roll = stepUniform(rng);
 			rng = roll.state;
-			awake = roll.value < WAKE_CHANCE_PERCENT / 100;
+			awake = roll.value < wakeChancePercent / 100;
 		}
 		if (!awake) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));

@@ -652,4 +652,36 @@ describe("advanceEnemies", () => {
 		); /* no attack despite adjacency */
 		expect(next.events).toEqual([]);
 	});
+
+	/*
+	 * A structural property that holds for any rng stream, not just a lucky
+	 * seed: STEALTH_RING_WAKE_CHANCE_PERCENT < WAKE_CHANCE_PERCENT, so
+	 * `roll.value < stealth/100` implies `roll.value < normal/100` — whenever
+	 * an equipped stealth ring's lower threshold wakes a sleeping enemy, the
+	 * unringed (higher-threshold) run on the exact same rng stream must also
+	 * wake it.
+	 */
+	it("an equipped stealth ring only ever lowers (never raises) the wake chance, for every seed", () => {
+		const stealthRing: HeldItem = {
+			itemId: 1,
+			kind: "stealth-ring",
+			equipped: true,
+			cursed: false,
+		};
+		for (let seed = 0; seed < 200; seed++) {
+			const base = {
+				...buildArenaGameState(9, 3, 1),
+				rng: seedToState(seed),
+				enemies: [zombie(5, 1, false)],
+			};
+			const withRing = advanceEnemies({
+				...base,
+				inventory: [stealthRing],
+			});
+			if (withRing.enemies[0]?.awake) {
+				const withoutRing = advanceEnemies({ ...base, inventory: [] });
+				expect(withoutRing.enemies[0]?.awake).toBe(true);
+			}
+		}
+	});
 });

@@ -307,6 +307,14 @@ export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
  */
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 
+/** Chance (out of 100), independently rolled per floor, that a ring of stealth spawns. */
+export const STEALTH_RING_SPAWN_CHANCE_PERCENT = 8;
+/**
+ * Replaces WAKE_CHANCE_PERCENT (33) while a ring of stealth is equipped —
+ * roughly half, see enemies.ts's advanceEnemies.
+ */
+export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
+
 /**
  * Permanent boost to a targeted sword's own attackBonus per scroll read
  * (see items/scrolls.ts — the player picks which held sword, equipped or

@@ -79,7 +79,10 @@ type ArmorIdentity = Omit<
 	"kind" | "equipped"
 >;
 type RingIdentity = Omit<
-	Extract<HeldItem, { kind: "regeneration-ring" | "sustenance-ring" }>,
+	Extract<
+		HeldItem,
+		{ kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring" }
+	>,
 	"kind" | "equipped"
 >;
 
@@ -99,7 +102,7 @@ export type Item = Position &
 		| { readonly kind: "sword"; readonly identity: SwordIdentity }
 		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
 		| {
-				readonly kind: "regeneration-ring" | "sustenance-ring";
+				readonly kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring";
 				readonly identity: RingIdentity;
 		  }
 	);
@@ -141,7 +144,7 @@ export type HeldItem =
 	  }
 	| {
 			readonly itemId: number;
-			readonly kind: "regeneration-ring" | "sustenance-ring";
+			readonly kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring";
 			readonly equipped: boolean;
 			readonly cursed: boolean;
 	  };

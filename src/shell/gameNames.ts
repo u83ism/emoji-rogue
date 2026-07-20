@@ -48,6 +48,8 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"remove-curse-scroll": "解呪の巻物",
 	/* Same generic display name as the other wands — which effect it grants only shows once used. */
 	"teleport-wand": "杖",
+	/* Same generic display name as the other rings — which effect it grants only shows once worn. */
+	"stealth-ring": "指輪",
 };
 
 /** Shown for any potion-family item not yet identified this run. */

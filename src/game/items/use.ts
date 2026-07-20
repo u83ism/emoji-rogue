@@ -44,6 +44,7 @@ const applyItemEffect = (
 			return applyToggleArmorEquip(state, item);
 		case "regeneration-ring":
 		case "sustenance-ring":
+		case "stealth-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state, targetItemId);

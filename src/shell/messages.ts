@@ -130,9 +130,13 @@ export const formatEvent = (
 				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を盗まれた!`
 				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
 		case "ring-equipped":
-			return event.payload.kind === "sustenance-ring"
-				? `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`
-				: `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
+			if (event.payload.kind === "sustenance-ring") {
+				return `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`;
+			}
+			if (event.payload.kind === "stealth-ring") {
+				return `${ITEM_NAMES[event.payload.kind]}を身につけた。足音が忍びやかになった!`;
+			}
+			return `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
 		case "weapon-enchanted":

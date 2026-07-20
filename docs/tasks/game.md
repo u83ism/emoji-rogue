@@ -388,6 +388,24 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン88完了(2026-07-20)。**
 
+## マイルストーン89 — 魔法の矢の杖(4種類目の杖、命中の杖より高威力・低頻度)
+
+未反映ブランチの内容の再実装、第7弾(方針はマイルストーン83を参照)。原作Rogueの"wand of magic missile"に着想を得た、命中の杖・鈍足の杖・テレポートの杖に続く4種類目の杖。効果は命中の杖と同じ(視界内最近接の敵に固定ダメージ、不意打ち倍率なし)だが、ダメージが高い代わりに出現率が低い。既存の`wand-struck`イベントをそのまま再利用する(新規イベント不要)。`combat.ts`の`applyWandStrike`(固定`WAND_STRIKE_DAMAGE`)には手を入れず、共有コア`applyEnemyHit`を使う新規`applyMagicMissileWandStrike`を並べて追加するだけに留める。
+
+- [x] `src/game/events.ts`: `ItemKind`に`"magic-missile-wand"`を追加(新規`GameEvent`は不要——既存の`wand-struck`をそのまま再利用)
+- [x] `src/game/balance.ts`: `MAGIC_MISSILE_WAND_DAMAGE = 5`(`WAND_STRIKE_DAMAGE`の3より高い)・`MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6`(`WAND_SPAWN_CHANCE_PERCENT`の8より低い)を追加
+- [x] `src/game/combat.ts`: `applyMagicMissileWandStrike(state, target)`(`applyWandStrike`と同型、`applyEnemyHit`を`MAGIC_MISSILE_WAND_DAMAGE`で呼ぶだけ)を追加
+- [x] `src/game/items/wands.ts`: `applyUseMagicMissileWand(state)`——`findNearestVisibleEnemy`で対象を選ぶ、他の杖と同じ無効果パターン
+- [x] `src/game/items/use.ts`: `applyItemEffect`に`case "magic-missile-wand"`を追加
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の杖と同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(新規イベントなし、`ItemKind`は自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/combat.test.ts`・`src/game/items/wands.test.ts`・`src/game/floor/items.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、魔法の矢の杖が視界内最近接の敵に`MAGIC_MISSILE_WAND_DAMAGE`(5)のダメージを与えることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 844件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン89完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

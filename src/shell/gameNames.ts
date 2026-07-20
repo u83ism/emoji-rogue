@@ -52,6 +52,8 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	/* Same generic display name as the other rings — which effect it grants only shows once worn. */
 	"stealth-ring": "指輪",
 	"awareness-ring": "指輪",
+	/* Same generic display name as the other wands — which effect it grants only shows once used. */
+	"magic-missile-wand": "杖",
 };
 
 /**

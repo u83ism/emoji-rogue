@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import {
+	MAGIC_MISSILE_WAND_DAMAGE,
 	SLOW_WAND_DURATION,
 	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
@@ -100,6 +101,41 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next).toBe(state);
+	});
+
+	it("using a held magic missile wand deals MAGIC_MISSILE_WAND_DAMAGE to the nearest visible (non-adjacent) enemy", () => {
+		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [target],
+			inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.player).toEqual(state.player); /* the player does not move */
+		expect(next.enemies).toEqual([]);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
+			},
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
+	});
+
+	it("using a held magic missile wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

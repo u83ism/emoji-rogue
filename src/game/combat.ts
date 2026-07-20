@@ -3,6 +3,7 @@ import {
 	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
+	MAGIC_MISSILE_WAND_DAMAGE,
 	SNEAK_ATTACK_MULTIPLIER,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
@@ -114,4 +115,18 @@ export const applyWandStrike = (state: GameState, target: Enemy): GameState =>
 	applyEnemyHit(state, target, WAND_STRIKE_DAMAGE, {
 		type: "wand-struck",
 		payload: { target: target.kind, damage: WAND_STRIKE_DAMAGE },
+	});
+
+/**
+ * A wand of magic missile's fixed-damage ranged hit — same shape as
+ * applyWandStrike (shared applyEnemyHit core, no sneak-attack multiplier),
+ * just a higher flat MAGIC_MISSILE_WAND_DAMAGE.
+ */
+export const applyMagicMissileWandStrike = (
+	state: GameState,
+	target: Enemy,
+): GameState =>
+	applyEnemyHit(state, target, MAGIC_MISSILE_WAND_DAMAGE, {
+		type: "wand-struck",
+		payload: { target: target.kind, damage: MAGIC_MISSILE_WAND_DAMAGE },
 	});

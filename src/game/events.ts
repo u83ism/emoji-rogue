@@ -47,6 +47,7 @@ export const ITEM_KIND_VALUES = [
 	"teleport-wand",
 	"stealth-ring",
 	"awareness-ring",
+	"magic-missile-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];

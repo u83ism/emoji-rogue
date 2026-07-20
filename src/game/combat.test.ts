@@ -3,11 +3,17 @@ import {
 	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
+	MAGIC_MISSILE_WAND_DAMAGE,
 	ORC_MAX_HP,
 	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
-import { applyPlayerAttack, applyWandStrike, isAdjacent } from "./combat.js";
+import {
+	applyMagicMissileWandStrike,
+	applyPlayerAttack,
+	applyWandStrike,
+	isAdjacent,
+} from "./combat.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy } from "./state.js";
 
@@ -260,6 +266,44 @@ describe("orc gold drop", () => {
 		const target = orc(5, 4);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.goldCollected).toBe(state.goldCollected);
+	});
+});
+
+describe("applyMagicMissileWandStrike", () => {
+	const state = buildArenaGameState(9, 9, 1);
+
+	it("deals a fixed MAGIC_MISSILE_WAND_DAMAGE, higher than WAND_STRIKE_DAMAGE, and logs wand-struck", () => {
+		expect(MAGIC_MISSILE_WAND_DAMAGE).toBeGreaterThan(WAND_STRIKE_DAMAGE);
+		const target = zombie(5, 4, 10);
+		const next = applyMagicMissileWandStrike(
+			{ ...state, enemies: [target] },
+			target,
+		);
+		expect(next.enemies).toEqual([
+			zombie(5, 4, 10 - MAGIC_MISSILE_WAND_DAMAGE),
+		]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
+			},
+		]);
+	});
+
+	it("removes a target whose hp reaches zero and logs the defeat", () => {
+		const target = zombie(5, 4, MAGIC_MISSILE_WAND_DAMAGE);
+		const next = applyMagicMissileWandStrike(
+			{ ...state, enemies: [target] },
+			target,
+		);
+		expect(next.enemies).toEqual([]);
+		expect(next.events).toEqual([
+			{
+				type: "wand-struck",
+				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
+			},
+			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		]);
 	});
 });
 

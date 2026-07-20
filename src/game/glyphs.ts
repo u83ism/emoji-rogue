@@ -100,6 +100,8 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	/* Same glyph as the other rings — every ring is just "a ring" on the ground. */
 	"stealth-ring": { glyph: "💍" },
 	"awareness-ring": { glyph: "💍" },
+	/* Same glyph again — every wand is just "a wand" on the ground. */
+	"magic-missile-wand": { glyph: "🪄" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };

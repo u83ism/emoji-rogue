@@ -360,6 +360,11 @@ export const WAND_SPAWN_CHANCE_PERCENT = 8;
 /** Chance (out of 100), independently rolled per floor, that a teleport wand spawns — same rarity as the other wands. */
 export const TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8;
 
+/** Fixed ranged damage a wand of magic missile deals — higher than WAND_STRIKE_DAMAGE, offset by a lower spawn chance. */
+export const MAGIC_MISSILE_WAND_DAMAGE = 5;
+/** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns — lower than WAND_SPAWN_CHANCE_PERCENT. */
+export const MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6;
+
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */

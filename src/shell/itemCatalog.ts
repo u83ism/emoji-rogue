@@ -10,6 +10,8 @@ import {
 	FOOD_COUNT_PER_FLOOR,
 	FOOD_RATION_RESTORE_AMOUNT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
+	MAGIC_MISSILE_WAND_DAMAGE,
+	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -115,6 +117,15 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: { type: "chance", percent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT },
 		effect:
 			"視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。1回使い切り",
+	},
+	"magic-missile-wand": {
+		catalogName: "魔法の矢の杖",
+		category: "杖",
+		spawn: {
+			type: "chance",
+			percent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
+		},
+		effect: `視界内の最も近い敵に${MAGIC_MISSILE_WAND_DAMAGE}ダメージ(攻撃の杖より高威力・低頻度)。1回使い切り`,
 	},
 	"regeneration-ring": {
 		catalogName: "再生の指輪",

@@ -1,6 +1,6 @@
 import { encodePointKey } from "../../pointkey.js";
 import { SLOW_WAND_DURATION } from "../balance.js";
-import { applyWandStrike } from "../combat.js";
+import { applyMagicMissileWandStrike, applyWandStrike } from "../combat.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
 import { applyEnemyTeleport } from "../teleport.js";
@@ -84,4 +84,16 @@ export const applyUseTeleportWand = (state: GameState): GameState => {
 		return state;
 	}
 	return applyEnemyTeleport(state, target);
+};
+
+/**
+ * A magic missile wand hits the nearest visible enemy for flat
+ * MAGIC_MISSILE_WAND_DAMAGE — same no-visible-target no-op as the other wands.
+ */
+export const applyUseMagicMissileWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return applyMagicMissileWandStrike(state, target);
 };

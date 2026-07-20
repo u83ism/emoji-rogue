@@ -297,6 +297,22 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン83完了(2026-07-20)。**
 
+## マイルストーン84 — ドラゴン(希少な最強格の近接アタッカー)
+
+未反映ブランチの内容の再実装、第2弾(方針はマイルストーン83を参照)。原作Rogueのドラゴン(Dragon)に着想を得た、既存のどの敵よりも頑丈で攻撃力も高い、ボス格の近接アタッカーを追加する。特殊能力は持たせない——ゾンビ・コウモリ・オークが`ENEMY_ACTIONS_PER_TURN`等のテーブルの数値差だけで、`advanceEnemies`に専用分岐を持たないのと同じ「パラメータだけで差別化する」パターンをドラゴンにも踏襲する。深さスケーリングはせず盗賊・ニンフ・アクエーター・オークと同じ独立per-floor抽選だが、出現率は指輪・杖と同等の低頻度(希少)にする。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"dragon"`を追加(新規`GameEvent`は不要——既存の`enemy-hit`/`enemy-defeated`/`sneak-attack`/`wand-struck`/`player-hit`/`player-died`がすべて`EnemyKind`をpayloadに持つ汎用イベントなのでそのまま横展開される)
+- [x] `src/game/balance.ts`: `DRAGON_MAX_HP = 8`・`DRAGON_ATTACK_DAMAGE = 4`・`DRAGON_ACTIONS_PER_TURN = 1`・`DRAGON_SPAWN_CHANCE_PERCENT = 8`(希少)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`dragon`のエントリを追加(経験値6、アクエーターの3を上回る)
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(`isEnemyKind`は`ENEMY_KIND_VALUES`から自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/format/validateGameState.test.ts`: 「存在しない敵種」の無効値プレースホルダとして`"dragon"`を使っていた4箇所(enemies配列・enemy-slowed・wand-struck・sneak-attackの各イベント検証)が、`"dragon"`の実装により意図せず正当な値になり偽陽性で落ちるところだった——元ブランチのマイルストーン65が同じ理由で踏んだ落とし穴と同一なので、同じ対処(未実装のまま残る原作Rogueモンスター`"griffin"`に差し替え)を先回りして適用した
+- [x] `src/game/combat.test.ts`・`src/game/floor/enemies.test.ts`: 経験値がアクエーターより高いこと、スポーンテーブルへの参加を確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、ドラゴンを`advanceTurn`のバンプ攻撃で撃破でき、経験値6(アクエーター撃破の3を上回る)が入ることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 830件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン84完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

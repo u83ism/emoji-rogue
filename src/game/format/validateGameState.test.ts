@@ -156,7 +156,7 @@ describe("validateGameState", () => {
 			throw new Error("unreachable: the dungeon state spawns enemies");
 		}
 		expectRejected(
-			{ ...valid, enemies: [{ ...enemies[0], kind: "dragon" }] },
+			{ ...valid, enemies: [{ ...enemies[0], kind: "griffin" }] },
 			"enemies",
 		);
 		expectRejected(
@@ -391,7 +391,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-slowed", payload: { target: "dragon", turns: 5 } },
+					{ type: "enemy-slowed", payload: { target: "griffin", turns: 5 } },
 				],
 			},
 			"events",
@@ -656,7 +656,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "wand-struck", payload: { target: "dragon", damage: 3 } },
+					{ type: "wand-struck", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",
@@ -754,7 +754,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "sneak-attack", payload: { target: "dragon", damage: 3 } },
+					{ type: "sneak-attack", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",

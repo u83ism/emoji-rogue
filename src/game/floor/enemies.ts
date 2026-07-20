@@ -4,6 +4,7 @@ import type { Rng } from "../../rng.js";
 import {
 	AQUATOR_SPAWN_CHANCE_PERCENT,
 	calculateEnemyCountForFloor,
+	DRAGON_SPAWN_CHANCE_PERCENT,
 	ENEMY_MAX_HP,
 	MONSTER_HOUSE_ENEMY_COUNT,
 	MONSTER_HOUSE_SPAWN_CHANCE_PERCENT,
@@ -30,6 +31,7 @@ const ENEMY_SPAWN_TABLE: readonly SpawnChance<EnemyKind>[] = [
 	{ kind: "nymph", chancePercent: NYMPH_SPAWN_CHANCE_PERCENT },
 	{ kind: "aquator", chancePercent: AQUATOR_SPAWN_CHANCE_PERCENT },
 	{ kind: "orc", chancePercent: ORC_SPAWN_CHANCE_PERCENT },
+	{ kind: "dragon", chancePercent: DRAGON_SPAWN_CHANCE_PERCENT },
 ];
 
 /**

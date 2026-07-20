@@ -80,6 +80,15 @@ export const ORC_ATTACK_DAMAGE = 2;
 export const ORC_ACTIONS_PER_TURN = 1;
 export const ORC_SPAWN_CHANCE_PERCENT = 20;
 
+// A boss-tier melee attacker, sturdier and harder-hitting than any other
+// enemy, differentiated purely by parameters — same "no advanceEnemies
+// branch" idiom as zombie/bat. Independent per-floor spawn like thief/nymph/
+// aquator/orc, but rare (same rate as ring/wand drops).
+export const DRAGON_MAX_HP = 8;
+export const DRAGON_ATTACK_DAMAGE = 4;
+export const DRAGON_ACTIONS_PER_TURN = 1;
+export const DRAGON_SPAWN_CHANCE_PERCENT = 8;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -110,6 +119,7 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	nymph: NYMPH_MAX_HP,
 	aquator: AQUATOR_MAX_HP,
 	orc: ORC_MAX_HP,
+	dragon: DRAGON_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -118,6 +128,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	nymph: NYMPH_ATTACK_DAMAGE,
 	aquator: AQUATOR_ATTACK_DAMAGE,
 	orc: ORC_ATTACK_DAMAGE,
+	dragon: DRAGON_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -131,6 +142,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	nymph: NYMPH_ACTIONS_PER_TURN,
 	aquator: AQUATOR_ACTIONS_PER_TURN,
 	orc: ORC_ACTIONS_PER_TURN,
+	dragon: DRAGON_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -140,6 +152,7 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	nymph: 1,
 	aquator: 3,
 	orc: 3,
+	dragon: 6,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

@@ -262,3 +262,23 @@ describe("orc gold drop", () => {
 		expect(next.goldCollected).toBe(state.goldCollected);
 	});
 });
+
+describe("dragon", () => {
+	const state = buildArenaGameState(9, 9, 1);
+
+	it("awards more experience than aquator on defeat, purely via the balance.ts lookup", () => {
+		const target: Enemy = {
+			x: 5,
+			y: 4,
+			kind: "dragon",
+			hp: 1,
+			awake: true,
+			slowedTurnsRemaining: 0,
+		};
+		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
+		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.dragon);
+		expect(ENEMY_EXPERIENCE_REWARD.dragon).toBeGreaterThan(
+			ENEMY_EXPERIENCE_REWARD.aquator,
+		);
+	});
+});

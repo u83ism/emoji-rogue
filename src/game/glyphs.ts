@@ -28,6 +28,8 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	aquator: { glyph: "🐙" },
 	/* Ogre: single-codepoint, Unicode 6.0. */
 	orc: { glyph: "👹" },
+	/* Dragon: single-codepoint, Unicode 6.0. */
+	dragon: { glyph: "🐉" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

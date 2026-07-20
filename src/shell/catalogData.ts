@@ -2,6 +2,7 @@ import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	AQUATOR_SPAWN_CHANCE_PERCENT,
 	DART_TRAP_DAMAGE,
+	DRAGON_SPAWN_CHANCE_PERCENT,
 	ENEMY_COUNT_SCALING,
 	GOAL_FLOOR,
 	GOLD_AMOUNT_MAX,
@@ -74,6 +75,11 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	orc: {
 		spawn: { type: "chance", percent: ORC_SPAWN_CHANCE_PERCENT },
 		behavior: `頑丈な近接アタッカー。倒すと${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールドをその場で落とす`,
+	},
+	dragon: {
+		spawn: { type: "chance", percent: DRAGON_SPAWN_CHANCE_PERCENT },
+		behavior:
+			"希少な最強格の近接アタッカー。特殊能力はないが桁違いに頑丈で攻撃力も高い",
 	},
 };
 

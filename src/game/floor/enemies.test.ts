@@ -75,7 +75,13 @@ describe("drawFloorEnemies", () => {
 		expect(asleep.filter((enemy) => enemy.kind === "bat").length).toBe(
 			calculateEnemyCountForFloor("bat", 1),
 		);
-		for (const kind of ["thief", "nymph", "aquator", "orc"] as const) {
+		for (const kind of [
+			"thief",
+			"nymph",
+			"aquator",
+			"orc",
+			"dragon",
+		] as const) {
 			expect(asleep.filter((enemy) => enemy.kind === kind).length).toBe(1);
 		}
 

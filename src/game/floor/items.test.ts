@@ -61,6 +61,7 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"remove-curse-scroll",
 	"teleport-wand",
 	"stealth-ring",
+	"awareness-ring",
 ];
 
 describe("drawFloorItems", () => {

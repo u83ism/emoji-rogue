@@ -16,6 +16,7 @@ import {
 	UNEXPLORED_CELL,
 	WON_PLAYER_CELL,
 } from "./glyphs.js";
+import { hasEquippedRing } from "./items/rings.js";
 import type { GameState, GameStatus } from "./state.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
@@ -112,8 +113,11 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 	}
 
-	/* enemies are drawn while visible, or unconditionally while detected */
-	const detectingMonsters = state.detectMonstersTurnsRemaining > 0;
+	/* enemies are drawn while visible, or unconditionally while detected
+	 * (a timed potion effect or a permanently-equipped ring of awareness) */
+	const detectingMonsters =
+		state.detectMonstersTurnsRemaining > 0 ||
+		hasEquippedRing(state.inventory, "awareness-ring");
 	for (const enemy of state.enemies) {
 		if (
 			!detectingMonsters &&

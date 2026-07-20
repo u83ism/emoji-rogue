@@ -355,6 +355,24 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン86完了(2026-07-20)。**
 
+## マイルストーン87 — 千里眼の指輪(4種類目の指輪、敵の位置を常時察知する)
+
+未反映ブランチの内容の再実装、第5弾(方針はマイルストーン83を参照)。索敵の薬(一定ターンだけ敵の位置を視界外・未探索領域含めて可視化する)の恒久版を、再生・満腹・隠密に続く4種類目の指輪として追加する。`frame.ts`の敵描画条件は既に`state.detectMonstersTurnsRemaining > 0`という状態依存の条件分岐になっているため、`|| hasEquippedRing(state.inventory, "awareness-ring")`を足すだけで実現できる。
+
+- [x] `src/game/events.ts`: `ItemKind`/`EQUIPMENT_ITEM_KIND_VALUES`に`"awareness-ring"`を追加(新規`GameEvent`は不要——既存の`ring-equipped`をそのまま再利用)
+- [x] `src/game/state.ts`: 指輪バリアントのkind unionに`"awareness-ring"`を追加(4種目)
+- [x] `src/game/balance.ts`: `AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8`を追加
+- [x] `src/game/items/rings.ts`・`src/game/items/heldItemFactory.ts`・`src/game/items/drop.ts`・`src/game/items/use.ts`・`src/game/format/validateGameState.ts`: 指輪4種を扱う各所に`"awareness-ring"`のcase/型を追加(マイルストーン86で確立したパターンの横展開)
+- [x] `src/game/frame.ts`: 敵描画条件を`state.detectMonstersTurnsRemaining > 0 || hasEquippedRing(state.inventory, "awareness-ring")`に変更
+- [x] `src/game/floor/items.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/itemCatalog.ts`: 他の指輪と同じ形で追加
+- [x] `src/shell/messages.ts`・`src/shell/gameNames.ts`: `ring-equipped`のメッセージ分岐が指輪4種目でif-chain 4分岐になり`functional-style.md`の許容上限(3分岐)を超えるため、`gameNames.ts`に`RING_EQUIPPED_EFFECT`(`Partial<Record<ItemKind, string>>`)ルックアップテーブルを新設し、`messages.ts`側は対応エントリがなければ`throw`(非リング種でring-equippedが発火するのは真のバグなので`error-handling.md`のthrow対象)
+- [x] `src/game/items/rings.test.ts`・`src/game/frame.test.ts`・`src/game/floor/items.test.ts`・`src/shell/messages.test.ts`: 各パターンのテストを追加
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、視界外・未探索の敵が指輪なしでは非表示・装備時のみ`buildFrameGrid`に表示されることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 840件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン87完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

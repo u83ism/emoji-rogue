@@ -50,7 +50,24 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"teleport-wand": "杖",
 	/* Same generic display name as the other rings — which effect it grants only shows once worn. */
 	"stealth-ring": "指輪",
+	"awareness-ring": "指輪",
 };
+
+/**
+ * The flavor text for messages.ts's ring-equipped case, one entry per ring
+ * kind. A lookup table rather than an if-chain (converted here at the 4th
+ * ring — functional-style.md's if-chain limit is 3 branches): the payload's
+ * `kind` is the wider ItemKind, so this is a Partial map, not a total one —
+ * messages.ts treats a missing entry as unreachable (ring-equipped never
+ * fires for a non-ring kind).
+ */
+export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
+	{
+		"regeneration-ring": "じわじわとHPが回復するようになった!",
+		"sustenance-ring": "空腹の進みがゆるやかになった!",
+		"stealth-ring": "足音が忍びやかになった!",
+		"awareness-ring": "敵の気配を常に感じ取れるようになった!",
+	};
 
 /** Shown for any potion-family item not yet identified this run. */
 const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";

@@ -315,6 +315,9 @@ export const STEALTH_RING_SPAWN_CHANCE_PERCENT = 8;
  */
 export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
 
+/** Chance (out of 100), independently rolled per floor, that a ring of awareness spawns. */
+export const AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8;
+
 /**
  * Permanent boost to a targeted sword's own attackBonus per scroll read
  * (see items/scrolls.ts — the player picks which held sword, equipped or

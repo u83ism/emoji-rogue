@@ -38,7 +38,8 @@ const buildFullInventory = (): readonly HeldItem[] =>
 		if (
 			kind === "regeneration-ring" ||
 			kind === "sustenance-ring" ||
-			kind === "stealth-ring"
+			kind === "stealth-ring" ||
+			kind === "awareness-ring"
 		) {
 			return { itemId, kind, equipped: false, cursed: false };
 		}

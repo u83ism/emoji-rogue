@@ -1,6 +1,7 @@
 import type { Rng } from "../../rng.js";
 import {
 	ARMOR_SPAWN_CHANCE_PERCENT,
+	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	BLIND_POTION_SPAWN_CHANCE_PERCENT,
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
 	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
@@ -99,6 +100,10 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		chancePercent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	},
 	{ kind: "stealth-ring", chancePercent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "awareness-ring",
+		chancePercent: AWARENESS_RING_SPAWN_CHANCE_PERCENT,
+	},
 ];
 
 /** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */

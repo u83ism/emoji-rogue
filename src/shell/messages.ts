@@ -2,6 +2,7 @@ import type { GameEvent, ItemKind } from "../game/events.js";
 import {
 	ENEMY_NAMES,
 	ITEM_NAMES,
+	RING_EQUIPPED_EFFECT,
 	resolveItemDisplayName,
 	TRAP_NAMES,
 } from "./gameNames.js";
@@ -129,14 +130,15 @@ export const formatEvent = (
 			return event.payload.kind !== undefined
 				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を盗まれた!`
 				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
-		case "ring-equipped":
-			if (event.payload.kind === "sustenance-ring") {
-				return `${ITEM_NAMES[event.payload.kind]}を身につけた。空腹の進みがゆるやかになった!`;
+		case "ring-equipped": {
+			const effect = RING_EQUIPPED_EFFECT[event.payload.kind];
+			if (effect === undefined) {
+				throw new Error(
+					`unreachable: ring-equipped fired for non-ring kind ${event.payload.kind}`,
+				);
 			}
-			if (event.payload.kind === "stealth-ring") {
-				return `${ITEM_NAMES[event.payload.kind]}を身につけた。足音が忍びやかになった!`;
-			}
-			return `${ITEM_NAMES[event.payload.kind]}を身につけた。じわじわとHPが回復するようになった!`;
+			return `${ITEM_NAMES[event.payload.kind]}を身につけた。${effect}`;
+		}
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
 		case "weapon-enchanted":

@@ -2,6 +2,7 @@ import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_DEFENSE_BONUS,
 	ARMOR_SPAWN_CHANCE_PERCENT,
+	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_BONUS,
@@ -132,6 +133,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "指輪",
 		spawn: { type: "chance", percent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
 		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる(外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
+	},
+	"awareness-ring": {
+		catalogName: "千里眼の指輪",
+		category: "指輪",
+		spawn: { type: "chance", percent: AWARENESS_RING_SPAWN_CHANCE_PERCENT },
+		effect: `装備している間、視界外・未探索領域を含め常に敵の位置を感知する(索敵の薬の恒久版、外すと効果も消える)。${RING_CURSE_CHANCE_PERCENT}%で呪われており外せなくなる`,
 	},
 	sword: {
 		catalogName: "剣",

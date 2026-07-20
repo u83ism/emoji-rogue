@@ -68,6 +68,29 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(detecting)[2]?.[27]?.glyph).toBe("🧟");
 	});
 
+	it("draws enemies outside FOV too while an awareness ring is equipped", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const zombie = {
+			kind: "zombie",
+			hp: 2,
+			awake: true,
+			slowedTurnsRemaining: 0,
+		} as const;
+		const detecting = {
+			...wide,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "awareness-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+			],
+			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12, normally hidden */,
+		};
+		expect(buildFrameGrid(detecting)[2]?.[27]?.glyph).toBe("🧟");
+	});
+
 	it("draws bats with their own glyph, distinct from zombies", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const bat = {

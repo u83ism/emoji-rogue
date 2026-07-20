@@ -254,6 +254,10 @@ describe("formatEvent", () => {
 				{ type: "ring-equipped", payload: { kind: "stealth-ring" } },
 				"指輪を身につけた。足音が忍びやかになった!",
 			],
+			[
+				{ type: "ring-equipped", payload: { kind: "awareness-ring" } },
+				"指輪を身につけた。敵の気配を常に感じ取れるようになった!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

@@ -13,6 +13,7 @@ export const ENEMY_KIND_VALUES = [
 	"aquator",
 	"orc",
 	"dragon",
+	"yeti",
 ] as const;
 
 /** Events carry it so the shell can name the attacker. */

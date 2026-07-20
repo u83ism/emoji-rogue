@@ -17,6 +17,7 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	aquator: "アクエーター",
 	orc: "オーク",
 	dragon: "ドラゴン",
+	yeti: "雪男",
 };
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {

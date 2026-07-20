@@ -30,6 +30,8 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	orc: { glyph: "👹" },
 	/* Dragon: single-codepoint, Unicode 6.0. */
 	dragon: { glyph: "🐉" },
+	/* No stable single-codepoint yeti emoji exists — bear (Unicode 6.0) stands in as the nearest mountain-beast glyph. */
+	yeti: { glyph: "🐻" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

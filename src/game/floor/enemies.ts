@@ -11,6 +11,7 @@ import {
 	NYMPH_SPAWN_CHANCE_PERCENT,
 	ORC_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
+	YETI_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
@@ -32,6 +33,7 @@ const ENEMY_SPAWN_TABLE: readonly SpawnChance<EnemyKind>[] = [
 	{ kind: "aquator", chancePercent: AQUATOR_SPAWN_CHANCE_PERCENT },
 	{ kind: "orc", chancePercent: ORC_SPAWN_CHANCE_PERCENT },
 	{ kind: "dragon", chancePercent: DRAGON_SPAWN_CHANCE_PERCENT },
+	{ kind: "yeti", chancePercent: YETI_SPAWN_CHANCE_PERCENT },
 ];
 
 /**

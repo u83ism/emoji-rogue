@@ -13,6 +13,7 @@ import {
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
+	YETI_SPAWN_CHANCE_PERCENT,
 } from "../game/balance.js";
 import type { EnemyKind, TrapKind } from "../game/events.js";
 
@@ -80,6 +81,11 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 		spawn: { type: "chance", percent: DRAGON_SPAWN_CHANCE_PERCENT },
 		behavior:
 			"希少な最強格の近接アタッカー。特殊能力はないが桁違いに頑丈で攻撃力も高い",
+	},
+	yeti: {
+		spawn: { type: "chance", percent: YETI_SPAWN_CHANCE_PERCENT },
+		behavior:
+			"頑丈だが低頻度に出現する近接アタッカー。オークとドラゴンの中間の強さ",
 	},
 };
 

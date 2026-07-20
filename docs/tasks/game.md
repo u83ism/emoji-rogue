@@ -373,6 +373,21 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン87完了(2026-07-20)。**
 
+## マイルストーン88 — 雪男(頑丈だが低頻度に出現する近接アタッカー)
+
+未反映ブランチの内容の再実装、第6弾(方針はマイルストーン83を参照)。原作Rogueの雪男(Yeti)に着想を得た敵。雪男そのものを描く単一コードポイントの安定絵文字は存在しないため、雪山の獣という近い代替として🐻(熊、Unicode 6.0)を採用する。オーク・ドラゴンと同じ「パラメータだけで差別化する」パターンを踏襲し、HP・攻撃力・出現率ともオーク(HP4)とドラゴン(HP8)の中間に位置づける。深さスケーリングはせず独立per-floor抽選。
+
+- [x] `src/game/events.ts`: `ENEMY_KIND_VALUES`に`"yeti"`を追加(新規`GameEvent`は不要)
+- [x] `src/game/balance.ts`: `YETI_MAX_HP = 5`・`YETI_ATTACK_DAMAGE = 3`・`YETI_ACTIONS_PER_TURN = 1`・`YETI_SPAWN_CHANCE_PERCENT = 15`(オークの20とドラゴンの8の中間)を追加し、`ENEMY_MAX_HP`/`ENEMY_ATTACK_DAMAGE`/`ENEMY_ACTIONS_PER_TURN`/`ENEMY_EXPERIENCE_REWARD`に`yeti`のエントリを追加(経験値はオークの3とドラゴンの6の中間で4)
+- [x] `src/game/floor/enemies.ts`・`src/game/glyphs.ts`・`src/shell/gameNames.ts`・`src/shell/catalogData.ts`: 他の独立per-floor抽選kindと同じ形で追加
+- [x] `src/game/format/validateGameState.ts`: 変更不要(`isEnemyKind`は自動導出)。列挙値追加のみのためセーブ形式の構造変更なし
+- [x] `src/game/floor/enemies.test.ts`: スポーンテーブルへの参加を確認
+- [x] パイプライン確認: `npm run build`後、`dist/game/index.mjs`を直接importするNodeスクリプトで、雪男を`advanceTurn`のバンプ攻撃で撃破でき、経験値4(オークとドラゴンの中間)が入ることを確認した
+
+自動テスト(型検査・lint+行数ゲート・Vitest 840件・knip・build)通過、`npm run docs:catalog`で`docs/catalog.md`を更新して完了。
+
+**マイルストーン88完了(2026-07-20)。**
+
 ## バックログ(マイルストーン未整理)
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)
 - **インベントリ/コマンドUXの拡充(開発テーマ化、2026-07-17決定)**: 「CLIの範疇でどこまでリッチなUXを実現できるか」を本プロジェクトの開発テーマの一つと位置づけ、不思議のダンジョンシリーズ級の操作感を目指す方向で個別課題を統合する。発端は2026-07-16テストプレイの指摘(識別の巻物が`POTION_KINDS`先頭順で手持ちと無関係な種類を鑑定し、手持ちの「未鑑定の薬」が変わらない)で、当初の最小修正案「インベントリ優先化」はこのテーマに吸収。具体候補: ①識別の巻物はアイテム選択プロンプトで対象を選ぶ(トルネコ式) ②階段は踏んだだけでは降りず「降りる」コマンドで意思確認する ③アイテムの「使う」以外の動詞(置く・投げる等)。着手時は設計マイルストーンから始める(選択UI=シェル側の入力モード追加であり、`GameState`に選択状態を持たせない設計判断が必要)

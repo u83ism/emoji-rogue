@@ -89,6 +89,14 @@ export const DRAGON_ATTACK_DAMAGE = 4;
 export const DRAGON_ACTIONS_PER_TURN = 1;
 export const DRAGON_SPAWN_CHANCE_PERCENT = 8;
 
+// Another "parameters only" melee attacker, positioned between orc and
+// dragon on every axis. No single-codepoint stable emoji depicts a yeti, so
+// glyphs.ts substitutes a bear as the nearest mountain-beast stand-in.
+export const YETI_MAX_HP = 5;
+export const YETI_ATTACK_DAMAGE = 3;
+export const YETI_ACTIONS_PER_TURN = 1;
+export const YETI_SPAWN_CHANCE_PERCENT = 15;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -120,6 +128,7 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	aquator: AQUATOR_MAX_HP,
 	orc: ORC_MAX_HP,
 	dragon: DRAGON_MAX_HP,
+	yeti: YETI_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -129,6 +138,7 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	aquator: AQUATOR_ATTACK_DAMAGE,
 	orc: ORC_ATTACK_DAMAGE,
 	dragon: DRAGON_ATTACK_DAMAGE,
+	yeti: YETI_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -143,6 +153,7 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	aquator: AQUATOR_ACTIONS_PER_TURN,
 	orc: ORC_ACTIONS_PER_TURN,
 	dragon: DRAGON_ACTIONS_PER_TURN,
+	yeti: YETI_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -153,6 +164,7 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	aquator: 3,
 	orc: 3,
 	dragon: 6,
+	yeti: 4,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

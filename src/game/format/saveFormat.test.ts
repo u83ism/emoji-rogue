@@ -42,7 +42,6 @@ describe("save file shape guard", () => {
 				playerAttackDamage: "number",
 				playerDefense: "number",
 				playerFood: "number",
-				hungerTickCounter: "number",
 				hasRingOfRegeneration: "boolean",
 				hasRingOfSustenance: "boolean",
 				armorProtected: "boolean",

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { HUNGER_TURNS_PER_POINT } from "../balance.js";
 import { buildDungeonGameState } from "../initialState.js";
 import { validateGameState } from "./validateGameState.js";
 
@@ -167,18 +166,6 @@ describe("validateGameState", () => {
 		expectRejected({ ...buildValidState(), playerFood: -1 }, "playerFood");
 		expectRejected({ ...buildValidState(), playerFood: 101 }, "playerFood");
 		expectRejected({ ...buildValidState(), playerFood: "1" }, "playerFood");
-		expectRejected(
-			{ ...buildValidState(), hungerTickCounter: -1 },
-			"hungerTickCounter",
-		);
-		expectRejected(
-			{ ...buildValidState(), hungerTickCounter: "0" },
-			"hungerTickCounter",
-		);
-		expectRejected(
-			{ ...buildValidState(), hungerTickCounter: HUNGER_TURNS_PER_POINT },
-			"hungerTickCounter",
-		);
 
 		const valid = buildValidState();
 		const enemies = valid.enemies;

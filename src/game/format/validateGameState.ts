@@ -1,7 +1,7 @@
 /* file-size-exception: 手書きセーブ検証 — 依存追加禁止(zod不採用)の受容コスト。型ナローイングの都合で逐次チェックが必要(2026-07-18裁可) */
 import { err, ok, type Result } from "../../result.js";
 import type { RngState } from "../../rng.js";
-import { HUNGER_TURNS_PER_POINT, PLAYER_MAX_FOOD } from "../balance.js";
+import { PLAYER_MAX_FOOD } from "../balance.js";
 import {
 	type DeathCause,
 	ENEMY_KIND_VALUES,
@@ -329,13 +329,6 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(playerFood) || playerFood > PLAYER_MAX_FOOD) {
 		return err("playerFood");
 	}
-	const hungerTickCounter = value.hungerTickCounter;
-	if (
-		!isNonNegativeInteger(hungerTickCounter) ||
-		hungerTickCounter >= HUNGER_TURNS_PER_POINT
-	) {
-		return err("hungerTickCounter");
-	}
 	const hasRingOfRegeneration = value.hasRingOfRegeneration;
 	if (!isBooleanValue(hasRingOfRegeneration)) {
 		return err("hasRingOfRegeneration");
@@ -465,7 +458,6 @@ export const validateGameState = (
 		playerAttackDamage,
 		playerDefense,
 		playerFood,
-		hungerTickCounter,
 		hasRingOfRegeneration,
 		hasRingOfSustenance,
 		confusedTurnsRemaining,

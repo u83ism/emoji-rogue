@@ -120,15 +120,8 @@ export interface GameState {
 	 * regardless).
 	 */
 	readonly playerDefense: number;
-	/** Decreases by 1 every HUNGER_TURNS_PER_POINT turns; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
+	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
 	readonly playerFood: number;
-	/**
-	 * Turns accumulated toward the next playerFood point lost — see
-	 * HUNGER_TURNS_PER_POINT and applyHungerTick. Resets to 0 each time a
-	 * point is lost; persists across floor transitions (unlike
-	 * turnsOnCurrentFloor, which is per-floor).
-	 */
-	readonly hungerTickCounter: number;
 	/** Once equipped, heals HP over time — see applyRegenerationTick. Never turns back off. */
 	readonly hasRingOfRegeneration: boolean;
 	/** Once equipped, may skip a hunger tick — see applyHungerTick. Never turns back off. */

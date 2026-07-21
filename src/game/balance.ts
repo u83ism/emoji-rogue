@@ -216,8 +216,18 @@ export const PLAYER_MAX_FOOD = 100;
  * stage at 30, the drop from 100 was going unnoticed until it was critical.
  */
 export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
-/** HP lost per turn while playerFood is at 0. */
+/** HP lost per turn while playerFood is at 0 (this one is not stretched by HUNGER_TURNS_PER_POINT — starving already means 0). */
 export const STARVATION_DAMAGE_PER_TURN = 1;
+/**
+ * How many turns of movement one playerFood point costs (see
+ * GameState.hungerTickCounter and applyHungerTick) — 1 means every turn
+ * drains a point, same as the original pace; raising it stretches the food
+ * economy without touching PLAYER_MAX_FOOD or FOOD_RATION_RESTORE_AMOUNT.
+ * Provisional pending balance testing via scripts/run-bot.mjs (a BOT
+ * measurement found ~45-60% of runs starving even under full-floor looting —
+ * see docs/tasks/game.md's backlog entry, 2026-07-21).
+ */
+export const HUNGER_TURNS_PER_POINT = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;
 export const FOOD_COUNT_PER_FLOOR = 2;
 

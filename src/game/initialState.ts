@@ -24,6 +24,7 @@ const INITIAL_RUN_STATE = {
 	playerAttackDamage: PLAYER_ATTACK_DAMAGE,
 	playerDefense: 0,
 	playerFood: PLAYER_MAX_FOOD,
+	hungerTickCounter: 0,
 	hasRingOfRegeneration: false,
 	hasRingOfSustenance: false,
 	confusedTurnsRemaining: 0,

@@ -1,3 +1,4 @@
+import type { ItemKind } from "../game/events.js";
 import type { Action, Direction, GameState, Position } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
 import { findAdjacentEnemyDirection } from "./combatPolicy.js";
@@ -48,10 +49,14 @@ export interface BotDecision {
  *     what the player does, so finishing it off beats walking past it.
  *  5. Otherwise walk toward the current goal, recomputing it when reached,
  *     invalidated, or stuck oscillating in place (see isCyclingInPlace).
+ *
+ * `disabledItemKinds` is a balance-experiment knob (see itemUsePolicy.ts's
+ * decideItemToUse) — empty by default, so normal play is unaffected.
  */
 export const decideAction = (
 	state: GameState,
 	previousMemory: BotMemory,
+	disabledItemKinds: ReadonlySet<ItemKind> = new Set(),
 ): BotDecision => {
 	const memory = updateMemoryForTurn(state, previousMemory);
 
@@ -63,7 +68,7 @@ export const decideAction = (
 		return { action: { type: "wait" }, memory };
 	}
 
-	const itemToUse = decideItemToUse(state);
+	const itemToUse = decideItemToUse(state, disabledItemKinds);
 	if (itemToUse !== undefined) {
 		return {
 			action: { type: "use-item", payload: { kind: itemToUse } },

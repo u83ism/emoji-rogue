@@ -33,19 +33,35 @@ const holds = (state: GameState, kind: ItemKind): boolean =>
  * single boost to exploration speed available), healing once hurt to half
  * HP or worse, food once hunger crosses the warning threshold, then any
  * permanent-upside item just sitting unused. Undefined means move instead.
+ *
+ * `disabledKinds` excludes specific kinds from ever being used — not a
+ * gameplay behavior, but a knob for balance experiments (e.g.
+ * scripts/run-bot.mjs's `--disable=regeneration-ring,sustenance-ring` runs a
+ * same-seed comparison against rings never being equipped, to measure how
+ * much of the run's outcome they actually explain).
  */
-export const decideItemToUse = (state: GameState): ItemKind | undefined => {
-	if (holds(state, "mapping-scroll")) {
+export const decideItemToUse = (
+	state: GameState,
+	disabledKinds: ReadonlySet<ItemKind> = new Set(),
+): ItemKind | undefined => {
+	if (holds(state, "mapping-scroll") && !disabledKinds.has("mapping-scroll")) {
 		return "mapping-scroll";
 	}
-	if (state.playerHp * 2 <= state.playerMaxHp && holds(state, "heal-potion")) {
+	if (
+		state.playerHp * 2 <= state.playerMaxHp &&
+		holds(state, "heal-potion") &&
+		!disabledKinds.has("heal-potion")
+	) {
 		return "heal-potion";
 	}
 	if (
 		state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD &&
-		holds(state, "food")
+		holds(state, "food") &&
+		!disabledKinds.has("food")
 	) {
 		return "food";
 	}
-	return PERMANENT_UPSIDE_KINDS.find((kind) => holds(state, kind));
+	return PERMANENT_UPSIDE_KINDS.find(
+		(kind) => holds(state, kind) && !disabledKinds.has(kind),
+	);
 };

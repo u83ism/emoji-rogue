@@ -81,4 +81,26 @@ describe("decideItemToUse", () => {
 		};
 		expect(decideItemToUse(state)).toBeUndefined();
 	});
+
+	it("skips a disabled kind and falls through to the next priority item", () => {
+		const state = {
+			...baseState(),
+			inventory: [
+				{ kind: "regeneration-ring" as const, quantity: 1 },
+				{ kind: "strength" as const, quantity: 1 },
+			],
+		};
+		expect(decideItemToUse(state, new Set(["regeneration-ring"]))).toBe(
+			"strength",
+		);
+	});
+
+	it("skips a disabled kind even when it is the only priority-eligible item held", () => {
+		const state = {
+			...baseState(),
+			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
+			inventory: [{ kind: "food" as const, quantity: 1 }],
+		};
+		expect(decideItemToUse(state, new Set(["food"]))).toBeUndefined();
+	});
 });

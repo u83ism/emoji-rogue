@@ -4,6 +4,16 @@
 // offline analysis. Run after `npm run build`:
 //
 //   node scripts/run-bot.mjs [--seed=N] [--width=N] [--height=N] [--max-turns=N] [--quiet]
+//     [--disable=kind1,kind2] [--summary-only]
+//
+// --disable is a balance-experiment knob (see itemUsePolicy.ts's
+// decideItemToUse): item kinds listed are never used/equipped even when
+// held, so the same seed can be re-run with e.g.
+// --disable=regeneration-ring,sustenance-ring to measure how much of the
+// run's outcome a given item actually explains.
+// --summary-only skips the per-turn JSONL file and console chatter, printing
+// one `RESULT_JSON: {...}` line instead — for scripting statistical batches
+// over many seeds without generating hundreds of log files.
 //
 // Exists purely to gather balance/AI-behavior statistics — not part of the
 // shipped game (see src/bot/index.ts's own note).
@@ -32,17 +42,31 @@ const parseNumberArgument = (argv, name, fallback) => {
 	return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
+const parseDisabledKinds = (argv) => {
+	const prefix = "--disable=";
+	const match = argv.find((argument) => argument.startsWith(prefix));
+	if (match === undefined) {
+		return new Set();
+	}
+	return new Set(match.slice(prefix.length).split(",").filter(Boolean));
+};
+
 const argv = process.argv.slice(2);
 const seed = parseNumberArgument(argv, "seed", Date.now());
 const width = parseNumberArgument(argv, "width", 40);
 const height = parseNumberArgument(argv, "height", 20);
 const maxTurns = parseNumberArgument(argv, "max-turns", 20000);
-const quiet = argv.includes("--quiet");
+const disabledItemKinds = parseDisabledKinds(argv);
+const summaryOnly = argv.includes("--summary-only");
+const quiet = argv.includes("--quiet") || summaryOnly;
 
-const logDirectory = join(homedir(), ".emoji-rogue", "bot-logs");
-mkdirSync(logDirectory, { recursive: true });
-const logFilePath = join(logDirectory, `bot-${seed}-${Date.now()}.jsonl`);
-const logLines = [];
+const logLines = summaryOnly ? undefined : [];
+let logFilePath;
+if (!summaryOnly) {
+	const logDirectory = join(homedir(), ".emoji-rogue", "bot-logs");
+	mkdirSync(logDirectory, { recursive: true });
+	logFilePath = join(logDirectory, `bot-${seed}-${Date.now()}.jsonl`);
+}
 
 const printStatusLine = (entry) => {
 	console.log(
@@ -56,15 +80,24 @@ let state = buildDungeonGameState(width, height, seed);
 let memory = createInitialBotMemory();
 let turn = 0;
 let previousFloor = state.floor;
+let deathCause;
 
-console.log(`シード: ${seed} (${width}x${height})`);
-console.log(`ログファイル: ${logFilePath}`);
+if (!summaryOnly) {
+	console.log(`シード: ${seed} (${width}x${height})`);
+	console.log(`ログファイル: ${logFilePath}`);
+}
 
 while (state.status === "playing" && turn < maxTurns) {
 	turn++;
-	const decision = decideAction(state, memory);
+	const decision = decideAction(state, memory, disabledItemKinds);
 	memory = decision.memory;
 	state = advanceTurn(state, decision.action);
+
+	if (state.status === "dead" && deathCause === undefined) {
+		const lastEvent = state.events.at(-1);
+		deathCause =
+			lastEvent?.type === "player-died" ? lastEvent.payload.by : "unknown";
+	}
 
 	const entry = buildTurnLogEntry(
 		turn,
@@ -73,7 +106,7 @@ while (state.status === "playing" && turn < maxTurns) {
 		memory.goal,
 		memory.stagnantTurns,
 	);
-	logLines.push(JSON.stringify(entry));
+	logLines?.push(JSON.stringify(entry));
 
 	const floorChanged = state.floor !== previousFloor;
 	previousFloor = state.floor;
@@ -94,21 +127,45 @@ while (state.status === "playing" && turn < maxTurns) {
 	}
 }
 
-writeFileSync(logFilePath, `${logLines.join("\n")}\n`, "utf8");
+if (!summaryOnly) {
+	writeFileSync(logFilePath, `${logLines.join("\n")}\n`, "utf8");
+}
 
 const stoppedReason =
 	state.status !== "playing" ? state.status : `max-turns-reached(${maxTurns})`;
 const gaveUpFromStagnation =
 	state.status === "exited" && memory.stagnantTurns >= STAGNATION_QUIT_TURNS;
 
-console.log("--- 結果 ---");
-console.log(
-	`終了理由: ${stoppedReason}${gaveUpFromStagnation ? " (stuck-no-progress)" : ""}`,
-);
-console.log(`ターン数: ${turn}`);
-console.log(`到達フロア: ${state.floor}`);
-console.log(`HP: ${state.playerHp}/${state.playerMaxHp}`);
-console.log(`所持金: ${state.goldCollected}`);
-console.log(`アミュレット: ${state.hasAmulet}`);
-console.log(`スコア: ${calculateScore(state)}`);
-console.log(`ログ行数: ${logLines.length} (${logFilePath})`);
+const summary = {
+	seed,
+	stoppedReason,
+	gaveUpFromStagnation,
+	turns: turn,
+	floor: state.floor,
+	playerHp: state.playerHp,
+	playerMaxHp: state.playerMaxHp,
+	goldCollected: state.goldCollected,
+	hasAmulet: state.hasAmulet,
+	score: calculateScore(state),
+	deathCause,
+	hasRingOfRegeneration: state.hasRingOfRegeneration,
+	hasRingOfSustenance: state.hasRingOfSustenance,
+	disabledItemKinds: [...disabledItemKinds],
+};
+
+if (summaryOnly) {
+	console.log(`RESULT_JSON: ${JSON.stringify(summary)}`);
+} else {
+	console.log("--- 結果 ---");
+	console.log(
+		`終了理由: ${stoppedReason}${gaveUpFromStagnation ? " (stuck-no-progress)" : ""}`,
+	);
+	console.log(`ターン数: ${turn}`);
+	console.log(`到達フロア: ${state.floor}`);
+	console.log(`HP: ${state.playerHp}/${state.playerMaxHp}`);
+	console.log(`所持金: ${state.goldCollected}`);
+	console.log(`アミュレット: ${state.hasAmulet}`);
+	console.log(`スコア: ${calculateScore(state)}`);
+	console.log(`死因: ${deathCause ?? "-"}`);
+	console.log(`ログ行数: ${logLines.length} (${logFilePath})`);
+}

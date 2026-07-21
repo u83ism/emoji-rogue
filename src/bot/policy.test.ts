@@ -89,6 +89,21 @@ describe("decideAction", () => {
 		expect(action).toEqual({ type: "quit" });
 	});
 
+	it("does not use a disabled item kind even if it would otherwise be used first", () => {
+		const state = {
+			...baseState(),
+			items: [{ x: 4, y: 2, kind: "sword" as const }],
+			playerHp: 1,
+			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+		};
+		const { action } = decideAction(
+			state,
+			createInitialBotMemory(),
+			new Set(["heal-potion"]),
+		);
+		expect(action).toEqual({ type: "move", payload: { direction: "north" } });
+	});
+
 	it("keeps pursuing the same committed goal across turns instead of re-choosing it", () => {
 		const state = {
 			...baseState(),

@@ -49,10 +49,7 @@ export const buildTurnLogEntry = (
 	action,
 	goalKind: goal?.kind,
 	stagnantTurns,
-	inventoryCount: nextState.inventory.reduce(
-		(total, entry) => total + entry.quantity,
-		0,
-	),
+	inventoryCount: nextState.inventory.length,
 	lootRemainingOnFloor: nextState.items.length + nextState.goldPiles.length,
 	recentEvents: nextState.events.slice(-2),
 });

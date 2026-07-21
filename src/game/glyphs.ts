@@ -26,6 +26,20 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	nymph: { glyph: "👻" },
 	/* Octopus: single-codepoint, Unicode 6.0. */
 	aquator: { glyph: "🐙" },
+	/* Ogre: single-codepoint, Unicode 6.0. */
+	orc: { glyph: "👹" },
+	/* Dragon: single-codepoint, Unicode 6.0. */
+	dragon: { glyph: "🐉" },
+	/* No stable single-codepoint yeti emoji exists — bear (Unicode 6.0) stands in as the nearest mountain-beast glyph. */
+	yeti: { glyph: "🐻" },
+	/* Snake: single-codepoint, Unicode 6.0. */
+	snake: { glyph: "🐍" },
+	/* Vampire: single-codepoint, no ZWJ/variation selector, but Unicode 11.0 —
+	 * newer than this project's usual Unicode 6.0 preference (see docs/design.md),
+	 * kept as an exception since no older glyph depicts a vampire (same
+	 * reasoning as the yeti/bear substitution, except here the glyph itself
+	 * is the best fit rather than a stand-in). */
+	vampire: { glyph: "🧛" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
@@ -36,12 +50,16 @@ export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
 export const AMULET_CELL: Cell = { glyph: "💎" };
 /* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require
- * one — see docs/design.md's "avoid combining sequences" rule. Shield uses a
- * safety vest for the same reason (🛡️ needs a variation selector). */
+ * one — see docs/design.md's "avoid combining sequences" rule (re-verified
+ * milestone 73: both 🗡️/⚔️ still need VS16). The defense equipment item
+ * uses a safety vest for the same reason (🛡️ needs a variation selector) —
+ * milestone 75 renamed the item itself from "shield"/盾 to "armor"/鎧 to
+ * match the glyph, rather than keep hunting for a shield-shaped emoji that
+ * doesn't exist under this stability bar. */
 export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"heal-potion": { glyph: "💊" },
 	sword: { glyph: "🔪" },
-	shield: { glyph: "🦺" },
+	armor: { glyph: "🦺" },
 	food: { glyph: "🍖" },
 	/* Same glyph as heal-potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },
@@ -61,29 +79,75 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"detect-monster": { glyph: "💊" },
 	/* Same glyph again — life is unidentified until drunk too. */
 	life: { glyph: "💊" },
-	/* Beginner symbol, doubles as a shield-like badge: single-codepoint, Unicode 6.0. */
-	"protect-armor": { glyph: "🔰" },
-	/* Scroll: single-codepoint, Unicode 6.0. */
+	/* Same glyph again — hallucination is unidentified until drunk too. */
+	hallucination: { glyph: "💊" },
+	/* Scroll: single-codepoint, Unicode 6.0. Every scroll kind shares this
+	 * glyph — genre convention (Mystery Dungeon et al.) is that item art is
+	 * fixed per category, and identity is conveyed by the name shown on
+	 * pickup, not by varying the icon. Unlike wands/rings below, scrolls are
+	 * not anonymous (their real name shows immediately), so the shared glyph
+	 * carries no gameplay weight here — it's purely the genre convention. */
+	"protect-armor": { glyph: "📜" },
 	"teleport-scroll": { glyph: "📜" },
-	/* Compass: single-codepoint, no variation selector — 🗺️ (world map) needs one. */
-	"mapping-scroll": { glyph: "🧭" },
-	/* Magnifying glass: single-codepoint, Unicode 6.0. */
-	"identify-scroll": { glyph: "🔍" },
+	"mapping-scroll": { glyph: "📜" },
+	"identify-scroll": { glyph: "📜" },
+	"enchant-weapon": { glyph: "📜" },
+	"enchant-armor": { glyph: "📜" },
+	"remove-curse-scroll": { glyph: "📜" },
 	/* Ring: single-codepoint, Unicode 6.0. */
 	"regeneration-ring": { glyph: "💍" },
 	/* Same glyph as the ring of regeneration — both are just "a ring" on the ground. */
 	"sustenance-ring": { glyph: "💍" },
-	/* High voltage: single-codepoint, stable since Unicode 4.0. */
-	"enchant-weapon": { glyph: "⚡" },
-	/* Sparkles: single-codepoint, Unicode 6.0 — distinct from the weapon bolt. */
-	"enchant-armor": { glyph: "✨" },
-	/* Crystal ball: single-codepoint, Unicode 6.0. */
-	"striking-wand": { glyph: "🔮" },
+	/* Magic wand: single-codepoint, VS16-free, Emoji 13.0 — within the
+	 * Emoji-15.1 ceiling (docs/emoji-policy.md ADR 2026-07-19). Replaces the
+	 * earlier crystal-ball glyph, which was semantically a mismatch for
+	 * "wand" but was the best fit under the old (Unicode-6.0) ceiling. */
+	"striking-wand": { glyph: "🪄" },
 	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */
-	"slow-wand": { glyph: "🔮" },
+	"slow-wand": { glyph: "🪄" },
+	/* Same glyph again — every wand is just "a wand" on the ground. */
+	"teleport-wand": { glyph: "🪄" },
+	/* Same glyph as the other rings — every ring is just "a ring" on the ground. */
+	"stealth-ring": { glyph: "💍" },
+	"awareness-ring": { glyph: "💍" },
+	"aggravate-monster-ring": { glyph: "💍" },
+	/* Same glyph again — every wand is just "a wand" on the ground. */
+	"magic-missile-wand": { glyph: "🪄" },
+	"sleep-wand": { glyph: "🪄" },
+	/* Same scroll glyph as every other scroll kind — see the comment above. */
+	"confuse-monster-scroll": { glyph: "📜" },
+	"hold-monster-scroll": { glyph: "📜" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };
+
+/* Status-effect chip glyphs shown in chrome (src/shell/statusBar.tsx,
+ * demo/main.js) — exported here (not just inline in statusBar.tsx) so both
+ * consumers share one definition instead of hand-copying the emoji and
+ * silently drifting (see docs/tasks/game.md milestone 78). Selection
+ * rationale for each is in milestone 74 and docs/emoji-registry.md. */
+export const CONFUSION_GLYPH = "💫";
+export const LEVITATION_GLYPH = "🪽";
+export const BLINDNESS_GLYPH = "🙈";
+export const PARALYSIS_GLYPH = "⚡";
+export const DETECT_MONSTER_GLYPH = "🔭";
+/* Woozy face: single-codepoint, no VS16, Unicode 11.0 — CONFUSION_GLYPH(💫)
+ * is already taken, and this project's other status chips are all
+ * Unicode ≤10; kept anyway since no lower-Unicode glyph reads as "things
+ * look wrong" without colliding with an existing chip (same exception
+ * rationale as the vampire glyph in ENEMY_GLYPHS). */
+export const HALLUCINATION_GLYPH = "🥴";
+
+/**
+ * Marks a currently-equipped sword/armor/ring row in the inventory overlay
+ * (src/shell/inventoryLabels.ts, demo/main.js) — same shared-glyph reasoning
+ * as the status chips above. Single codepoint, no VS16, Unicode 6.0 (well
+ * under the docs/emoji-policy.md ceiling); EAW Wide per Unicode's East Asian
+ * Width data. Added 2026-07-19 (milestone 81) — still pending the real
+ * Windows Terminal check the policy's step 5 calls for (this environment has
+ * no tmux/PTY, same constraint noted in milestones 79/80).
+ */
+export const EQUIPPED_GLYPH = "✅";
 
 // Out-of-sight layers use the full-width space (U+3000, East Asian Width
 // Wide — a stable 2 columns) instead of emoji: ANSI dimming has no effect on

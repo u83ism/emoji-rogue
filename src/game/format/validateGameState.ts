@@ -9,6 +9,7 @@ import {
 	type GameEvent,
 	ITEM_KIND_VALUES,
 	type ItemKind,
+	isEquipmentItemKind,
 	TRAP_KIND_VALUES,
 	type TrapKind,
 } from "../events.js";
@@ -16,7 +17,7 @@ import type {
 	Enemy,
 	GameState,
 	GoldPile,
-	InventoryEntry,
+	HeldItem,
 	Item,
 	Position,
 	Stairs,
@@ -31,12 +32,6 @@ export const isPositiveInteger = (value: unknown): value is number =>
 
 const isNonNegativeInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value >= 0;
-
-const isInteger = (value: unknown): value is number =>
-	typeof value === "number" && Number.isInteger(value);
-
-const isNonZeroInteger = (value: unknown): value is number =>
-	isInteger(value) && value !== 0;
 
 export const isFiniteNumber = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value);
@@ -103,7 +98,8 @@ const isEnemyArray = (
 			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp) &&
 			isBooleanValue(enemy.awake) &&
-			isNonNegativeInteger(enemy.slowedTurnsRemaining),
+			isNonNegativeInteger(enemy.slowedTurnsRemaining) &&
+			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -112,24 +108,83 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
 
+/**
+ * A held item: itemId + kind, plus (for sword/armor/ring kinds only) the
+ * equip/curse/bonus state HeldItem carries — see state.ts's doc comment.
+ */
+const isHeldItem = (value: unknown): value is HeldItem => {
+	if (
+		!isRecord(value) ||
+		!isPositiveInteger(value.itemId) ||
+		!isItemKind(value.kind)
+	) {
+		return false;
+	}
+	if (!isEquipmentItemKind(value.kind)) {
+		return true;
+	}
+	if (!isBooleanValue(value.equipped) || !isBooleanValue(value.cursed)) {
+		return false;
+	}
+	if (value.kind === "sword") {
+		return isNonNegativeInteger(value.attackBonus);
+	}
+	if (value.kind === "armor") {
+		return (
+			isNonNegativeInteger(value.defenseBonus) &&
+			isBooleanValue(value.rustProtected)
+		);
+	}
+	return true;
+};
+
+const isHeldItemArray = (value: unknown): value is readonly HeldItem[] =>
+	Array.isArray(value) && value.every(isHeldItem);
+
+/**
+ * A sword/armor/ring's identity on a floor Item — same shape as HeldItem's
+ * equip state minus `equipped` (meaningless on the ground). Rolled once at
+ * floor generation, so every equipment-kind Item always carries one — see
+ * Item's doc comment in state.ts.
+ */
+const isItemIdentity = (kind: ItemKind, value: unknown): boolean => {
+	if (
+		!isRecord(value) ||
+		!isPositiveInteger(value.itemId) ||
+		!isBooleanValue(value.cursed)
+	) {
+		return false;
+	}
+	if (kind === "sword") {
+		return isNonNegativeInteger(value.attackBonus);
+	}
+	if (kind === "armor") {
+		return (
+			isNonNegativeInteger(value.defenseBonus) &&
+			isBooleanValue(value.rustProtected)
+		);
+	}
+	return true;
+};
+
 const isItemArray = (
 	value: unknown,
 	terrain: readonly (readonly number[])[],
 ): value is readonly Item[] =>
 	Array.isArray(value) &&
-	value.every(
-		(item) =>
-			isRecord(item) && standsOnFloor(item, terrain) && isItemKind(item.kind),
-	);
-
-const isInventoryArray = (value: unknown): value is readonly InventoryEntry[] =>
-	Array.isArray(value) &&
-	value.every(
-		(entry) =>
-			isRecord(entry) &&
-			isItemKind(entry.kind) &&
-			isPositiveInteger(entry.quantity),
-	);
+	value.every((item) => {
+		if (
+			!isRecord(item) ||
+			!standsOnFloor(item, terrain) ||
+			!isItemKind(item.kind)
+		) {
+			return false;
+		}
+		if (!isEquipmentItemKind(item.kind)) {
+			return true;
+		}
+		return isItemIdentity(item.kind, item.identity);
+	});
 
 const isGoldPileArray = (
 	value: unknown,
@@ -183,18 +238,23 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-healed": (payload) =>
 		isItemKind(payload.by) && isNonNegativeInteger(payload.amount),
 	"item-picked-up": (payload) => isItemKind(payload.kind),
+	"inventory-full": (payload) => isItemKind(payload.kind),
+	"item-dropped": (payload) => isItemKind(payload.kind),
 	"game-won": emptyPayload,
 	"weapon-equipped": (payload) =>
-		isItemKind(payload.kind) && isInteger(payload.bonus),
+		isItemKind(payload.kind) && isPositiveInteger(payload.bonus),
 	"armor-equipped": (payload) =>
-		isItemKind(payload.kind) && isNonZeroInteger(payload.bonus),
+		isItemKind(payload.kind) && isNonNegativeInteger(payload.bonus),
 	"player-hungry": emptyPayload,
 	"player-starved": (payload) => isPositiveInteger(payload.damage),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
-	/* trapdoor and teleport are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE */
+	/* trapdoor, teleport, bear and rust are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE */
 	"trap-triggered": (payload) =>
-		payload.kind === "trapdoor" || payload.kind === "teleport"
+		payload.kind === "trapdoor" ||
+		payload.kind === "teleport" ||
+		payload.kind === "bear" ||
+		payload.kind === "rust"
 			? isNonNegativeInteger(payload.damage)
 			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
 	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
@@ -230,6 +290,20 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-revitalized": (payload) => isPositiveInteger(payload.maxHpBonus),
 	"winds-of-kron-warning": emptyPayload,
 	"winds-of-kron-eviction": emptyPayload,
+	"item-unequipped": (payload) => isItemKind(payload.kind),
+	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
+	"curse-revealed": (payload) => isItemKind(payload.kind),
+	"items-decursed": (payload) => isPositiveInteger(payload.count),
+	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
+	"enemy-teleported": (payload) => isEnemyKind(payload.target),
+	"enemy-confused": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
+	"hallucination-faded": emptyPayload,
+	"enemy-held": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"enemy-slept": (payload) => isEnemyKind(payload.target),
+	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
 };
 
 /** The same table widened for lookup by an untrusted string key. */
@@ -317,25 +391,13 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(playerExperience)) {
 		return err("playerExperience");
 	}
-	const playerAttackDamage = value.playerAttackDamage;
-	if (!isPositiveInteger(playerAttackDamage)) {
-		return err("playerAttackDamage");
-	}
-	const playerDefense = value.playerDefense;
-	if (!isInteger(playerDefense)) {
-		return err("playerDefense");
+	const playerPower = value.playerPower;
+	if (!isPositiveInteger(playerPower)) {
+		return err("playerPower");
 	}
 	const playerFood = value.playerFood;
 	if (!isNonNegativeInteger(playerFood) || playerFood > PLAYER_MAX_FOOD) {
 		return err("playerFood");
-	}
-	const hasRingOfRegeneration = value.hasRingOfRegeneration;
-	if (!isBooleanValue(hasRingOfRegeneration)) {
-		return err("hasRingOfRegeneration");
-	}
-	const hasRingOfSustenance = value.hasRingOfSustenance;
-	if (!isBooleanValue(hasRingOfSustenance)) {
-		return err("hasRingOfSustenance");
 	}
 	const confusedTurnsRemaining = value.confusedTurnsRemaining;
 	if (!isNonNegativeInteger(confusedTurnsRemaining)) {
@@ -344,10 +406,6 @@ export const validateGameState = (
 	const levitationTurnsRemaining = value.levitationTurnsRemaining;
 	if (!isNonNegativeInteger(levitationTurnsRemaining)) {
 		return err("levitationTurnsRemaining");
-	}
-	const armorProtected = value.armorProtected;
-	if (!isBooleanValue(armorProtected)) {
-		return err("armorProtected");
 	}
 	const blindTurnsRemaining = value.blindTurnsRemaining;
 	if (!isNonNegativeInteger(blindTurnsRemaining)) {
@@ -360,6 +418,10 @@ export const validateGameState = (
 	const detectMonstersTurnsRemaining = value.detectMonstersTurnsRemaining;
 	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
 		return err("detectMonstersTurnsRemaining");
+	}
+	const hallucinatingTurnsRemaining = value.hallucinatingTurnsRemaining;
+	if (!isNonNegativeInteger(hallucinatingTurnsRemaining)) {
+		return err("hallucinatingTurnsRemaining");
 	}
 	const floor = value.floor;
 	if (!isPositiveInteger(floor)) {
@@ -414,8 +476,12 @@ export const validateGameState = (
 		return err("items");
 	}
 	const inventory = value.inventory;
-	if (!isInventoryArray(inventory)) {
+	if (!isHeldItemArray(inventory)) {
 		return err("inventory");
+	}
+	const nextItemId = value.nextItemId;
+	if (!isPositiveInteger(nextItemId)) {
+		return err("nextItemId");
 	}
 	const identifiedPotionKinds = value.identifiedPotionKinds;
 	if (!isItemKindArray(identifiedPotionKinds)) {
@@ -455,17 +521,14 @@ export const validateGameState = (
 		playerMaxHp,
 		playerLevel,
 		playerExperience,
-		playerAttackDamage,
-		playerDefense,
+		playerPower,
 		playerFood,
-		hasRingOfRegeneration,
-		hasRingOfSustenance,
 		confusedTurnsRemaining,
 		levitationTurnsRemaining,
-		armorProtected,
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		detectMonstersTurnsRemaining,
+		hallucinatingTurnsRemaining,
 		floor,
 		turnsOnCurrentFloor,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
@@ -480,12 +543,31 @@ export const validateGameState = (
 			hp: enemy.hp,
 			awake: enemy.awake,
 			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
+			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
-		items: items.map((item) => ({ x: item.x, y: item.y, kind: item.kind })),
-		inventory: inventory.map((entry) => ({
-			kind: entry.kind,
-			quantity: entry.quantity,
-		})),
+		items: items.map((item): Item => {
+			const position = { x: item.x, y: item.y };
+			switch (item.kind) {
+				case "sword":
+					return { ...position, kind: "sword", identity: item.identity };
+				case "armor":
+					return { ...position, kind: "armor", identity: item.identity };
+				case "regeneration-ring":
+				case "sustenance-ring":
+				case "stealth-ring":
+				case "awareness-ring":
+				case "aggravate-monster-ring":
+					return {
+						...position,
+						kind: item.kind,
+						identity: item.identity,
+					};
+				default:
+					return { ...position, kind: item.kind };
+			}
+		}),
+		inventory: [...inventory],
+		nextItemId,
 		identifiedPotionKinds: [...identifiedPotionKinds],
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,

@@ -1,4 +1,7 @@
-import { PLAYER_HUNGER_WARNING_THRESHOLD } from "../game/balance.js";
+import {
+	INVENTORY_CAPACITY,
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+} from "../game/balance.js";
 import type { GameState } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
 import { findNearestReachableTarget } from "./pathfinding.js";
@@ -12,8 +15,15 @@ export interface BotGoal {
 	readonly y: number;
 }
 
+/** Whether picking up one more item (gold and the amulet never take a slot) would even fit. */
+const hasInventorySpace = (state: GameState): boolean =>
+	state.inventory.length < INVENTORY_CAPACITY;
+
 const isLootTile = (state: GameState, x: number, y: number): boolean => {
-	if (state.items.some((item) => item.x === x && item.y === y)) {
+	if (
+		hasInventorySpace(state) &&
+		state.items.some((item) => item.x === x && item.y === y)
+	) {
 		return true;
 	}
 	if (state.goldPiles.some((pile) => pile.x === x && pile.y === y)) {
@@ -25,6 +35,7 @@ const isLootTile = (state: GameState, x: number, y: number): boolean => {
 };
 
 const isFoodTile = (state: GameState, x: number, y: number): boolean =>
+	hasInventorySpace(state) &&
 	state.items.some(
 		(item) => item.kind === "food" && item.x === x && item.y === y,
 	);

@@ -12,6 +12,7 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	hp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 describe("findAdjacentEnemyDirection", () => {

@@ -71,7 +71,7 @@ export const decideAction = (
 	const itemToUse = decideItemToUse(state, disabledItemKinds);
 	if (itemToUse !== undefined) {
 		return {
-			action: { type: "use-item", payload: { kind: itemToUse } },
+			action: { type: "use-item", payload: itemToUse },
 			memory,
 		};
 	}

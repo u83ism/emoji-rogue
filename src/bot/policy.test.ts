@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildArenaGameState } from "../game/initialState.js";
-import type { Action, Enemy, GameState } from "../game/state.js";
+import type { Action, Enemy, GameState, Item } from "../game/state.js";
 import { createInitialBotMemory } from "./memory.js";
 import { decideAction, STAGNATION_QUIT_TURNS } from "./policy.js";
 
@@ -13,6 +13,14 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	hp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const swordAt = (x: number, y: number): Item => ({
+	x,
+	y,
+	kind: "sword",
+	identity: { itemId: 99, cursed: false, attackBonus: 1 },
 });
 
 describe("decideAction", () => {
@@ -20,7 +28,7 @@ describe("decideAction", () => {
 		const state = {
 			...baseState(),
 			paralyzedTurnsRemaining: 2,
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
 			playerHp: 1,
 		};
 		const { action } = decideAction(state, createInitialBotMemory());
@@ -31,19 +39,19 @@ describe("decideAction", () => {
 		const state = {
 			...baseState(),
 			playerHp: 1,
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
 		};
 		const { action } = decideAction(state, createInitialBotMemory());
 		expect(action).toEqual({
 			type: "use-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 	});
 
 	it("attacks an adjacent enemy before continuing toward the goal", () => {
 		const state = {
 			...baseState(),
-			items: [{ x: 8, y: 8, kind: "sword" as const }],
+			items: [swordAt(8, 8)],
 			enemies: [enemyAt(4, 3)],
 		};
 		const { action } = decideAction(state, createInitialBotMemory());
@@ -53,7 +61,7 @@ describe("decideAction", () => {
 	it("moves toward the nearest loot when nothing more urgent is going on", () => {
 		const state = {
 			...baseState(),
-			items: [{ x: 4, y: 2, kind: "sword" as const }],
+			items: [swordAt(4, 2)],
 		};
 		const { action, memory } = decideAction(state, createInitialBotMemory());
 		expect(action).toEqual({ type: "move", payload: { direction: "north" } });
@@ -92,9 +100,9 @@ describe("decideAction", () => {
 	it("does not use a disabled item kind even if it would otherwise be used first", () => {
 		const state = {
 			...baseState(),
-			items: [{ x: 4, y: 2, kind: "sword" as const }],
+			items: [swordAt(4, 2)],
 			playerHp: 1,
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
 		};
 		const { action } = decideAction(
 			state,
@@ -107,7 +115,7 @@ describe("decideAction", () => {
 	it("keeps pursuing the same committed goal across turns instead of re-choosing it", () => {
 		const state = {
 			...baseState(),
-			items: [{ x: 4, y: 1, kind: "sword" as const }],
+			items: [swordAt(4, 1)],
 		};
 		const first = decideAction(state, createInitialBotMemory());
 		const second = decideAction(state, first.memory);

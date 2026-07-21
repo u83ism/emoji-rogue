@@ -1,7 +1,7 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng } from "../rng.js";
 import { buildEventLog } from "./events.js";
-import type { GameState, Position } from "./state.js";
+import type { Enemy, GameState, Position } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 /**
@@ -56,4 +56,36 @@ export const applyRandomTeleport = (state: GameState): GameState => {
 			{ type: "player-teleported", payload: { x: target.x, y: target.y } },
 		]),
 	});
+};
+
+/**
+ * Forcibly relocates `target` to a random floor tile (same eligible-tile
+ * rules as applyRandomTeleport — not the player's tile, not another enemy's)
+ * and wakes it: landing somewhere unfamiliar and staying asleep would be an
+ * odd combination. Used by the teleport wand (items/wands.ts).
+ */
+export const applyEnemyTeleport = (
+	state: GameState,
+	target: Enemy,
+): GameState => {
+	const tiles = collectTeleportTargets(state);
+	const rng = createRng(1).setState(state.rng);
+	const destination = tiles[rng.getUniformInt(0, tiles.length - 1)];
+	if (destination === undefined) {
+		throw new Error(
+			"unreachable: collectTeleportTargets always returns at least one tile",
+		);
+	}
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target
+				? { ...enemy, x: destination.x, y: destination.y, awake: true }
+				: enemy,
+		),
+		rng: rng.getState(),
+		events: buildEventLog(state.events, [
+			{ type: "enemy-teleported", payload: { target: target.kind } },
+		]),
+	};
 };

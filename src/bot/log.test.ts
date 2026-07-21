@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { buildArenaGameState } from "../game/initialState.js";
+import type { Item } from "../game/state.js";
 import { buildTurnLogEntry } from "./log.js";
+
+const armorAt = (x: number, y: number): Item => ({
+	x,
+	y,
+	kind: "armor",
+	identity: { itemId: 2, cursed: false, defenseBonus: 1, rustProtected: false },
+});
 
 describe("buildTurnLogEntry", () => {
 	it("snapshots the fields relevant to offline analysis", () => {
@@ -8,10 +16,16 @@ describe("buildTurnLogEntry", () => {
 			...buildArenaGameState(5, 5, 1),
 			goldCollected: 12,
 			inventory: [
-				{ kind: "food" as const, quantity: 2 },
-				{ kind: "sword" as const, quantity: 1 },
+				{ itemId: 1, kind: "food" as const },
+				{
+					itemId: 2,
+					kind: "sword" as const,
+					equipped: false,
+					cursed: false,
+					attackBonus: 1,
+				},
 			],
-			items: [{ x: 1, y: 1, kind: "shield" as const }],
+			items: [armorAt(1, 1)],
 		};
 		const entry = buildTurnLogEntry(
 			7,
@@ -34,7 +48,7 @@ describe("buildTurnLogEntry", () => {
 			action: { type: "wait" },
 			goalKind: "loot",
 			stagnantTurns: 3,
-			inventoryCount: 3,
+			inventoryCount: 2,
 			lootRemainingOnFloor: 1,
 			recentEvents: [],
 		});

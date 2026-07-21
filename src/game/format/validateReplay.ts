@@ -3,7 +3,6 @@ import type { Action, Direction } from "../state.js";
 import type { Replay } from "./replay.js";
 import {
 	isFiniteNumber,
-	isItemKind,
 	isPositiveInteger,
 	isRecord,
 } from "./validateGameState.js";
@@ -26,7 +25,14 @@ const isAction = (value: unknown): value is Action => {
 		case "quit":
 			return true;
 		case "use-item":
-			return isRecord(value.payload) && isItemKind(value.payload.kind);
+			return (
+				isRecord(value.payload) &&
+				isPositiveInteger(value.payload.itemId) &&
+				(value.payload.targetItemId === undefined ||
+					isPositiveInteger(value.payload.targetItemId))
+			);
+		case "drop-item":
+			return isRecord(value.payload) && isPositiveInteger(value.payload.itemId);
 		default:
 			return false;
 	}

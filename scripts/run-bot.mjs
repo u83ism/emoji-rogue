@@ -148,8 +148,11 @@ const summary = {
 	hasAmulet: state.hasAmulet,
 	score: calculateScore(state),
 	deathCause,
-	hasRingOfRegeneration: state.hasRingOfRegeneration,
-	hasRingOfSustenance: state.hasRingOfSustenance,
+	equippedRingKind:
+		state.inventory.find(
+			(item) =>
+				"equipped" in item && item.equipped && item.kind.endsWith("-ring"),
+		)?.kind ?? null,
 	disabledItemKinds: [...disabledItemKinds],
 };
 

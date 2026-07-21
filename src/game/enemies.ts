@@ -4,48 +4,42 @@ import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	ENEMY_ACTIONS_PER_TURN,
 	ENEMY_ATTACK_DAMAGE,
+	ENEMY_MAX_HP,
 	MIN_DAMAGE_TAKEN,
-	THIEF_STEAL_AMOUNT,
+	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
+import { resolveFleeingTheft } from "./enemyFlee.js";
 import { stepTowardPlayer, stepWandering } from "./enemyMovement.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import { removeOneFromInventory } from "./items/inventory.js";
-import type { Enemy, GameState, Position } from "./state.js";
+import {
+	applyArmorRust,
+	calculatePlayerDefense,
+	canRustEquippedArmor,
+} from "./items/equipment.js";
+import { hasEquippedRing } from "./items/rings.js";
+import type { Enemy, GameState, HeldItem, Position } from "./state.js";
+import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /**
- * One turn for every enemy, in array order. A still-sleeping enemy (see
- * Enemy.awake) takes no action at all unless it wakes this turn: while
- * adjacent to the player, or inside the player's field of view (the same
- * `visiblePoints` set used for the chase decision below, reused as a wake
- * check), it rolls WAKE_CHANCE_PERCENT (consuming the state's RNG) each turn
- * until it succeeds — not a guaranteed wake, so a fast enough attack can
- * still land a sneak attack. Once awake, an enemy never sleeps again. Awake
- * enemies act
- * `ENEMY_ACTIONS_PER_TURN[kind]` times (a fast kind like a bat gets two
- * attacks or two steps for the player's one): adjacent to the player attacks
- * in place (damage from balance.ts by kind, reduced by the (locally
- * accumulated) playerDefense but never below MIN_DAMAGE_TAKEN) — except a
- * thief, which steals up to THIEF_STEAL_AMOUNT gold instead of dealing
- * damage, and a nymph, which steals one random held item stack instead
- * (rng-picked when more than one kind is held; item-stolen fires with kind:
- * undefined if the inventory was empty). Both flee the board for good
- * afterward (never rejoin `nextEnemies`, killed or not). An aquator instead
- * stands its ground: every landed hit additionally rolls
- * AQUATOR_RUST_CHANCE_PERCENT to also knock 1 off playerDefense
- * (armor-rusted), so its later hits in the same fight — this turn's or a
- * future one's — land harder, unless armorProtected is set (see the protect
- * armor scroll), in which case the rust roll is skipped entirely — no rng
- * consumed, no chance of it landing. An awake enemy with slowedTurnsRemaining > 0
- * (see the slow wand) skips this turn's action entirely — no movement, no
- * attack — while the counter ticks down, checked right after the sleep
- * check above. Non-adjacent
- * enemies chase via A* while inside the player's field of view, or wander
- * using (and advancing) the state's RNG. The player's HP reaching zero ends
- * the run and cuts short any remaining actions, this enemy's and the rest of
- * the array's alike.
+ * One turn for every enemy, in array order. A still-sleeping enemy wakes
+ * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll
+ * (STEALTH_RING_WAKE_CHANCE_PERCENT with a stealth ring worn) — not
+ * guaranteed, leaving room for a sneak attack. Once awake it acts
+ * ENEMY_ACTIONS_PER_TURN[kind] times: adjacent attacks in place (damage from
+ * balance.ts, reduced by calculatePlayerDefense but never below
+ * MIN_DAMAGE_TAKEN) — except thief/nymph, which flee after stealing instead
+ * (enemyFlee.ts's resolveFleeingTheft); aquator, whose landed hits also roll
+ * AQUATOR_RUST_CHANCE_PERCENT to rust the equipped armor; and vampire, which
+ * heals off its own landed hits (vampireLifesteal.ts, capped at
+ * ENEMY_MAX_HP.vampire). A slowedTurnsRemaining > 0 enemy (slow wand) skips
+ * its whole action, just ticking down. Non-adjacent enemies chase via A*
+ * while visible and not confused (confusedTurnsRemaining > 0 — confuse
+ * monster scroll — forces wandering instead; adjacent attacks are
+ * unaffected), or wander otherwise. The player's HP reaching zero ends the
+ * run and cuts short any remaining actions.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -64,8 +58,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 	let rng = state.rng;
 	let playerHp = state.playerHp;
 	let goldCollected = state.goldCollected;
-	let inventory = state.inventory;
-	let playerDefense = state.playerDefense;
+	let inventory: readonly HeldItem[] = state.inventory;
 	let died = false;
 	const events: GameEvent[] = [];
 	const nextEnemies: Enemy[] = [];
@@ -78,9 +71,12 @@ export const advanceEnemies = (state: GameState): GameState => {
 			(isAdjacent(enemy, state.player) ||
 				visiblePoints.has(encodePointKey(enemy.x, enemy.y)))
 		) {
+			const wakeChancePercent = hasEquippedRing(inventory, "stealth-ring")
+				? STEALTH_RING_WAKE_CHANCE_PERCENT
+				: WAKE_CHANCE_PERCENT;
 			const roll = stepUniform(rng);
 			rng = roll.state;
-			awake = roll.value < WAKE_CHANCE_PERCENT / 100;
+			awake = roll.value < wakeChancePercent / 100;
 		}
 		if (!awake) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
@@ -88,17 +84,28 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 
+		/* Decided from this turn's still-undecremented value (same idiom as
+		 * slowedTurnsRemaining below) — the scroll's own application turn
+		 * already wanders instead of chasing. */
+		const confused = enemy.confusedTurnsRemaining > 0;
+		const confusedTurnsRemaining = Math.max(
+			0,
+			enemy.confusedTurnsRemaining - 1,
+		);
+
 		if (enemy.slowedTurnsRemaining > 0) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
 			nextEnemies.push({
 				...enemy,
 				awake,
 				slowedTurnsRemaining: enemy.slowedTurnsRemaining - 1,
+				confusedTurnsRemaining,
 			});
 			continue;
 		}
 
 		let next: Position = enemy;
+		let currentHp = enemy.hp;
 		let fled = false;
 		for (
 			let action = 0;
@@ -106,52 +113,56 @@ export const advanceEnemies = (state: GameState): GameState => {
 			action++
 		) {
 			if (isAdjacent(next, state.player)) {
-				if (enemy.kind === "thief") {
-					const stolen = Math.min(THIEF_STEAL_AMOUNT, goldCollected);
-					goldCollected -= stolen;
-					events.push({ type: "gold-stolen", payload: { amount: stolen } });
-					fled = true;
-					continue;
-				}
-				if (enemy.kind === "nymph") {
-					if (inventory.length === 0) {
-						events.push({ type: "item-stolen", payload: { kind: undefined } });
-					} else {
-						const pick = stepUniform(rng);
-						rng = pick.state;
-						const index = Math.floor(pick.value * inventory.length);
-						const entry = inventory[index];
-						if (entry === undefined) {
-							throw new Error("unreachable: index is within inventory bounds");
-						}
-						inventory = removeOneFromInventory(inventory, index);
-						events.push({ type: "item-stolen", payload: { kind: entry.kind } });
-					}
+				if (enemy.kind === "thief" || enemy.kind === "nymph") {
+					const result = resolveFleeingTheft(
+						enemy.kind,
+						rng,
+						goldCollected,
+						inventory,
+					);
+					rng = result.rng;
+					goldCollected = result.goldCollected;
+					inventory = result.inventory;
+					events.push(result.event);
 					fled = true;
 					continue;
 				}
 				const damage = Math.max(
 					MIN_DAMAGE_TAKEN,
-					ENEMY_ATTACK_DAMAGE[enemy.kind] - playerDefense,
+					ENEMY_ATTACK_DAMAGE[enemy.kind] - calculatePlayerDefense(inventory),
 				);
 				playerHp -= damage;
 				events.push({
 					type: "player-hit",
 					payload: { by: enemy.kind, damage },
 				});
-				if (enemy.kind === "aquator" && !state.armorProtected) {
+				if (enemy.kind === "aquator" && canRustEquippedArmor(inventory)) {
 					const rustRoll = stepUniform(rng);
 					rng = rustRoll.state;
 					if (rustRoll.value < AQUATOR_RUST_CHANCE_PERCENT / 100) {
-						playerDefense -= 1;
+						inventory = applyArmorRust(inventory);
 						events.push({ type: "armor-rusted", payload: { amount: 1 } });
+					}
+				}
+				if (enemy.kind === "vampire") {
+					const lifesteal = resolveVampireLifesteal(
+						currentHp,
+						ENEMY_MAX_HP.vampire,
+						damage,
+					);
+					currentHp = lifesteal.hp;
+					if (lifesteal.event !== undefined) {
+						events.push(lifesteal.event);
 					}
 				}
 				if (playerHp <= 0) {
 					died = true;
 					events.push({ type: "player-died", payload: { by: enemy.kind } });
 				}
-			} else if (visiblePoints.has(encodePointKey(next.x, next.y))) {
+			} else if (
+				!confused &&
+				visiblePoints.has(encodePointKey(next.x, next.y))
+			) {
 				const step = stepTowardPlayer(state, next, occupied);
 				next = step ?? next;
 			} else {
@@ -165,7 +176,14 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 		occupied.add(encodePointKey(next.x, next.y));
-		nextEnemies.push({ ...enemy, x: next.x, y: next.y, awake: true });
+		nextEnemies.push({
+			...enemy,
+			x: next.x,
+			y: next.y,
+			hp: currentHp,
+			awake: true,
+			confusedTurnsRemaining,
+		});
 	}
 
 	return {
@@ -173,7 +191,6 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: Math.max(0, playerHp),
 		goldCollected,
 		inventory,
-		playerDefense,
 		enemies: nextEnemies,
 		events: buildEventLog(state.events, events),
 		rng,

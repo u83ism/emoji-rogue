@@ -15,12 +15,17 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	thief: "盗賊",
 	nymph: "ニンフ",
 	aquator: "アクエーター",
+	orc: "オーク",
+	dragon: "ドラゴン",
+	yeti: "雪男",
+	snake: "蛇",
+	vampire: "ヴァンパイア",
 };
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"heal-potion": "回復薬",
 	sword: "剣",
-	shield: "盾",
+	armor: "鎧",
 	food: "食料",
 	poison: "毒薬",
 	"teleport-scroll": "巻物",
@@ -43,7 +48,38 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"raise-level": "レベルアップの薬",
 	"detect-monster": "索敵の薬",
 	life: "生命の薬",
+	"remove-curse-scroll": "解呪の巻物",
+	/* Same generic display name as the other wands — which effect it grants only shows once used. */
+	"teleport-wand": "杖",
+	/* Same generic display name as the other rings — which effect it grants only shows once worn. */
+	"stealth-ring": "指輪",
+	"awareness-ring": "指輪",
+	/* Same generic display name as the other wands — which effect it grants only shows once used. */
+	"magic-missile-wand": "杖",
+	/* Scrolls show their real name immediately, unlike wands/rings — no generic placeholder. */
+	"confuse-monster-scroll": "混乱の巻物",
+	hallucination: "幻覚の薬",
+	"hold-monster-scroll": "束縛の巻物",
+	"aggravate-monster-ring": "指輪",
+	"sleep-wand": "杖",
 };
+
+/**
+ * The flavor text for messages.ts's ring-equipped case, one entry per ring
+ * kind. A lookup table rather than an if-chain (converted here at the 4th
+ * ring — functional-style.md's if-chain limit is 3 branches): the payload's
+ * `kind` is the wider ItemKind, so this is a Partial map, not a total one —
+ * messages.ts treats a missing entry as unreachable (ring-equipped never
+ * fires for a non-ring kind).
+ */
+export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
+	{
+		"regeneration-ring": "じわじわとHPが回復するようになった!",
+		"sustenance-ring": "空腹の進みがゆるやかになった!",
+		"stealth-ring": "足音が忍びやかになった!",
+		"awareness-ring": "敵の気配を常に感じ取れるようになった!",
+		"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
+	};
 
 /** Shown for any potion-family item not yet identified this run. */
 const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
@@ -52,6 +88,8 @@ export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	dart: "矢のわな",
 	trapdoor: "落とし穴",
 	teleport: "テレポートの罠",
+	bear: "捕獲のわな",
+	rust: "錆びわな",
 };
 
 /**

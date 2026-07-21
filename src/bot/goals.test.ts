@@ -1,17 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { PLAYER_HUNGER_WARNING_THRESHOLD } from "../game/balance.js";
 import { buildArenaGameState } from "../game/initialState.js";
-import type { GameState } from "../game/state.js";
+import type { GameState, Item } from "../game/state.js";
 import { chooseGoal, isGoalStillValid } from "./goals.js";
 
 const baseState = (): GameState => buildArenaGameState(9, 9, 1);
 
+const swordAt = (x: number, y: number): Item => ({
+	x,
+	y,
+	kind: "sword",
+	identity: { itemId: 1, cursed: false, attackBonus: 1 },
+});
+
+const armorAt = (x: number, y: number): Item => ({
+	x,
+	y,
+	kind: "armor",
+	identity: { itemId: 2, cursed: false, defenseBonus: 1, rustProtected: false },
+});
+
+const foodAt = (x: number, y: number): Item => ({ x, y, kind: "food" });
+
 describe("chooseGoal", () => {
 	it("targets the nearest item when loot is present", () => {
-		const state = {
-			...baseState(),
-			items: [{ x: 6, y: 4, kind: "sword" as const }],
-		};
+		const state = { ...baseState(), items: [swordAt(6, 4)] };
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
 			x: 6,
@@ -52,10 +65,7 @@ describe("chooseGoal", () => {
 	it("excludes blacklisted tiles from consideration", () => {
 		const state = {
 			...baseState(),
-			items: [
-				{ x: 6, y: 4, kind: "sword" as const },
-				{ x: 5, y: 3, kind: "shield" as const },
-			],
+			items: [swordAt(6, 4), armorAt(5, 3)],
 		};
 		const blacklist = new Set(["6,4"]);
 		expect(chooseGoal(state, blacklist)).toEqual({
@@ -69,10 +79,7 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			items: [
-				{ x: 3, y: 3, kind: "sword" as const },
-				{ x: 7, y: 7, kind: "food" as const },
-			],
+			items: [swordAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -85,11 +92,8 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			inventory: [{ kind: "food" as const, quantity: 1 }],
-			items: [
-				{ x: 3, y: 3, kind: "sword" as const },
-				{ x: 7, y: 7, kind: "food" as const },
-			],
+			inventory: [{ itemId: 10, kind: "food" as const }],
+			items: [swordAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -102,10 +106,7 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD + 1,
-			items: [
-				{ x: 3, y: 3, kind: "sword" as const },
-				{ x: 7, y: 7, kind: "food" as const },
-			],
+			items: [swordAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -113,14 +114,27 @@ describe("chooseGoal", () => {
 			y: 3,
 		});
 	});
+
+	it("does not target a loot item once the inventory is already full", () => {
+		const state = {
+			...baseState(),
+			inventory: Array.from({ length: 20 }, (_, index) => ({
+				itemId: index,
+				kind: "food" as const,
+			})),
+			items: [swordAt(6, 4)],
+		};
+		expect(chooseGoal(state, new Set())).toEqual({
+			kind: "stairs",
+			x: state.stairs.x,
+			y: state.stairs.y,
+		});
+	});
 });
 
 describe("isGoalStillValid", () => {
 	it("is true for a loot goal whose tile still has loot", () => {
-		const state = {
-			...baseState(),
-			items: [{ x: 6, y: 4, kind: "sword" as const }],
-		};
+		const state = { ...baseState(), items: [swordAt(6, 4)] };
 		expect(isGoalStillValid(state, { kind: "loot", x: 6, y: 4 })).toBe(true);
 	});
 

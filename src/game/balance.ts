@@ -19,6 +19,16 @@ export const MIN_DAMAGE_TAKEN = 1;
  */
 export const DAMAGE_VARIANCE_STDDEV = 0.5;
 
+/**
+ * Max distinct item kinds the player can hold at once — one slot per held
+ * kind (stacking more of an already-held kind never costs a slot). Picking
+ * up a new kind is refused once at capacity — see applyItemPickup. Matches
+ * the base どうぐ袋 capacity of Fushigi no Dungeon: Shiren the Wanderer (the
+ * series this project's inventory UX takes its cues from); that series lets
+ * the capacity grow via found items, which this project does not (yet).
+ */
+export const INVENTORY_CAPACITY = 20;
+
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;
 export const ZOMBIE_ACTIONS_PER_TURN = 1;
@@ -34,7 +44,7 @@ export const BAT_COUNT_BASE = 2;
 // Never deals HP damage — it steals gold on contact and flees instead (see
 // advanceEnemies's kind-specific branch) and does not scale with depth like
 // zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an independent
-// per-floor roll like sword/shield.
+// per-floor roll like sword/armor.
 export const THIEF_MAX_HP = 2;
 export const THIEF_ATTACK_DAMAGE = 0;
 export const THIEF_ACTIONS_PER_TURN = 1;
@@ -58,6 +68,52 @@ export const AQUATOR_ACTIONS_PER_TURN = 1;
 /** Chance (out of 100), independently rolled every time an aquator's attack lands, that it also rusts armor. */
 export const AQUATOR_RUST_CHANCE_PERCENT = 33;
 export const AQUATOR_SPAWN_CHANCE_PERCENT = 20;
+
+// A sturdier straight-up melee attacker than aquator — no special behavior of
+// its own in advanceEnemies (same "attack if adjacent, otherwise chase/wander"
+// as zombie/bat); its distinguishing trait is combat.ts's applyEnemyHit
+// dropping a bonus gold pile on death (see GOLD_AMOUNT_MIN/MAX), echoing
+// original Rogue's gold-hoarding orc. Independent per-floor spawn, no depth
+// scaling — same idiom as thief/nymph/aquator.
+export const ORC_MAX_HP = 4;
+export const ORC_ATTACK_DAMAGE = 2;
+export const ORC_ACTIONS_PER_TURN = 1;
+export const ORC_SPAWN_CHANCE_PERCENT = 20;
+
+// A boss-tier melee attacker, sturdier and harder-hitting than any other
+// enemy, differentiated purely by parameters — same "no advanceEnemies
+// branch" idiom as zombie/bat. Independent per-floor spawn like thief/nymph/
+// aquator/orc, but rare (same rate as ring/wand drops).
+export const DRAGON_MAX_HP = 8;
+export const DRAGON_ATTACK_DAMAGE = 4;
+export const DRAGON_ACTIONS_PER_TURN = 1;
+export const DRAGON_SPAWN_CHANCE_PERCENT = 8;
+
+// Another "parameters only" melee attacker, positioned between orc and
+// dragon on every axis. No single-codepoint stable emoji depicts a yeti, so
+// glyphs.ts substitutes a bear as the nearest mountain-beast stand-in.
+export const YETI_MAX_HP = 5;
+export const YETI_ATTACK_DAMAGE = 3;
+export const YETI_ACTIONS_PER_TURN = 1;
+export const YETI_SPAWN_CHANCE_PERCENT = 15;
+
+// Low HP but a harder bite than zombie/bat — the balance point is the extra
+// damage offsetting how easily it dies. Independent per-floor spawn, no
+// depth scaling — same idiom as thief/nymph/aquator/orc/yeti.
+export const SNAKE_MAX_HP = 2;
+export const SNAKE_ATTACK_DAMAGE = 2;
+export const SNAKE_ACTIONS_PER_TURN = 1;
+export const SNAKE_SPAWN_CHANCE_PERCENT = 20;
+
+// Stands and fights like aquator rather than fleeing — every landed hit
+// heals it for a percentage of the damage dealt, capped at VAMPIRE_MAX_HP
+// (see vampireLifesteal.ts). Independent per-floor spawn, no depth scaling.
+export const VAMPIRE_MAX_HP = 4;
+export const VAMPIRE_ATTACK_DAMAGE = 2;
+export const VAMPIRE_ACTIONS_PER_TURN = 1;
+/** Percentage (floored) of landed damage a vampire heals itself for — see vampireLifesteal.ts's resolveVampireLifesteal. */
+export const VAMPIRE_LIFESTEAL_PERCENT = 50;
+export const VAMPIRE_SPAWN_CHANCE_PERCENT = 15;
 
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
@@ -88,6 +144,11 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_MAX_HP,
 	nymph: NYMPH_MAX_HP,
 	aquator: AQUATOR_MAX_HP,
+	orc: ORC_MAX_HP,
+	dragon: DRAGON_MAX_HP,
+	yeti: YETI_MAX_HP,
+	snake: SNAKE_MAX_HP,
+	vampire: VAMPIRE_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -95,6 +156,11 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_ATTACK_DAMAGE,
 	nymph: NYMPH_ATTACK_DAMAGE,
 	aquator: AQUATOR_ATTACK_DAMAGE,
+	orc: ORC_ATTACK_DAMAGE,
+	dragon: DRAGON_ATTACK_DAMAGE,
+	yeti: YETI_ATTACK_DAMAGE,
+	snake: SNAKE_ATTACK_DAMAGE,
+	vampire: VAMPIRE_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -107,6 +173,11 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	thief: THIEF_ACTIONS_PER_TURN,
 	nymph: NYMPH_ACTIONS_PER_TURN,
 	aquator: AQUATOR_ACTIONS_PER_TURN,
+	orc: ORC_ACTIONS_PER_TURN,
+	dragon: DRAGON_ACTIONS_PER_TURN,
+	yeti: YETI_ACTIONS_PER_TURN,
+	snake: SNAKE_ACTIONS_PER_TURN,
+	vampire: VAMPIRE_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -115,6 +186,11 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	thief: 2,
 	nymph: 1,
 	aquator: 3,
+	orc: 3,
+	dragon: 6,
+	yeti: 4,
+	snake: 3,
+	vampire: 5,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */
@@ -161,26 +237,25 @@ export const calculateEnemyCountForFloor = (
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
-/** Permanent boost to playerAttackDamage per sword used. Stacks — no cap. */
+/** A freshly picked-up sword's own attackBonus (see HeldItem) — raised further by enchant-weapon scrolls targeting it. */
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
 export const SWORD_SPAWN_CHANCE_PERCENT = 15;
 /**
- * Chance (out of 100) that a sword turns out cursed the moment it's used —
- * rolled fresh at use time, not at spawn (see docs/tasks/game-history.md milestone
- * 29: inventory stacks lose per-item identity, so there is nowhere to pin a
- * curse flag onto a specific sword ahead of time).
+ * Chance (out of 100) that a sword turns out cursed — rolled once at pickup
+ * (see items/pickups.ts) and hidden until equipped. A cursed item is exactly
+ * as effective as an uncursed one; the only effect is that it cannot be
+ * unequipped until a remove-curse scroll is read (milestone 81 dropped the
+ * older "curse subtracts from the stat" design).
  */
 export const SWORD_CURSE_CHANCE_PERCENT = 20;
-/** However cursed a sword, playerAttackDamage never drops below this. */
-export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 
-/** Permanent boost to playerDefense per shield used. Stacks — no cap (see MIN_DAMAGE_TAKEN). */
-export const SHIELD_DEFENSE_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that a shield spawns. */
-export const SHIELD_SPAWN_CHANCE_PERCENT = 15;
-/** Chance (out of 100) that a shield turns out cursed the moment it's used — same idiom as SWORD_CURSE_CHANCE_PERCENT. */
-export const SHIELD_CURSE_CHANCE_PERCENT = 20;
+/** A freshly picked-up armor's own defenseBonus (see HeldItem) — raised further by enchant-armor scrolls targeting it. */
+export const ARMOR_DEFENSE_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that armor spawns. */
+export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
+/** Chance (out of 100) that armor turns out cursed — same idiom and timing as SWORD_CURSE_CHANCE_PERCENT. */
+export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 
 export const POISON_DAMAGE = 4;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
@@ -195,7 +270,7 @@ export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
 export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
-/** Permanent boost to playerAttackDamage per strength potion drunk. Same magnitude as a sword. */
+/** Permanent boost to playerPower per strength potion drunk — meaningful even with no sword equipped. */
 export const STRENGTH_POTION_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
@@ -241,15 +316,31 @@ export const TELEPORT_TRAP_DAMAGE = 0;
  */
 export const TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20;
 
+/** No damage — the penalty is the paralysis itself, see PARALYZED_TURNS_REMAINING handling in trapTrigger.ts. */
+export const BEAR_TRAP_DAMAGE = 0;
+/** How many turns a bear trap paralyzes the player for — same length as the paralysis potion. */
+export const BEAR_TRAP_PARALYSIS_DURATION = 3;
+/** Chance (out of 100), independently rolled per floor, that a bear trap spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, allowed on GOAL_FLOOR too (it never generates a floor beyond it). */
+export const BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15;
+
+/** No damage — the penalty is the armor degradation itself, see trapTrigger.ts's TRAP_SIDE_EFFECTS. */
+export const RUST_TRAP_DAMAGE = 0;
+/** Chance (out of 100), independently rolled per floor, that a rust trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
+export const RUST_TRAP_SPAWN_CHANCE_PERCENT = 15;
+
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 	trapdoor: TRAPDOOR_DAMAGE,
 	teleport: TELEPORT_TRAP_DAMAGE,
+	bear: BEAR_TRAP_DAMAGE,
+	rust: RUST_TRAP_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
 export const RING_SPAWN_CHANCE_PERCENT = 8;
+/** Chance (out of 100) that a ring turns out cursed — same pickup-time-roll, hidden-until-equipped idiom as SWORD_CURSE_CHANCE_PERCENT. */
+export const RING_CURSE_CHANCE_PERCENT = 20;
 /**
  * Chance (out of 100), rolled independently every turn a ring of
  * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it
@@ -268,18 +359,33 @@ export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
  */
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 
+/** Chance (out of 100), independently rolled per floor, that a ring of stealth spawns. */
+export const STEALTH_RING_SPAWN_CHANCE_PERCENT = 8;
 /**
- * Permanent boost to playerAttackDamage per scroll read — same magnitude as
- * a sword, but unlike a found sword this is never cursed (scrolls have no
- * curse mechanic in this game, see docs/tasks/game-history.md milestone 36).
+ * Replaces WAKE_CHANCE_PERCENT (33) while a ring of stealth is equipped —
+ * roughly half, see enemies.ts's advanceEnemies.
+ */
+export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
+
+/** Chance (out of 100), independently rolled per floor, that a ring of awareness spawns. */
+export const AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8;
+
+/** Chance (out of 100), independently rolled per floor, that a ring of aggravate monster spawns — the first ring with a downside rather than a benefit. */
+export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
+
+/**
+ * Permanent boost to a targeted sword's own attackBonus per scroll read
+ * (see items/scrolls.ts — the player picks which held sword, equipped or
+ * not; no-op with no sword held). Same magnitude as a freshly found sword,
+ * but the scroll itself is never cursed.
  */
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
 export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
- * Permanent boost to playerDefense per scroll read — same magnitude as a
- * shield, but (like enchant-weapon) never cursed.
+ * Permanent boost to a targeted armor's own defenseBonus per scroll read —
+ * same targeting and never-cursed rules as ENCHANT_WEAPON_BONUS.
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
@@ -293,6 +399,32 @@ export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 export const WAND_STRIKE_DAMAGE = 3;
 /** Chance (out of 100), independently rolled per floor, that a wand spawns. */
 export const WAND_SPAWN_CHANCE_PERCENT = 8;
+
+/** Chance (out of 100), independently rolled per floor, that a teleport wand spawns — same rarity as the other wands. */
+export const TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8;
+
+/** Fixed ranged damage a wand of magic missile deals — higher than WAND_STRIKE_DAMAGE, offset by a lower spawn chance. */
+export const MAGIC_MISSILE_WAND_DAMAGE = 5;
+/** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns — lower than WAND_SPAWN_CHANCE_PERCENT. */
+export const MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6;
+
+/** How many turns a confuse monster scroll makes an enemy wander instead of pathfinding toward the player (adjacent attacks still land). */
+export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
+/** Chance (out of 100), independently rolled per floor, that a confuse monster scroll spawns. */
+export const CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
+/** How many turns a hallucination potion swaps displayed enemy glyphs for decoys — purely cosmetic, see frame.ts. */
+export const HALLUCINATION_POTION_DURATION = 20;
+/** Chance (out of 100), independently rolled per floor, that a hallucination potion spawns. */
+export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
+
+/** How many turns a hold monster scroll freezes every visible enemy for — same length as SLOW_WAND_DURATION, its single-target counterpart. */
+export const HOLD_MONSTER_SCROLL_DURATION = 5;
+/** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
+export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
+/** Chance (out of 100), independently rolled per floor, that a sleep wand spawns — same rarity as the other wands. */
+export const SLEEP_WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
@@ -309,8 +441,11 @@ export const LEVITATION_POTION_DURATION = 15;
 /** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
 export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
-/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. */
+/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. Sets rustProtected on a targeted held armor (see items/scrolls.ts). */
 export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
+
+/** Chance (out of 100), independently rolled per floor, that a remove-curse scroll spawns. No-op (not consumed) if nothing currently equipped is cursed. */
+export const REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a blindness potion shrinks the player's field of view for. */
 export const BLIND_POTION_DURATION = 20;

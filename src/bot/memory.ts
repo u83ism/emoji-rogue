@@ -46,7 +46,7 @@ const buildProgressSignature = (state: GameState): string =>
 		state.floor,
 		state.items.length,
 		state.goldPiles.length,
-		state.inventory.reduce((total, entry) => total + entry.quantity, 0),
+		state.inventory.length,
 		state.goldCollected,
 		state.hasAmulet,
 		state.playerExperience,

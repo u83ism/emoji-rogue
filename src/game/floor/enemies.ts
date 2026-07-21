@@ -4,11 +4,16 @@ import type { Rng } from "../../rng.js";
 import {
 	AQUATOR_SPAWN_CHANCE_PERCENT,
 	calculateEnemyCountForFloor,
+	DRAGON_SPAWN_CHANCE_PERCENT,
 	ENEMY_MAX_HP,
 	MONSTER_HOUSE_ENEMY_COUNT,
 	MONSTER_HOUSE_SPAWN_CHANCE_PERCENT,
 	NYMPH_SPAWN_CHANCE_PERCENT,
+	ORC_SPAWN_CHANCE_PERCENT,
+	SNAKE_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
+	VAMPIRE_SPAWN_CHANCE_PERCENT,
+	YETI_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
@@ -28,6 +33,11 @@ const ENEMY_SPAWN_TABLE: readonly SpawnChance<EnemyKind>[] = [
 	{ kind: "thief", chancePercent: THIEF_SPAWN_CHANCE_PERCENT },
 	{ kind: "nymph", chancePercent: NYMPH_SPAWN_CHANCE_PERCENT },
 	{ kind: "aquator", chancePercent: AQUATOR_SPAWN_CHANCE_PERCENT },
+	{ kind: "orc", chancePercent: ORC_SPAWN_CHANCE_PERCENT },
+	{ kind: "dragon", chancePercent: DRAGON_SPAWN_CHANCE_PERCENT },
+	{ kind: "yeti", chancePercent: YETI_SPAWN_CHANCE_PERCENT },
+	{ kind: "snake", chancePercent: SNAKE_SPAWN_CHANCE_PERCENT },
+	{ kind: "vampire", chancePercent: VAMPIRE_SPAWN_CHANCE_PERCENT },
 ];
 
 /**
@@ -55,6 +65,7 @@ export const drawFloorEnemies = (
 			hp: ENEMY_MAX_HP.zombie,
 			awake: false,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		});
 	}
 	const batCount = calculateEnemyCountForFloor("bat", floor);
@@ -65,6 +76,7 @@ export const drawFloorEnemies = (
 			hp: ENEMY_MAX_HP.bat,
 			awake: false,
 			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
 		});
 	}
 	for (const spawn of ENEMY_SPAWN_TABLE) {
@@ -75,6 +87,7 @@ export const drawFloorEnemies = (
 				hp: ENEMY_MAX_HP[spawn.kind],
 				awake: false,
 				slowedTurnsRemaining: 0,
+				confusedTurnsRemaining: 0,
 			});
 		}
 	}
@@ -101,6 +114,7 @@ export const drawFloorEnemies = (
 				hp: ENEMY_MAX_HP[kind],
 				awake: true,
 				slowedTurnsRemaining: 0,
+				confusedTurnsRemaining: 0,
 			});
 		}
 	}

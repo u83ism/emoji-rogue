@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { createRng, type Rng } from "../../rng.js";
 import {
 	FOOD_COUNT_PER_FLOOR,
-	GOAL_FLOOR,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
@@ -40,7 +39,7 @@ const buildPool = (size: number): Position[] =>
 const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"sword",
 	"enchant-weapon",
-	"shield",
+	"armor",
 	"enchant-armor",
 	"poison",
 	"strength",
@@ -59,6 +58,16 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"sustenance-ring",
 	"striking-wand",
 	"slow-wand",
+	"remove-curse-scroll",
+	"teleport-wand",
+	"stealth-ring",
+	"awareness-ring",
+	"magic-missile-wand",
+	"confuse-monster-scroll",
+	"hallucination",
+	"hold-monster-scroll",
+	"aggravate-monster-ring",
+	"sleep-wand",
 ];
 
 describe("drawFloorItems", () => {
@@ -68,6 +77,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(
 			drawn.items.filter((item) => item.kind === "heal-potion").length,
@@ -92,6 +102,7 @@ describe("drawFloorItems", () => {
 			createAlwaysMissRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(drawn.items.length).toBe(
 			POTION_COUNT_PER_FLOOR + FOOD_COUNT_PER_FLOOR,
@@ -109,6 +120,7 @@ describe("drawFloorItems", () => {
 			createAlwaysHitRng(),
 			1,
 			() => true,
+			1,
 		);
 		expect(generous.goldPiles.length).toBe(GOLD_PILES_PER_FLOOR);
 		for (const pile of generous.goldPiles) {
@@ -119,73 +131,33 @@ describe("drawFloorItems", () => {
 			createAlwaysMissRng(),
 			1,
 			() => true,
+			1,
 		);
 		for (const pile of stingy.goldPiles) {
 			expect(pile.amount).toBe(GOLD_AMOUNT_MAX); /* upper bound of the roll */
 		}
 	});
 
-	it("with every roll hitting, spawns dart traps plus one trapdoor and one teleport trap", () => {
+	it("draws a floor's worth of traps too, but leaves the eligibility/GOAL_FLOOR rules to drawFloorTraps (see traps.test.ts)", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
 			1,
 			() => true,
-		);
-		expect(drawn.traps.filter((trap) => trap.kind === "dart").length).toBe(
-			TRAP_COUNT_PER_FLOOR,
-		);
-		expect(drawn.traps.filter((trap) => trap.kind === "trapdoor").length).toBe(
 			1,
 		);
-		expect(drawn.traps.filter((trap) => trap.kind === "teleport").length).toBe(
-			1,
-		);
+		expect(drawn.traps.length).toBeGreaterThanOrEqual(TRAP_COUNT_PER_FLOOR);
 	});
 
-	it("with every roll missing, spawns only the guaranteed dart traps", () => {
-		const drawn = drawFloorItems(
-			buildPool(100),
-			createAlwaysMissRng(),
-			1,
-			() => true,
-		);
-		expect(drawn.traps.length).toBe(TRAP_COUNT_PER_FLOOR);
-		expect(drawn.traps.every((trap) => trap.kind === "dart")).toBe(true);
-	});
-
-	it("never spawns a trapdoor on GOAL_FLOOR, even when its roll would hit", () => {
-		const drawn = drawFloorItems(
-			buildPool(100),
-			createAlwaysHitRng(),
-			GOAL_FLOOR,
-			() => true,
-		);
-		expect(drawn.traps.some((trap) => trap.kind === "trapdoor")).toBe(false);
-		/* the teleport trap is still allowed there — it stays within the floor */
-		expect(drawn.traps.some((trap) => trap.kind === "teleport")).toBe(true);
-	});
-
-	it("lands traps only on eligible tiles and skips them when none qualify", () => {
-		const restricted = drawFloorItems(
-			buildPool(100),
-			createAlwaysHitRng(),
-			1,
-			(position) => position.x >= 50,
-		);
-		expect(restricted.traps.length).toBeGreaterThan(0);
-		for (const trap of restricted.traps) {
-			expect(trap.x).toBeGreaterThanOrEqual(50);
-		}
-
+	it("items and gold ignore the trap eligibility predicate", () => {
 		const none = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
 			1,
 			() => false,
+			1,
 		);
 		expect(none.traps.length).toBe(0);
-		/* items and gold ignore the trap predicate */
 		expect(none.items.length).toBeGreaterThan(0);
 		expect(none.goldPiles.length).toBeGreaterThan(0);
 	});

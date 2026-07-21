@@ -1,43 +1,47 @@
 import type { Rng } from "../../rng.js";
 import {
+	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
+	ARMOR_SPAWN_CHANCE_PERCENT,
+	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	BLIND_POTION_SPAWN_CHANCE_PERCENT,
+	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
 	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	FOOD_COUNT_PER_FLOOR,
-	GOAL_FLOOR,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
+	HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
+	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	LIFE_POTION_SPAWN_CHANCE_PERCENT,
+	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
 	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
+	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
-	SHIELD_SPAWN_CHANCE_PERCENT,
+	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
+	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	SWORD_SPAWN_CHANCE_PERCENT,
-	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
-	TRAP_COUNT_PER_FLOOR,
-	TRAPDOOR_SPAWN_CHANCE_PERCENT,
+	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
-import type { ItemKind } from "../events.js";
+import { type ItemKind, isEquipmentItemKind } from "../events.js";
+import { buildFloorItem } from "../items/heldItemFactory.js";
 import type { GoldPile, Item, Position, Trap } from "../state.js";
-import {
-	drawSpawnTile,
-	drawSpawnTileWhere,
-	type SpawnChance,
-} from "./spawnPool.js";
+import { drawSpawnTile, type SpawnChance } from "./spawnPool.js";
+import { drawFloorTraps } from "./traps.js";
 
 /**
  * Chance-rolled items, one independent roll per entry. Same rng-order caveat
@@ -52,7 +56,7 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "enchant-weapon",
 		chancePercent: ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 	},
-	{ kind: "shield", chancePercent: SHIELD_SPAWN_CHANCE_PERCENT },
+	{ kind: "armor", chancePercent: ARMOR_SPAWN_CHANCE_PERCENT },
 	{
 		kind: "enchant-armor",
 		chancePercent: ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -92,6 +96,41 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 	},
 	{ kind: "striking-wand", chancePercent: WAND_SPAWN_CHANCE_PERCENT },
 	{ kind: "slow-wand", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
+	/* Added in milestone 81 — appended at the end so it doesn't shift the roll order of every earlier kind. */
+	{
+		kind: "remove-curse-scroll",
+		chancePercent: REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "teleport-wand",
+		chancePercent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
+	},
+	{ kind: "stealth-ring", chancePercent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "awareness-ring",
+		chancePercent: AWARENESS_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "magic-missile-wand",
+		chancePercent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "confuse-monster-scroll",
+		chancePercent: CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "hallucination",
+		chancePercent: HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "hold-monster-scroll",
+		chancePercent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "aggravate-monster-ring",
+		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{ kind: "sleep-wand", chancePercent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
 ];
 
 /** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */
@@ -99,6 +138,8 @@ export interface FloorItems {
 	readonly items: readonly Item[];
 	readonly goldPiles: readonly GoldPile[];
 	readonly traps: readonly Trap[];
+	/** `nextItemId` after this floor's sword/armor/ring spawns each consumed one — see heldItemFactory.ts's buildFloorItem. */
+	readonly nextItemId: number;
 }
 
 /**
@@ -106,22 +147,19 @@ export interface FloorItems {
  * from) `remaining` by consuming `rng`: POTION_COUNT_PER_FLOOR healing
  * potions and FOOD_COUNT_PER_FLOOR food rations guaranteed, then the
  * chance-rolled kinds of ITEM_SPAWN_TABLE, then GOLD_PILES_PER_FLOOR gold
- * piles (random amount each), TRAP_COUNT_PER_FLOOR dart traps, and the
- * chance-rolled trapdoor (never on GOAL_FLOOR — it would generate a floor
- * beyond it) and teleport trap (allowed on GOAL_FLOOR — it only relocates
- * the player within the floor).
- *
- * Traps only land on tiles satisfying `isTrapTileEligible` (room interiors
- * away from doorways — see layout.ts): an invisible trap on a corridor or
- * doorway tile would be unavoidable. A trap whose draw finds no eligible
- * tile is skipped, never relocated onto an ineligible one.
+ * piles (random amount each), then every trap (see traps.ts's
+ * drawFloorTraps). A spawned sword/armor/ring also gets its identity (curse,
+ * starting bonus, itemId) rolled here, once, from `nextItemId` — see
+ * heldItemFactory.ts's buildFloorItem.
  */
 export const drawFloorItems = (
 	remaining: Position[],
 	rng: Rng,
 	floor: number,
 	isTrapTileEligible: (position: Position) => boolean,
+	nextItemId: number,
 ): FloorItems => {
+	let itemId = nextItemId;
 	const items: Item[] = [];
 	for (let i = 0; i < POTION_COUNT_PER_FLOOR && remaining.length > 0; i++) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "heal-potion" });
@@ -134,7 +172,11 @@ export const drawFloorItems = (
 			remaining.length > 0 &&
 			rng.getUniformInt(0, 99) < spawn.chancePercent
 		) {
-			items.push({ ...drawSpawnTile(remaining, rng), kind: spawn.kind });
+			const position = drawSpawnTile(remaining, rng);
+			items.push(buildFloorItem(spawn.kind, itemId, position, rng));
+			if (isEquipmentItemKind(spawn.kind)) {
+				itemId += 1;
+			}
 		}
 	}
 
@@ -146,33 +188,7 @@ export const drawFloorItems = (
 		});
 	}
 
-	const traps: Trap[] = [];
-	for (let i = 0; i < TRAP_COUNT_PER_FLOOR && remaining.length > 0; i++) {
-		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
-		if (tile === undefined) {
-			break;
-		}
-		traps.push({ ...tile, kind: "dart" });
-	}
-	if (
-		floor !== GOAL_FLOOR &&
-		remaining.length > 0 &&
-		rng.getUniformInt(0, 99) < TRAPDOOR_SPAWN_CHANCE_PERCENT
-	) {
-		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
-		if (tile !== undefined) {
-			traps.push({ ...tile, kind: "trapdoor" });
-		}
-	}
-	if (
-		remaining.length > 0 &&
-		rng.getUniformInt(0, 99) < TELEPORT_TRAP_SPAWN_CHANCE_PERCENT
-	) {
-		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
-		if (tile !== undefined) {
-			traps.push({ ...tile, kind: "teleport" });
-		}
-	}
+	const traps = drawFloorTraps(remaining, rng, floor, isTrapTileEligible);
 
-	return { items, goldPiles, traps };
+	return { items, goldPiles, traps, nextItemId: itemId };
 };

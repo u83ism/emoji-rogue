@@ -1,6 +1,6 @@
 # emoji-rogue アーキテクチャガイド
 
-コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**完了マイルストーンの履歴**は `docs/tasks/game-history.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
+コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**完了マイルストーンの履歴**は `docs/tasks/game-history.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md`、**絵文字選定の技術基準**は `docs/emoji-policy.md`、**現在の絵文字割り当て・却下候補の台帳**は `docs/emoji-registry.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
 
 ## 一言でいうと
 
@@ -43,7 +43,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
-| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン / A*追跡・徘徊 |
+| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン(隣接時の特殊挙動は`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復へ切り出し済み) / A*追跡・徘徊 |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理(空腹・混乱・浮遊・盲目・麻痺・索敵・再生・クロンの風)。1件=1ファイル、全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
@@ -51,7 +51,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `messages.ts`+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts`。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 フォーク層は従来どおり: `src/map/`(生成器8種) `src/fov/`(3アルゴリズム) `src/path/`(A*/Dijkstra) `src/scheduler/`+`src/engine.ts`(未接続のまま温存) `src/lighting.ts` `src/color.ts` `src/text.ts` `src/noise/` `src/stringgenerator.ts`、共有ヘルパー `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts`、公開バレル `src/index.ts`。
 
@@ -74,10 +74,10 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - セル単位の `<Box>` は使わない(Inkの過去の絵文字幅バグ ink#733 の震源地。修正済みだが防御的に避ける)
 - 代わりに `groupIntoRuns()` で同色連続セルを文字列に事前結合し、1行 = `<Box flexDirection="row">` 内の少数の `<Text>` として描画
 - `TILE_W = 2`(1論理セル=1絵文字=2カラム)は設計判断の明文化であって、実測はしない
-- 周辺UI(ステータスバー等)は普通にInkのBox/Borderを使ってよい。**chrome内の絵文字はタイルと同じ安定基準**(単一コードポイント・バリエーションセレクタ不要・EAW Wide・実機確認)を満たすものだけ許可(マイルストーン68で「chrome絵文字全面禁止」から改訂。💰が先例、現在は🍖💪🦺も使用)
+- 周辺UI(ステータスバー等)は普通にInkのBox/Borderを使ってよい。**chrome内の絵文字はタイルと同じ安定基準**を満たすものだけ許可(マイルストーン68で「chrome絵文字全面禁止」から改訂。💰が先例、現在は🍖💪🦺も使用)
 - 差分描画はInkのreconcilerに全部任せる(自前ANSIバッファは書かない)
 
-バリエーションセレクタ付き絵文字(⚠️等)での幅崩れ回帰テストは `GameScreen.test.tsx`。**タイル用絵文字を選ぶときは単一コードポイント・Unicode 6.0以前を基本とし、East Asian Width が Ambiguous な文字を避ける**(`src/game/glyphs.ts` の各コメントと `docs/tasks/modernization.md` Stage 5参照)。
+絵文字を選ぶときの安定基準(単一コードポイント・バリエーションセレクタ不要・EAW Wide・非最近追加、の4点)とその技術的根拠は `docs/emoji-policy.md` にまとめてある。バリエーションセレクタ付き絵文字(⚠️等)での幅崩れ回帰テストは `GameScreen.test.tsx`。
 
 ## コーディング規約の要点(詳細は `.claude/rules/`)
 
@@ -88,6 +88,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使わない)
 - **座標キー**: `src/pointkey.ts` の `encodePointKey/decodePointKey`(`"x,y"`形式)。直書き禁止
 - **構造lint(正当化ベース)**: `scripts/check-structure.mjs` が`npm run lint`で、ファイル200行(目安150)とフォルダ15ファイル(目安10、非テスト)を強制。hint→error→justifiedの3段で、超過の容認は**人間裁可の正当化**(ファイル=先頭の`file-size-exception:`コメント、フォルダ=`scripts/structure-exceptions.json`)のみ。フォルダ分割=ドメインモデリングはAIが提案し人間が命名を裁可する(`.claude/rules/file-structure.md`)
+- **構造lintの逆方向(監査hint)**: 上記2チェックは肥大化→分割の一方向にしか反応しない。軸の切り直し・過剰分割の集約はサイズでは検出できないため、`scripts/structure-audit-state.json`の最終監査コミットからの差分規模(ファイル数/行数)に応じてhintのみを出す第3チェックがある(常にhint止まり、errorには昇格しない)。hint発火時や依頼時は`structure-audit`スキルで人間主導のレビューを行う(`.claude/rules/file-structure.md`「The reverse direction」節)
 - テストはソースと同居(`foo.ts` → `foo.test.ts`)。横断テストは `map/generators.test.ts`・`map/invariants.test.ts` と `advanceTurn.test.ts` のファズテスト
 
 ## 検証コマンド

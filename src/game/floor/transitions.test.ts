@@ -66,7 +66,7 @@ describe("descendStairs", () => {
 				state.items.filter((item) => item.kind === "sword").length,
 			).toBeLessThanOrEqual(1);
 			expect(
-				state.items.filter((item) => item.kind === "shield").length,
+				state.items.filter((item) => item.kind === "armor").length,
 			).toBeLessThanOrEqual(1);
 			expect(
 				state.items.filter((item) => item.kind === "poison").length,

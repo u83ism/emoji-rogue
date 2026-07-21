@@ -5,6 +5,7 @@ import {
 	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
 } from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
+import { hasEquippedRing } from "../items/rings.js";
 import type { GameState } from "../state.js";
 
 /** The deterministic part of a hunger tick — never touches state.rng. */
@@ -53,7 +54,7 @@ const applyHungerConsequences = (state: GameState): GameState => {
  * called after combat/movement resolves each turn-consuming action, so a
  * death from an enemy this same turn must not also take a hunger tick.
  *
- * While hasRingOfSustenance is set, the whole tick has a
+ * While a ring of sustenance is currently equipped, the whole tick has a
  * SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT chance of being skipped outright
  * (rolled via the same temporary-stateful-Rng pattern as
  * applyRegenerationTick, consuming state.rng either way). Without the ring
@@ -64,7 +65,7 @@ export const applyHungerTick = (state: GameState): GameState => {
 		return state;
 	}
 
-	if (!state.hasRingOfSustenance) {
+	if (!hasEquippedRing(state.inventory, "sustenance-ring")) {
 		return applyHungerConsequences(state);
 	}
 

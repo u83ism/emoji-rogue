@@ -1,5 +1,12 @@
+/* file-size-exception: GameState/Actionの型定義=ゲームの全語彙を1箇所で読める価値を優先(events.ts/balance.tsと同じ理屈、2026-07-19裁可) */
 import type { RngState } from "../rng.js";
-import type { EnemyKind, GameEvent, ItemKind, TrapKind } from "./events.js";
+import type {
+	EnemyKind,
+	EquipmentItemKind,
+	GameEvent,
+	ItemKind,
+	TrapKind,
+} from "./events.js";
 
 export type Direction = "north" | "south" | "west" | "east";
 
@@ -15,7 +22,21 @@ export type Action =
 	| { readonly type: "wait" }
 	| {
 			readonly type: "use-item";
-			readonly payload: { readonly kind: ItemKind };
+			readonly payload: {
+				/** The specific HeldItem.itemId to use — not a kind, since same-kind items can now differ (equip state, enchantment). */
+				readonly itemId: number;
+				/**
+				 * Which held sword/armor a targeted scroll (enchant-weapon,
+				 * enchant-armor, protect-armor) applies to, by itemId. Absent/
+				 * unheld clamps to a no-op, same as using an itemId not held.
+				 * Ignored by every other kind.
+				 */
+				readonly targetItemId?: number;
+			};
+	  }
+	| {
+			readonly type: "drop-item";
+			readonly payload: { readonly itemId: number };
 	  }
 	| { readonly type: "save" }
 	| { readonly type: "quit" };
@@ -42,12 +63,110 @@ export type Enemy = Position & {
 	readonly awake: boolean;
 	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */
 	readonly slowedTurnsRemaining: number;
+	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
+	readonly confusedTurnsRemaining: number;
 };
 
-/** An item lying on the floor, waiting to be stepped on. */
-export type Item = Position & {
-	readonly kind: ItemKind;
-};
+/**
+ * A sword/armor/ring's already-rolled identity (see HeldItem) minus the
+ * fields meaningless on the ground (`kind` — carried by the Item itself —
+ * and `equipped`, always false while lying on a tile).
+ */
+type SwordIdentity = Omit<
+	Extract<HeldItem, { kind: "sword" }>,
+	"kind" | "equipped"
+>;
+type ArmorIdentity = Omit<
+	Extract<HeldItem, { kind: "armor" }>,
+	"kind" | "equipped"
+>;
+type RingIdentity = Omit<
+	Extract<
+		HeldItem,
+		{
+			kind:
+				| "regeneration-ring"
+				| "sustenance-ring"
+				| "stealth-ring"
+				| "awareness-ring"
+				| "aggravate-monster-ring";
+		}
+	>,
+	"kind" | "equipped"
+>;
+
+/**
+ * An item lying on the floor, waiting to be stepped on. A sword/armor/ring's
+ * `identity` (curse, starting bonus, itemId) is rolled once, at floor
+ * generation (floor/items.ts's drawFloorItems) — the item already "is" what
+ * it is the moment it exists in the dungeon, same as original Rogue; the
+ * player just doesn't know yet (see HeldItem's doc comment on when it's
+ * revealed). Dropping it again (applyItemDrop) carries the same `identity`
+ * along unchanged, so a dropped +2 sword or a cursed ring doesn't reroll
+ * into a fresh one on re-pickup (milestone 81 follow-up).
+ */
+export type Item = Position &
+	(
+		| { readonly kind: Exclude<ItemKind, EquipmentItemKind> }
+		| { readonly kind: "sword"; readonly identity: SwordIdentity }
+		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
+		| {
+				readonly kind:
+					| "regeneration-ring"
+					| "sustenance-ring"
+					| "stealth-ring"
+					| "awareness-ring"
+					| "aggravate-monster-ring";
+				readonly identity: RingIdentity;
+		  }
+	);
+
+/**
+ * One held item. `itemId` is assigned once at pickup (see GameState.nextItemId
+ * / applyItemPickup) and never changes or gets reused — Actions address a
+ * held item by this id, never by its position in the inventory array, so
+ * replays stay correct even if the array's order or contents shift (see
+ * docs/tasks/game.md's cursor-selection backlog note on index fragility).
+ *
+ * Consumables (potions/scrolls/wands/food) carry only their kind. A
+ * sword/armor/ring carries real equip state instead: `cursed` is rolled once
+ * at pickup and stays hidden from the player until the item is equipped, so
+ * it can be true even while `equipped` is false. `attackBonus`/
+ * `defenseBonus`/`rustProtected` are intrinsic to that specific item (raised
+ * by enchant scrolls, degraded by rust) and persist whether or not the item
+ * is currently worn — swapping equipment never resets them.
+ */
+export type HeldItem =
+	| {
+			readonly itemId: number;
+			readonly kind: Exclude<ItemKind, EquipmentItemKind>;
+	  }
+	| {
+			readonly itemId: number;
+			readonly kind: "sword";
+			readonly equipped: boolean;
+			readonly cursed: boolean;
+			readonly attackBonus: number;
+	  }
+	| {
+			readonly itemId: number;
+			readonly kind: "armor";
+			readonly equipped: boolean;
+			readonly cursed: boolean;
+			readonly defenseBonus: number;
+			readonly rustProtected: boolean;
+	  }
+	| {
+			readonly itemId: number;
+			readonly kind:
+				| "regeneration-ring"
+				| "sustenance-ring"
+				| "stealth-ring"
+				| "awareness-ring"
+				| "aggravate-monster-ring";
+			readonly equipped: boolean;
+			readonly cursed: boolean;
+	  };
 
 /**
  * A pile of gold lying on the floor. Unlike Item, gold is never held or
@@ -78,12 +197,6 @@ export type Trap = Position & {
 	readonly kind: TrapKind;
 };
 
-/** One stack of a held item kind. No capacity limit (yet) — see the backlog. */
-export interface InventoryEntry {
-	readonly kind: ItemKind;
-	readonly quantity: number;
-}
-
 /**
  * The complete, serializable game state. Contains only data — no functions —
  * so a save file is just `JSON.stringify(state)` and a replay is the initial
@@ -112,36 +225,40 @@ export interface GameState {
 	readonly playerLevel: number;
 	/** Cumulative kills-based experience. See applyExperienceGain and LEVEL_EXPERIENCE_THRESHOLDS. */
 	readonly playerExperience: number;
-	/** Base damage plus any permanent bonus from swords used so far. */
-	readonly playerAttackDamage: number;
 	/**
-	 * Damage reduction from shields used so far (0 initially) — can go negative
-	 * from a cursed shield (see MIN_DAMAGE_TAKEN, which floors damage taken
-	 * regardless).
+	 * "Power" in the Fushigi no Dungeon sense: a permanent character stat
+	 * raised only by strength potions, meaningful even unarmed. The actual
+	 * attack total adds the equipped sword's own attackBonus on top — see
+	 * calculatePlayerAttackDamage in items/equipment.ts.
 	 */
-	readonly playerDefense: number;
+	readonly playerPower: number;
 	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
 	readonly playerFood: number;
-	/** Once equipped, heals HP over time — see applyRegenerationTick. Never turns back off. */
-	readonly hasRingOfRegeneration: boolean;
-	/** Once equipped, may skip a hunger tick — see applyHungerTick. Never turns back off. */
-	readonly hasRingOfSustenance: boolean;
 	/** Turns left of randomized movement — see applyConfusionTick and applyMove. 0 means not confused. */
 	readonly confusedTurnsRemaining: number;
 	/** Turns left of floating over traps unharmed — see applyLevitationTick and applyTrapTrigger. */
 	readonly levitationTurnsRemaining: number;
-	/** Once set, an aquator's rust roll never triggers — see advanceEnemies. */
-	readonly armorProtected: boolean;
 	/** Turns left of shrunk field of view — see applyBlindnessTick and resolveViewRadius. */
 	readonly blindTurnsRemaining: number;
 	/** Turns left of being unable to act at all — see applyParalysisTick and advanceTurn. */
 	readonly paralyzedTurnsRemaining: number;
 	/** Turns left of seeing every enemy regardless of FOV — see applyDetectMonstersTick and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
+	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/hallucination.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */
+	readonly hallucinatingTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];
-	/** Items picked up but not yet used — stepping on an item no longer uses it immediately. */
-	readonly inventory: readonly InventoryEntry[];
+	/**
+	 * Items picked up but not yet used — stepping on an item no longer uses it
+	 * immediately. One entry per held item (no stacking): two heal potions are
+	 * two entries and cost two of INVENTORY_CAPACITY's (balance.ts) slots, not
+	 * one stack of quantity 2. Equipping a sword/armor/ring does not remove it
+	 * from here — the entry's own `equipped` flips instead (see HeldItem). See
+	 * applyItemPickup.
+	 */
+	readonly inventory: readonly HeldItem[];
+	/** The itemId the next picked-up item will be assigned — incremented by applyItemPickup, never reused. */
+	readonly nextItemId: number;
 	/** Potion kinds identified this run (by drinking one) — see POTION_KINDS. */
 	readonly identifiedPotionKinds: readonly ItemKind[];
 	readonly goldPiles: readonly GoldPile[];

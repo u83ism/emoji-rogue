@@ -5,11 +5,18 @@
 // internals or past it into the shell-facing i18n module.
 
 export type { Cell } from "../renderer/index.js";
-export { buildCatalogMarkdown } from "../shell/catalog.js";
-export { formatEvent, formatInventoryEntry } from "../shell/messages.js";
+export { buildCatalogMarkdown } from "../shell/catalog/catalog.js";
+export { formatEvent } from "../shell/eventMessages.js";
+export { resolveItemDisplayName } from "../shell/gameNames.js";
+export {
+	formatHeldItemLabel,
+	formatInventoryTitle,
+	resolveItemVerbPrompt,
+} from "../shell/inventoryLabels.js";
 export {
 	INVENTORY_EMPTY_MESSAGE,
-	INVENTORY_TITLE,
+	ITEM_TARGET_PROMPT,
+	SAVE_LOAD_WARNING_MESSAGE,
 } from "../shell/systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
 export {
@@ -23,9 +30,32 @@ export type { Replay } from "./format/replay.js";
 export { buildReplayGameState } from "./format/replay.js";
 export type { ReplayFileError } from "./format/replayFormat.js";
 export { parseReplayFileContent } from "./format/replayFormat.js";
+export type { SaveFileError } from "./format/saveFormat.js";
+export {
+	buildSaveFileContent,
+	parseSaveFileContent,
+} from "./format/saveFormat.js";
 export { buildFrameGrid } from "./frame.js";
+export {
+	BLINDNESS_GLYPH,
+	CONFUSION_GLYPH,
+	DETECT_MONSTER_GLYPH,
+	HALLUCINATION_GLYPH,
+	LEVITATION_GLYPH,
+	PARALYSIS_GLYPH,
+} from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
-export { toInventoryLetter, toUseItemAction } from "./inventoryKeymap.js";
+export {
+	resolveTargetKind,
+	toInventoryLetter,
+	toItemVerbAction,
+	toSelectedHeldItem,
+	toTargetedUseAction,
+} from "./inventoryKeymap.js";
+export {
+	calculatePlayerAttackDamage,
+	calculatePlayerDefense,
+} from "./items/equipment.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,
@@ -33,7 +63,7 @@ export type {
 	Enemy,
 	GameState,
 	GameStatus,
-	InventoryEntry,
+	HeldItem,
 	Item,
 	Position,
 } from "./state.js";

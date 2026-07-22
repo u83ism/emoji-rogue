@@ -1,16 +1,27 @@
 import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	AQUATOR_SPAWN_CHANCE_PERCENT,
+	BEAR_TRAP_PARALYSIS_DURATION,
+	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
 	DART_TRAP_DAMAGE,
+	DRAGON_SPAWN_CHANCE_PERCENT,
 	ENEMY_COUNT_SCALING,
 	GOAL_FLOOR,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
 	NYMPH_SPAWN_CHANCE_PERCENT,
+	ORC_SPAWN_CHANCE_PERCENT,
+	RUST_TRAP_SPAWN_CHANCE_PERCENT,
+	SNAKE_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
-} from "../game/balance.js";
-import type { EnemyKind, TrapKind } from "../game/events.js";
+	VAMPIRE_LIFESTEAL_PERCENT,
+	VAMPIRE_SPAWN_CHANCE_PERCENT,
+	YETI_SPAWN_CHANCE_PERCENT,
+} from "../../game/balance.js";
+import type { EnemyKind, TrapKind } from "../../game/events.js";
 
 // The enemy/trap half of docs/catalog.md's prose data (items live in
 // itemCatalog.ts). Numbers inside descriptions are ALWAYS interpolated from
@@ -66,7 +77,29 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	},
 	aquator: {
 		spawn: { type: "chance", percent: AQUATOR_SPAWN_CHANCE_PERCENT },
-		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で防具を錆びさせ、防御力を1下げる(防具保護の巻物で無効化)`,
+		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)`,
+	},
+	orc: {
+		spawn: { type: "chance", percent: ORC_SPAWN_CHANCE_PERCENT },
+		behavior: `頑丈な近接アタッカー。倒すと${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールドをその場で落とす`,
+	},
+	dragon: {
+		spawn: { type: "chance", percent: DRAGON_SPAWN_CHANCE_PERCENT },
+		behavior:
+			"希少な最強格の近接アタッカー。特殊能力はないが桁違いに頑丈で攻撃力も高い",
+	},
+	yeti: {
+		spawn: { type: "chance", percent: YETI_SPAWN_CHANCE_PERCENT },
+		behavior:
+			"頑丈だが低頻度に出現する近接アタッカー。オークとドラゴンの中間の強さ",
+	},
+	snake: {
+		spawn: { type: "chance", percent: SNAKE_SPAWN_CHANCE_PERCENT },
+		behavior: "HPは低いが噛みつきのダメージが高い近接アタッカー",
+	},
+	vampire: {
+		spawn: { type: "chance", percent: VAMPIRE_SPAWN_CHANCE_PERCENT },
+		behavior: `逃げずに戦い続け、攻撃が命中するたびそのダメージの${VAMPIRE_LIFESTEAL_PERCENT}%を自分のHPとして回復する(最大HPが上限)`,
 	},
 };
 
@@ -87,5 +120,14 @@ export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	teleport: {
 		spawn: { type: "chance", percent: TELEPORT_TRAP_SPAWN_CHANCE_PERCENT },
 		effect: "フロア内のランダムな床へ飛ばされる",
+	},
+	bear: {
+		spawn: { type: "chance", percent: BEAR_TRAP_SPAWN_CHANCE_PERCENT },
+		effect: `ダメージはないが${BEAR_TRAP_PARALYSIS_DURATION}ターン動けなくなる`,
+	},
+	rust: {
+		spawn: { type: "chance", percent: RUST_TRAP_SPAWN_CHANCE_PERCENT },
+		effect:
+			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物で無効化)",
 	},
 };

@@ -1,38 +1,9 @@
-import { encodePointKey } from "../../pointkey.js";
 import { SLOW_WAND_DURATION } from "../balance.js";
-import { applyWandStrike } from "../combat.js";
+import { applyMagicMissileWandStrike, applyWandStrike } from "../combat.js";
 import { buildEventLog } from "../events.js";
-import type { Enemy, GameState } from "../state.js";
-import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
-
-/**
- * The closest (Manhattan distance) enemy currently in the player's field of
- * view, or undefined if none are visible — a wand's automatic aim, standing
- * in for a manual targeting UI this project deliberately doesn't have
- * (docs/design.md's single-key interaction rule).
- */
-const findNearestVisibleEnemy = (state: GameState): Enemy | undefined => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
-	const visibleEnemies = state.enemies.filter((enemy) =>
-		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
-	);
-	return visibleEnemies.reduce<Enemy | undefined>((closest, candidate) => {
-		if (closest === undefined) {
-			return candidate;
-		}
-		const candidateDistance =
-			Math.abs(candidate.x - state.player.x) +
-			Math.abs(candidate.y - state.player.y);
-		const closestDistance =
-			Math.abs(closest.x - state.player.x) +
-			Math.abs(closest.y - state.player.y);
-		return candidateDistance < closestDistance ? candidate : closest;
-	}, undefined);
-};
+import type { GameState } from "../state.js";
+import { applyEnemyTeleport } from "../teleport.js";
+import { findNearestVisibleEnemy } from "../vision.js";
 
 /**
  * A wand of striking hits the nearest visible enemy for flat damage. With no
@@ -69,6 +40,53 @@ export const applyUseSlowWand = (state: GameState): GameState => {
 				type: "enemy-slowed",
 				payload: { target: target.kind, turns: SLOW_WAND_DURATION },
 			},
+		]),
+	};
+};
+
+/**
+ * A teleport wand forcibly relocates the nearest visible enemy to a random
+ * floor tile and wakes it. Same no-visible-target no-op as the other wands.
+ */
+export const applyUseTeleportWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return applyEnemyTeleport(state, target);
+};
+
+/**
+ * A magic missile wand hits the nearest visible enemy for flat
+ * MAGIC_MISSILE_WAND_DAMAGE — same no-visible-target no-op as the other wands.
+ */
+export const applyUseMagicMissileWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return applyMagicMissileWandStrike(state, target);
+};
+
+/**
+ * A sleep wand forces the nearest visible enemy back to `awake: false` — the
+ * inverse of a ring of aggravate monster. The target's next wake roll (see
+ * advanceEnemies) starts fresh, so it is not guaranteed to stay asleep for
+ * any particular number of turns. Same no-visible-target no-op as the other
+ * wands.
+ */
+export const applyUseSleepWand = (state: GameState): GameState => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined) {
+		return state;
+	}
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target ? { ...enemy, awake: false } : enemy,
+		),
+		events: buildEventLog(state.events, [
+			{ type: "enemy-slept", payload: { target: target.kind } },
 		]),
 	};
 };

@@ -34,6 +34,8 @@ export interface FloorLayout {
 	readonly amulet: Position | undefined;
 	/** The digger's room rectangles — kept for placement checks and tests; never part of GameState. */
 	readonly rooms: readonly Room[];
+	/** `nextItemId` after this floor's equipment spawns each consumed one — see drawFloorItems. */
+	readonly nextItemId: number;
 }
 
 /**
@@ -59,6 +61,7 @@ export const buildFloorLayout = (
 	rng: Rng,
 	floor: number,
 	stairsDirection: "up" | "down",
+	nextItemId: number,
 ): FloorLayout => {
 	const columns = buildEmptyColumns(width);
 	const dungeon = createDiggerMap(width, height, rng).create((x, y, value) => {
@@ -88,12 +91,12 @@ export const buildFloorLayout = (
 	const amulet: Position | undefined =
 		floor === GOAL_FLOOR ? drawSpawnTile(remaining, rng) : undefined;
 
-	const { items, goldPiles, traps } = drawFloorItems(
-		remaining,
-		rng,
-		floor,
-		isWalkAroundTile,
-	);
+	const {
+		items,
+		goldPiles,
+		traps,
+		nextItemId: nextItemIdAfterFloor,
+	} = drawFloorItems(remaining, rng, floor, isWalkAroundTile, nextItemId);
 
 	return {
 		terrain: columns,
@@ -105,5 +108,6 @@ export const buildFloorLayout = (
 		stairs,
 		amulet,
 		rooms,
+		nextItemId: nextItemIdAfterFloor,
 	};
 };

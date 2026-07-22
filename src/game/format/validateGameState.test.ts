@@ -144,25 +144,8 @@ describe("validateGameState", () => {
 			{ ...buildValidState(), playerExperience: "0" },
 			"playerExperience",
 		);
-		expectRejected(
-			{ ...buildValidState(), playerAttackDamage: 0 },
-			"playerAttackDamage",
-		);
-		expectRejected(
-			{ ...buildValidState(), playerAttackDamage: "1" },
-			"playerAttackDamage",
-		);
-		expectRejected(
-			{
-				...buildValidState(),
-				playerDefense: 1.5,
-			} /* cursed shields make negative valid, but non-integers never are */,
-			"playerDefense",
-		);
-		expectRejected(
-			{ ...buildValidState(), playerDefense: "1" },
-			"playerDefense",
-		);
+		expectRejected({ ...buildValidState(), playerPower: 0 }, "playerPower");
+		expectRejected({ ...buildValidState(), playerPower: "1" }, "playerPower");
 		expectRejected({ ...buildValidState(), playerFood: -1 }, "playerFood");
 		expectRejected({ ...buildValidState(), playerFood: 101 }, "playerFood");
 		expectRejected({ ...buildValidState(), playerFood: "1" }, "playerFood");
@@ -173,7 +156,7 @@ describe("validateGameState", () => {
 			throw new Error("unreachable: the dungeon state spawns enemies");
 		}
 		expectRejected(
-			{ ...valid, enemies: [{ ...enemies[0], kind: "dragon" }] },
+			{ ...valid, enemies: [{ ...enemies[0], kind: "griffin" }] },
 			"enemies",
 		);
 		expectRejected(
@@ -182,6 +165,10 @@ describe("validateGameState", () => {
 		);
 		expectRejected(
 			{ ...valid, enemies: [{ ...enemies[0], awake: "true" }] },
+			"enemies",
+		);
+		expectRejected(
+			{ ...valid, enemies: [{ ...enemies[0], confusedTurnsRemaining: -1 }] },
 			"enemies",
 		);
 		expectRejected(
@@ -222,6 +209,72 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+	});
+
+	it("accepts a well-formed equipment item identity and rejects a broken or missing one", () => {
+		const { x, y } = buildDungeonGameState(20, 12, 42).stairs;
+		const floorSpot = { x, y };
+
+		const accepted = validateGameState({
+			...buildValidState(),
+			items: [
+				{
+					...floorSpot,
+					kind: "sword",
+					identity: { itemId: 7, cursed: true, attackBonus: 3 },
+				},
+			],
+		});
+		expect(accepted.ok).toBe(true);
+		if (accepted.ok) {
+			expect(accepted.value.items).toEqual([
+				{
+					...floorSpot,
+					kind: "sword",
+					identity: { itemId: 7, cursed: true, attackBonus: 3 },
+				},
+			]);
+		}
+
+		/* identity is rolled at floor generation, so every equipment-kind item
+		 * always has one — a fresh spawn with none is invalid */
+		expectRejected(
+			{ ...buildValidState(), items: [{ ...floorSpot, kind: "armor" }] },
+			"items",
+		);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				items: [
+					{
+						...floorSpot,
+						kind: "sword",
+						identity: { itemId: 7, cursed: true },
+					},
+				] /* missing attackBonus */,
+			},
+			"items",
+		);
+
+		/* a non-equipment kind has no identity concept at all — a bogus one is
+		 * simply dropped on rebuild, same as any other unknown extra field. */
+		const ignoredOnConsumable = validateGameState({
+			...buildValidState(),
+			items: [
+				{
+					...floorSpot,
+					kind: "heal-potion",
+					identity: { itemId: 7, cursed: true },
+				},
+			],
+		});
+		expect(ignoredOnConsumable.ok).toBe(true);
+		if (ignoredOnConsumable.ok) {
+			expect(ignoredOnConsumable.value.items).toEqual([
+				{ ...floorSpot, kind: "heal-potion" },
+			]);
+		}
 	});
 
 	it("accepts a well-formed game-won event", () => {
@@ -342,7 +395,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-slowed", payload: { target: "dragon", turns: 5 } },
+					{ type: "enemy-slowed", payload: { target: "griffin", turns: 5 } },
 				],
 			},
 			"events",
@@ -403,11 +456,9 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
-	it("rejects a non-boolean armorProtected", () => {
-		expectRejected(
-			{ ...buildValidState(), armorProtected: "true" },
-			"armorProtected",
-		);
+	it("rejects a non-integer or non-positive nextItemId", () => {
+		expectRejected({ ...buildValidState(), nextItemId: "1" }, "nextItemId");
+		expectRejected({ ...buildValidState(), nextItemId: 0 }, "nextItemId");
 	});
 
 	it("rejects a non-boolean hasAttacked or hasEaten", () => {
@@ -609,7 +660,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "wand-struck", payload: { target: "dragon", damage: 3 } },
+					{ type: "wand-struck", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",
@@ -620,6 +671,132 @@ describe("validateGameState", () => {
 				events: [
 					{ type: "wand-struck", payload: { target: "zombie", damage: 0 } },
 				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-teleported event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-teleported", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-teleported", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts well-formed hallucination events and rejects broken ones", () => {
+		const accepted = validateGameState({
+			...buildValidState(),
+			hallucinatingTurnsRemaining: 5,
+			events: [
+				{ type: "player-hallucinated", payload: { turns: 20 } },
+				{ type: "hallucination-faded", payload: {} },
+			],
+		});
+		expect(accepted.ok).toBe(true);
+
+		expectRejected(
+			{ ...buildValidState(), hallucinatingTurnsRemaining: -1 },
+			"hallucinatingTurnsRemaining",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-hallucinated", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed vampire-healed event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "vampire-healed", payload: { amount: 1 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "vampire-healed", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-slept", payload: { target: "zombie" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-slept", payload: { target: "griffin" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-held event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "enemy-held", payload: { target: "zombie", turns: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-held", payload: { target: "griffin", turns: 5 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed enemy-confused event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "enemy-confused", payload: { target: "griffin", turns: 8 } },
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed orc-gold-drop event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "orc-gold-drop", payload: { amount: 5 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "orc-gold-drop", payload: { amount: 0 } }],
 			},
 			"events",
 		);
@@ -641,14 +818,22 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed armor-equipped event and rejects a broken one", () => {
+	it("accepts a well-formed armor-equipped event (including a rusted-to-0 bonus) and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "armor-equipped", payload: { kind: "shield", bonus: 1 } },
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
 			],
 		});
 		expect(result.ok).toBe(true);
+
+		const rustedToZero = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
+			],
+		});
+		expect(rustedToZero.ok).toBe(true);
 
 		expectRejected(
 			{
@@ -663,7 +848,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "armor-equipped", payload: { kind: "shield", bonus: 0 } },
+					{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
 				],
 			},
 			"events",
@@ -683,7 +868,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "sneak-attack", payload: { target: "dragon", damage: 3 } },
+					{ type: "sneak-attack", payload: { target: "griffin", damage: 3 } },
 				],
 			},
 			"events",
@@ -730,13 +915,6 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("rejects a non-boolean hasRingOfRegeneration", () => {
-		expectRejected(
-			{ ...buildValidState(), hasRingOfRegeneration: "true" },
-			"hasRingOfRegeneration",
-		);
-	});
-
 	it("accepts a well-formed sustenance ring-equipped event", () => {
 		const result = validateGameState({
 			...buildValidState(),
@@ -745,42 +923,88 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
-	it("rejects a non-boolean hasRingOfSustenance", () => {
+	it("accepts well-formed item-unequipped/equip-blocked-cursed/curse-revealed/items-decursed events, rejects broken ones", () => {
+		const unequipped = validateGameState({
+			...buildValidState(),
+			events: [{ type: "item-unequipped", payload: { kind: "sword" } }],
+		});
+		expect(unequipped.ok).toBe(true);
+
+		const blocked = validateGameState({
+			...buildValidState(),
+			events: [{ type: "equip-blocked-cursed", payload: { kind: "armor" } }],
+		});
+		expect(blocked.ok).toBe(true);
+
+		const revealed = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "curse-revealed", payload: { kind: "regeneration-ring" } },
+			],
+		});
+		expect(revealed.ok).toBe(true);
+
+		const decursed = validateGameState({
+			...buildValidState(),
+			events: [{ type: "items-decursed", payload: { count: 2 } }],
+		});
+		expect(decursed.ok).toBe(true);
+
 		expectRejected(
-			{ ...buildValidState(), hasRingOfSustenance: "true" },
-			"hasRingOfSustenance",
+			{
+				...buildValidState(),
+				events: [{ type: "item-unequipped", payload: { kind: "bow" } }],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "items-decursed", payload: { count: 0 } }],
+			},
+			"events",
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords, shields and food) and rejects a broken one", () => {
+	it("accepts a well-formed inventory (including swords, armor and food, each its own slot) and rejects a broken one", () => {
+		const inventory = [
+			{ itemId: 1, kind: "heal-potion" },
+			{ itemId: 2, kind: "heal-potion" },
+			{
+				itemId: 3,
+				kind: "sword",
+				equipped: true,
+				cursed: false,
+				attackBonus: 1,
+			},
+			{
+				itemId: 4,
+				kind: "armor",
+				equipped: false,
+				cursed: true,
+				defenseBonus: 1,
+				rustProtected: false,
+			},
+			{ itemId: 5, kind: "food" },
+		] as const;
 		const accepted = validateGameState({
 			...buildValidState(),
-			inventory: [
-				{ kind: "heal-potion", quantity: 3 },
-				{ kind: "sword", quantity: 1 },
-				{ kind: "shield", quantity: 1 },
-				{ kind: "food", quantity: 2 },
-			],
+			inventory,
 		});
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
-			expect(accepted.value.inventory).toEqual([
-				{ kind: "heal-potion", quantity: 3 },
-				{ kind: "sword", quantity: 1 },
-				{ kind: "shield", quantity: 1 },
-				{ kind: "food", quantity: 2 },
-			]);
+			expect(accepted.value.inventory).toEqual(inventory);
 		}
 
 		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "bow", quantity: 1 }] },
+			{ ...buildValidState(), inventory: [{ itemId: 1, kind: "bow" }] },
 			"inventory",
 		);
 		expectRejected(
 			{
 				...buildValidState(),
-				inventory: [{ kind: "heal-potion", quantity: 0 }],
-			},
+				inventory: [{ itemId: 1, kind: "sword", equipped: true }],
+			} /* cursed/attackBonus missing */,
 			"inventory",
 		);
 	});
@@ -922,6 +1146,42 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+
+		const bearTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "bear" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "bear", damage: 0 } },
+			],
+		});
+		expect(bearTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "bear", damage: -1 } },
+				],
+			},
+			"events",
+		);
+
+		const rustTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "rust" }],
+			events: [
+				{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+			],
+		});
+		expect(rustTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{ type: "trap-triggered", payload: { kind: "rust", damage: -1 } },
+				],
+			},
+			"events",
+		);
 		expectRejected(
 			{
 				...buildValidState(),
@@ -935,7 +1195,7 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "poison", quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "poison" }],
 			identifiedPotionKinds: ["poison"],
 			events: [
 				{ type: "player-poisoned", payload: { damage: 4 } },
@@ -947,10 +1207,6 @@ describe("validateGameState", () => {
 			expect(accepted.value.identifiedPotionKinds).toEqual(["poison"]);
 		}
 
-		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "poison", quantity: 0 }] },
-			"inventory",
-		);
 		expectRejected(
 			{ ...buildValidState(), identifiedPotionKinds: ["dragon"] },
 			"identifiedPotionKinds",
@@ -968,18 +1224,11 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "teleport-scroll", quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "teleport-scroll" }],
 			events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "teleport-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 		expectRejected(
 			{ ...buildValidState(), items: [{ x: 2, y: 2, kind: "amulet" }] },
 			"items",
@@ -997,36 +1246,21 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "mapping-scroll", quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "mapping-scroll" }],
 			events: [{ type: "floor-mapped", payload: {} }],
 		});
 		expect(accepted.ok).toBe(true);
-
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "mapping-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 	});
 
 	it("accepts an identify item kind and a potion-identified event, rejects broken ones", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "identify-scroll", quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "identify-scroll" }],
 			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{
-				...buildValidState(),
-				inventory: [{ kind: "identify-scroll", quantity: 0 }],
-			},
-			"inventory",
-		);
 		expectRejected(
 			{
 				...buildValidState(),
@@ -1040,15 +1274,11 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ kind: "strength", quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "strength" }],
 			events: [{ type: "player-strengthened", payload: { bonus: 1 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
-		expectRejected(
-			{ ...buildValidState(), inventory: [{ kind: "strength", quantity: 0 }] },
-			"inventory",
-		);
 		expectRejected(
 			{
 				...buildValidState(),

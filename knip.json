@@ -1,6 +1,12 @@
 {
 	"$schema": "https://unpkg.com/knip@6/schema.json",
-	"entry": ["scripts/demo-renderer.mjs", "scripts/replay-verify.mjs"],
-	"project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs"],
+	"entry": [
+		"scripts/check-structure.ts",
+		"scripts/demo-renderer.ts",
+		"scripts/generate-catalog.ts",
+		"scripts/replay-verify.ts",
+		"scripts/run-bot.ts"
+	],
+	"project": ["src/**/*.{ts,tsx}", "scripts/**/*.ts"],
 	"ignoreExportsUsedInFile": true
 }

@@ -47,9 +47,9 @@ describe("buildReplayGameState", () => {
 			{ type: "move", payload: { direction: "west" } },
 			{ type: "move", payload: { direction: "east" } },
 			{ type: "wait" },
-			{ type: "use-item", payload: { kind: "heal-potion" } },
-			{ type: "use-item", payload: { kind: "sword" } },
-			{ type: "use-item", payload: { kind: "shield" } },
+			{ type: "use-item", payload: { itemId: 1 } },
+			{ type: "use-item", payload: { itemId: 2 } },
+			{ type: "use-item", payload: { itemId: 3 } },
 		];
 
 		for (const seed of [1, 2, 3]) {

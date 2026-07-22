@@ -11,31 +11,32 @@ const zombie = (x: number, y: number): Enemy => ({
 	hp: ZOMBIE_MAX_HP,
 	awake: true,
 	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
 });
 
 describe("applyUseItem dispatch", () => {
 	it("using an item spends a turn: adjacent enemies still get to act", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ kind: "heal-potion" as const, quantity: 1 }],
+			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
 			enemies: [zombie(5, 1)] /* adjacent to the player */,
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next.playerHp).toBe(state.playerHp - 1);
 		expect(next.events.some((event) => event.type === "player-hit")).toBe(true);
 	});
 
-	it("using an item kind with none held is a no-op (same reference, no turn spent)", () => {
+	it("using an itemId with nothing held under it is a no-op (same reference, no turn spent)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [zombie(5, 1)] /* adjacent — would hit if enemies acted */,
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { kind: "heal-potion" },
+			payload: { itemId: 1 },
 		});
 		expect(next).toBe(state);
 	});

@@ -2,6 +2,7 @@ import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
 	DETECT_MONSTER_POTION_DURATION,
+	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
@@ -77,8 +78,7 @@ export const applyUsePotion = (
 		case "strength":
 			return {
 				...state,
-				playerAttackDamage:
-					state.playerAttackDamage + STRENGTH_POTION_ATTACK_BONUS,
+				playerPower: state.playerPower + STRENGTH_POTION_ATTACK_BONUS,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
@@ -143,6 +143,18 @@ export const applyUsePotion = (
 					{
 						type: "player-detected-monsters",
 						payload: { turns: DETECT_MONSTER_POTION_DURATION },
+					},
+				]),
+			};
+		case "hallucination":
+			return {
+				...state,
+				hallucinatingTurnsRemaining: HALLUCINATION_POTION_DURATION,
+				identifiedPotionKinds,
+				events: buildEventLog(state.events, [
+					{
+						type: "player-hallucinated",
+						payload: { turns: HALLUCINATION_POTION_DURATION },
 					},
 				]),
 			};

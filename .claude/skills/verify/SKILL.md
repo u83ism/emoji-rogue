@@ -28,7 +28,7 @@ tmux -L verify_emoji_rogue kill-server
   load) and `replay.json` (full action log, overwritten each run, **not**
   consumed on load). Inspect these directly after a session instead of
   re-deriving state from the pane capture.
-- `node scripts/replay-verify.mjs` reconstructs the last session's
+- `npx unrun scripts/replay-verify.ts` reconstructs the last session's
   `replay.json` via `buildReplayGameState` and prints floor/HP/status — a
   fast way to cross-check a live session against the reducer without
   re-reading the whole pane transcript.

@@ -23,9 +23,12 @@ describe("saveGameState / loadSavedGameState", () => {
 		saveGameState(state, testFilePath);
 		expect(existsSync(testFilePath)).toBe(true);
 
-		expect(loadSavedGameState(testFilePath)).toEqual(state);
+		expect(loadSavedGameState(testFilePath)).toEqual({
+			kind: "loaded",
+			state,
+		});
 		expect(existsSync(testFilePath)).toBe(false); /* resumes exactly once */
-		expect(loadSavedGameState(testFilePath)).toBeUndefined();
+		expect(loadSavedGameState(testFilePath)).toEqual({ kind: "none" });
 	});
 
 	it("creates missing directories on save", () => {
@@ -34,13 +37,13 @@ describe("saveGameState / loadSavedGameState", () => {
 		expect(existsSync(nested)).toBe(true);
 	});
 
-	it("consumes an invalid save file and starts fresh", () => {
+	it("reports a corrupted save file, consumes it, and starts fresh", () => {
 		writeFileSync(testFilePath, "{broken", "utf8");
-		expect(loadSavedGameState(testFilePath)).toBeUndefined();
+		expect(loadSavedGameState(testFilePath)).toEqual({ kind: "corrupted" });
 		expect(existsSync(testFilePath)).toBe(false); /* no retry loop next boot */
 	});
 
-	it("returns undefined when no save file exists", () => {
-		expect(loadSavedGameState(testFilePath)).toBeUndefined();
+	it("reports no save when no save file exists", () => {
+		expect(loadSavedGameState(testFilePath)).toEqual({ kind: "none" });
 	});
 });

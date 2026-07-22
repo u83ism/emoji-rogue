@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { PLAYER_HUNGER_WARNING_THRESHOLD } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import type { GameState } from "../state.js";
+import type { GameState, HeldItem } from "../state.js";
 import { applyHungerTick } from "./hunger.js";
+
+/** An equipped ring of sustenance — the new stand-in for the old hasRingOfSustenance flag. */
+const equippedSustenanceRing: HeldItem = {
+	itemId: 1,
+	kind: "sustenance-ring",
+	equipped: true,
+	cursed: false,
+};
 
 describe("applyHungerTick", () => {
 	it("decrements playerFood by one with no event when nowhere near the threshold", () => {
@@ -86,7 +94,7 @@ describe("applyHungerTick", () => {
 	it("skips the whole tick (food and rng only) when the ring's roll succeeds", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 1),
-			hasRingOfSustenance: true,
+			inventory: [equippedSustenanceRing],
 		};
 		const next = applyHungerTick(state);
 		expect(next.playerFood).toBe(state.playerFood);
@@ -97,7 +105,7 @@ describe("applyHungerTick", () => {
 	it("ticks normally, still consuming rng, when the ring's roll fails", () => {
 		const state: GameState = {
 			...buildArenaGameState(5, 5, 2000),
-			hasRingOfSustenance: true,
+			inventory: [equippedSustenanceRing],
 		};
 		const next = applyHungerTick(state);
 		expect(next.playerFood).toBe(state.playerFood - 1);

@@ -9,7 +9,7 @@
 
 ## Enforcement: justification-based lint
 
-`scripts/check-structure.mjs` (wired into `npm run lint`) enforces both limits with Kaachan-style tiers:
+`scripts/check-structure.ts` (wired into `npm run lint`) enforces both limits with Kaachan-style tiers:
 **hint** (over the aim — informational only) → **error** (over the limit — blocks) → **justified**
 (allowed, with the human-approved reason on record).
 
@@ -32,3 +32,21 @@ Label every proposed name with its provenance:
   tracker look established but aren't (the "tick" incident, 2026-07-18 — the human approved the folder
   only after asking what the word even meant).
 - **AI造語 (coinage)** — anything else. Needs explicit approval, and expect it to be questioned.
+
+## The reverse direction: re-cutting or aggregating, not just splitting
+
+Checks 1-2 only ever detect monotonic growth — a file or folder got too big. They cannot detect the
+opposite failure modes: the current split is along the wrong axis, or a group of small files/folders
+should be aggregated back because the earlier split turned out to be a modeling mistake. Neither is
+detectable by a line/file-count threshold — both need a semantic read (co-change patterns in git history,
+duplicated responsibility across siblings) that only a human-led review can make.
+
+`scripts/check-structure.ts`'s third check is a **hint-only, never-blocking** nudge toward that review:
+it diffs `src/` against the commit recorded in `scripts/structure-audit-state.json` and hints once enough
+has changed (`DRIFT_HINT_FILES` / `DRIFT_HINT_LINES`). It intentionally cannot escalate to error — unlike
+size/granularity, "this needs a fresh look" is not something a human should ever be blocked from
+overriding, or it would just get an exception written against it out of annoyance.
+
+Run the actual review via the `structure-audit` skill when the hint fires (or on request). Re-cuts and
+aggregations follow the same rule as folder splits above: **AI proposes, human ratifies** — this is not a
+step that sediments into the lint.

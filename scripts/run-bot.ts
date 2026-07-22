@@ -1,9 +1,8 @@
-#!/usr/bin/env node
 // Headless autoplay: runs the explore-everything bot (src/bot/) against a
 // real dungeon run via the pure reducer, logging every turn as JSONL for
-// offline analysis. Run after `npm run build`:
+// offline analysis. Run:
 //
-//   node scripts/run-bot.mjs [--seed=N] [--width=N] [--height=N] [--max-turns=N] [--quiet]
+//   npx unrun scripts/run-bot.ts [--seed=N] [--width=N] [--height=N] [--max-turns=N] [--quiet]
 //     [--disable=kind1,kind2] [--summary-only]
 //
 // --disable is a balance-experiment knob (see itemUsePolicy.ts's
@@ -25,14 +24,20 @@ import {
 	createInitialBotMemory,
 	decideAction,
 	STAGNATION_QUIT_TURNS,
-} from "../dist/bot/index.mjs";
+	type TurnLogEntry,
+} from "../src/bot/index.js";
 import {
 	advanceTurn,
 	buildDungeonGameState,
 	calculateScore,
-} from "../dist/game/index.mjs";
+	type ItemKind,
+} from "../src/game/index.js";
 
-const parseNumberArgument = (argv, name, fallback) => {
+const parseNumberArgument = (
+	argv: readonly string[],
+	name: string,
+	fallback: number,
+): number => {
 	const prefix = `--${name}=`;
 	const match = argv.find((argument) => argument.startsWith(prefix));
 	if (match === undefined) {
@@ -42,13 +47,16 @@ const parseNumberArgument = (argv, name, fallback) => {
 	return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
-const parseDisabledKinds = (argv) => {
+/** Kind names come from a free-form CLI flag, so this is not validated against ITEM_KIND_VALUES — an unrecognized kind simply never matches anything in decideItemToUse, the same tolerance the original untyped script had. */
+const parseDisabledKinds = (argv: readonly string[]): ReadonlySet<ItemKind> => {
 	const prefix = "--disable=";
 	const match = argv.find((argument) => argument.startsWith(prefix));
 	if (match === undefined) {
 		return new Set();
 	}
-	return new Set(match.slice(prefix.length).split(",").filter(Boolean));
+	return new Set(
+		match.slice(prefix.length).split(",").filter(Boolean),
+	) as ReadonlySet<ItemKind>;
 };
 
 const argv = process.argv.slice(2);
@@ -60,15 +68,15 @@ const disabledItemKinds = parseDisabledKinds(argv);
 const summaryOnly = argv.includes("--summary-only");
 const quiet = argv.includes("--quiet") || summaryOnly;
 
-const logLines = summaryOnly ? undefined : [];
-let logFilePath;
+const logLines: string[] | undefined = summaryOnly ? undefined : [];
+let logFilePath: string | undefined;
 if (!summaryOnly) {
 	const logDirectory = join(homedir(), ".emoji-rogue", "bot-logs");
 	mkdirSync(logDirectory, { recursive: true });
 	logFilePath = join(logDirectory, `bot-${seed}-${Date.now()}.jsonl`);
 }
 
-const printStatusLine = (entry) => {
+const printStatusLine = (entry: TurnLogEntry): void => {
 	console.log(
 		`[turn ${entry.turn}] floor=${entry.floor} hp=${entry.playerHp}/${entry.playerMaxHp} ` +
 			`food=${entry.playerFood} gold=${entry.goldCollected} amulet=${entry.hasAmulet} ` +
@@ -80,7 +88,7 @@ let state = buildDungeonGameState(width, height, seed);
 let memory = createInitialBotMemory();
 let turn = 0;
 let previousFloor = state.floor;
-let deathCause;
+let deathCause: string | undefined;
 
 if (!summaryOnly) {
 	console.log(`シード: ${seed} (${width}x${height})`);
@@ -127,7 +135,7 @@ while (state.status === "playing" && turn < maxTurns) {
 	}
 }
 
-if (!summaryOnly) {
+if (!summaryOnly && logFilePath !== undefined && logLines !== undefined) {
 	writeFileSync(logFilePath, `${logLines.join("\n")}\n`, "utf8");
 }
 
@@ -170,5 +178,5 @@ if (summaryOnly) {
 	console.log(`アミュレット: ${state.hasAmulet}`);
 	console.log(`スコア: ${calculateScore(state)}`);
 	console.log(`死因: ${deathCause ?? "-"}`);
-	console.log(`ログ行数: ${logLines.length} (${logFilePath})`);
+	console.log(`ログ行数: ${logLines?.length} (${logFilePath})`);
 }

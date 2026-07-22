@@ -42,23 +42,33 @@ const DRIFT_HINT_LINES = 3000;
 const PRAGMA = "file-size-exception:";
 const PRAGMA_SEARCH_LINES = 5;
 
+interface FolderExceptions {
+	readonly folders?: Record<string, string>;
+}
+
+interface AuditState {
+	readonly lastAuditCommit: string;
+	readonly lastAuditDate: string;
+}
+
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const exceptionsPath = join(scriptDirectory, "structure-exceptions.json");
 const folderExceptions = new Map(
 	Object.entries(
 		existsSync(exceptionsPath)
-			? (JSON.parse(readFileSync(exceptionsPath, "utf8")).folders ?? {})
+			? ((JSON.parse(readFileSync(exceptionsPath, "utf8")) as FolderExceptions)
+					.folders ?? {})
 			: {},
 	),
 );
 
-const isSourceFile = (name) =>
+const isSourceFile = (name: string): boolean =>
 	(name.endsWith(".ts") || name.endsWith(".tsx")) &&
 	!name.endsWith(".test.ts") &&
 	!name.endsWith(".test.tsx");
 
 /** Every folder under (and including) `root`, depth-first. */
-const collectFolders = (root) => {
+const collectFolders = (root: string): string[] => {
 	const folders = [root];
 	for (const entry of readdirSync(root)) {
 		const path = join(root, entry);
@@ -69,8 +79,8 @@ const collectFolders = (root) => {
 	return folders;
 };
 
-const hints = [];
-const errors = [];
+const hints: string[] = [];
+const errors: string[] = [];
 
 /* --- Check 1: file sizes (game + shell layers only) --- */
 const sizeCheckedFolders = [
@@ -128,7 +138,9 @@ for (const folder of collectFolders("src")) {
 /* --- Check 3: structural drift since last audit (hint-only) --- */
 const auditStatePath = join(scriptDirectory, "structure-audit-state.json");
 if (existsSync(auditStatePath)) {
-	const auditState = JSON.parse(readFileSync(auditStatePath, "utf8"));
+	const auditState = JSON.parse(
+		readFileSync(auditStatePath, "utf8"),
+	) as AuditState;
 	try {
 		const diffStat = execSync(
 			`git diff --stat ${auditState.lastAuditCommit}..HEAD -- src`,

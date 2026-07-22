@@ -1,10 +1,8 @@
-#!/usr/bin/env node
 // Manual check for the replay recorded by the last CLI session
 // (~/.emoji-rogue/replay.json, written by src/main.tsx on exit). Run after
-// `npm run build` and after playing (and quitting/dying/winning) at least
-// once:
+// playing (and quitting/dying/winning) at least once:
 //
-//   node scripts/replay-verify.mjs
+//   npx unrun scripts/replay-verify.ts
 //
 // Reconstructs the run from (width, height, seed) + the recorded actions and
 // prints a summary — compare it against what you actually remember seeing.
@@ -14,11 +12,11 @@ import { join } from "node:path";
 import {
 	buildReplayGameState,
 	parseReplayFileContent,
-} from "../dist/game/index.mjs";
+} from "../src/game/index.js";
 
 const replayFilePath = join(homedir(), ".emoji-rogue", "replay.json");
 
-let content;
+let content: string;
 try {
 	content = readFileSync(replayFilePath, "utf8");
 } catch {

@@ -57,7 +57,7 @@ Unicodeの文字幅プロパティ(East Asian Width)には Narrow(1桁確定)・
 2. `[...候補].length` で単一コードポイントか確認(基準1・2)
 3. Unicode公式データまたは絵文字リファレンスでEAWとデフォルト表示(text/emoji)・導入バージョンを確認、Unicode 15.1以下か見る(基準3・4)
 4. `src/game/glyphs.ts` に追加する際、選定理由をコメントで残す(既存エントリのコメント形式に倣う)
-5. Windows Terminalでの実機確認(`node scripts/demo-renderer.mjs` 等)。基準を満たしていても実機確認は省略しない
+5. Windows Terminalでの実機確認(`npx unrun scripts/demo-renderer.ts` 等)。基準を満たしていても実機確認は省略しない
 
 ## 決定の記録(ADR)
 

@@ -1,6 +1,6 @@
 ---
 name: structure-audit
-description: Human-led review of src/'s domain-split axis — re-cutting or aggregating folders/files that the size-based structure lint can't detect. Use when scripts/check-structure.mjs's drift hint fires, or when asked to "run a structure audit" / "structure-auditして".
+description: Human-led review of src/'s domain-split axis — re-cutting or aggregating folders/files that the size-based structure lint can't detect. Use when scripts/check-structure.ts's drift hint fires, or when asked to "run a structure audit" / "structure-auditして".
 ---
 
 # Structure audit

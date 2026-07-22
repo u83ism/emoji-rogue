@@ -9,7 +9,7 @@
 
 ## Enforcement: justification-based lint
 
-`scripts/check-structure.mjs` (wired into `npm run lint`) enforces both limits with Kaachan-style tiers:
+`scripts/check-structure.ts` (wired into `npm run lint`) enforces both limits with Kaachan-style tiers:
 **hint** (over the aim — informational only) → **error** (over the limit — blocks) → **justified**
 (allowed, with the human-approved reason on record).
 
@@ -41,7 +41,7 @@ should be aggregated back because the earlier split turned out to be a modeling 
 detectable by a line/file-count threshold — both need a semantic read (co-change patterns in git history,
 duplicated responsibility across siblings) that only a human-led review can make.
 
-`scripts/check-structure.mjs`'s third check is a **hint-only, never-blocking** nudge toward that review:
+`scripts/check-structure.ts`'s third check is a **hint-only, never-blocking** nudge toward that review:
 it diffs `src/` against the commit recorded in `scripts/structure-audit-state.json` and hints once enough
 has changed (`DRIFT_HINT_FILES` / `DRIFT_HINT_LINES`). It intentionally cannot escalate to error — unlike
 size/granularity, "this needs a fresh look" is not something a human should ever be blocked from

@@ -8,7 +8,7 @@ description: Spec check → implement → test (if logic involved) → update pr
 2. **Implement**: form an implementation plan, then write code following `.claude/rules/`.
 3. **Test**: if the change involves logic (not pure config/docs), write or update the corresponding
    `foo.test.ts` and run `npm test`. Skip only for changes that touch no logic.
-4. **Structure check**: run `node scripts/check-structure.mjs` (also part of `npm run lint`) and act on
+4. **Structure check**: run `npm run lint` (which includes `scripts/check-structure.ts`) and act on
    what it reports per `.claude/rules/file-structure.md`: errors must be resolved within this task — by
    splitting, or by a **human-approved** justification (never self-authorized); a folder-limit error means
    proposing a domain split for the human to ratify. Hints are worth mentioning in the completion report.

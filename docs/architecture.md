@@ -1,6 +1,6 @@
 # emoji-rogue アーキテクチャガイド
 
-コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**完了マイルストーンの履歴**は `docs/tasks/game-history.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md`、**絵文字選定の技術基準**は `docs/emoji-policy.md`、**現在の絵文字割り当て・却下候補の台帳**は `docs/emoji-registry.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
+コードベースを初めて読む人(未来の自分を含む)向けの案内。**製品として何を作るか**は `docs/design.md`、**進行中のゲーム実装タスク**は `docs/tasks/game.md`、**完了マイルストーンの履歴**は `docs/tasks/game-history.md`、**近代化改修の完了済み履歴**は `docs/tasks/modernization.md`、**絵文字選定の技術基準**は `docs/emoji-policy.md`、**現在の絵文字割り当て・却下候補の台帳**は `docs/emoji-registry.md`、**オリジナルRogue 5.4の仕様書き起こし**は `docs/rogue-5.4-spec.md` を参照。このファイルは「今のコードがどういう構造で、どこから読めばいいか」だけを扱う。
 
 ## 一言でいうと
 

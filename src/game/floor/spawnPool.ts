@@ -9,6 +9,8 @@ import { computeVisiblePoints, VIEW_RADIUS } from "../vision.js";
 export interface SpawnChance<Kind> {
 	readonly kind: Kind;
 	readonly chancePercent: number;
+	/** Rolled only on floors >= this value; omitted rolls on every floor (the default before this field existed). */
+	readonly minFloor?: number;
 }
 
 /** One random tile out of the pool, removed from it (no tile spawns twice). */

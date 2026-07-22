@@ -114,6 +114,14 @@ export const VAMPIRE_ACTIONS_PER_TURN = 1;
 /** Percentage (floored) of landed damage a vampire heals itself for — see vampireLifesteal.ts's resolveVampireLifesteal. */
 export const VAMPIRE_LIFESTEAL_PERCENT = 50;
 export const VAMPIRE_SPAWN_CHANCE_PERCENT = 15;
+/**
+ * A vampire's own heal (floor(VAMPIRE_ATTACK_DAMAGE * VAMPIRE_LIFESTEAL_PERCENT / 100) = 1/turn)
+ * exactly cancels an unarmed player's PLAYER_ATTACK_DAMAGE (1/turn), making it an unkillable
+ * stalemate before the player finds a sword or strength potion. Gating the spawn to floor 8+
+ * (2026-07-23 player report, raised 3→8 same day: floor 3 still felt too early) pushes it later
+ * than dragon/yeti, matching its ENEMY_EXPERIENCE_REWARD placement between the two.
+ */
+export const VAMPIRE_MIN_SPAWN_FLOOR = 8;
 
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake

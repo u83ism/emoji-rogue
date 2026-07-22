@@ -4,6 +4,7 @@ import { createRng, type Rng } from "../../rng.js";
 import {
 	calculateEnemyCountForFloor,
 	MONSTER_HOUSE_ENEMY_COUNT,
+	VAMPIRE_MIN_SPAWN_FLOOR,
 } from "../balance.js";
 import type { Position } from "../state.js";
 import { drawFloorEnemies } from "./enemies.js";
@@ -63,17 +64,17 @@ describe("drawFloorEnemies", () => {
 			firstRoom,
 			buildPoolWithRoom(otherRoom),
 			createAlwaysHitRng(),
-			1,
+			VAMPIRE_MIN_SPAWN_FLOOR,
 		);
 		const asleep = enemies.filter((enemy) => !enemy.awake);
 		const awake = enemies.filter((enemy) => enemy.awake);
 
 		/* the regular spawns: scaled zombies/bats plus thief/nymph/aquator */
 		expect(asleep.filter((enemy) => enemy.kind === "zombie").length).toBe(
-			calculateEnemyCountForFloor("zombie", 1),
+			calculateEnemyCountForFloor("zombie", VAMPIRE_MIN_SPAWN_FLOOR),
 		);
 		expect(asleep.filter((enemy) => enemy.kind === "bat").length).toBe(
-			calculateEnemyCountForFloor("bat", 1),
+			calculateEnemyCountForFloor("bat", VAMPIRE_MIN_SPAWN_FLOOR),
 		);
 		for (const kind of [
 			"thief",
@@ -125,6 +126,17 @@ describe("drawFloorEnemies", () => {
 		expect(enemies.filter((enemy) => enemy.kind === "bat").length).toBe(
 			calculateEnemyCountForFloor("bat", 7),
 		);
+	});
+
+	it("never spawns a vampire below VAMPIRE_MIN_SPAWN_FLOOR, even with every roll hitting", () => {
+		const enemies = drawFloorEnemies(
+			rooms,
+			firstRoom,
+			buildPoolWithRoom(otherRoom),
+			createAlwaysHitRng(),
+			VAMPIRE_MIN_SPAWN_FLOOR - 1,
+		);
+		expect(enemies.some((enemy) => enemy.kind === "vampire")).toBe(false);
 	});
 
 	it("skips the monster house when the dungeon has no room besides the starting one", () => {

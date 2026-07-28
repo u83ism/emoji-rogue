@@ -1,42 +1,23 @@
 import {
-	AQUATOR_RUST_CHANCE_PERCENT,
-	AQUATOR_SPAWN_CHANCE_PERCENT,
 	BEAR_TRAP_PARALYSIS_DURATION,
 	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
-	CENTAUR_SPAWN_CHANCE_PERCENT,
 	DART_TRAP_DAMAGE,
-	DRAGON_SPAWN_CHANCE_PERCENT,
-	EMU_SPAWN_CHANCE_PERCENT,
-	ENEMY_COUNT_SCALING,
 	GOAL_FLOOR,
-	GOLD_AMOUNT_MAX,
-	GOLD_AMOUNT_MIN,
-	HOBGOBLIN_SPAWN_CHANCE_PERCENT,
-	JABBERWOCK_MIN_SPAWN_FLOOR,
-	JABBERWOCK_SPAWN_CHANCE_PERCENT,
-	KESTREL_SPAWN_CHANCE_PERCENT,
-	NYMPH_SPAWN_CHANCE_PERCENT,
-	ORC_SPAWN_CHANCE_PERCENT,
-	QUAGGA_SPAWN_CHANCE_PERCENT,
-	RAT_SPAWN_CHANCE_PERCENT,
 	RUST_TRAP_SPAWN_CHANCE_PERCENT,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 	SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT,
-	SNAKE_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
-	THIEF_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
-	UR_VILE_SPAWN_CHANCE_PERCENT,
-	VAMPIRE_LIFESTEAL_PERCENT,
-	VAMPIRE_SPAWN_CHANCE_PERCENT,
-	YETI_SPAWN_CHANCE_PERCENT,
 } from "../../game/balance.js";
-import type { EnemyKind, TrapKind } from "../../game/events.js";
+import type { TrapKind } from "../../game/events.js";
 
-// The enemy/trap half of docs/catalog.md's prose data (items live in
-// itemCatalog.ts). Numbers inside descriptions are ALWAYS interpolated from
-// balance.ts constants — never typed by hand — so a balance change
+// The trap half of docs/catalog.md's prose data, plus the shared SpawnInfo/
+// ItemCategory types every catalog file builds on (items live in
+// itemCatalog.ts/potionCatalog.ts, enemies in enemyCatalog.ts — split out in
+// milestone 101 once the combined file would have crossed the 200-line
+// structure-lint limit). Numbers inside descriptions are ALWAYS interpolated
+// from balance.ts constants — never typed by hand — so a balance change
 // regenerates into correct prose. Records over the kind unions: adding a
 // kind without a catalog entry is a compile error, which is the whole point
 // versus a hand-written list.
@@ -61,92 +42,6 @@ export interface ItemCatalogEntry {
 	readonly spawn: SpawnInfo;
 	readonly effect: string;
 }
-
-export interface EnemyCatalogEntry {
-	readonly spawn: SpawnInfo;
-	/** 習性 — qualitative only; every number comes interpolated from balance.ts. */
-	readonly behavior: string;
-}
-
-export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
-	zombie: {
-		spawn: { type: "scaling", ...ENEMY_COUNT_SCALING.zombie },
-		behavior: "基本の敵。視界に入ると追跡し、隣接すると攻撃してくる",
-	},
-	bat: {
-		spawn: { type: "scaling", ...ENEMY_COUNT_SCALING.bat },
-		behavior: "速いが打たれ弱い。隣接されたまま1ターン過ごすと2発殴られる",
-	},
-	thief: {
-		spawn: { type: "chance", percent: THIEF_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"ダメージは与えず、接触すると所持金を盗んで姿を消す。倒せば盗まれない",
-	},
-	nymph: {
-		spawn: { type: "chance", percent: NYMPH_SPAWN_CHANCE_PERCENT },
-		behavior: "ダメージは与えず、接触すると持ち物を1つ盗んで姿を消す",
-	},
-	aquator: {
-		spawn: { type: "chance", percent: AQUATOR_SPAWN_CHANCE_PERCENT },
-		behavior: `攻撃が命中するたび${AQUATOR_RUST_CHANCE_PERCENT}%で装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)`,
-	},
-	orc: {
-		spawn: { type: "chance", percent: ORC_SPAWN_CHANCE_PERCENT },
-		behavior: `頑丈な近接アタッカー。倒すと${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールドをその場で落とす`,
-	},
-	dragon: {
-		spawn: { type: "chance", percent: DRAGON_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"希少な最強格の近接アタッカー。特殊能力はないが桁違いに頑丈で攻撃力も高い",
-	},
-	yeti: {
-		spawn: { type: "chance", percent: YETI_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"頑丈だが低頻度に出現する近接アタッカー。オークとドラゴンの中間の強さ",
-	},
-	snake: {
-		spawn: { type: "chance", percent: SNAKE_SPAWN_CHANCE_PERCENT },
-		behavior: "HPは低いが噛みつきのダメージが高い近接アタッカー",
-	},
-	vampire: {
-		spawn: { type: "chance", percent: VAMPIRE_SPAWN_CHANCE_PERCENT },
-		behavior: `逃げずに戦い続け、攻撃が命中するたびそのダメージの${VAMPIRE_LIFESTEAL_PERCENT}%を自分のHPとして回復する(最大HPが上限)`,
-	},
-	rat: {
-		spawn: { type: "chance", percent: RAT_SPAWN_CHANCE_PERCENT },
-		behavior: "最弱の雑魚。特殊能力はない",
-	},
-	emu: {
-		spawn: { type: "chance", percent: EMU_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"HPは低いが噛みつきのダメージが高い近接アタッカー(蛇と同系統だがさらに打たれ弱い)",
-	},
-	kestrel: {
-		spawn: { type: "chance", percent: KESTREL_SPAWN_CHANCE_PERCENT },
-		behavior: "速いが打たれ弱い。コウモリより攻撃が鋭い",
-	},
-	hobgoblin: {
-		spawn: { type: "chance", percent: HOBGOBLIN_SPAWN_CHANCE_PERCENT },
-		behavior: "中堅の近接アタッカー。特殊能力はない",
-	},
-	centaur: {
-		spawn: { type: "chance", percent: CENTAUR_SPAWN_CHANCE_PERCENT },
-		behavior: "オークより頑丈な近接アタッカー。特殊能力はない",
-	},
-	quagga: {
-		spawn: { type: "chance", percent: QUAGGA_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"コウモリ・ケストレルと同じく素早く2回行動するが、1発あたりの威力も高い",
-	},
-	"ur-vile": {
-		spawn: { type: "chance", percent: UR_VILE_SPAWN_CHANCE_PERCENT },
-		behavior: "雪男とドラゴンの中間の強さの近接アタッカー。特殊能力はない",
-	},
-	jabberwock: {
-		spawn: { type: "chance", percent: JABBERWOCK_SPAWN_CHANCE_PERCENT },
-		behavior: `特殊能力はないがドラゴンに匹敵する最強格。${JABBERWOCK_MIN_SPAWN_FLOOR}階以降にのみ出現`,
-	},
-};
 
 export interface TrapCatalogEntry {
 	readonly spawn: SpawnInfo;

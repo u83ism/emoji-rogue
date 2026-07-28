@@ -194,6 +194,98 @@ export const JABBERWOCK_ACTIONS_PER_TURN = 1;
 export const JABBERWOCK_SPAWN_CHANCE_PERCENT = 6;
 export const JABBERWOCK_MIN_SPAWN_FLOOR = 6;
 
+// The remaining eight original-Rogue monsters, each needing a genuinely new
+// advanceEnemies mechanic (added 2026-07-28, second half of the roster —
+// see docs/tasks/game.md milestone 101's backlog note). Gated to a
+// minFloor where the mechanic makes them meaningfully more dangerous than a
+// same-tier "parameters only" attacker, same reasoning as
+// VAMPIRE_MIN_SPAWN_FLOOR.
+
+// Fast (like bat/kestrel/quagga) AND passively regenerates — see
+// enemyRegen.ts. Gated deeper than troll since the two mechanics stack.
+export const GRIFFIN_MAX_HP = 6;
+export const GRIFFIN_ATTACK_DAMAGE = 3;
+export const GRIFFIN_ACTIONS_PER_TURN = 2;
+export const GRIFFIN_SPAWN_CHANCE_PERCENT = 6;
+export const GRIFFIN_MIN_SPAWN_FLOOR = 5;
+/** HP regenerated per awake turn while below GRIFFIN_MAX_HP — see enemyRegen.ts. */
+export const GRIFFIN_REGEN_AMOUNT = 1;
+
+// Not fast, but regenerates more per turn than griffin — its own signature
+// trait instead of a lesser copy of griffin's.
+export const TROLL_MAX_HP = 6;
+export const TROLL_ATTACK_DAMAGE = 3;
+export const TROLL_ACTIONS_PER_TURN = 1;
+export const TROLL_SPAWN_CHANCE_PERCENT = 8;
+export const TROLL_MIN_SPAWN_FLOOR = 4;
+/** HP regenerated per awake turn while below TROLL_MAX_HP — see enemyRegen.ts. */
+export const TROLL_REGEN_AMOUNT = 2;
+
+// Blind: only wakes on adjacency (never on being seen), and never chases
+// once awake — always wanders, same as a confused enemy, except it can still
+// wake up and it is never actually confused. See advanceEnemies. Weak
+// otherwise and not gated — original Rogue's Icky Thing is an early nuisance.
+export const ICKY_THING_MAX_HP = 2;
+export const ICKY_THING_ATTACK_DAMAGE = 1;
+export const ICKY_THING_ACTIONS_PER_TURN = 1;
+export const ICKY_THING_SPAWN_CHANCE_PERCENT = 15;
+
+// Stationary: never chases or wanders, only ever attacks when the player
+// steps adjacent to it (see advanceEnemies). Original Rogue's Venus Flytrap
+// also physically holds the player in place while adjacent — deliberately
+// not implemented here (would need a new constraint inside advanceTurn.ts's
+// applyMove, see docs/tasks/game.md milestone 101's follow-up note); for now
+// the only penalty for walking away is forfeiting its experience.
+export const VENUS_FLYTRAP_MAX_HP = 3;
+export const VENUS_FLYTRAP_ATTACK_DAMAGE = 2;
+export const VENUS_FLYTRAP_ACTIONS_PER_TURN = 1;
+export const VENUS_FLYTRAP_SPAWN_CHANCE_PERCENT = 10;
+
+// A ranged gaze instead of chasing while visible but not adjacent — see
+// advanceEnemies. Reuses the player's own confusedTurnsRemaining field/tick,
+// same "same field, different source" idiom as the sleeping gas trap reusing
+// paralyzedTurnsRemaining.
+export const MEDUSA_MAX_HP = 5;
+export const MEDUSA_ATTACK_DAMAGE = 2;
+export const MEDUSA_ACTIONS_PER_TURN = 1;
+export const MEDUSA_SPAWN_CHANCE_PERCENT = 6;
+export const MEDUSA_MIN_SPAWN_FLOOR = 5;
+/** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands — same "roll every eligible turn" idiom as WAKE_CHANCE_PERCENT. */
+export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
+/** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */
+export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
+
+// Invisible unless adjacent (or detected — see frame.ts's buildFrameGrid).
+// No advanceEnemies branch of its own: it fights exactly like a
+// "parameters only" attacker once you bump into it, the danger is purely
+// that you cannot see it coming.
+export const PHANTOM_MAX_HP = 3;
+export const PHANTOM_ATTACK_DAMAGE = 2;
+export const PHANTOM_ACTIONS_PER_TURN = 1;
+export const PHANTOM_SPAWN_CHANCE_PERCENT = 8;
+export const PHANTOM_MIN_SPAWN_FLOOR = 3;
+
+// Every landed hit permanently lowers playerMaxHp — see wraithDrain.ts.
+// Gated like vampire: a permanent debuff is dangerous enough to delay.
+export const WRAITH_MAX_HP = 4;
+export const WRAITH_ATTACK_DAMAGE = 2;
+export const WRAITH_ACTIONS_PER_TURN = 1;
+export const WRAITH_SPAWN_CHANCE_PERCENT = 8;
+export const WRAITH_MIN_SPAWN_FLOOR = 4;
+/** Permanent playerMaxHp lost per landed hit — see wraithDrain.ts. Never drains playerMaxHp below 1. */
+export const WRAITH_DRAIN_AMOUNT = 1;
+
+// Disguised as a gold pile while still asleep (see frame.ts's
+// buildFrameGrid) — the instant it wakes (the same WAKE_CHANCE_PERCENT roll
+// every sleeping enemy uses) it draws as its real glyph instead. No
+// advanceEnemies branch of its own beyond that — a "parameters only"
+// attacker once revealed. Not gated: the disguise itself is what makes it
+// dangerous even early.
+export const XEROC_MAX_HP = 4;
+export const XEROC_ATTACK_DAMAGE = 3;
+export const XEROC_ACTIONS_PER_TURN = 1;
+export const XEROC_SPAWN_CHANCE_PERCENT = 10;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -236,6 +328,14 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	quagga: QUAGGA_MAX_HP,
 	"ur-vile": UR_VILE_MAX_HP,
 	jabberwock: JABBERWOCK_MAX_HP,
+	griffin: GRIFFIN_MAX_HP,
+	troll: TROLL_MAX_HP,
+	"icky-thing": ICKY_THING_MAX_HP,
+	"venus-flytrap": VENUS_FLYTRAP_MAX_HP,
+	medusa: MEDUSA_MAX_HP,
+	phantom: PHANTOM_MAX_HP,
+	wraith: WRAITH_MAX_HP,
+	xeroc: XEROC_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -256,6 +356,14 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	quagga: QUAGGA_ATTACK_DAMAGE,
 	"ur-vile": UR_VILE_ATTACK_DAMAGE,
 	jabberwock: JABBERWOCK_ATTACK_DAMAGE,
+	griffin: GRIFFIN_ATTACK_DAMAGE,
+	troll: TROLL_ATTACK_DAMAGE,
+	"icky-thing": ICKY_THING_ATTACK_DAMAGE,
+	"venus-flytrap": VENUS_FLYTRAP_ATTACK_DAMAGE,
+	medusa: MEDUSA_ATTACK_DAMAGE,
+	phantom: PHANTOM_ATTACK_DAMAGE,
+	wraith: WRAITH_ATTACK_DAMAGE,
+	xeroc: XEROC_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -281,6 +389,14 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	quagga: QUAGGA_ACTIONS_PER_TURN,
 	"ur-vile": UR_VILE_ACTIONS_PER_TURN,
 	jabberwock: JABBERWOCK_ACTIONS_PER_TURN,
+	griffin: GRIFFIN_ACTIONS_PER_TURN,
+	troll: TROLL_ACTIONS_PER_TURN,
+	"icky-thing": ICKY_THING_ACTIONS_PER_TURN,
+	"venus-flytrap": VENUS_FLYTRAP_ACTIONS_PER_TURN,
+	medusa: MEDUSA_ACTIONS_PER_TURN,
+	phantom: PHANTOM_ACTIONS_PER_TURN,
+	wraith: WRAITH_ACTIONS_PER_TURN,
+	xeroc: XEROC_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -302,6 +418,14 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	quagga: 4,
 	"ur-vile": 4,
 	jabberwock: 6,
+	griffin: 7,
+	troll: 6,
+	"icky-thing": 1,
+	"venus-flytrap": 3,
+	medusa: 5,
+	phantom: 4,
+	wraith: 5,
+	xeroc: 4,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

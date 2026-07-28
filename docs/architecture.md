@@ -43,7 +43,8 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
-| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン(隣接時の特殊挙動は`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復へ切り出し済み) / A*追跡・徘徊 |
+| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン(隣接時の命中処理は`enemyHitLanded.ts`に集約——`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化・`enemyRegen.ts`の毎ターン自己回復を内包) / A*追跡・徘徊+`resolveEnemyMovement`(ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃) |
+| `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理(空腹・混乱・浮遊・盲目・麻痺・索敵・再生・クロンの風)。1件=1ファイル、全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
@@ -51,7 +52,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 フォーク層は従来どおり: `src/map/`(生成器8種) `src/fov/`(3アルゴリズム) `src/path/`(A*/Dijkstra) `src/scheduler/`+`src/engine.ts`(未接続のまま温存) `src/lighting.ts` `src/color.ts` `src/text.ts` `src/noise/` `src/stringgenerator.ts`、共有ヘルパー `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts`、公開バレル `src/index.ts`。
 

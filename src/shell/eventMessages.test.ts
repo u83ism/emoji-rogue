@@ -294,6 +294,18 @@ describe("formatEvent", () => {
 				{ type: "vampire-healed", payload: { amount: 1 } },
 				"ヴァンパイアが血を吸い、HPを1回復した",
 			],
+			[
+				{ type: "enemy-regenerated", payload: { target: "troll", amount: 2 } },
+				"トロルのHPが2回復した",
+			],
+			[
+				{ type: "player-drained", payload: { amount: 1 } },
+				"レイスに生命力を吸われた。最大HPが1下がった",
+			],
+			[
+				{ type: "player-gazed", payload: { turns: 6 } },
+				"メデューサの視線を受けた。頭がくらくらする!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

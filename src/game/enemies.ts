@@ -1,45 +1,36 @@
 import { encodePointKey } from "../pointkey.js";
 import { stepUniform } from "../rng.js";
 import {
-	AQUATOR_RUST_CHANCE_PERCENT,
 	ENEMY_ACTIONS_PER_TURN,
-	ENEMY_ATTACK_DAMAGE,
 	ENEMY_MAX_HP,
-	MIN_DAMAGE_TAKEN,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "./balance.js";
 import { isAdjacent } from "./combat.js";
 import { resolveFleeingTheft } from "./enemyFlee.js";
-import { stepTowardPlayer, stepWandering } from "./enemyMovement.js";
+import { resolveEnemyHitLanded } from "./enemyHitLanded.js";
+import { resolveEnemyMovement } from "./enemyMovement.js";
+import { resolveEnemyRegen } from "./enemyRegen.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import {
-	applyArmorRust,
-	calculatePlayerDefense,
-	canRustEquippedArmor,
-} from "./items/equipment.js";
 import { hasEquippedRing } from "./items/rings.js";
 import type { Enemy, GameState, HeldItem, Position } from "./state.js";
-import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
 
 /**
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
- * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll
- * (STEALTH_RING_WAKE_CHANCE_PERCENT with a stealth ring worn) — not
- * guaranteed, leaving room for a sneak attack. Once awake it acts
- * ENEMY_ACTIONS_PER_TURN[kind] times: adjacent attacks in place (damage from
- * balance.ts, reduced by calculatePlayerDefense but never below
- * MIN_DAMAGE_TAKEN) — except thief/nymph, which flee after stealing instead
- * (enemyFlee.ts's resolveFleeingTheft); aquator, whose landed hits also roll
- * AQUATOR_RUST_CHANCE_PERCENT to rust the equipped armor; and vampire, which
- * heals off its own landed hits (vampireLifesteal.ts, capped at
- * ENEMY_MAX_HP.vampire). A slowedTurnsRemaining > 0 enemy (slow wand) skips
- * its whole action, just ticking down. Non-adjacent enemies chase via A*
- * while visible and not confused (confusedTurnsRemaining > 0 — confuse
- * monster scroll — forces wandering instead; adjacent attacks are
- * unaffected), or wander otherwise. The player's HP reaching zero ends the
- * run and cuts short any remaining actions.
+ * this turn only while adjacent/visible (icky-thing: adjacent only — it is
+ * blind), via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
+ * with a stealth ring worn). Once awake it acts ENEMY_ACTIONS_PER_TURN[kind]
+ * times: adjacent hits resolve via enemyHitLanded.ts (base damage plus each
+ * kind's own extra effect — aquator's rust, vampire's lifesteal, wraith's
+ * permanent playerMaxHp drain) — except thief/nymph, which flee after
+ * stealing instead (enemyFlee.ts); non-adjacent enemies resolve via
+ * enemyMovement.ts's resolveEnemyMovement (chase/wander, or venus-flytrap's
+ * stationary/medusa's ranged gaze special cases). A slowedTurnsRemaining > 0
+ * enemy (slow wand) skips its whole action, just ticking down. Griffin and
+ * troll additionally regenerate HP every awake turn regardless of action
+ * (enemyRegen.ts), independent of whether they landed a hit. The player's HP
+ * reaching zero ends the run and cuts short any remaining actions.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -57,6 +48,8 @@ export const advanceEnemies = (state: GameState): GameState => {
 
 	let rng = state.rng;
 	let playerHp = state.playerHp;
+	let playerMaxHp = state.playerMaxHp;
+	let playerConfusedTurnsRemaining = state.confusedTurnsRemaining;
 	let goldCollected = state.goldCollected;
 	let inventory: readonly HeldItem[] = state.inventory;
 	let died = false;
@@ -66,11 +59,10 @@ export const advanceEnemies = (state: GameState): GameState => {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let awake = enemy.awake;
-		if (
-			!awake &&
-			(isAdjacent(enemy, state.player) ||
-				visiblePoints.has(encodePointKey(enemy.x, enemy.y)))
-		) {
+		const canWakeFromSight =
+			enemy.kind !== "icky-thing" &&
+			visiblePoints.has(encodePointKey(enemy.x, enemy.y));
+		if (!awake && (isAdjacent(enemy, state.player) || canWakeFromSight)) {
 			const wakeChancePercent = hasEquippedRing(inventory, "stealth-ring")
 				? STEALTH_RING_WAKE_CHANCE_PERCENT
 				: WAKE_CHANCE_PERCENT;
@@ -127,49 +119,54 @@ export const advanceEnemies = (state: GameState): GameState => {
 					fled = true;
 					continue;
 				}
-				const damage = Math.max(
-					MIN_DAMAGE_TAKEN,
-					ENEMY_ATTACK_DAMAGE[enemy.kind] - calculatePlayerDefense(inventory),
+				const hit = resolveEnemyHitLanded(
+					enemy,
+					currentHp,
+					playerHp,
+					playerMaxHp,
+					inventory,
+					rng,
 				);
-				playerHp -= damage;
-				events.push({
-					type: "player-hit",
-					payload: { by: enemy.kind, damage },
-				});
-				if (enemy.kind === "aquator" && canRustEquippedArmor(inventory)) {
-					const rustRoll = stepUniform(rng);
-					rng = rustRoll.state;
-					if (rustRoll.value < AQUATOR_RUST_CHANCE_PERCENT / 100) {
-						inventory = applyArmorRust(inventory);
-						events.push({ type: "armor-rusted", payload: { amount: 1 } });
-					}
+				currentHp = hit.enemyHp;
+				playerHp = hit.playerHp;
+				playerMaxHp = hit.playerMaxHp;
+				inventory = hit.inventory;
+				rng = hit.rng;
+				for (const event of hit.events) {
+					events.push(event);
 				}
-				if (enemy.kind === "vampire") {
-					const lifesteal = resolveVampireLifesteal(
-						currentHp,
-						ENEMY_MAX_HP.vampire,
-						damage,
-					);
-					currentHp = lifesteal.hp;
-					if (lifesteal.event !== undefined) {
-						events.push(lifesteal.event);
-					}
-				}
-				if (playerHp <= 0) {
+				if (hit.died) {
 					died = true;
-					events.push({ type: "player-died", payload: { by: enemy.kind } });
 				}
-			} else if (
-				!confused &&
-				visiblePoints.has(encodePointKey(next.x, next.y))
-			) {
-				const step = stepTowardPlayer(state, next, occupied);
-				next = step ?? next;
 			} else {
-				const wandered = stepWandering(state, next, occupied, rng);
-				next = wandered.position;
-				rng = wandered.rng;
+				const movement = resolveEnemyMovement(
+					state,
+					enemy,
+					next,
+					occupied,
+					visiblePoints,
+					confused,
+					rng,
+				);
+				next = movement.position;
+				rng = movement.rng;
+				if (movement.playerConfusedTurnsRemaining !== undefined) {
+					playerConfusedTurnsRemaining = movement.playerConfusedTurnsRemaining;
+				}
+				if (movement.event !== undefined) {
+					events.push(movement.event);
+				}
 			}
+		}
+
+		const regen = resolveEnemyRegen(
+			enemy.kind,
+			currentHp,
+			ENEMY_MAX_HP[enemy.kind],
+		);
+		currentHp = regen.hp;
+		if (regen.event !== undefined) {
+			events.push(regen.event);
 		}
 
 		if (fled) {
@@ -189,6 +186,8 @@ export const advanceEnemies = (state: GameState): GameState => {
 	return {
 		...state,
 		playerHp: Math.max(0, playerHp),
+		playerMaxHp,
+		confusedTurnsRemaining: playerConfusedTurnsRemaining,
 		goldCollected,
 		inventory,
 		enemies: nextEnemies,

@@ -270,6 +270,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		payload.kind === undefined || isItemKind(payload.kind),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-regenerated": (payload) => isPositiveInteger(payload.amount),
+	"enemy-regenerated": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.amount),
+	"player-drained": (payload) => isPositiveInteger(payload.amount),
+	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"weapon-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),

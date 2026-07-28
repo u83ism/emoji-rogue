@@ -28,6 +28,14 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	quagga: "クアッガ",
 	"ur-vile": "アーヴァイル",
 	jabberwock: "ジャバウォック",
+	griffin: "グリフィン",
+	troll: "トロル",
+	"icky-thing": "イッキーシング",
+	"venus-flytrap": "ハエトリソウ",
+	medusa: "メデューサ",
+	phantom: "ファントム",
+	wraith: "レイス",
+	xeroc: "ゼロック",
 };
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {

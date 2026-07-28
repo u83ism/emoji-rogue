@@ -1,5 +1,5 @@
 import type { Cell, TileGlyphs } from "../renderer/index.js";
-import type { EnemyKind, ItemKind } from "./events.js";
+import type { ItemKind } from "./events.js";
 
 // Tile set limited to emoji already verified stable on a real terminal
 // (docs/tasks/modernization.md Stage 5).
@@ -14,60 +14,10 @@ export const PLAYER_CELL: Cell = { glyph: "🧑" };
 export const DEAD_PLAYER_CELL: Cell = { glyph: "💀" };
 /* Also single-codepoint, Unicode 6.0 — shown once the player surfaces with the amulet. */
 export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
-/* Bat, also single-codepoint. Per-kind so a third enemy kind is one entry. */
-export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
-	zombie: { glyph: "🧟" },
-	bat: { glyph: "🦇" },
-	/* Goblin mask: single-codepoint, Unicode 6.0. */
-	thief: { glyph: "👺" },
-	/* Ghost: single-codepoint, Unicode 6.0 — fits "appears, steals, vanishes"
-	 * better than the newer (Unicode 10) fairy emoji, which this project's
-	 * stability rule (docs/design.md) avoids. */
-	nymph: { glyph: "👻" },
-	/* Octopus: single-codepoint, Unicode 6.0. */
-	aquator: { glyph: "🐙" },
-	/* Ogre: single-codepoint, Unicode 6.0. */
-	orc: { glyph: "👹" },
-	/* Dragon: single-codepoint, Unicode 6.0. */
-	dragon: { glyph: "🐉" },
-	/* No stable single-codepoint yeti emoji exists — bear (Unicode 6.0) stands in as the nearest mountain-beast glyph. */
-	yeti: { glyph: "🐻" },
-	/* Snake: single-codepoint, Unicode 6.0. */
-	snake: { glyph: "🐍" },
-	/* Vampire: single-codepoint, no ZWJ/variation selector, but Unicode 11.0 —
-	 * newer than this project's usual Unicode 6.0 preference (see docs/design.md),
-	 * kept as an exception since no older glyph depicts a vampire (same
-	 * reasoning as the yeti/bear substitution, except here the glyph itself
-	 * is the best fit rather than a stand-in). */
-	vampire: { glyph: "🧛" },
-	/* Rat: direct literal match, single-codepoint, Unicode 6.0. */
-	rat: { glyph: "🐀" },
-	/* No stable single-codepoint emu emoji exists — dodo (Unicode 13.0)
-	 * stands in as the nearest "large flightless bird" glyph, same
-	 * substitution reasoning as the yeti/bear pairing above. */
-	emu: { glyph: "🦤" },
-	/* No stable single-codepoint kestrel/falcon emoji exists — eagle
-	 * (Unicode 9.0) stands in as the nearest bird-of-prey glyph. */
-	kestrel: { glyph: "🦅" },
-	/* No stable single-codepoint hobgoblin emoji exists — thief already uses
-	 * the goblin mask (👺), so this uses the horned devil face (Unicode 6.0)
-	 * instead, both reading as "evil humanoid" without colliding. */
-	hobgoblin: { glyph: "😈" },
-	/* No stable single-codepoint centaur emoji exists — horse (Unicode 6.0)
-	 * stands in for the "half-horse" half of the hybrid. */
-	centaur: { glyph: "🐎" },
-	/* Quagga is literally an extinct zebra subspecies — zebra (Unicode 10.0)
-	 * is a direct match, not a stand-in. */
-	quagga: { glyph: "🦓" },
-	/* Ur-vile has no real-world analog and no established visual design even
-	 * within Rogue itself — bust in silhouette (Unicode 6.0) stands in for
-	 * "shadowy figure", the weakest match in this batch. */
-	"ur-vile": { glyph: "👤" },
-	/* Jabberwock is dragon-like but distinct from this game's own Dragon —
-	 * dragon face (Unicode 6.0) is a different codepoint from the dragon (🐉)
-	 * glyph above, avoiding a collision while keeping the family resemblance. */
-	jabberwock: { glyph: "🐲" },
-};
+/* Enemy glyphs live in enemyGlyphs.ts (split out in milestone 101 once the
+ * rationale comments for the full 26-kind roster pushed this file past the
+ * 200-line structure-lint limit) — re-export kept out on purpose so
+ * importers reach for the dedicated module directly. */
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
 	down: { glyph: "🔽" },

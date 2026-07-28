@@ -178,5 +178,11 @@ export const formatEvent = (
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}を眠らせた!`;
 		case "vampire-healed":
 			return `${ENEMY_NAMES.vampire}が血を吸い、HPを${event.payload.amount}回復した`;
+		case "enemy-regenerated":
+			return `${ENEMY_NAMES[event.payload.target]}のHPが${event.payload.amount}回復した`;
+		case "player-drained":
+			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
+		case "player-gazed":
+			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
 	}
 };

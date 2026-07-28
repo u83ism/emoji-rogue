@@ -24,6 +24,14 @@ export const ENEMY_KIND_VALUES = [
 	"quagga",
 	"ur-vile",
 	"jabberwock",
+	"griffin",
+	"troll",
+	"icky-thing",
+	"venus-flytrap",
+	"medusa",
+	"phantom",
+	"wraith",
+	"xeroc",
 ] as const;
 
 /** Events carry it so the shell can name the attacker. */
@@ -430,6 +438,21 @@ export type GameEvent =
 			/** A vampire healing itself off a landed hit — see vampireLifesteal.ts. Fired only when the heal is nonzero (already at max HP is silent). */
 			readonly type: "vampire-healed";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** A griffin/troll's passive per-turn self-heal — see enemyRegen.ts. Fired only when the heal is nonzero (already at max HP is silent). */
+			readonly type: "enemy-regenerated";
+			readonly payload: { readonly target: EnemyKind; readonly amount: number };
+	  }
+	| {
+			/** A wraith's landed hit permanently lowering playerMaxHp — see wraithDrain.ts. Fired only when the drain is nonzero (already at the floor is silent). */
+			readonly type: "player-drained";
+			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** A medusa's ranged gaze landing — sets confusedTurnsRemaining, same field as player-confused (the confusion potion) but its own event/flavor text, same "same field, different source" idiom as the sleeping gas trap reusing paralyzedTurnsRemaining. See advanceEnemies. */
+			readonly type: "player-gazed";
+			readonly payload: { readonly turns: number };
 	  };
 
 /**

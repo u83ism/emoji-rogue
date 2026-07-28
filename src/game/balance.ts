@@ -299,6 +299,19 @@ export const PLAYER_MAX_FOOD = 100;
  * stage at 30, the drop from 100 was going unnoticed until it was critical.
  */
 export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
+/**
+ * playerFood at or below this triggers the one-time player-weak warning and
+ * applies WEAK_ATTACK_PENALTY to the player's attack (see
+ * calculatePlayerAttackDamage). A second, more urgent stage below
+ * PLAYER_HUNGER_WARNING_THRESHOLD, matching original Rogue's
+ * Hungry→Weak→Faint progression — the Weak-stage strength loss, modeled here
+ * as an attack penalty since this game has no separate strength stat.
+ */
+export const PLAYER_WEAK_THRESHOLD = 20;
+/** Flat reduction to calculatePlayerAttackDamage while playerFood <= PLAYER_WEAK_THRESHOLD. */
+export const WEAK_ATTACK_PENALTY = 1;
+/** Floor for calculatePlayerAttackDamage — keeps a weakened, unarmed player from dealing 0 damage. */
+export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 /** HP lost per turn while playerFood is at 0. */
 export const STARVATION_DAMAGE_PER_TURN = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;
@@ -336,6 +349,18 @@ export const RUST_TRAP_DAMAGE = 0;
 /** Chance (out of 100), independently rolled per floor, that a rust trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
 export const RUST_TRAP_SPAWN_CHANCE_PERCENT = 15;
 
+/** No damage — the penalty is the forced sleep itself, see trapTrigger.ts's TRAP_SIDE_EFFECTS. */
+export const SLEEPING_GAS_TRAP_DAMAGE = 0;
+/**
+ * How many turns a sleeping gas trap holds the player for — reuses
+ * paralyzedTurnsRemaining, same field/tick/status-bar chip as a bear trap
+ * (see trapTrigger.ts). Longer than BEAR_TRAP_PARALYSIS_DURATION: original
+ * Rogue's sleep trap is the more punishing of the two.
+ */
+export const SLEEPING_GAS_TRAP_PARALYSIS_DURATION = 5;
+/** Chance (out of 100), independently rolled per floor, that a sleeping gas trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
+export const SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT = 15;
+
 /** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
@@ -343,6 +368,7 @@ export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	teleport: TELEPORT_TRAP_DAMAGE,
 	bear: BEAR_TRAP_DAMAGE,
 	rust: RUST_TRAP_DAMAGE,
+	"sleeping-gas": SLEEPING_GAS_TRAP_DAMAGE,
 };
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */

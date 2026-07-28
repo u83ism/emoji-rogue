@@ -111,6 +111,7 @@ export const TRAP_KIND_VALUES = [
 	"teleport",
 	"bear",
 	"rust",
+	"sleeping-gas",
 ] as const;
 
 /** Hidden until stepped on — see trapTrigger.ts. */
@@ -204,6 +205,11 @@ export type GameEvent =
 			/** Fired every turn spent at 0 food, alongside the HP loss it causes. */
 			readonly type: "player-starved";
 			readonly payload: { readonly damage: number };
+	  }
+	| {
+			/** Fired once, the turn playerFood crosses PLAYER_WEAK_THRESHOLD going down — see calculatePlayerAttackDamage. */
+			readonly type: "player-weak";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. */

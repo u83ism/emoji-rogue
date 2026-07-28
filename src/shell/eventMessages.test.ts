@@ -90,6 +90,7 @@ describe("formatEvent", () => {
 				"解呪の巻物を読んだ。呪いが解け、2個のアイテムを外せるようになった!",
 			],
 			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
+			[{ type: "player-weak", payload: {} }, "空腹で力が入らなくなってきた"],
 			[
 				{ type: "player-starved", payload: { damage: 1 } },
 				"空腹で1のダメージを受けた",
@@ -117,6 +118,13 @@ describe("formatEvent", () => {
 			[
 				{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
 				"テレポートの罠を踏んでしまった!",
+			],
+			[
+				{
+					type: "trap-triggered",
+					payload: { kind: "sleeping-gas", damage: 0 },
+				},
+				"睡眠ガスのわなを踏んでしまった!",
 			],
 			[
 				{ type: "player-poisoned", payload: { damage: 4 } },

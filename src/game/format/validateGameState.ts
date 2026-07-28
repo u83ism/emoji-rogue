@@ -246,15 +246,17 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"armor-equipped": (payload) =>
 		isItemKind(payload.kind) && isNonNegativeInteger(payload.bonus),
 	"player-hungry": emptyPayload,
+	"player-weak": emptyPayload,
 	"player-starved": (payload) => isPositiveInteger(payload.damage),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
-	/* trapdoor, teleport, bear and rust are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE */
+	/* trapdoor, teleport, bear, rust and sleeping-gas are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE, SLEEPING_GAS_TRAP_DAMAGE */
 	"trap-triggered": (payload) =>
 		payload.kind === "trapdoor" ||
 		payload.kind === "teleport" ||
 		payload.kind === "bear" ||
-		payload.kind === "rust"
+		payload.kind === "rust" ||
+		payload.kind === "sleeping-gas"
 			? isNonNegativeInteger(payload.damage)
 			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
 	"player-poisoned": (payload) => isPositiveInteger(payload.damage),

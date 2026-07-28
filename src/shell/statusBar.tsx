@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
+	PLAYER_WEAK_THRESHOLD,
 } from "../game/balance.js";
 import {
 	BLINDNESS_GLYPH,
@@ -19,12 +20,19 @@ import type { GameState } from "../game/state.js";
 
 const LOW_HP_THRESHOLD = 3;
 
-/** Two stages: yellow once food dips to the warning threshold, red once it hits 0 (starving). */
+/**
+ * Three stages: yellow once food dips to the warning threshold, brighter red
+ * once it dips to the weak threshold (see calculatePlayerAttackDamage), full
+ * red once it hits 0 (starving).
+ */
 const resolveFoodTextStyle = (
 	playerFood: number,
 ): { readonly color?: string } => {
 	if (playerFood <= 0) {
 		return { color: "red" };
+	}
+	if (playerFood <= PLAYER_WEAK_THRESHOLD) {
+		return { color: "redBright" };
 	}
 	return playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
 		? { color: "yellow" }

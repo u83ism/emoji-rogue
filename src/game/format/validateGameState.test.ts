@@ -1014,6 +1014,7 @@ describe("validateGameState", () => {
 			...buildValidState(),
 			events: [
 				{ type: "player-hungry", payload: {} },
+				{ type: "player-weak", payload: {} },
 				{ type: "player-starved", payload: { damage: 1 } },
 				{ type: "player-ate", payload: { amount: 50 } },
 				{ type: "player-died", payload: { by: "hunger" } },
@@ -1178,6 +1179,30 @@ describe("validateGameState", () => {
 				...buildValidState(),
 				events: [
 					{ type: "trap-triggered", payload: { kind: "rust", damage: -1 } },
+				],
+			},
+			"events",
+		);
+
+		const sleepingGasTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "sleeping-gas" }],
+			events: [
+				{
+					type: "trap-triggered",
+					payload: { kind: "sleeping-gas", damage: 0 },
+				},
+			],
+		});
+		expect(sleepingGasTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{
+						type: "trap-triggered",
+						payload: { kind: "sleeping-gas", damage: -1 },
+					},
 				],
 			},
 			"events",

@@ -75,6 +75,8 @@ export const formatEvent = (
 			return `${ITEM_NAMES["remove-curse-scroll"]}を読んだ。呪いが解け、${event.payload.count}個のアイテムを外せるようになった!`;
 		case "player-hungry":
 			return "空腹を感じてきた";
+		case "player-weak":
+			return "空腹で力が入らなくなってきた";
 		case "player-starved":
 			return `空腹で${event.payload.damage}のダメージを受けた`;
 		case "player-ate":

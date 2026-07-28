@@ -596,7 +596,29 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン99完了(2026-07-21)。**
 
+## マイルストーン100 — 空腹Weak段階+睡眠ガストラップ(原作Rogue仕様合わせ第1弾、2026-07-28)
+
+`/goal`セッション(2026-07-28)でオリジナルRogueとの仕様差分を洗い出し(下記バックログの「原作Rogue仕様差分の棚卸し」を参照)、そのうち影響範囲が小さい2件から着手。原作の空腹段階Hungry→Weak→Faint→餓死のうち、emoji-rogueは警告(Hungry相当)と餓死(Faint相当)の2段階しか無くWeak相当の力低下が無かった点、原作の睡眠ガストラップが未実装だった点を解消。
+
+- [x] `balance.ts`: `PLAYER_WEAK_THRESHOLD`(20)・`WEAK_ATTACK_PENALTY`(1)・`MIN_PLAYER_ATTACK_DAMAGE`(1)を追加。`SLEEPING_GAS_TRAP_DAMAGE`(0)・`SLEEPING_GAS_TRAP_PARALYSIS_DURATION`(5、`BEAR_TRAP_PARALYSIS_DURATION`より長い=原作でより厳しい罠)・`SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT`(15)を追加
+- [x] `items/equipment.ts`: `calculatePlayerAttackDamage`が`playerFood <= PLAYER_WEAK_THRESHOLD`の間`WEAK_ATTACK_PENALTY`を減算(`MIN_PLAYER_ATTACK_DAMAGE`で下限)。専用フラグを持たずplayerFoodから直接導出するため、食料を食べて閾値を上回った瞬間に自動で解除される
+- [x] `turnEnd/hunger.ts`: `player-hungry`と同じ「閾値をまたいだターンに一度だけ」の型で`player-weak`イベントを追加
+- [x] `trapTrigger.ts`/`floor/traps.ts`: 睡眠ガストラップを追加。効果は捕獲のわなと同じ`paralyzedTurnsRemaining`を再利用(既存の bear トラップと同じ前例踏襲)、スポーン抽選も同じ独立per-floor判定パターンで追加
+- [x] `events.ts`/`format/validateGameState.ts`/`shell/gameNames.ts`/`shell/eventMessages.ts`/`shell/catalog/catalogData.ts`: 列挙値追加のみ(`TrapKind`に`sleeping-gas`、`GameEvent`に`player-weak`)のため、既存の列挙値追加の前例(マイルストーン24)を踏襲しSAVE_FORMAT_VERSION/REPLAY_FORMAT_VERSIONは据え置き
+- [x] `shell/statusBar.tsx`・`demo/main.js`: 満腹度表示を2段階→3段階(黄色→明るい赤→赤)に
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成、README.mdの該当箇所を更新
+- [x] 自動テスト追加(hunger.test.ts・equipment.test.ts・trapTrigger.test.ts・floor/traps.test.ts・eventMessages.test.ts・validateGameState.test.ts)。型検査・Biome・structure-lint・Vitest 965件・knip・build通過を確認。BOTドライバ(seed 1・23)がクラッシュせず完走することも確認(結果自体はスポーン抽選が1つ増えたことで全シードのRNG消費列が変わるため旧統計とは一致しない——マイルストーン28等の過去のわな追加と同じ既知の影響)
+
+**マイルストーン100完了(2026-07-28)。**
+
 ## バックログ(マイルストーン未整理)
+- **原作Rogue仕様差分の棚卸し**(2026-07-28、`/goal`セッションでの調査): 「原作Rogueに仕様をできるだけ揃える」方針のもと、現状とのギャップを分野別に洗い出した。マイルストーン100(空腹Weak段階+睡眠ガストラップ)で1件着手済み、残りは未着手のまま優先度未定でここに記録:
+  - **マップ生成**: フォーク層に原作Rogueのダンジョン生成アルゴリズムそのものの移植(`src/map/rogue.ts`の`createRogueMap`、3x3セルグリッド)が既に存在するが未使用— 実際のフロア生成(`floor/layout.ts`)は`createDiggerMap`を使っている。`architecture.md`いわく`rogue.ts`は「原本アルゴリズム自体が全部屋の接続を保証しない(接続失敗を静かにスキップ)」のが不採用理由。採用するなら接続保証のフォールバックを別途設計する必要がある
+  - **戦闘解決**: 現行は決定的な引き算(`calculatePlayerAttackDamage` − 防御力)で必ず命中する。原作はAC・レベル・STR依存のd20到達判定+武器ごとのダイスダメージで、外れることがある。導入するなら`balance.ts`・`combat.ts`・`enemies.ts`・BOTの`combatPolicy.ts`・既存テスト全体に波及する大改修になる見込み
+  - **敵ロースター**: 原作はA〜Zの26種、現行は10種(ケンタウロス・グリフィン・メデューサ・トロルなど16種が未実装)。既存の敵追加パターン(マイルストーン83以降)をそのまま横展開できるので着手コストは比較的低い
+  - **武器・防具のバリエーション**: 原作は複数武器種(ダイスダメージ)・防具種(段階的AC)があるが、現行は剣1種・防具1種(個体ごとに+1ボーナス)のみ
+  - **指輪・巻物・杖の網羅率**: 指輪は原作10種中5種(怪力・耐久・索敵・敏捷・防御目的が未実装)。杖も炎/冷気/雷・変身・無効化などが未実装。詳細はマイルストーン33付近の既存バックログ項目も参照
+  - **空腹**: マイルストーン100でWeak相当を追加済み。Faint相当(強制的にターンをスキップする等)は未着手
 - **バランス調整の宿題: 満腹度経済のタイトさと指輪の相対価値**(2026-07-21、BOT統計より): `src/bot/itemUsePolicy.ts`/`scripts/run-bot.mjs`にアイテム種別ごとの使用無効化トグル(`--disable=kind1,kind2`)を追加し、seed 1〜60×4設定(通常/再生の指輪無効/満腹の指輪無効/両方無効)でA/B比較を実施。結果: 全設定で死因の45〜60%が餓死(全踏破前提でも変わらず最多)。両指輪を無効化すると勝率5.0%→0.0%・平均生存ターン650→365まで低下し、特に満腹の指輪(食事tickを確率スキップ)の方が再生の指輪より効いていた(満腹の指輪だけ抜くと勝率0%・平均441ターン、再生の指輪だけ抜くと勝率1.7%・平均500ターン)。ただしシード単位では60中40シードが指輪の有無で到達フロア無変化(大半の回は指輪を見つける前に決着している)ため、効果は「指輪を引けた一部の回」に集中。**解釈: 指輪単体が強すぎるというより、満腹度経済が厳しすぎて勝利がほぼ満腹の指輪の運に懸かっている**——両者は別課題ではなく同じ根(食料経済のタイトさ)の表裏に見える。次にバランスへ手を入れるなら、FOOD_COUNT_PER_FLOORか満腹の指輪のスキップ率のどちらかをまず動かして同じ比較を再実行すると効果が測れる
 - **全踏破プレイBOT(`src/bot/`)の未識別アイテム問題**(2026-07-21指摘): `identifiedPotionKinds`はシェル表示用のマスキングでしかなく`GameState`自体は常に真の`kind`を持つため、BOTは未鑑定という概念を経由せず全ポーションの正体を最初から知っている(`itemUsePolicy.ts`が`poison`等を除外できているのはこれが理由)。人間プレイに近い判断をさせるなら、BOT側に「まだ`identifiedPotionKinds`に載っていない種類は不明」として扱う自前のフィルタ層と、未識別ポーションを飲むか様子見するかの別レイヤーの意思決定が必要。今は「バランス統計を大量に回す」目的の完全情報エージェントとして割り切っている——人間らしい手探りプレイの統計が欲しくなったら再評価
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)

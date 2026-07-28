@@ -274,6 +274,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isPositiveInteger(payload.amount),
 	"player-drained": (payload) => isPositiveInteger(payload.amount),
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
+	"player-held": (payload) => isEnemyKind(payload.by),
 	"weapon-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),

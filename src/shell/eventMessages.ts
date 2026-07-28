@@ -184,5 +184,7 @@ export const formatEvent = (
 			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
 		case "player-gazed":
 			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
+		case "player-held":
+			return `${ENEMY_NAMES[event.payload.by]}に捕まっていて動けない!`;
 	}
 };

@@ -453,6 +453,11 @@ export type GameEvent =
 			/** A medusa's ranged gaze landing — sets confusedTurnsRemaining, same field as player-confused (the confusion potion) but its own event/flavor text, same "same field, different source" idiom as the sleeping gas trap reusing paralyzedTurnsRemaining. See advanceEnemies. */
 			readonly type: "player-gazed";
 			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** An attempt to move away from an adjacent, awake venus-flytrap — the turn is still spent struggling. See advanceTurn.ts's applyMove. */
+			readonly type: "player-held";
+			readonly payload: { readonly by: EnemyKind };
 	  };
 
 /**

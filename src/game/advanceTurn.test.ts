@@ -495,6 +495,128 @@ describe("advanceTurn", () => {
 		expect(next.enemies[0]?.hp).toBe(ZOMBIE_MAX_HP - 1);
 	});
 
+	it("an adjacent, awake venus-flytrap blocks a move that would leave its reach, but the turn is still spent", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(
+			state,
+			move("north"),
+		); /* (2,1) is not adjacent to (3,2) */
+		expect(next.player).toEqual(state.player); /* did not move */
+		expect(next.playerFood).toBe(state.playerFood - 1); /* the turn was spent */
+		expect(next.events).toEqual([
+			{ type: "player-held", payload: { by: "venus-flytrap" } },
+			/* still adjacent and awake, the flytrap gets its own bite in too */
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
+		]);
+	});
+
+	it("attacking the holding venus-flytrap itself is unaffected by the hold", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(state, move("east")); /* bumps into the flytrap */
+		expect(next.player).toEqual(state.player); /* bump attacks never move */
+		expect(next.enemies).toEqual([{ ...flytrap, hp: 2 }]);
+		expect(next.events.some((event) => event.type === "player-held")).toBe(
+			false,
+		);
+	});
+
+	it("a sleeping venus-flytrap does not hold the player", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(state, move("north"));
+		expect(next.player).toEqual({ x: 2, y: 1 });
+	});
+
+	it("bumping a wall while held still spends no turn — the wall wins over the hold", () => {
+		const flytrap: Enemy = {
+			x: 2,
+			y: 3,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		/* player at (2,2) in a 3x3 arena: every direction but toward the
+		 * flytrap (south) is a wall */
+		const state = { ...buildArenaGameState(3, 3, 1), enemies: [flytrap] };
+		expect(advanceTurn(state, move("north"))).toBe(state);
+	});
+
+	it("blocks stepping onto the staircase while held", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const flytrap: Enemy = {
+			x: start.player.x + 1,
+			y: start.player.y,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = {
+			...start,
+			stairs: {
+				x: start.player.x + 1,
+				y: start.player.y,
+				direction: "down" as const,
+			},
+			enemies: [{ ...flytrap, x: start.player.x, y: start.player.y + 1 }],
+		};
+		/* the flytrap sits south of the player, the stairs sit east — stepping
+		 * east would leave the flytrap's reach, so it should be blocked */
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(state.floor);
+		expect(next.player).toEqual(state.player);
+		expect(next.events).toEqual([
+			{ type: "player-held", payload: { by: "venus-flytrap" } },
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
+		]);
+	});
+
+	it("once the holding flytrap is dead, the player can move away freely", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const held = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		expect(advanceTurn(held, move("north")).player).toEqual(held.player);
+
+		const freed = { ...held, enemies: [] }; /* the flytrap has been slain */
+		expect(advanceTurn(freed, move("north")).player).toEqual({ x: 2, y: 1 });
+	});
+
 	it("quit marks the game as exited without touching the rest", () => {
 		const state = buildArenaGameState(5, 5, 1);
 		const exited = advanceTurn(state, { type: "quit" });

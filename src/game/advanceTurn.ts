@@ -1,7 +1,8 @@
 /* file-size-exception: リデューサ本体(applyMove/applyTurnEndTicks/applyItemAction/advanceTurn)の一体性を優先(2026-07-19裁可) */
 import { stepUniform } from "../rng.js";
-import { applyPlayerAttack } from "./combat.js";
+import { applyPlayerAttack, isAdjacent } from "./combat.js";
 import { advanceEnemies } from "./enemies.js";
+import { buildEventLog } from "./events.js";
 import { ascendStairs, descendStairs } from "./floor/transitions.js";
 import { applyItemDrop } from "./items/drop.js";
 import {
@@ -44,6 +45,15 @@ const findEnemyAt = (
 const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
 
+/** Awake venus-flytraps currently adjacent to the player — the ones capable of holding it in place this turn. */
+const findHoldingFlytraps = (state: GameState): readonly Enemy[] =>
+	state.enemies.filter(
+		(enemy) =>
+			enemy.kind === "venus-flytrap" &&
+			enemy.awake &&
+			isAdjacent(enemy, state.player),
+	);
+
 /**
  * A movement turn: bump attack when an enemy occupies the target tile
  * (even one standing on the staircase), transition floors when it is the
@@ -51,6 +61,13 @@ const isFloor = (state: GameState, x: number, y: number): boolean =>
  * floor (picking up any item, gold or the amulet lying there). Bumping a
  * wall consumes no turn (returns the input state, same reference); the
  * other three all do.
+ *
+ * An awake venus-flytrap holds the player in place while adjacent: any
+ * open-floor walk (including onto the staircase) that would leave every
+ * flytrap currently holding it is blocked — logged as player-held — but
+ * still spends the turn (struggling wastes the attempt, same as original
+ * Rogue). Attacking the flytrap itself is unaffected, since that resolves
+ * as the bump-attack branch above, never reaching this check.
  *
  * While confusedTurnsRemaining is set, the intended `direction` is ignored
  * in favor of a uniformly random one (consuming state.rng) — even a wall
@@ -80,6 +97,17 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 	}
 	if (!isFloor(stateWithRng, x, y)) {
 		return stateWithRng;
+	}
+	const holdingFlytrap = findHoldingFlytraps(stateWithRng).find(
+		(flytrap) => !isAdjacent(flytrap, { x, y }),
+	);
+	if (holdingFlytrap !== undefined) {
+		return {
+			...stateWithRng,
+			events: buildEventLog(stateWithRng.events, [
+				{ type: "player-held", payload: { by: holdingFlytrap.kind } },
+			]),
+		};
 	}
 	if (x === stateWithRng.stairs.x && y === stateWithRng.stairs.y) {
 		/* the whole floor is replaced, so this floor's enemies never act */

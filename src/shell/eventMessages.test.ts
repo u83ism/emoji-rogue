@@ -306,6 +306,10 @@ describe("formatEvent", () => {
 				{ type: "player-gazed", payload: { turns: 6 } },
 				"メデューサの視線を受けた。頭がくらくらする!",
 			],
+			[
+				{ type: "player-held", payload: { by: "venus-flytrap" } },
+				"ハエトリソウに捕まっていて動けない!",
+			],
 		];
 		for (const [event, expected] of cases) {
 			expect(formatEvent(event, [])).toBe(expected);

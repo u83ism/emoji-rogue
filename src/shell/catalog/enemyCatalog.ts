@@ -152,7 +152,8 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	},
 	"venus-flytrap": {
 		spawn: { type: "chance", percent: VENUS_FLYTRAP_SPAWN_CHANCE_PERCENT },
-		behavior: "その場から動かず、隣接している間だけ攻撃してくる",
+		behavior:
+			"その場から動かず、隣接している間だけ攻撃してくる。隣接中はプレイヤーを拘束し、離れようとする移動を妨げる(その場合もターンは消費される)",
 	},
 	medusa: {
 		spawn: { type: "chance", percent: MEDUSA_SPAWN_CHANCE_PERCENT },

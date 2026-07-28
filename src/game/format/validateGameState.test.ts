@@ -807,6 +807,22 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed player-held event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-held", payload: { by: "venus-flytrap" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-held", payload: { by: "unknown-kind" } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),

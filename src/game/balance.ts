@@ -126,16 +126,15 @@ export const VAMPIRE_MIN_SPAWN_FLOOR = 8;
 // Eight more "parameters only" melee attackers (no advanceEnemies branch of
 // their own — same idiom as orc/dragon/yeti), added 2026-07-28 to widen the
 // enemy roster toward original Rogue's full 26-letter cast. Chosen as a first
-// batch specifically because none of them need a new mechanic: every other
-// unimplemented original monster (Griffin/Troll's regen, Icky Thing's
-// blindness, Venus Flytrap's stationary hold, Medusa's gaze, Phantom's
-// invisibility, Wraith's stat drain, Xeroc's gold mimicry) needs new game
-// systems and is left for later milestones — see docs/tasks/game.md's
-// backlog. Spawn percentages are set conservatively (roughly half of an
-// existing "common" kind's rate) since adding eight more independent
-// per-floor rolls on top of the existing eight meaningfully raises enemy
-// density — first-pass numbers, expect retuning after playtesting like every
-// other balance.ts value.
+// batch specifically because none of them need a new mechanic — the other
+// eight original monsters (Griffin/Troll's regen, Icky Thing's blindness,
+// Venus Flytrap's stationary hold, Medusa's gaze, Phantom's invisibility,
+// Wraith's stat drain, Xeroc's gold mimicry) each needed their own new game
+// system and followed in later milestones (101 and 102). Spawn percentages
+// are set conservatively (roughly half of an existing "common" kind's rate)
+// since adding eight more independent per-floor rolls on top of the existing
+// eight meaningfully raises enemy density — first-pass numbers, expect
+// retuning after playtesting like every other balance.ts value.
 
 // Weakest of the batch — below zombie in every stat, original Rogue's
 // earliest and most common trash mob.
@@ -231,11 +230,10 @@ export const ICKY_THING_ACTIONS_PER_TURN = 1;
 export const ICKY_THING_SPAWN_CHANCE_PERCENT = 15;
 
 // Stationary: never chases or wanders, only ever attacks when the player
-// steps adjacent to it (see advanceEnemies). Original Rogue's Venus Flytrap
-// also physically holds the player in place while adjacent — deliberately
-// not implemented here (would need a new constraint inside advanceTurn.ts's
-// applyMove, see docs/tasks/game.md milestone 101's follow-up note); for now
-// the only penalty for walking away is forfeiting its experience.
+// steps adjacent to it (see advanceEnemies). Also holds the player in place
+// while adjacent, matching original Rogue — see advanceTurn.ts's applyMove
+// (findHoldingFlytraps): any open-floor walk that would leave every
+// currently-holding flytrap is blocked (still spends the turn struggling).
 export const VENUS_FLYTRAP_MAX_HP = 3;
 export const VENUS_FLYTRAP_ATTACK_DAMAGE = 2;
 export const VENUS_FLYTRAP_ACTIONS_PER_TURN = 1;

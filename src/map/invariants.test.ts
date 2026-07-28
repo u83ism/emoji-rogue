@@ -172,16 +172,18 @@ describe("createUniformMap invariants", () => {
 
 describe("createRogueMap invariants", () => {
 	/*
-	 * No connectivity assertion: the original algorithm's
-	 * connectUnconnectedRooms can silently give up on a room, so full
-	 * connectivity is not guaranteed by construction.
+	 * connectUnconnectedRooms is a best-effort pass and can leave a room with
+	 * zero connections; create() runs a union-find bridging pass
+	 * (guaranteeFullConnectivity) afterward, so full connectivity is
+	 * guaranteed regardless.
 	 */
-	it.each(SEEDS)("seed %i: full binary grid", (seed) => {
+	it.each(SEEDS)("seed %i: connected floor", (seed) => {
 		const grid = buildGrid((callback) =>
 			createRogueMap(WIDTH, HEIGHT, createRng(seed)).create(callback),
 		);
 		expectEveryCellWritten(grid);
 		expectValuesWithin(grid, [0, 1]);
+		expectOpenCellsConnected(grid, [0]);
 	});
 
 	it("is deterministic for the same seed", () => {

@@ -34,7 +34,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
                  └→ <GameScreen>           src/renderer/ (Inkが端末に描画)
 ```
 
-新しいフロアは `floor/layout.ts`(digger地形 + `floor/enemies.ts`/`floor/items.ts` のスポーンテーブル)が生成し、`floor/transitions.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
+新しいフロアは `floor/layout.ts`(原作Rogue生成アルゴリズム地形〈`map/rogue.ts`〉 + `floor/enemies.ts`/`floor/items.ts` のスポーンテーブル)が生成し、`floor/transitions.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
 
 ## ディレクトリマップ(ゲーム層)
 
@@ -64,7 +64,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - 中級: `cellular.ts`(セルオートマトン+`connect()`で全空間接続保証)
 - 本丸: `digger.ts` + `features.ts`(Room/Corridorは判別可能union。`corridorIsValid`が検証中にcorridorを短縮するin-place副作用を持つのは原本由来の仕様)
 - `uniform.ts` はタイムアウトを `Result<_, GenerationTimedOut>` で返す唯一の生成器
-- `rogue.ts` は原本アルゴリズム自体が全部屋の接続を保証しない(接続失敗を静かにスキップ)
+- `rogue.ts` は原本アルゴリズム(3x3セルグリッド)そのものを移植したもので、実際のフロア生成(`floor/layout.ts`)がこれを使う。原本の接続パス(`connectRooms`/`connectUnconnectedRooms`)は部屋を接続し損ねることがあるため、`create()`が最後にセルグリッド上のUnion-Findで全接続を保証する(`guaranteeFullConnectivity`)。あわせて、部屋が地図端に接するほど縮んだ場合に壁位置計算がグリッド外に出る/部屋と面していない位置にドアを置く原本由来のバグも修正済み
 
 生成結果の構造保証は `src/map/invariants.test.ts`(25シード×全生成器で連結性・外周壁・決定性を検証)が担っている。生成器をいじったらまずこれを走らせる。
 

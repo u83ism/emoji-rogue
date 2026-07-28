@@ -1,6 +1,8 @@
 import { DIRS } from "../constants.js";
 import { toXy } from "../indexing.js";
 import type { Rng } from "../rng.js";
+import type { DungeonMap } from "./dungeon.js";
+import { addDoors, clearDoors, type Room } from "./features.js";
 import type { CreateCallback } from "./map.js";
 
 type Point = [number, number];
@@ -26,8 +28,8 @@ export interface RogueRoom {
 	celly: number;
 }
 
-export interface RogueMap {
-	create(callback?: CreateCallback): void;
+export interface RogueMap extends DungeonMap {
+	create(callback?: CreateCallback): RogueMap;
 }
 
 const calculateRoomSize = (size: number, cell: number): [number, number] => {
@@ -216,6 +218,74 @@ export const createRogueMap = (
 		}
 	};
 
+	/*
+	 * connectUnconnectedRooms() is a best-effort pass and can leave a room
+	 * with zero connections. Bridge any grid-adjacent room pair that still
+	 * sits in a different connected component (union-find over the cell
+	 * grid) until the whole grid is one component. This always terminates
+	 * because the underlying cellWidth x cellHeight grid-adjacency graph is
+	 * itself fully connected.
+	 */
+	const guaranteeFullConnectivity = (): void => {
+		const cellWidth = resolvedOptions.cellWidth;
+		const cellHeight = resolvedOptions.cellHeight;
+		const totalCells = cellWidth * cellHeight;
+		const cellIndex = (cellX: number, cellY: number): number =>
+			cellX * cellHeight + cellY;
+
+		const parent: number[] = [];
+		for (let i = 0; i < totalCells; i++) parent.push(i);
+
+		const find = (index: number): number => {
+			let current = index;
+			while (true) {
+				const next = parent[current];
+				if (next === undefined)
+					throw new Error("unreachable: parent array fully initialized");
+				if (next === current) return current;
+				current = next;
+			}
+		};
+
+		const union = (indexA: number, indexB: number): void => {
+			const rootA = find(indexA);
+			const rootB = find(indexB);
+			if (rootA !== rootB) parent[rootA] = rootB;
+		};
+
+		for (let i = 0; i < cellWidth; i++) {
+			for (let j = 0; j < cellHeight; j++) {
+				for (const connection of room(i, j).connections) {
+					union(cellIndex(i, j), cellIndex(connection[0], connection[1]));
+				}
+			}
+		}
+
+		let bridgedAny = true;
+		while (bridgedAny) {
+			bridgedAny = false;
+			for (let i = 0; i < cellWidth; i++) {
+				for (let j = 0; j < cellHeight; j++) {
+					const neighbors: Point[] = [
+						[i + 1, j],
+						[i, j + 1],
+					];
+					for (const [neighborX, neighborY] of neighbors) {
+						if (neighborX >= cellWidth || neighborY >= cellHeight) continue;
+						if (
+							find(cellIndex(i, j)) === find(cellIndex(neighborX, neighborY))
+						) {
+							continue;
+						}
+						room(i, j).connections.push([neighborX, neighborY]);
+						union(cellIndex(i, j), cellIndex(neighborX, neighborY));
+						bridgedAny = true;
+					}
+				}
+			}
+		}
+	};
+
 	const createRooms = (): void => {
 		const cw = resolvedOptions.cellWidth;
 		const ch = resolvedOptions.cellHeight;
@@ -250,14 +320,22 @@ export const createRogueMap = (
 				let sxOffset = Math.round(rng.getUniformInt(0, cwp - roomw) / 2);
 				let syOffset = Math.round(rng.getUniformInt(0, chp - roomh) / 2);
 
+				/*
+				 * Never shrink a room to zero area: a room with no floor tiles
+				 * still gets corridors routed to it (connections are decided
+				 * before room sizes are known), and those corridors would dead-
+				 * end into nothing. A 1-tile room is always valid instead.
+				 */
 				while (sx + sxOffset + roomw >= width) {
-					if (sxOffset) sxOffset--;
-					else roomw--;
+					if (sxOffset > 0) sxOffset--;
+					else if (roomw > 1) roomw--;
+					else break;
 				}
 
 				while (sy + syOffset + roomh >= height) {
-					if (syOffset) syOffset--;
-					else roomh--;
+					if (syOffset > 0) syOffset--;
+					else if (roomh > 1) roomh--;
+					else break;
 				}
 
 				sx += sxOffset;
@@ -278,19 +356,39 @@ export const createRogueMap = (
 		}
 	};
 
+	/*
+	 * The door-position roll (getUniformInt over y+1..y+height-2, or the x
+	 * equivalent) is meant to land strictly inside the room, but for a
+	 * degenerate room (width or height shrunk to 1 by createRooms's edge
+	 * shrink loop) that range is empty/inverted and the roll can fall
+	 * outside the room entirely, leaving the door only diagonally adjacent
+	 * to the room instead of sharing an edge with it. Clamp it into the
+	 * room's own row/column range so the door always touches the room.
+	 *
+	 * The returned point sits one tile beyond the door, giving drawCorridor a
+	 * waypoint already clear of the room wall. For a room hugging the map
+	 * edge that waypoint can fall outside the grid; clamp it there too so
+	 * the corridor never anchors on an off-grid coordinate.
+	 */
 	const getWallPosition = (aRoom: RogueRoom, aDirection: number): Point => {
 		let rx: number;
 		let ry: number;
 		let door: number;
 
 		if (aDirection === 1 || aDirection === 3) {
-			rx = rng.getUniformInt(aRoom.x + 1, aRoom.x + aRoom.width - 2);
+			rx = Math.min(
+				Math.max(
+					rng.getUniformInt(aRoom.x + 1, aRoom.x + aRoom.width - 2),
+					aRoom.x,
+				),
+				aRoom.x + aRoom.width - 1,
+			);
 			if (aDirection === 1) {
-				ry = aRoom.y - 2;
-				door = ry + 1;
+				door = aRoom.y - 1;
+				ry = Math.max(aRoom.y - 2, 0);
 			} else {
-				ry = aRoom.y + aRoom.height + 1;
-				door = ry - 1;
+				door = aRoom.y + aRoom.height;
+				ry = Math.min(aRoom.y + aRoom.height + 1, height - 1);
 			}
 			set(
 				rx,
@@ -298,13 +396,19 @@ export const createRogueMap = (
 				0,
 			); /* not setting a specific 'door' tile value right now, just empty space */
 		} else {
-			ry = rng.getUniformInt(aRoom.y + 1, aRoom.y + aRoom.height - 2);
+			ry = Math.min(
+				Math.max(
+					rng.getUniformInt(aRoom.y + 1, aRoom.y + aRoom.height - 2),
+					aRoom.y,
+				),
+				aRoom.y + aRoom.height - 1,
+			);
 			if (aDirection === 2) {
-				rx = aRoom.x + aRoom.width + 1;
-				door = rx - 1;
+				door = aRoom.x + aRoom.width;
+				rx = Math.min(aRoom.x + aRoom.width + 1, width - 1);
 			} else {
-				rx = aRoom.x - 2;
-				door = rx + 1;
+				door = aRoom.x - 1;
+				rx = Math.max(aRoom.x - 2, 0);
 			}
 			set(door, ry, 0);
 		}
@@ -394,8 +498,39 @@ export const createRogueMap = (
 		}
 	};
 
-	return {
-		create(callback?: CreateCallback): void {
+	let computedRooms: Room[] = [];
+
+	const buildComputedRooms = (): void => {
+		computedRooms = [];
+		for (let i = 0; i < resolvedOptions.cellWidth; i++) {
+			for (let j = 0; j < resolvedOptions.cellHeight; j++) {
+				const current = room(i, j);
+				if (current.width <= 0 || current.height <= 0) continue;
+				const roomBox: Room = {
+					kind: "room",
+					x1: current.x,
+					y1: current.y,
+					x2: current.x + current.width - 1,
+					y2: current.y + current.height - 1,
+					doors: {},
+				};
+				clearDoors(roomBox);
+				addDoors(roomBox, (x, y) => {
+					if (x < 0 || x >= width || y < 0 || y >= height) return true;
+					return at(x, y) === 1;
+				});
+				computedRooms.push(roomBox);
+			}
+		}
+	};
+
+	const rogueMap: RogueMap = {
+		getRooms: () => computedRooms,
+		/* the algorithm doesn't decompose its corridor-drawing into discrete
+		 * start/end Corridor objects, and nothing consumes .getCorridors()
+		 * on this generator */
+		getCorridors: () => [],
+		create(callback?: CreateCallback): RogueMap {
 			map = [];
 			for (let i = 0; i < width; i++) {
 				const column: number[] = [];
@@ -407,8 +542,10 @@ export const createRogueMap = (
 			initRooms();
 			connectRooms();
 			connectUnconnectedRooms();
+			guaranteeFullConnectivity();
 			createRooms();
 			createCorridors();
+			buildComputedRooms();
 
 			if (callback) {
 				for (let i = 0; i < width; i++) {
@@ -417,6 +554,10 @@ export const createRogueMap = (
 					}
 				}
 			}
+
+			return rogueMap;
 		},
 	};
+
+	return rogueMap;
 };

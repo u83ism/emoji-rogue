@@ -7,7 +7,7 @@ import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { replaceHeldItem } from "./inventory.js";
 
-type SwordItem = Extract<HeldItem, { kind: "sword" }>;
+export type SwordItem = Extract<HeldItem, { kind: "sword" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 type EquippableItem = Extract<HeldItem, { equipped: boolean }>;
 

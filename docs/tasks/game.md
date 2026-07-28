@@ -678,10 +678,28 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン104完了(2026-07-28)。**
 
+## マイルストーン105 — 戦闘のダイス化(原作Rogue仕様合わせ第6弾、2026-07-28)
+
+「原作Rogue仕様差分の棚卸し」(マイルストーン100の項を参照)の最後の1件に着手。現行の「決定的な引き算で必ず命中」する戦闘解決を、命中判定(外れることがある)+ダイスダメージ(幅を持つ)に置き換えた。原作のAC・レベル・STR依存のd20到達判定は、既存の`balance.ts`が採否判定を含め全域で使っている「percent値+`rng.getUniformInt(0,99)`」という慣用句(スポーン率・メデューサの視線判定など)にそのまま乗せる形で簡略化——d20+ACという別の数値体系を並行導入するより、既存の慣用句1つに寄せた方が学習コストが低いと判断した。杖はスコープ外(据え置き、確定命中のまま)。
+
+- [x] `balance.ts`: `PLAYER_BASE_HIT_CHANCE_PERCENT`(80)・`PLAYER_HIT_CHANCE_PER_ATTACK_BONUS`(3)・`ENEMY_BASE_HIT_CHANCE_PERCENT`(75)・`ENEMY_HIT_CHANCE_PER_DEFENSE_POINT`(4)・`MIN_HIT_CHANCE_PERCENT`(10)・`MAX_HIT_CHANCE_PERCENT`(95)・`PLAYER_DAMAGE_DICE_COUNT`/`SIDES`(1d4)・`ENEMY_DAMAGE_DICE_COUNT`/`SIDES`(1d4)を追加。`ENEMY_ATTACK_DAMAGE`(26種)は値そのものは変更せず「平均ダメージ」という既存の意味を保ったまま、ダイスの適用点(ロール時)でダイスの期待値を差し引く方式にしたため、26種分の新規バランス値を人力で書き起こす必要がなかった
+- [x] `damage.ts`: 既存の正規分布版`rollDamage`(未使用のまま維持)とは別に、離散ダイス版`rollDamageDice(rng, diceCount, diceSides, bonus, minimum)`(NdM+bonusを`getUniformInt`の合計で実装、消費rng回数が常にdiceCount回で決定的)・`rollToHit(rng, hitChancePercent)`・`damageDiceMean(diceSides)`を追加
+- [x] `items/hitChance.ts`(新規、equipment.tsから200行制限に触れる直前に分離): `calculatePlayerHitChancePercent`(装備中の剣のattackBonusで上昇)・`calculateEnemyHitChancePercent`(装備中の防具のdefenseBonusで低下)。いずれも[MIN_HIT_CHANCE_PERCENT, MAX_HIT_CHANCE_PERCENT]にクランプ
+- [x] `combat.ts`の`applyPlayerAttack`: 眠っている敵への不意打ちは命中判定なしの確定命中のまま(原作の奇襲は必ず当たる)。起きている敵への通常攻撃は`calculatePlayerHitChancePercent`で命中判定し、外れると`player-attack-missed`を記録して終了(ダメージなし、ただし`hasAttacked`は立つ——武器を振ったこと自体が非殺生コンダクトを破る)。杖(`applyWandStrike`/`applyMagicMissileWandStrike`)は据え置き
+- [x] `enemyHitLanded.ts`の`resolveEnemyHitLanded`: `calculateEnemyHitChancePercent`で先に命中判定し、外れると`enemy-attack-missed`を記録して終了(アクエーターの錆び・ヴァンパイアの吸血・レイスの弱体化など命中後エフェクトは一切発火しない)。命中時のみダイスダメージをロールし、以降(防御力減算・各種行動)は従来どおり
+- [x] `events.ts`/`format/validateGameState.ts`/`shell/eventMessages.ts`: `player-attack-missed`(payload: `target: EnemyKind`)・`enemy-attack-missed`(payload: `by: EnemyKind`)を追加(列挙値追加のみ、SAVE_FORMAT_VERSION据え置き)
+- [x] 既存テストの波及修正: `advanceTurn.test.ts`/`enemies.test.ts`の複数テストが「攻撃は必ず命中し、ダメージは常に同じ値」という前提のハードコードだったため失敗——多くは`seedToState`の小さい連番シードの最初の一様乱数draw値が0に極めて近い(≈seed×0.000487、`rng.ts`の実装特性)ことを利用して命中側の別シードに差し替え、待機ループのテストのみ「ちょうどPLAYER_MAX_HPターンで死ぬ」から「十分な猶予ターン内に必ず死ぬ」に緩和。アクエーターの錆びロール系テストの「rngが全く消費されない」という前提も「命中・ダメージのロール自体は必ず消費するが錆びロールだけは省略される」に修正
+- [x] 新規テスト追加: `damage.test.ts`(`rollToHit`/`rollDamageDice`/`damageDiceMean`)・`items/hitChance.test.ts`(新規ファイル)・`combat.test.ts`/`enemies.test.ts`に外れケースの専用テスト(`player-attack-missed`/`enemy-attack-missed`が記録されダメージが発生しないこと)。乱数のばらつきを検証するテストは連番シードでは偏るため、広く散らしたシード(`seedIndex * 70000`)を使用
+- [x] BOTの`combatPolicy.ts`は隣接する敵への方向を返すだけでダメージ計算を一切持たないため無改修で成立。BOTドライバでseed 1〜400超を実走し、クラッシュ0件・フロア7到達まで確認。勝利(status: won)は今回の探索範囲内では再現しなかったが、マイルストーン99時点の記録(「両指輪無効で勝率0%、通常構成でも勝率5.0%」)からして原作Rogue仕様合わせ以前から低い値だったため、今回の変更による退行とは判断していない
+- [x] `README.md`(戦闘とレベルの説明に命中判定・ダイスダメージを追記)・`docs/architecture.md`(`combat.ts`の説明に`hitChance.ts`/`damage.ts`のポインタを追加)を更新。`docs/catalog.md`は戦闘解決の変更では中身が変わらないため再生成のみ(差分なし)
+- [x] 型検査・Biome・structure-lint・Vitest 1027件・knip・build通過を確認
+
+**マイルストーン105完了(2026-07-28)。これで「原作Rogue仕様差分の棚卸し」バックログの7項目のうち、マップ生成・戦闘解決・敵ロースター・空腹(Weak相当)の4件が完了。武器・防具のバリエーション、指輪・巻物・杖の網羅率、空腹のFaint相当は引き続き未着手。**
+
 ## バックログ(マイルストーン未整理)
-- **原作Rogue仕様差分の棚卸し**(2026-07-28、`/goal`セッションでの調査): 「原作Rogueに仕様をできるだけ揃える」方針のもと、現状とのギャップを分野別に洗い出した。マイルストーン100(空腹Weak段階+睡眠ガストラップ)・104(マップ生成)で2件着手済み、残りは未着手のまま優先度未定でここに記録:
+- **原作Rogue仕様差分の棚卸し**(2026-07-28、`/goal`セッションでの調査): 「原作Rogueに仕様をできるだけ揃える」方針のもと、現状とのギャップを分野別に洗い出した。マイルストーン100(空腹Weak段階+睡眠ガストラップ)・104(マップ生成)・105(戦闘のダイス化)で3件着手済み、残りは未着手のまま優先度未定でここに記録:
   - **マップ生成**: マイルストーン104で`createRogueMap`(原作Rogueアルゴリズム)への切替+接続保証を実装済み。完了
-  - **戦闘解決**: 現行は決定的な引き算(`calculatePlayerAttackDamage` − 防御力)で必ず命中する。原作はAC・レベル・STR依存のd20到達判定+武器ごとのダイスダメージで、外れることがある。導入するなら`balance.ts`・`combat.ts`・`enemies.ts`・BOTの`combatPolicy.ts`・既存テスト全体に波及する大改修になる見込み
+  - **戦闘解決**: マイルストーン105で命中判定+ダイスダメージを実装済み。完了(杖は確定命中のまま据え置き)
   - **敵ロースター**: マイルストーン101〜103で原作26種全て実装済み、ハエトリソウの拘束効果も含め完了
   - **武器・防具のバリエーション**: 原作は複数武器種(ダイスダメージ)・防具種(段階的AC)があるが、現行は剣1種・防具1種(個体ごとに+1ボーナス)のみ
   - **指輪・巻物・杖の網羅率**: 指輪は原作10種中5種(怪力・耐久・索敵・敏捷・防御目的が未実装)。杖も炎/冷気/雷・変身・無効化などが未実装。詳細はマイルストーン33付近の既存バックログ項目も参照

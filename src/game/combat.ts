@@ -1,15 +1,26 @@
+import type { RngState } from "../rng.js";
 import { createRng } from "../rng.js";
 import {
 	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
+	MIN_PLAYER_ATTACK_DAMAGE,
+	PLAYER_DAMAGE_DICE_COUNT,
+	PLAYER_DAMAGE_DICE_SIDES,
 	SNEAK_ATTACK_MULTIPLIER,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
+import {
+	type DamageRoll,
+	damageDiceMean,
+	rollDamageDice,
+	rollToHit,
+} from "./damage.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
 import { calculatePlayerAttackDamage } from "./items/equipment.js";
+import { calculatePlayerHitChancePercent } from "./items/hitChance.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
 /**
@@ -79,28 +90,66 @@ const applyEnemyHit = (
 };
 
 /**
- * The player's bump attack resolved against one enemy: damage comes from
- * calculatePlayerAttackDamage (playerPower plus the equipped sword's own
- * attackBonus, if any), multiplied by SNEAK_ATTACK_MULTIPLIER when the
- * target is still asleep. The player does not move — attacking is what the
- * movement turn was spent on.
+ * Rolls the player's dice damage: PLAYER_DAMAGE_DICE_COUNT dPLAYER_DAMAGE_DICE_SIDES
+ * plus calculatePlayerAttackDamage (playerPower, the equipped sword's own
+ * attackBonus, the Weak penalty) as a flat bonus, with the die's own mean
+ * subtracted so that bonus keeps meaning "average total" — see balance.ts.
+ */
+const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll => {
+	const bonus =
+		calculatePlayerAttackDamage(state) -
+		damageDiceMean(PLAYER_DAMAGE_DICE_SIDES);
+	return rollDamageDice(
+		rng,
+		PLAYER_DAMAGE_DICE_COUNT,
+		PLAYER_DAMAGE_DICE_SIDES,
+		bonus,
+		MIN_PLAYER_ATTACK_DAMAGE,
+	);
+};
+
+/**
+ * The player's bump attack resolved against one enemy. A still-sleeping
+ * target is always a guaranteed sneak attack (SNEAK_ATTACK_MULTIPLIER on the
+ * dice roll, no to-hit check — original Rogue's surprise attacks always
+ * land); an awake target first rolls calculatePlayerHitChancePercent, and a
+ * miss ends the turn with no damage (player-attack-missed) but still marks
+ * hasAttacked (swinging, even missing, breaks the pacifist conduct). The
+ * player does not move — attacking is what the movement turn was spent on.
  */
 export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
-	const isSneakAttack = !target.awake;
-	const attackDamage = calculatePlayerAttackDamage(state);
-	const damage = isSneakAttack
-		? attackDamage * SNEAK_ATTACK_MULTIPLIER
-		: attackDamage;
+	if (!target.awake) {
+		const diceRoll = rollPlayerDamage(state.rng, state);
+		const damage = diceRoll.damage * SNEAK_ATTACK_MULTIPLIER;
+		return applyEnemyHit({ ...state, rng: diceRoll.rng }, target, damage, {
+			type: "sneak-attack",
+			payload: { target: target.kind, damage },
+		});
+	}
+
+	const hitRoll = rollToHit(state.rng, calculatePlayerHitChancePercent(state));
+	if (!hitRoll.hit) {
+		return {
+			...state,
+			rng: hitRoll.rng,
+			hasAttacked: true,
+			events: buildEventLog(state.events, [
+				{ type: "player-attack-missed", payload: { target: target.kind } },
+			]),
+		};
+	}
+	const diceRoll = rollPlayerDamage(hitRoll.rng, state);
 	return applyEnemyHit(
-		state,
+		{ ...state, rng: diceRoll.rng },
 		target,
-		damage,
-		isSneakAttack
-			? { type: "sneak-attack", payload: { target: target.kind, damage } }
-			: { type: "enemy-hit", payload: { target: target.kind, damage } },
+		diceRoll.damage,
+		{
+			type: "enemy-hit",
+			payload: { target: target.kind, damage: diceRoll.damage },
+		},
 	);
 };
 

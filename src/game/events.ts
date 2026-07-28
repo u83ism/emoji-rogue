@@ -458,6 +458,16 @@ export type GameEvent =
 			/** An attempt to move away from an adjacent, awake venus-flytrap — the turn is still spent struggling. See advanceTurn.ts's applyMove. */
 			readonly type: "player-held";
 			readonly payload: { readonly by: EnemyKind };
+	  }
+	| {
+			/** A player melee attack (bump or sneak) that failed its to-hit roll — no damage, no side effects. See combat.ts's applyPlayerAttack. */
+			readonly type: "player-attack-missed";
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** An adjacent enemy's attack that failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain) triggers on a miss. See enemyHitLanded.ts. */
+			readonly type: "enemy-attack-missed";
+			readonly payload: { readonly by: EnemyKind };
 	  };
 
 /**

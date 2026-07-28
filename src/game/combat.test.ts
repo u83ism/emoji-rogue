@@ -157,6 +157,27 @@ describe("applyPlayerAttack", () => {
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.hasAttacked).toBe(true);
 	});
+
+	it("a failed to-hit roll deals no damage, logs player-attack-missed, but still sets hasAttacked and consumes rng", () => {
+		/* seed 1643's to-hit roll against an awake target misses outright */
+		const missState = buildArenaGameState(9, 9, 1643);
+		const target = zombie(5, 4);
+		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
+		expect(next.enemies).toEqual([target]);
+		expect(next.events).toEqual([
+			{ type: "player-attack-missed", payload: { target: "zombie" } },
+		]);
+		expect(next.hasAttacked).toBe(true);
+		expect(next.rng).not.toEqual(missState.rng);
+	});
+
+	it("a sneak attack on a sleeping target never misses, however low the hit chance would otherwise be", () => {
+		/* the same seed that misses an awake target's to-hit roll still guarantees a sneak attack */
+		const missState = buildArenaGameState(9, 9, 1643);
+		const target = zombie(5, 4, 10, false);
+		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
+		expect(next.events[0]?.type).toBe("sneak-attack");
+	});
 });
 
 describe("applyWandStrike", () => {

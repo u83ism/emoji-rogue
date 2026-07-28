@@ -46,7 +46,8 @@ describe("advanceTurn", () => {
 	});
 
 	it("moving into an enemy is a bump attack: damage, no movement, turn spent", () => {
-		const state = { ...buildArenaGameState(5, 5, 1), enemies: [zombie(3, 2)] };
+		/* seed 2: both the player's and the zombie's to-hit+damage rolls land with damage 1 — see combat dice-ification, milestone 105 */
+		const state = { ...buildArenaGameState(5, 5, 2), enemies: [zombie(3, 2)] };
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual(state.player);
 		expect(next.enemies).toEqual([{ ...zombie(3, 2), hp: ZOMBIE_MAX_HP - 1 }]);
@@ -82,7 +83,10 @@ describe("advanceTurn", () => {
 
 	it("waiting passes the turn to the enemies (no cornered soft-lock)", () => {
 		/* 9x3 arena: player (4,1) with an adjacent enemy — waiting must let
-		 * the enemy act instead of freezing time forever */
+		 * the enemy act instead of freezing time forever. Seed 1's first
+		 * to-hit+damage roll lands with damage 1; since attacks can now miss
+		 * (combat dice-ification, milestone 105), the death loop below uses a
+		 * generous turn budget instead of exactly PLAYER_MAX_HP turns. */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [zombie(5, 1)],
@@ -91,9 +95,9 @@ describe("advanceTurn", () => {
 		expect(next.player).toEqual(state.player);
 		expect(next.playerHp).toBe(state.playerHp - 1);
 
-		/* waiting next to an enemy for the whole hp pool ends the run */
+		/* waiting next to a persistently-attacking enemy long enough always ends the run eventually */
 		let current: GameState = state;
-		for (let i = 0; i < PLAYER_MAX_HP; i++) {
+		for (let i = 0; i < PLAYER_MAX_HP * 3; i++) {
 			current = advanceTurn(current, { type: "wait" });
 		}
 		expect(current.status).toBe("dead");
@@ -594,9 +598,11 @@ describe("advanceTurn", () => {
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(state.floor);
 		expect(next.player).toEqual(state.player);
+		/* damage 1 (not the flat VENUS_FLYTRAP_ATTACK_DAMAGE=2) is this seed's
+		 * actual dice roll — see combat dice-ification, milestone 105 */
 		expect(next.events).toEqual([
 			{ type: "player-held", payload: { by: "venus-flytrap" } },
-			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 1 } },
 		]);
 	});
 

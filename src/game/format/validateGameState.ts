@@ -311,6 +311,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 	"enemy-slept": (payload) => isEnemyKind(payload.target),
 	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
+	"player-attack-missed": (payload) => isEnemyKind(payload.target),
+	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

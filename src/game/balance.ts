@@ -1,10 +1,12 @@
 /* file-size-exception: 調整ノブの単一責務カタログ — 1種1エントリで、分割するとノブが散る(2026-07-18裁可) */
 // Combat tuning knobs, all in one place. Values are provisional and expected
 // to change after real-terminal playtesting (docs/tasks/game-history.md, milestone 5).
-// Damage is a fixed amount — no dice — so combat stays deterministic
-// (docs/tasks/game-history.md milestone 15: a normal-distribution roll was tried and
-// rolled back, but the reusable rollDamage() in damage.ts is kept for when
-// dice-based damage is wanted again).
+// Melee combat rolls a to-hit chance and a discrete NdM+bonus damage die
+// (docs/tasks/game.md milestone 104: original Rogue's d20-style AC/level
+// to-hit collapsed onto the percent-roll idiom already used everywhere else
+// in this file, rather than a parallel AC number space). damage.ts's older
+// rollDamage() (a normal-distribution roll tried and rolled back in
+// game-history.md milestone 15) stays dormant, unrelated to the dice below.
 
 import type { EnemyKind, TrapKind } from "./events.js";
 
@@ -14,10 +16,46 @@ export const PLAYER_ATTACK_DAMAGE = 1;
 export const MIN_DAMAGE_TAKEN = 1;
 /**
  * Standard deviation for damage.ts's rollDamage(), which nothing currently
- * calls — combat is deterministic for now (see the comment above). Kept so
- * the normal-distribution pattern is ready to wire back in later.
+ * calls — melee combat uses the discrete-dice constants below instead. Kept
+ * dormant so the normal-distribution pattern is ready if wanted elsewhere.
  */
 export const DAMAGE_VARIANCE_STDDEV = 0.5;
+
+/**
+ * Percent chance a player melee attack (bump or wand-free ranged strike)
+ * connects, before the equipped sword's own bonus. Sneak attacks (target
+ * still asleep) skip this roll entirely — original Rogue's surprise attacks
+ * always land. See items/equipment.ts's calculatePlayerHitChancePercent.
+ */
+export const PLAYER_BASE_HIT_CHANCE_PERCENT = 80;
+/** Extra hit chance per point of the equipped sword's attackBonus — a sharper blade is easier to land, not just harder-hitting. */
+export const PLAYER_HIT_CHANCE_PER_ATTACK_BONUS = 3;
+/** Percent chance an adjacent enemy's attack connects with the player, before the equipped armor's defenseBonus reduces it. */
+export const ENEMY_BASE_HIT_CHANCE_PERCENT = 75;
+/** Hit chance removed from an attacking enemy per point of the player's equipped armor defenseBonus. */
+export const ENEMY_HIT_CHANCE_PER_DEFENSE_POINT = 4;
+/** Every hit-chance roll (player and enemy alike) clamps into this range — a heavily armored/leveled character can still be grazed, and a weak swing can still connect. */
+export const MIN_HIT_CHANCE_PERCENT = 10;
+export const MAX_HIT_CHANCE_PERCENT = 95;
+
+/**
+ * The player's base weapon die — there's no per-weapon-type variety yet
+ * (every sword rolls the same die), so playerPower/the sword's attackBonus/
+ * the Weak penalty are folded in as a flat bonus on top, at the point of the
+ * roll (see combat.ts), the same numbers calculatePlayerAttackDamage always
+ * produced pre-dice.
+ */
+export const PLAYER_DAMAGE_DICE_COUNT = 1;
+export const PLAYER_DAMAGE_DICE_SIDES = 4;
+/**
+ * Every enemy kind's melee damage die. ENEMY_ATTACK_DAMAGE below keeps its
+ * original meaning ("this kind's average hit") unchanged — the die's own
+ * mean is subtracted from it at the point of the roll (see
+ * enemyHitLanded.ts), so 1d4 of variance layers uniformly on top of the
+ * already-tuned 26-kind table without hand-authoring a second table.
+ */
+export const ENEMY_DAMAGE_DICE_COUNT = 1;
+export const ENEMY_DAMAGE_DICE_SIDES = 4;
 
 /**
  * Max distinct item kinds the player can hold at once — one slot per held

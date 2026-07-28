@@ -186,5 +186,9 @@ export const formatEvent = (
 			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
 		case "player-held":
 			return `${ENEMY_NAMES[event.payload.by]}に捕まっていて動けない!`;
+		case "player-attack-missed":
+			return `${ENEMY_NAMES[event.payload.target]}への攻撃は外れた`;
+		case "enemy-attack-missed":
+			return `${ENEMY_NAMES[event.payload.by]}の攻撃は外れた`;
 	}
 };

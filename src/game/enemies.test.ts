@@ -292,7 +292,8 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a bat adjacent to the player attacks twice per turn", () => {
-		const state = buildCorridorState([bat(5, 1)]);
+		/* seed 2's two to-hit+damage rolls both land with damage 1 — see combat dice-ification, milestone 105 */
+		const state = { ...buildCorridorState([bat(5, 1)]), rng: seedToState(2) };
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([bat(5, 1)]);
 		expect(next.playerHp).toBe(state.playerHp - 2);
@@ -337,6 +338,19 @@ describe("advanceEnemies", () => {
 				type: "player-hit",
 				payload: { by: "zombie", damage: MIN_DAMAGE_TAKEN },
 			},
+		]);
+	});
+
+	it("a failed to-hit roll deals no damage and logs enemy-attack-missed instead of player-hit", () => {
+		/* seed 1541's to-hit roll against the player misses outright */
+		const state = {
+			...buildArenaGameState(9, 3, 1541),
+			enemies: [zombie(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events).toEqual([
+			{ type: "enemy-attack-missed", payload: { by: "zombie" } },
 		]);
 	});
 
@@ -511,9 +525,11 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
+		/* seed 2: the zombie's to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
 		const state = {
 			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
 			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
+			rng: seedToState(2),
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
@@ -527,12 +543,13 @@ describe("advanceEnemies", () => {
 
 	/*
 	 * Whether a landed aquator hit also rusts armor is an
-	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 1's first
-	 * roll succeeds, seed 1000's fails.
+	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 2's to-hit
+	 * roll lands and its rust roll succeeds (see combat dice-ification,
+	 * milestone 105), seed 1000's rust roll fails.
 	 */
 	it("an adjacent aquator deals damage, stands its ground, and may rust the equipped armor", () => {
 		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+			...buildArenaGameState(9, 3, 2),
 			inventory: [equippedArmor(2)],
 			enemies: [aquator(5, 1)],
 		};
@@ -560,7 +577,8 @@ describe("advanceEnemies", () => {
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory),
 		);
-		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
+		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 		]);
@@ -573,7 +591,8 @@ describe("advanceEnemies", () => {
 		};
 		const next = advanceEnemies(state);
 		expect(next.inventory).toEqual([]);
-		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
+		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 		]);
@@ -610,9 +629,9 @@ describe("advanceEnemies", () => {
 	});
 
 	it("rust from one aquator carries into the next aquator's turn via the shared accumulator", () => {
-		/* at seed 1, only the first of these two aquators' rolls succeeds */
+		/* at seed 4, exactly one of these two aquators' hits also rusts — see combat dice-ification, milestone 105 */
 		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+			...buildArenaGameState(9, 3, 4),
 			inventory: [equippedArmor(5)],
 			enemies: [aquator(5, 1), aquator(3, 1)],
 		};
@@ -720,7 +739,11 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a sleeping enemy adjacent to the player wakes and attacks the same turn", () => {
-		const state = buildCorridorState([zombie(5, 1, false)]);
+		/* seed 2: the wake roll succeeds and the following to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
+		const state = {
+			...buildCorridorState([zombie(5, 1, false)]),
+			rng: seedToState(2),
+		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(5, 1, true)]);
 		expect(next.playerHp).toBe(state.playerHp - 1);

@@ -40,6 +40,33 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	 * reasoning as the yeti/bear substitution, except here the glyph itself
 	 * is the best fit rather than a stand-in). */
 	vampire: { glyph: "🧛" },
+	/* Rat: direct literal match, single-codepoint, Unicode 6.0. */
+	rat: { glyph: "🐀" },
+	/* No stable single-codepoint emu emoji exists — dodo (Unicode 13.0)
+	 * stands in as the nearest "large flightless bird" glyph, same
+	 * substitution reasoning as the yeti/bear pairing above. */
+	emu: { glyph: "🦤" },
+	/* No stable single-codepoint kestrel/falcon emoji exists — eagle
+	 * (Unicode 9.0) stands in as the nearest bird-of-prey glyph. */
+	kestrel: { glyph: "🦅" },
+	/* No stable single-codepoint hobgoblin emoji exists — thief already uses
+	 * the goblin mask (👺), so this uses the horned devil face (Unicode 6.0)
+	 * instead, both reading as "evil humanoid" without colliding. */
+	hobgoblin: { glyph: "😈" },
+	/* No stable single-codepoint centaur emoji exists — horse (Unicode 6.0)
+	 * stands in for the "half-horse" half of the hybrid. */
+	centaur: { glyph: "🐎" },
+	/* Quagga is literally an extinct zebra subspecies — zebra (Unicode 10.0)
+	 * is a direct match, not a stand-in. */
+	quagga: { glyph: "🦓" },
+	/* Ur-vile has no real-world analog and no established visual design even
+	 * within Rogue itself — bust in silhouette (Unicode 6.0) stands in for
+	 * "shadowy figure", the weakest match in this batch. */
+	"ur-vile": { glyph: "👤" },
+	/* Jabberwock is dragon-like but distinct from this game's own Dragon —
+	 * dragon face (Unicode 6.0) is a different codepoint from the dragon (🐉)
+	 * glyph above, avoiding a collision while keeping the family resemblance. */
+	jabberwock: { glyph: "🐲" },
 };
 /* Staircase, by direction (both single-codepoint, Unicode 6.0). */
 export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {

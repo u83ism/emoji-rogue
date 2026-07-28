@@ -20,6 +20,14 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	yeti: "雪男",
 	snake: "蛇",
 	vampire: "ヴァンパイア",
+	rat: "ラット",
+	emu: "エミュー",
+	kestrel: "ケストレル",
+	hobgoblin: "ホブゴブリン",
+	centaur: "ケンタウロス",
+	quagga: "クアッガ",
+	"ur-vile": "アーヴァイル",
+	jabberwock: "ジャバウォック",
 };
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {

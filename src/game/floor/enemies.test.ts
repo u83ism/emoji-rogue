@@ -85,6 +85,14 @@ describe("drawFloorEnemies", () => {
 			"yeti",
 			"snake",
 			"vampire",
+			"rat",
+			"emu",
+			"kestrel",
+			"hobgoblin",
+			"centaur",
+			"quagga",
+			"ur-vile",
+			"jabberwock",
 		] as const) {
 			expect(asleep.filter((enemy) => enemy.kind === kind).length).toBe(1);
 		}

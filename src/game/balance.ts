@@ -123,6 +123,77 @@ export const VAMPIRE_SPAWN_CHANCE_PERCENT = 15;
  */
 export const VAMPIRE_MIN_SPAWN_FLOOR = 8;
 
+// Eight more "parameters only" melee attackers (no advanceEnemies branch of
+// their own — same idiom as orc/dragon/yeti), added 2026-07-28 to widen the
+// enemy roster toward original Rogue's full 26-letter cast. Chosen as a first
+// batch specifically because none of them need a new mechanic: every other
+// unimplemented original monster (Griffin/Troll's regen, Icky Thing's
+// blindness, Venus Flytrap's stationary hold, Medusa's gaze, Phantom's
+// invisibility, Wraith's stat drain, Xeroc's gold mimicry) needs new game
+// systems and is left for later milestones — see docs/tasks/game.md's
+// backlog. Spawn percentages are set conservatively (roughly half of an
+// existing "common" kind's rate) since adding eight more independent
+// per-floor rolls on top of the existing eight meaningfully raises enemy
+// density — first-pass numbers, expect retuning after playtesting like every
+// other balance.ts value.
+
+// Weakest of the batch — below zombie in every stat, original Rogue's
+// earliest and most common trash mob.
+export const RAT_MAX_HP = 1;
+export const RAT_ATTACK_DAMAGE = 1;
+export const RAT_ACTIONS_PER_TURN = 1;
+export const RAT_SPAWN_CHANCE_PERCENT = 12;
+
+// A glass cannon in the same vein as snake — even less HP, still bites hard.
+export const EMU_MAX_HP = 1;
+export const EMU_ATTACK_DAMAGE = 2;
+export const EMU_ACTIONS_PER_TURN = 1;
+export const EMU_SPAWN_CHANCE_PERCENT = 10;
+
+// A second "acts twice per turn" kind alongside bat, tuned meaningfully more
+// dangerous than bat (same speed, sharper attack) rather than a plain
+// reskin.
+export const KESTREL_MAX_HP = 1;
+export const KESTREL_ATTACK_DAMAGE = 2;
+export const KESTREL_ACTIONS_PER_TURN = 2;
+export const KESTREL_SPAWN_CHANCE_PERCENT = 8;
+
+// A mid-tier grunt, weaker cousin of orc/centaur without either of their
+// gimmicks (no gold drop, no extra HP).
+export const HOBGOBLIN_MAX_HP = 3;
+export const HOBGOBLIN_ATTACK_DAMAGE = 2;
+export const HOBGOBLIN_ACTIONS_PER_TURN = 1;
+export const HOBGOBLIN_SPAWN_CHANCE_PERCENT = 15;
+
+// A sturdier mid-tier melee attacker, comparable to orc but without its
+// gold-drop gimmick.
+export const CENTAUR_MAX_HP = 4;
+export const CENTAUR_ATTACK_DAMAGE = 2;
+export const CENTAUR_ACTIONS_PER_TURN = 1;
+export const CENTAUR_SPAWN_CHANCE_PERCENT = 12;
+
+// The third "acts twice per turn" kind — two real hits at moderate power
+// makes it the most dangerous of the fast trio (bat/kestrel/quagga).
+export const QUAGGA_MAX_HP = 3;
+export const QUAGGA_ATTACK_DAMAGE = 2;
+export const QUAGGA_ACTIONS_PER_TURN = 2;
+export const QUAGGA_SPAWN_CHANCE_PERCENT = 8;
+
+// Upper-mid tier, positioned between yeti and dragon on every axis.
+export const UR_VILE_MAX_HP = 5;
+export const UR_VILE_ATTACK_DAMAGE = 3;
+export const UR_VILE_ACTIONS_PER_TURN = 1;
+export const UR_VILE_SPAWN_CHANCE_PERCENT = 8;
+
+// A second boss-tier attacker alongside dragon — comparably rare and
+// dangerous, gated to deeper floors the same way VAMPIRE_MIN_SPAWN_FLOOR
+// gates vampire.
+export const JABBERWOCK_MAX_HP = 7;
+export const JABBERWOCK_ATTACK_DAMAGE = 4;
+export const JABBERWOCK_ACTIONS_PER_TURN = 1;
+export const JABBERWOCK_SPAWN_CHANCE_PERCENT = 6;
+export const JABBERWOCK_MIN_SPAWN_FLOOR = 6;
+
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
  * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
@@ -157,6 +228,14 @@ export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
 	yeti: YETI_MAX_HP,
 	snake: SNAKE_MAX_HP,
 	vampire: VAMPIRE_MAX_HP,
+	rat: RAT_MAX_HP,
+	emu: EMU_MAX_HP,
+	kestrel: KESTREL_MAX_HP,
+	hobgoblin: HOBGOBLIN_MAX_HP,
+	centaur: CENTAUR_MAX_HP,
+	quagga: QUAGGA_MAX_HP,
+	"ur-vile": UR_VILE_MAX_HP,
+	jabberwock: JABBERWOCK_MAX_HP,
 };
 export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	zombie: ZOMBIE_ATTACK_DAMAGE,
@@ -169,6 +248,14 @@ export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
 	yeti: YETI_ATTACK_DAMAGE,
 	snake: SNAKE_ATTACK_DAMAGE,
 	vampire: VAMPIRE_ATTACK_DAMAGE,
+	rat: RAT_ATTACK_DAMAGE,
+	emu: EMU_ATTACK_DAMAGE,
+	kestrel: KESTREL_ATTACK_DAMAGE,
+	hobgoblin: HOBGOBLIN_ATTACK_DAMAGE,
+	centaur: CENTAUR_ATTACK_DAMAGE,
+	quagga: QUAGGA_ATTACK_DAMAGE,
+	"ur-vile": UR_VILE_ATTACK_DAMAGE,
+	jabberwock: JABBERWOCK_ATTACK_DAMAGE,
 };
 /**
  * How many times this kind acts per player turn. A closure-based Scheduler
@@ -186,6 +273,14 @@ export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
 	yeti: YETI_ACTIONS_PER_TURN,
 	snake: SNAKE_ACTIONS_PER_TURN,
 	vampire: VAMPIRE_ACTIONS_PER_TURN,
+	rat: RAT_ACTIONS_PER_TURN,
+	emu: EMU_ACTIONS_PER_TURN,
+	kestrel: KESTREL_ACTIONS_PER_TURN,
+	hobgoblin: HOBGOBLIN_ACTIONS_PER_TURN,
+	centaur: CENTAUR_ACTIONS_PER_TURN,
+	quagga: QUAGGA_ACTIONS_PER_TURN,
+	"ur-vile": UR_VILE_ACTIONS_PER_TURN,
+	jabberwock: JABBERWOCK_ACTIONS_PER_TURN,
 };
 /** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
 export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
@@ -199,6 +294,14 @@ export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
 	yeti: 4,
 	snake: 3,
 	vampire: 5,
+	rat: 1,
+	emu: 2,
+	kestrel: 2,
+	hobgoblin: 3,
+	centaur: 3,
+	quagga: 4,
+	"ur-vile": 4,
+	jabberwock: 6,
 };
 
 /** Max HP gained each time the player levels up — see applyExperienceGain. */

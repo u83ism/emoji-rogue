@@ -46,7 +46,8 @@ describe("advanceTurn", () => {
 	});
 
 	it("moving into an enemy is a bump attack: damage, no movement, turn spent", () => {
-		const state = { ...buildArenaGameState(5, 5, 1), enemies: [zombie(3, 2)] };
+		/* seed 2: both the player's and the zombie's to-hit+damage rolls land with damage 1 — see combat dice-ification, milestone 105 */
+		const state = { ...buildArenaGameState(5, 5, 2), enemies: [zombie(3, 2)] };
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual(state.player);
 		expect(next.enemies).toEqual([{ ...zombie(3, 2), hp: ZOMBIE_MAX_HP - 1 }]);
@@ -82,7 +83,10 @@ describe("advanceTurn", () => {
 
 	it("waiting passes the turn to the enemies (no cornered soft-lock)", () => {
 		/* 9x3 arena: player (4,1) with an adjacent enemy — waiting must let
-		 * the enemy act instead of freezing time forever */
+		 * the enemy act instead of freezing time forever. Seed 1's first
+		 * to-hit+damage roll lands with damage 1; since attacks can now miss
+		 * (combat dice-ification, milestone 105), the death loop below uses a
+		 * generous turn budget instead of exactly PLAYER_MAX_HP turns. */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [zombie(5, 1)],
@@ -91,9 +95,9 @@ describe("advanceTurn", () => {
 		expect(next.player).toEqual(state.player);
 		expect(next.playerHp).toBe(state.playerHp - 1);
 
-		/* waiting next to an enemy for the whole hp pool ends the run */
+		/* waiting next to a persistently-attacking enemy long enough always ends the run eventually */
 		let current: GameState = state;
-		for (let i = 0; i < PLAYER_MAX_HP; i++) {
+		for (let i = 0; i < PLAYER_MAX_HP * 3; i++) {
 			current = advanceTurn(current, { type: "wait" });
 		}
 		expect(current.status).toBe("dead");
@@ -493,6 +497,130 @@ describe("advanceTurn", () => {
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(1);
 		expect(next.enemies[0]?.hp).toBe(ZOMBIE_MAX_HP - 1);
+	});
+
+	it("an adjacent, awake venus-flytrap blocks a move that would leave its reach, but the turn is still spent", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(
+			state,
+			move("north"),
+		); /* (2,1) is not adjacent to (3,2) */
+		expect(next.player).toEqual(state.player); /* did not move */
+		expect(next.playerFood).toBe(state.playerFood - 1); /* the turn was spent */
+		expect(next.events).toEqual([
+			{ type: "player-held", payload: { by: "venus-flytrap" } },
+			/* still adjacent and awake, the flytrap gets its own bite in too */
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
+		]);
+	});
+
+	it("attacking the holding venus-flytrap itself is unaffected by the hold", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(state, move("east")); /* bumps into the flytrap */
+		expect(next.player).toEqual(state.player); /* bump attacks never move */
+		expect(next.enemies).toEqual([{ ...flytrap, hp: 2 }]);
+		expect(next.events.some((event) => event.type === "player-held")).toBe(
+			false,
+		);
+	});
+
+	it("a sleeping venus-flytrap does not hold the player", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const next = advanceTurn(state, move("north"));
+		expect(next.player).toEqual({ x: 2, y: 1 });
+	});
+
+	it("bumping a wall while held still spends no turn — the wall wins over the hold", () => {
+		const flytrap: Enemy = {
+			x: 2,
+			y: 3,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		/* player at (2,2) in a 3x3 arena: every direction but toward the
+		 * flytrap (south) is a wall */
+		const state = { ...buildArenaGameState(3, 3, 1), enemies: [flytrap] };
+		expect(advanceTurn(state, move("north"))).toBe(state);
+	});
+
+	it("blocks stepping onto the staircase while held", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const flytrap: Enemy = {
+			x: start.player.x + 1,
+			y: start.player.y,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const state = {
+			...start,
+			stairs: {
+				x: start.player.x + 1,
+				y: start.player.y,
+				direction: "down" as const,
+			},
+			enemies: [{ ...flytrap, x: start.player.x, y: start.player.y + 1 }],
+		};
+		/* the flytrap sits south of the player, the stairs sit east — stepping
+		 * east would leave the flytrap's reach, so it should be blocked */
+		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(state.floor);
+		expect(next.player).toEqual(state.player);
+		/* damage 1 (not the flat VENUS_FLYTRAP_ATTACK_DAMAGE=2) is this seed's
+		 * actual dice roll — see combat dice-ification, milestone 105 */
+		expect(next.events).toEqual([
+			{ type: "player-held", payload: { by: "venus-flytrap" } },
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 1 } },
+		]);
+	});
+
+	it("once the holding flytrap is dead, the player can move away freely", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+		};
+		const held = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		expect(advanceTurn(held, move("north")).player).toEqual(held.player);
+
+		const freed = { ...held, enemies: [] }; /* the flytrap has been slain */
+		expect(advanceTurn(freed, move("north")).player).toEqual({ x: 2, y: 1 });
 	});
 
 	it("quit marks the game as exited without touching the rest", () => {

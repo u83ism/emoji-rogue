@@ -67,7 +67,9 @@ describe("buildDungeonGameState", () => {
 	});
 
 	it("spawns zombies and bats on floor tiles outside the starting view", () => {
-		expect(state.enemies.length).toBe(5); /* 3 zombies + 2 bats */
+		expect(state.enemies.length).toBe(
+			7,
+		); /* 3 zombies + 2 bats + a nymph + a rat roll */
 		for (const enemy of state.enemies) {
 			expect(state.terrain[enemy.x]?.[enemy.y]).toBe(0);
 			expect(enemy).not.toEqual(state.player);

@@ -391,6 +391,104 @@ describe("buildFrameGrid", () => {
 		);
 	});
 
+	it("a phantom is not drawn even within FOV unless adjacent", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const phantom = {
+			kind: "phantom",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const; /* distance 5 — visible FOV, but not adjacent */
+		const state = { ...wide, enemies: [phantom] };
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).not.toBe("🫥");
+	});
+
+	it("an adjacent phantom is drawn", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const phantom = {
+			kind: "phantom",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 16,
+			y: 2,
+		} as const; /* distance 1 from player at (15,2) */
+		const state = { ...wide, enemies: [phantom] };
+		expect(buildFrameGrid(state)[2]?.[16]?.glyph).toBe("🫥");
+	});
+
+	it("a detected phantom is drawn even without adjacency", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const phantom = {
+			kind: "phantom",
+			hp: 3,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 27,
+			y: 2,
+		} as const; /* distance 12, normally hidden even for a non-phantom */
+		const state = {
+			...wide,
+			detectMonstersTurnsRemaining: 5,
+			enemies: [phantom],
+		};
+		expect(buildFrameGrid(state)[2]?.[27]?.glyph).toBe("🫥");
+	});
+
+	it("a still-asleep xeroc draws as a gold pile, not its own glyph", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const xeroc = {
+			kind: "xeroc",
+			hp: 4,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = { ...wide, enemies: [xeroc] };
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe("💰");
+	});
+
+	it("an awake xeroc draws its real glyph", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const xeroc = {
+			kind: "xeroc",
+			hp: 4,
+			awake: true,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = { ...wide, enemies: [xeroc] };
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe("🪙");
+	});
+
+	it("a disguised xeroc still draws as gold while hallucinating — the decoy would give it away", () => {
+		const wide = buildArenaGameState(30, 5, 1);
+		const xeroc = {
+			kind: "xeroc",
+			hp: 4,
+			awake: false,
+			slowedTurnsRemaining: 0,
+			confusedTurnsRemaining: 0,
+			x: 20,
+			y: 2,
+		} as const;
+		const state = {
+			...wide,
+			enemies: [xeroc],
+			hallucinatingTurnsRemaining: 5,
+		};
+		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe("💰");
+	});
+
 	it("hallucination decoy glyphs change as turnsOnCurrentFloor advances", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const zombie = {

@@ -1,6 +1,7 @@
 import { createRng } from "../../rng.js";
 import {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
+	PLAYER_WEAK_THRESHOLD,
 	STARVATION_DAMAGE_PER_TURN,
 	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
 } from "../balance.js";
@@ -17,6 +18,12 @@ const applyHungerConsequences = (state: GameState): GameState => {
 		playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
 	) {
 		events.push({ type: "player-hungry", payload: {} });
+	}
+	if (
+		state.playerFood > PLAYER_WEAK_THRESHOLD &&
+		playerFood <= PLAYER_WEAK_THRESHOLD
+	) {
+		events.push({ type: "player-weak", payload: {} });
 	}
 
 	if (playerFood > 0) {
@@ -47,12 +54,16 @@ const applyHungerConsequences = (state: GameState): GameState => {
 
 /**
  * Ticks playerFood down by one and applies its consequences: a one-time
- * player-hungry warning the turn food crosses the warning threshold going
- * down, and STARVATION_DAMAGE_PER_TURN of HP loss (with a player-starved
- * event) every turn spent at 0 food, which can itself end the run
- * (player-died, by: "hunger"). A no-op once the run is no longer playing —
- * called after combat/movement resolves each turn-consuming action, so a
- * death from an enemy this same turn must not also take a hunger tick.
+ * player-hungry warning the turn food crosses PLAYER_HUNGER_WARNING_THRESHOLD
+ * going down, a one-time player-weak warning the turn it crosses
+ * PLAYER_WEAK_THRESHOLD going down (which also weakens
+ * calculatePlayerAttackDamage for as long as playerFood stays at or below
+ * it — no separate flag, derived straight from playerFood), and
+ * STARVATION_DAMAGE_PER_TURN of HP loss (with a player-starved event) every
+ * turn spent at 0 food, which can itself end the run (player-died, by:
+ * "hunger"). A no-op once the run is no longer playing — called after
+ * combat/movement resolves each turn-consuming action, so a death from an
+ * enemy this same turn must not also take a hunger tick.
  *
  * While a ring of sustenance is currently equipped, the whole tick has a
  * SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT chance of being skipped outright

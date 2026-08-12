@@ -90,6 +90,7 @@ describe("formatEvent", () => {
 				"解呪の巻物を読んだ。呪いが解け、2個のアイテムを外せるようになった!",
 			],
 			[{ type: "player-hungry", payload: {} }, "空腹を感じてきた"],
+			[{ type: "player-weak", payload: {} }, "空腹で力が入らなくなってきた"],
 			[
 				{ type: "player-starved", payload: { damage: 1 } },
 				"空腹で1のダメージを受けた",
@@ -117,6 +118,13 @@ describe("formatEvent", () => {
 			[
 				{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
 				"テレポートの罠を踏んでしまった!",
+			],
+			[
+				{
+					type: "trap-triggered",
+					payload: { kind: "sleeping-gas", damage: 0 },
+				},
+				"睡眠ガスのわなを踏んでしまった!",
 			],
 			[
 				{ type: "player-poisoned", payload: { damage: 4 } },
@@ -285,6 +293,22 @@ describe("formatEvent", () => {
 			[
 				{ type: "vampire-healed", payload: { amount: 1 } },
 				"ヴァンパイアが血を吸い、HPを1回復した",
+			],
+			[
+				{ type: "enemy-regenerated", payload: { target: "troll", amount: 2 } },
+				"トロルのHPが2回復した",
+			],
+			[
+				{ type: "player-drained", payload: { amount: 1 } },
+				"レイスに生命力を吸われた。最大HPが1下がった",
+			],
+			[
+				{ type: "player-gazed", payload: { turns: 6 } },
+				"メデューサの視線を受けた。頭がくらくらする!",
+			],
+			[
+				{ type: "player-held", payload: { by: "venus-flytrap" } },
+				"ハエトリソウに捕まっていて動けない!",
 			],
 		];
 		for (const [event, expected] of cases) {

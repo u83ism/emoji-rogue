@@ -156,7 +156,7 @@ describe("validateGameState", () => {
 			throw new Error("unreachable: the dungeon state spawns enemies");
 		}
 		expectRejected(
-			{ ...valid, enemies: [{ ...enemies[0], kind: "griffin" }] },
+			{ ...valid, enemies: [{ ...enemies[0], kind: "unknown-kind" }] },
 			"enemies",
 		);
 		expectRejected(
@@ -395,7 +395,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-slowed", payload: { target: "griffin", turns: 5 } },
+					{
+						type: "enemy-slowed",
+						payload: { target: "unknown-kind", turns: 5 },
+					},
 				],
 			},
 			"events",
@@ -660,7 +663,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "wand-struck", payload: { target: "griffin", damage: 3 } },
+					{
+						type: "wand-struck",
+						payload: { target: "unknown-kind", damage: 3 },
+					},
 				],
 			},
 			"events",
@@ -686,7 +692,9 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "enemy-teleported", payload: { target: "griffin" } }],
+				events: [
+					{ type: "enemy-teleported", payload: { target: "unknown-kind" } },
+				],
 			},
 			"events",
 		);
@@ -732,6 +740,89 @@ describe("validateGameState", () => {
 		);
 	});
 
+	it("accepts a well-formed enemy-regenerated event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "enemy-regenerated", payload: { target: "troll", amount: 2 } },
+			],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{
+						type: "enemy-regenerated",
+						payload: { target: "troll", amount: 0 },
+					},
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{
+						type: "enemy-regenerated",
+						payload: { target: "unknown-kind", amount: 1 },
+					},
+				],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed player-drained event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-drained", payload: { amount: 1 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-drained", payload: { amount: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed player-gazed event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-gazed", payload: { turns: 6 } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-gazed", payload: { turns: 0 } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed player-held event and rejects broken ones", () => {
+		const result = validateGameState({
+			...buildValidState(),
+			events: [{ type: "player-held", payload: { by: "venus-flytrap" } }],
+		});
+		expect(result.ok).toBe(true);
+
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-held", payload: { by: "unknown-kind" } }],
+			},
+			"events",
+		);
+	});
+
 	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
@@ -742,7 +833,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "enemy-slept", payload: { target: "griffin" } }],
+				events: [{ type: "enemy-slept", payload: { target: "unknown-kind" } }],
 			},
 			"events",
 		);
@@ -759,7 +850,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-held", payload: { target: "griffin", turns: 5 } },
+					{ type: "enemy-held", payload: { target: "unknown-kind", turns: 5 } },
 				],
 			},
 			"events",
@@ -779,7 +870,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "enemy-confused", payload: { target: "griffin", turns: 8 } },
+					{
+						type: "enemy-confused",
+						payload: { target: "unknown-kind", turns: 8 },
+					},
 				],
 			},
 			"events",
@@ -868,7 +962,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "sneak-attack", payload: { target: "griffin", damage: 3 } },
+					{
+						type: "sneak-attack",
+						payload: { target: "unknown-kind", damage: 3 },
+					},
 				],
 			},
 			"events",
@@ -1014,6 +1111,7 @@ describe("validateGameState", () => {
 			...buildValidState(),
 			events: [
 				{ type: "player-hungry", payload: {} },
+				{ type: "player-weak", payload: {} },
 				{ type: "player-starved", payload: { damage: 1 } },
 				{ type: "player-ate", payload: { amount: 50 } },
 				{ type: "player-died", payload: { by: "hunger" } },
@@ -1178,6 +1276,30 @@ describe("validateGameState", () => {
 				...buildValidState(),
 				events: [
 					{ type: "trap-triggered", payload: { kind: "rust", damage: -1 } },
+				],
+			},
+			"events",
+		);
+
+		const sleepingGasTrapAccepted = validateGameState({
+			...buildValidState(),
+			traps: [{ ...floorSpot, kind: "sleeping-gas" }],
+			events: [
+				{
+					type: "trap-triggered",
+					payload: { kind: "sleeping-gas", damage: 0 },
+				},
+			],
+		});
+		expect(sleepingGasTrapAccepted.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [
+					{
+						type: "trap-triggered",
+						payload: { kind: "sleeping-gas", damage: -1 },
+					},
 				],
 			},
 			"events",

@@ -3,13 +3,25 @@ import { seedToState } from "../rng.js";
 import {
 	AQUATOR_MAX_HP,
 	BAT_MAX_HP,
+	GRIFFIN_MAX_HP,
+	GRIFFIN_REGEN_AMOUNT,
+	ICKY_THING_MAX_HP,
+	MEDUSA_GAZE_CONFUSE_DURATION,
+	MEDUSA_MAX_HP,
 	MIN_DAMAGE_TAKEN,
 	NYMPH_MAX_HP,
 	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
 	THIEF_MAX_HP,
+	TROLL_MAX_HP,
+	TROLL_REGEN_AMOUNT,
 	VAMPIRE_ATTACK_DAMAGE,
 	VAMPIRE_MAX_HP,
+	VENUS_FLYTRAP_ATTACK_DAMAGE,
+	VENUS_FLYTRAP_MAX_HP,
+	WRAITH_ATTACK_DAMAGE,
+	WRAITH_DRAIN_AMOUNT,
+	WRAITH_MAX_HP,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { advanceEnemies } from "./enemies.js";
@@ -85,6 +97,66 @@ const vampire = (x: number, y: number, hp = VAMPIRE_MAX_HP): Enemy => ({
 	y,
 	kind: "vampire",
 	hp,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const griffin = (x: number, y: number, hp = GRIFFIN_MAX_HP): Enemy => ({
+	x,
+	y,
+	kind: "griffin",
+	hp,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const troll = (x: number, y: number, hp = TROLL_MAX_HP): Enemy => ({
+	x,
+	y,
+	kind: "troll",
+	hp,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const ickyThing = (x: number, y: number, awake = true): Enemy => ({
+	x,
+	y,
+	kind: "icky-thing",
+	hp: ICKY_THING_MAX_HP,
+	awake,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const venusFlytrap = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "venus-flytrap",
+	hp: VENUS_FLYTRAP_MAX_HP,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const medusa = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "medusa",
+	hp: MEDUSA_MAX_HP,
+	awake: true,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+const wraith = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "wraith",
+	hp: WRAITH_MAX_HP,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
@@ -220,7 +292,8 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a bat adjacent to the player attacks twice per turn", () => {
-		const state = buildCorridorState([bat(5, 1)]);
+		/* seed 2's two to-hit+damage rolls both land with damage 1 — see combat dice-ification, milestone 105 */
+		const state = { ...buildCorridorState([bat(5, 1)]), rng: seedToState(2) };
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([bat(5, 1)]);
 		expect(next.playerHp).toBe(state.playerHp - 2);
@@ -265,6 +338,19 @@ describe("advanceEnemies", () => {
 				type: "player-hit",
 				payload: { by: "zombie", damage: MIN_DAMAGE_TAKEN },
 			},
+		]);
+	});
+
+	it("a failed to-hit roll deals no damage and logs enemy-attack-missed instead of player-hit", () => {
+		/* seed 1541's to-hit roll against the player misses outright */
+		const state = {
+			...buildArenaGameState(9, 3, 1541),
+			enemies: [zombie(5, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events).toEqual([
+			{ type: "enemy-attack-missed", payload: { by: "zombie" } },
 		]);
 	});
 
@@ -439,9 +525,11 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
+		/* seed 2: the zombie's to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
 		const state = {
 			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
 			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
+			rng: seedToState(2),
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
@@ -455,12 +543,13 @@ describe("advanceEnemies", () => {
 
 	/*
 	 * Whether a landed aquator hit also rusts armor is an
-	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 1's first
-	 * roll succeeds, seed 1000's fails.
+	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 2's to-hit
+	 * roll lands and its rust roll succeeds (see combat dice-ification,
+	 * milestone 105), seed 1000's rust roll fails.
 	 */
 	it("an adjacent aquator deals damage, stands its ground, and may rust the equipped armor", () => {
 		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+			...buildArenaGameState(9, 3, 2),
 			inventory: [equippedArmor(2)],
 			enemies: [aquator(5, 1)],
 		};
@@ -488,7 +577,8 @@ describe("advanceEnemies", () => {
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory),
 		);
-		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
+		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 		]);
@@ -501,7 +591,8 @@ describe("advanceEnemies", () => {
 		};
 		const next = advanceEnemies(state);
 		expect(next.inventory).toEqual([]);
-		expect(next.rng).toEqual(state.rng); /* no roll consumed at all */
+		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
+		expect(next.rng).not.toEqual(state.rng);
 		expect(next.events).toEqual([
 			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
 		]);
@@ -538,9 +629,9 @@ describe("advanceEnemies", () => {
 	});
 
 	it("rust from one aquator carries into the next aquator's turn via the shared accumulator", () => {
-		/* at seed 1, only the first of these two aquators' rolls succeeds */
+		/* at seed 4, exactly one of these two aquators' hits also rusts — see combat dice-ification, milestone 105 */
 		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+			...buildArenaGameState(9, 3, 4),
 			inventory: [equippedArmor(5)],
 			enemies: [aquator(5, 1), aquator(3, 1)],
 		};
@@ -648,7 +739,11 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a sleeping enemy adjacent to the player wakes and attacks the same turn", () => {
-		const state = buildCorridorState([zombie(5, 1, false)]);
+		/* seed 2: the wake roll succeeds and the following to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
+		const state = {
+			...buildCorridorState([zombie(5, 1, false)]),
+			rng: seedToState(2),
+		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(5, 1, true)]);
 		expect(next.playerHp).toBe(state.playerHp - 1);
@@ -767,6 +862,146 @@ describe("advanceEnemies", () => {
 		const state = buildCorridorState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
+			false,
+		);
+	});
+
+	it("a non-adjacent troll regenerates HP every turn even without landing a hit", () => {
+		const state = buildCorridorState([troll(7, 1, TROLL_MAX_HP - 3)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([
+			troll(6, 1, TROLL_MAX_HP - 3 + TROLL_REGEN_AMOUNT),
+		]);
+		expect(next.events).toEqual([
+			{
+				type: "enemy-regenerated",
+				payload: { target: "troll", amount: TROLL_REGEN_AMOUNT },
+			},
+		]);
+	});
+
+	it("regeneration caps at maxHp and logs no event once already full", () => {
+		const state = buildCorridorState([troll(7, 1, TROLL_MAX_HP)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([troll(6, 1, TROLL_MAX_HP)]);
+		expect(
+			next.events.some((event) => event.type === "enemy-regenerated"),
+		).toBe(false);
+	});
+
+	it("a griffin still only regenerates once per turn despite acting twice (fast)", () => {
+		const state = buildCorridorState([griffin(7, 1, GRIFFIN_MAX_HP - 3)]);
+		const next = advanceEnemies(state);
+		const regenEvents = next.events.filter(
+			(event) => event.type === "enemy-regenerated",
+		);
+		expect(regenEvents.length).toBe(1);
+		expect(next.enemies[0]?.hp).toBe(GRIFFIN_MAX_HP - 3 + GRIFFIN_REGEN_AMOUNT);
+	});
+
+	it("a sleeping icky-thing does not wake merely from being seen, consuming no rng", () => {
+		/* seed 1 would wake a sighted zombie (see above) — icky-thing must not */
+		const state = buildCorridorState([ickyThing(7, 1, false)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([ickyThing(7, 1, false)]);
+		expect(next.rng).toEqual(state.rng);
+	});
+
+	it("a sleeping icky-thing adjacent to the player can still wake", () => {
+		const state = buildCorridorState([ickyThing(5, 1, false)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([ickyThing(5, 1, true)]);
+	});
+
+	it("an awake icky-thing never chases even when visible, only wanders", () => {
+		/* a zombie at the same spot would deterministically step to (6,1)
+		 * without touching rng — icky-thing wanders instead, consuming rng */
+		const state = buildCorridorState([ickyThing(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.rng).not.toEqual(state.rng);
+	});
+
+	it("an icky-thing still attacks when adjacent, despite being blind", () => {
+		const state = buildCorridorState([ickyThing(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "icky-thing", damage: 1 } },
+		]);
+	});
+
+	it("a venus-flytrap never moves — neither chasing nor wandering — while visible but not adjacent", () => {
+		const state = buildCorridorState([venusFlytrap(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([venusFlytrap(7, 1)]);
+		expect(next.rng).toEqual(state.rng); /* no wander roll either */
+	});
+
+	it("an adjacent venus-flytrap still attacks in place", () => {
+		const state = buildCorridorState([venusFlytrap(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([venusFlytrap(5, 1)]);
+		expect(next.playerHp).toBe(state.playerHp - VENUS_FLYTRAP_ATTACK_DAMAGE);
+	});
+
+	/*
+	 * A medusa's gaze is a MEDUSA_GAZE_CHANCE_PERCENT chance, rolled once per
+	 * turn while visible and not adjacent (see balance.ts) — seed 1's first
+	 * roll succeeds, seed 678's fails (same two seeds the wake-roll tests
+	 * above already rely on for the same reason).
+	 */
+	it("a visible, non-adjacent medusa may gaze and confuse the player, without moving", () => {
+		const state = buildCorridorState([medusa(7, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([medusa(7, 1)]); /* stays put either way */
+		expect(next.confusedTurnsRemaining).toBe(MEDUSA_GAZE_CONFUSE_DURATION);
+		expect(next.events).toEqual([
+			{
+				type: "player-gazed",
+				payload: { turns: MEDUSA_GAZE_CONFUSE_DURATION },
+			},
+		]);
+	});
+
+	it("a medusa's failed gaze roll still leaves it standing still, doing nothing", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 678),
+			enemies: [medusa(7, 1)],
+		};
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([medusa(7, 1)]);
+		expect(next.confusedTurnsRemaining).toBe(0);
+		expect(next.events).toEqual([]);
+	});
+
+	it("an adjacent medusa attacks instead of gazing", () => {
+		const state = buildCorridorState([medusa(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.confusedTurnsRemaining).toBe(0);
+		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "medusa", damage: 2 } },
+		]);
+	});
+
+	it("an adjacent wraith permanently drains playerMaxHp on a landed hit", () => {
+		const state = buildCorridorState([wraith(5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.playerMaxHp).toBe(state.playerMaxHp - WRAITH_DRAIN_AMOUNT);
+		expect(next.playerHp).toBe(state.playerHp - WRAITH_ATTACK_DAMAGE);
+		expect(next.events).toEqual([
+			{
+				type: "player-hit",
+				payload: { by: "wraith", damage: WRAITH_ATTACK_DAMAGE },
+			},
+			{ type: "player-drained", payload: { amount: WRAITH_DRAIN_AMOUNT } },
+		]);
+	});
+
+	it("wraith drain never lowers playerMaxHp below 1, and logs no player-drained once there", () => {
+		const state = { ...buildCorridorState([wraith(5, 1)]), playerMaxHp: 1 };
+		const next = advanceEnemies(state);
+		expect(next.playerMaxHp).toBe(1);
+		expect(next.events.some((event) => event.type === "player-drained")).toBe(
 			false,
 		);
 	});

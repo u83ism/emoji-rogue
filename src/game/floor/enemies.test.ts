@@ -3,8 +3,13 @@ import type { Room } from "../../map/features.js";
 import { createRng, type Rng } from "../../rng.js";
 import {
 	calculateEnemyCountForFloor,
+	GRIFFIN_MIN_SPAWN_FLOOR,
+	MEDUSA_MIN_SPAWN_FLOOR,
 	MONSTER_HOUSE_ENEMY_COUNT,
+	PHANTOM_MIN_SPAWN_FLOOR,
+	TROLL_MIN_SPAWN_FLOOR,
 	VAMPIRE_MIN_SPAWN_FLOOR,
+	WRAITH_MIN_SPAWN_FLOOR,
 } from "../balance.js";
 import type { Position } from "../state.js";
 import { drawFloorEnemies } from "./enemies.js";
@@ -85,6 +90,22 @@ describe("drawFloorEnemies", () => {
 			"yeti",
 			"snake",
 			"vampire",
+			"rat",
+			"emu",
+			"kestrel",
+			"hobgoblin",
+			"centaur",
+			"quagga",
+			"ur-vile",
+			"jabberwock",
+			"griffin",
+			"troll",
+			"icky-thing",
+			"venus-flytrap",
+			"medusa",
+			"phantom",
+			"wraith",
+			"xeroc",
 		] as const) {
 			expect(asleep.filter((enemy) => enemy.kind === kind).length).toBe(1);
 		}
@@ -137,6 +158,25 @@ describe("drawFloorEnemies", () => {
 			VAMPIRE_MIN_SPAWN_FLOOR - 1,
 		);
 		expect(enemies.some((enemy) => enemy.kind === "vampire")).toBe(false);
+	});
+
+	it("never spawns griffin/troll/medusa/phantom/wraith below their own min spawn floor, even with every roll hitting", () => {
+		for (const [kind, minFloor] of [
+			["griffin", GRIFFIN_MIN_SPAWN_FLOOR],
+			["troll", TROLL_MIN_SPAWN_FLOOR],
+			["medusa", MEDUSA_MIN_SPAWN_FLOOR],
+			["phantom", PHANTOM_MIN_SPAWN_FLOOR],
+			["wraith", WRAITH_MIN_SPAWN_FLOOR],
+		] as const) {
+			const enemies = drawFloorEnemies(
+				rooms,
+				firstRoom,
+				buildPoolWithRoom(otherRoom),
+				createAlwaysHitRng(),
+				minFloor - 1,
+			);
+			expect(enemies.some((enemy) => enemy.kind === kind)).toBe(false);
+		}
 	});
 
 	it("skips the monster house when the dungeon has no room besides the starting one", () => {

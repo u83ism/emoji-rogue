@@ -24,6 +24,7 @@ export {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
+	PLAYER_WEAK_THRESHOLD,
 } from "./balance.js";
 export type { EnemyKind, GameEvent, ItemKind } from "./events.js";
 export type { Replay } from "./format/replay.js";

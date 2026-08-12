@@ -25,6 +25,7 @@ import {
 	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
+	PLAYER_WEAK_THRESHOLD,
 	parseSaveFileContent,
 	resolveItemVerbPrompt,
 	resolveTargetKind,
@@ -211,9 +212,11 @@ const renderStatus = () => {
 		` 🍖 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
 		state.playerFood <= 0
 			? "#f66"
-			: state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
-				? "#ff6"
-				: undefined,
+			: state.playerFood <= PLAYER_WEAK_THRESHOLD
+				? "#f96"
+				: state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD
+					? "#ff6"
+					: undefined,
 	);
 	appendStatusSegment(
 		` 💪 ${calculatePlayerAttackDamage(state)} 🦺 ${calculatePlayerDefense(state.inventory)}`,

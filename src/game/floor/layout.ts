@@ -1,6 +1,6 @@
 import { at } from "../../indexing.js";
-import { createDiggerMap } from "../../map/digger.js";
 import { getRoomCenter, type Room } from "../../map/features.js";
+import { createRogueMap } from "../../map/rogue.js";
 import type { Rng } from "../../rng.js";
 import { GOAL_FLOOR } from "../balance.js";
 import { buildEmptyColumns } from "../columns.js";
@@ -64,14 +64,16 @@ export const buildFloorLayout = (
 	nextItemId: number,
 ): FloorLayout => {
 	const columns = buildEmptyColumns(width);
-	const dungeon = createDiggerMap(width, height, rng).create((x, y, value) => {
+	const dungeon = createRogueMap(width, height, rng).create((x, y, value) => {
 		at(columns, x)[y] = value;
 	});
 	const rooms = dungeon.getRooms();
 
 	const firstRoom = rooms[0];
 	if (firstRoom === undefined) {
-		throw new Error("unreachable: digger always digs at least one room");
+		throw new Error(
+			"unreachable: the rogue generator always carves at least one room",
+		);
 	}
 	const [playerX, playerY] = getRoomCenter(firstRoom);
 	const player: Position = { x: playerX, y: playerY };

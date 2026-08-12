@@ -1,9 +1,10 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell } from "../renderer/index.js";
+import { isAdjacent } from "./combat.js";
+import { ENEMY_GLYPHS } from "./enemyGlyphs.js";
 import {
 	AMULET_CELL,
 	DEAD_PLAYER_CELL,
-	ENEMY_GLYPHS,
 	FALLBACK_CELL,
 	GOLD_CELL,
 	ITEM_GLYPHS,
@@ -45,6 +46,20 @@ const resolveHallucinatedGlyph = (
 		);
 	}
 	return glyph;
+};
+
+/** A still-asleep xeroc draws as GOLD_CELL (outranking hallucination, which would otherwise give the disguise away) — otherwise the hallucinated decoy or the real glyph. */
+const resolveEnemyCell = (
+	enemy: Enemy,
+	hallucinating: boolean,
+	turnsOnCurrentFloor: number,
+): Cell => {
+	if (enemy.kind === "xeroc" && !enemy.awake) {
+		return GOLD_CELL;
+	}
+	return hallucinating
+		? resolveHallucinatedGlyph(enemy, turnsOnCurrentFloor)
+		: ENEMY_GLYPHS[enemy.kind];
 };
 
 const toCell = (
@@ -141,12 +156,21 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	}
 
 	/* enemies are drawn while visible, or unconditionally while detected
-	 * (a timed potion effect or a permanently-equipped ring of awareness) */
+	 * (a timed potion effect or a permanently-equipped ring of awareness) —
+	 * except a phantom, which plain FOV visibility never reveals: only
+	 * detection or standing adjacent to it does. */
 	const detectingMonsters =
 		state.detectMonstersTurnsRemaining > 0 ||
 		hasEquippedRing(state.inventory, "awareness-ring");
 	const hallucinating = state.hallucinatingTurnsRemaining > 0;
 	for (const enemy of state.enemies) {
+		const isHiddenPhantom =
+			enemy.kind === "phantom" &&
+			!detectingMonsters &&
+			!isAdjacent(enemy, state.player);
+		if (isHiddenPhantom) {
+			continue;
+		}
 		if (
 			!detectingMonsters &&
 			!visiblePoints.has(encodePointKey(enemy.x, enemy.y))
@@ -155,9 +179,11 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		}
 		const enemyRow = grid[enemy.y];
 		if (enemyRow !== undefined) {
-			enemyRow[enemy.x] = hallucinating
-				? resolveHallucinatedGlyph(enemy, state.turnsOnCurrentFloor)
-				: ENEMY_GLYPHS[enemy.kind];
+			enemyRow[enemy.x] = resolveEnemyCell(
+				enemy,
+				hallucinating,
+				state.turnsOnCurrentFloor,
+			);
 		}
 	}
 

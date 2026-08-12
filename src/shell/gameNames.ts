@@ -20,6 +20,22 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	yeti: "雪男",
 	snake: "蛇",
 	vampire: "ヴァンパイア",
+	rat: "ラット",
+	emu: "エミュー",
+	kestrel: "ケストレル",
+	hobgoblin: "ホブゴブリン",
+	centaur: "ケンタウロス",
+	quagga: "クアッガ",
+	"ur-vile": "アーヴァイル",
+	jabberwock: "ジャバウォック",
+	griffin: "グリフィン",
+	troll: "トロル",
+	"icky-thing": "イッキーシング",
+	"venus-flytrap": "ハエトリソウ",
+	medusa: "メデューサ",
+	phantom: "ファントム",
+	wraith: "レイス",
+	xeroc: "ゼロック",
 };
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
@@ -90,6 +106,7 @@ export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	teleport: "テレポートの罠",
 	bear: "捕獲のわな",
 	rust: "錆びわな",
+	"sleeping-gas": "睡眠ガスのわな",
 };
 
 /**

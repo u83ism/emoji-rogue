@@ -596,7 +596,114 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン99完了(2026-07-21)。**
 
+## マイルストーン100 — 空腹Weak段階+睡眠ガストラップ(原作Rogue仕様合わせ第1弾、2026-07-28)
+
+`/goal`セッション(2026-07-28)でオリジナルRogueとの仕様差分を洗い出し(下記バックログの「原作Rogue仕様差分の棚卸し」を参照)、そのうち影響範囲が小さい2件から着手。原作の空腹段階Hungry→Weak→Faint→餓死のうち、emoji-rogueは警告(Hungry相当)と餓死(Faint相当)の2段階しか無くWeak相当の力低下が無かった点、原作の睡眠ガストラップが未実装だった点を解消。
+
+- [x] `balance.ts`: `PLAYER_WEAK_THRESHOLD`(20)・`WEAK_ATTACK_PENALTY`(1)・`MIN_PLAYER_ATTACK_DAMAGE`(1)を追加。`SLEEPING_GAS_TRAP_DAMAGE`(0)・`SLEEPING_GAS_TRAP_PARALYSIS_DURATION`(5、`BEAR_TRAP_PARALYSIS_DURATION`より長い=原作でより厳しい罠)・`SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT`(15)を追加
+- [x] `items/equipment.ts`: `calculatePlayerAttackDamage`が`playerFood <= PLAYER_WEAK_THRESHOLD`の間`WEAK_ATTACK_PENALTY`を減算(`MIN_PLAYER_ATTACK_DAMAGE`で下限)。専用フラグを持たずplayerFoodから直接導出するため、食料を食べて閾値を上回った瞬間に自動で解除される
+- [x] `turnEnd/hunger.ts`: `player-hungry`と同じ「閾値をまたいだターンに一度だけ」の型で`player-weak`イベントを追加
+- [x] `trapTrigger.ts`/`floor/traps.ts`: 睡眠ガストラップを追加。効果は捕獲のわなと同じ`paralyzedTurnsRemaining`を再利用(既存の bear トラップと同じ前例踏襲)、スポーン抽選も同じ独立per-floor判定パターンで追加
+- [x] `events.ts`/`format/validateGameState.ts`/`shell/gameNames.ts`/`shell/eventMessages.ts`/`shell/catalog/catalogData.ts`: 列挙値追加のみ(`TrapKind`に`sleeping-gas`、`GameEvent`に`player-weak`)のため、既存の列挙値追加の前例(マイルストーン24)を踏襲しSAVE_FORMAT_VERSION/REPLAY_FORMAT_VERSIONは据え置き
+- [x] `shell/statusBar.tsx`・`demo/main.js`: 満腹度表示を2段階→3段階(黄色→明るい赤→赤)に
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成、README.mdの該当箇所を更新
+- [x] 自動テスト追加(hunger.test.ts・equipment.test.ts・trapTrigger.test.ts・floor/traps.test.ts・eventMessages.test.ts・validateGameState.test.ts)。型検査・Biome・structure-lint・Vitest 965件・knip・build通過を確認。BOTドライバ(seed 1・23)がクラッシュせず完走することも確認(結果自体はスポーン抽選が1つ増えたことで全シードのRNG消費列が変わるため旧統計とは一致しない——マイルストーン28等の過去のわな追加と同じ既知の影響)
+
+**マイルストーン100完了(2026-07-28)。**
+
+## マイルストーン101 — 敵ロースターを8種追加(原作Rogue仕様合わせ第2弾、2026-07-28)
+
+「原作Rogue仕様差分の棚卸し」(マイルストーン100の項を参照)のうち敵ロースター(原作26種中10種のみ実装)に着手。26種のうち`advanceEnemies`に特殊分岐を要さない「パラメータだけで差別化する」オーク・ドラゴン・雪男・蛇と同じ型の8種(ラット・エミュー・ケストレル・ホブゴブリン・ケンタウロス・クアッガ・アーヴァイル・ジャバウォック)から着手し、新しいゲームメカニクス(グリフィン/トロルの自己回復、アイシングの盲目、ハエトリソウの固定+拘束、メデューサの視線攻撃、ファントムの透明化、レイスの永続弱体化、ゼロックの金貨擬態)が要る残り8種は個別の設計判断が要るため見送り、バックログに記録。
+
+- [x] `events.ts`: `ENEMY_KIND_VALUES`に`rat`・`emu`・`kestrel`・`hobgoblin`・`centaur`・`quagga`・`ur-vile`・`jabberwock`を追加(列挙値追加のみ、SAVE_FORMAT_VERSION据え置き — マイルストーン24の前例)
+- [x] `balance.ts`: 8種分のHP・攻撃力・行動回数/ターン・出現率(ジャバウォックのみ`JABBERWOCK_MIN_SPAWN_FLOOR`=6でヴァンパイアと同じ深さ制限)を追加。数値は「オーク・ドラゴン・雪男と同じパラメータ差別化パターン」に沿って暫定配置(バランス値は実機プレイでの調整前提、balance.ts冒頭のコメント通り)。出現率は既存8種の上にさらに8種分の独立per-floor抽選が乗るため、既存の「よく出る」枠(15〜20%)より控えめな8〜15%に設定——密度が上がりすぎる懸念への一次対応で、実機プレイの体感次第で再調整
+- [x] `floor/enemies.ts`: `ENEMY_SPAWN_TABLE`の末尾に8エントリ追加(rng消費順を守るため既存8種の後ろに追加)
+- [x] `glyphs.ts`: 絵文字を選定。直接一致(ラット🐀・クアッガ🦓)、近縁種代替(エミュー→ドードー🦤、ケストレル→ワシ🦅)、構成要素代替(ケンタウロス→馬🐎、グリフィンは未着手だが獅子は空けてある)、効果/系統代替(ホブゴブリン→角付き顔😈、ジャバウォック→ドラゴンフェイス🐲、既存の🐉と衝突回避)、苦肉の代替(アーヴァイル→シルエット👤、原作でも設定が曖昧なため最弱マッチ)。全候補は単一コードポイント・VS16不要・Unicode 15.1以下をNode実行とWebSearchでのバージョン確認で裏取り(実機確認は未実施)
+- [x] `shell/gameNames.ts`・`shell/catalog/catalogData.ts`: 日本語名(原作名の素直なカタカナ転写)と図鑑説明を追加
+- [x] `docs/emoji-registry.md`: 敵グリフ一覧を既存10種分(旧版はorc以降が抜けていた既存ドリフトも合わせて解消)更新。アクエーターの元ネタ(初期版rust monster、D&D著作権問題での改名)とドラゴン絵文字が中華風に寄りがちな点の調査メモを追記(この時点では新規8種分の追記漏れがあり、マイルストーン102でまとめて解消)
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成、README.mdの敵説明を更新
+- [x] `floor/enemies.test.ts`のスポーンテーブル網羅テストに8種を追加。型検査・Biome・structure-lint・Vitest 965件・knip・build通過を確認
+
+**マイルストーン101完了(2026-07-28)。**
+
+## マイルストーン102 — 敵ロースター残り8種+新規メカニクス6種(原作Rogue仕様合わせ第3弾、2026-07-28)
+
+マイルストーン101で見送った、新しいゲームメカニクスが要る残り8種(グリフィン・トロル・アイシング(イッキーシング)・ハエトリソウ・メデューサ・ファントム・レイス・ゼロック)を実装。原作26種のロースターがこれで完成。ハエトリソウの「プレイヤーを拘束する」ニュアンスは意図的に見送り(下記参照)。
+
+- [x] `balance.ts`: 8種分の数値+新規メカニクス用定数(`GRIFFIN_REGEN_AMOUNT`・`TROLL_REGEN_AMOUNT`・`MEDUSA_GAZE_CHANCE_PERCENT`・`MEDUSA_GAZE_CONFUSE_DURATION`・`WRAITH_DRAIN_AMOUNT`)を追加。グリフィン/トロル/メデューサ/ファントム/レイスは`minFloor`で深さ制限(ヴァンパイアと同じ理由——強力なメカニクス持ちは早期出現を避ける)
+- [x] `events.ts`: `EnemyKind`に8種、`GameEvent`に`enemy-regenerated`・`player-drained`・`player-gazed`を追加(列挙値追加のみ、SAVE_FORMAT_VERSION据え置き)。`player-gazed`はメデューサの視線用に新設——`confusedTurnsRemaining`フィールドは混乱の薬と共有するが、「薬を飲んだ」という誤った文言にならないよう睡眠ガストラップの前例と同じ「フィールド共有・イベントは別」を踏襲
+- [x] **自己回復(グリフィン・トロル)**: `src/game/enemyRegen.ts`(`resolveEnemyRegen`、vampireLifesteal.tsと同じ純粋関数パターン)。命中時ではなく毎ターン(行動回数に関わらず1回)HPが回復する点がヴァンパイアの吸血と異なる新パターン。グリフィンは俊敏(2回行動)、トロルは頑丈(回復量が多い)で書き分け
+- [x] **盲目(イッキーシング)**: `advanceEnemies`の目覚め判定を隣接のみに変更(視界に入っただけでは起きない)。目覚めた後も追跡せず徘徊のみ
+- [x] **非移動(ハエトリソウ)**: `advanceEnemies`で移動処理を完全にスキップ(隣接時のみ攻撃)。原作にある「隣接中はプレイヤーを拘束して逃げられなくする」効果は`applyMove`側への新しい制約が必要になり影響範囲が広いため今回は見送り、`balance.ts`のコメントで明示。現状は「素通りされると経験値を逃すだけ」の弱いペナルティ
+- [x] **視線攻撃(メデューサ)**: 視界内・隣接していない間、毎ターン`MEDUSA_GAZE_CHANCE_PERCENT`でプレイヤーを混乱させ、追跡しない(その場に留まる)。`src/game/enemyMovement.ts`に`resolveEnemyMovement`として集約(ハエトリソウの非移動・イッキーシングの追跡拒否も含む)
+- [x] **透明化(ファントム)**: `frame.ts`の描画判定を変更——通常の視界(FOV)だけでは描画せず、隣接時または索敵中(索敵の薬・千里眼の指輪)のみ描画。ゲーム内部の`GameState`自体は常に真の座標を持つ(BOTは元々全情報を見ているため影響なし)
+- [x] **永続弱体化(レイス)**: `src/game/wraithDrain.ts`(`resolveWraithDrain`)。命中のたびに`playerMaxHp`を`WRAITH_DRAIN_AMOUNT`だけ永続的に削る(下限1)。playerHpが新上限を超えていれば追従して下がる
+- [x] **金貨擬態(ゼロック)**: 追加の状態は持たせず、`frame.ts`で「未覚醒の間だけ`GOLD_CELL`(💰)として描画」という表示側のトリックのみで実現。目覚めた瞬間(既存のWAKE_CHANCE_PERCENT判定)から本来のグリフ(🪙)に切り替わる。幻覚中でも金貨表示を優先(でないと変な絵文字が一瞬見えて擬態が破綻する)
+- [x] `src/game/enemyHitLanded.ts`: 隣接攻撃が命中した際の共通処理(基礎ダメージ+アクエーター/ヴァンパイア/レイスの各効果+死亡判定)を`enemies.ts`から分離。構造lint(200行)対応で`vampireLifesteal.ts`と同じ粒度に揃えた
+- [x] 構造lint対応で計4ファイル新設・分割: `enemyRegen.ts`・`wraithDrain.ts`・`enemyHitLanded.ts`(新設)、`enemyGlyphs.ts`・`shell/catalog/enemyCatalog.ts`(`glyphs.ts`・`catalogData.ts`から敵グリフ/図鑑データを分離——26種分のコメント・数値展開で200行を超過したため)
+- [x] `docs/emoji-registry.md`: 敵グリフ一覧をA〜Z全26種に更新(マイルストーン101時点の記載漏れも解消)
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成、README.mdの敵説明を更新
+- [x] テスト追加: `enemyRegen.test.ts`・`wraithDrain.test.ts`(純粋関数の単体テスト、vampireLifesteal.test.tsと同型)、`enemies.test.ts`(自己回復・盲目・非移動・視線攻撃・永続弱体化の統合テスト——メデューサの視線判定はseed 1(成功)/678(失敗)で確定的に検証)、`frame.test.ts`(ファントムの表示条件・ゼロックの擬態/正体表示)、`floor/enemies.test.ts`(スポーンテーブル網羅+5種の深さ制限)、`validateGameState.test.ts`・`eventMessages.test.ts`(新規イベント3種)。`enemyHitLanded.ts`・`enemyMovement.ts`の新関数自体は専用テストファイルを作らず(`enemyFlee.ts`・既存の`stepTowardPlayer`/`stepWandering`と同じ前例)、`enemies.test.ts`の統合テスト経由でカバー
+- [x] 型検査・Biome・structure-lint・Vitest 998件・knip・build通過を確認。BOTドライバでseed 1〜20を実走し、xeroc・venus-flytrapを死因とする実例も観測(新メカニクスが実プレイで実際に発動することを確認)。クラッシュなし
+
+**マイルストーン102完了(2026-07-28)。これで原作Rogueの26種モンスターすべてを実装。**
+
+## マイルストーン103 — ハエトリソウの拘束効果(原作Rogue仕様合わせ第4弾、2026-07-28)
+
+マイルストーン102で見送ったハエトリソウの「隣接中はプレイヤーを拘束して逃がさない」効果を実装。よくあるゲームメカニクス(root/grab系)であり実装コストに見合うと判断し着手。
+
+- [x] `events.ts`: `GameEvent`に`player-held`(payload: `by: EnemyKind`)を追加(列挙値追加のみ、SAVE_FORMAT_VERSION据え置き)
+- [x] `advanceTurn.ts`: `applyMove`に`findHoldingFlytraps`(プレイヤーに隣接する覚醒中のハエトリソウ一覧)を追加。開いた床マスへの移動が「現在拘束している全ハエトリソウとの隣接を外れる」場合はブロックし、`player-held`をログしてターンは消費する(壁への激突判定より後・階段への到達判定より前に置くことで、壁バンプはターン消費なしのまま、階段への到達も拘束中はブロックされる)。ハエトリソウ自身への攻撃(バンプ攻撃)は別分岐のため無関係
+- [x] 複数のハエトリソウに同時に拘束されるケースも一般化して処理(いずれか1体でも隣接から外れるなら阻止)——実プレイでは稀だが`some(f => !isAdjacent(f, 移動先))`で正しく扱える
+- [x] `balance.ts`・`shell/catalog/enemyCatalog.ts`のハエトリソウ関連コメント・図鑑説明を更新(「見送り」の記述を解消)
+- [x] `format/validateGameState.ts`・`shell/eventMessages.ts`: `player-held`のバリデータ・メッセージ(「〜に捕まっていて動けない!」)を追加
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成
+- [x] テスト追加(`advanceTurn.test.ts`): 拘束による移動ブロック+ターン消費、ハエトリソウ自身への攻撃は影響なし、未覚醒のハエトリソウは拘束しない、壁バンプは拘束より優先(ターン消費なし)、階段到達も拘束でブロックされる、拘束元を倒せば次ターンから自由に動ける。`validateGameState.test.ts`・`eventMessages.test.ts`にも新規イベント分を追加
+- [x] 型検査・Biome・structure-lint・Vitest 1005件・knip・build通過を確認。BOTドライバでseed 1〜30超を実走しクラッシュなしを確認
+
+**マイルストーン103完了(2026-07-28)。**
+
+## マイルストーン104 — マップ生成を原作Rogueアルゴリズムに切替(原作Rogue仕様合わせ第5弾、2026-07-28)
+
+「原作Rogue仕様差分の棚卸し」(マイルストーン100の項を参照)の残り2件のうち、マップ生成に着手。実際のフロア生成(`floor/layout.ts`)を`map/digger.ts`の`createDiggerMap`から、既に移植済みだが未使用だった`map/rogue.ts`の`createRogueMap`(原作Rogueの3x3セルグリッド方式)に切り替えた。従来の不採用理由「原本アルゴリズム自体が全部屋の接続を保証しない(`connectUnconnectedRooms`が接続失敗を静かにスキップ)」を解消するのが主眼。
+
+- [x] `src/map/rogue.ts`: `create()`の`connectUnconnectedRooms()`の直後に`guaranteeFullConnectivity()`を追加。3x3セルグリッド上でUnion-Findを構築し(既存の`RogueRoom.connections`を種にunion)、まだ別成分にあるグリッド隣接ペアが無くなるまで橋渡し接続を追加し続ける方式(グリッド隣接グラフ自体は常に全体連結なので必ず終了する)
+- [x] 実装中に見つかった、接続保証以前からの原本由来のバグ2件も合わせて修正(いずれもBOT/invariantsテストで全接続を要求して初めて顕在化した): ①`getWallPosition`が「壁の1マス外」の待避点をマップ端で計算する際、境界チェックなしに範囲外座標を返すことがある(地図端に接する部屋の南・東方向で発生)→ 待避点のみクランプ(ドア自体の座標は元々範囲内が保証されている)。②`createRooms`の縮小ループが部屋の幅/高さを1未満(0)まで削ることがあり、面積ゼロの部屋に接続グラフ上だけ経路が張られて宙に浮いたコリドーになる→ 幅・高さとも最低1を保証するようループを修正
+- [x] `RogueMap`インターフェースを`DungeonMap`(`getRooms()`/`getCorridors()`)に準拠させ、`create()`をvoidから`RogueMap`を返す形に変更(`digger.ts`と同じchainableパターン)。`getRooms()`は各セルの部屋を境界ボックスの`Room`に変換し、`features.ts`の既存ユーティリティ`clearDoors`/`addDoors`(部屋の外周を後付けでスキャンしてドアを検出)をそのまま再利用(`digger.ts`の`addDoorsToRooms`と同じ仕組み)。`getCorridors()`は原本アルゴリズムがコリドーを開始/終了座標つきの離散オブジェクトに分解しないため`[]`固定(呼び出し側は誰も使っていないことを確認済み)
+- [x] `src/game/floor/layout.ts`: `createDiggerMap`呼び出しを`createRogueMap`に置き換え。`getRooms()`の呼び出し側は無変更で成立
+- [x] `src/map/invariants.test.ts`: `createRogueMap`ブロックに`expectOpenCellsConnected(grid, [0])`を追加(旧「接続性は保証されない」コメントを削除)。25シード×30x20マップで通過を確認。加えて40x20(実ゲーム使用サイズ)・30x20・50x30・60x25の4サイズ×各300シード(計1200通り)をスクラッチスクリプトで全数検査し、接続性の崩れ・クラッシュとも0件を確認(20x15のような本プロジェクトで実際に使われない極小サイズでは稀に接続漏れが残ることを把握したが、範囲外として許容)
+- [x] `src/game/initialState.test.ts`: 生成器の総取り替えでrng消費列が完全に変わるため、seed 12345の敵スポーン数を旧来の期待値5(ゾンビ3+コウモリ2)から実際の7(+ナイフ+ラットの抽選ヒット)に更新——過去のわな/敵追加と同じ「シード固定テストの数値だけ変わる」既知の影響(マイルストーン28等)
+- [x] `docs/architecture.md`: `rogue.ts`の説明を「接続を保証しない」から「Union-Findで接続保証済み、原本由来のバグも修正済み」に更新。フロア生成の説明を「digger地形」から「原作Rogue生成アルゴリズム地形」に更新
+- [x] 型検査・Biome・structure-lint・Vitest 1005件・knip・build通過を確認。BOTドライバでseed 1・7・12345・42・100・999(500〜3000ターン)、および2〜10番台の複数シードでフロア2〜4まで到達する周回を確認——クラッシュなし、行き止まりなし
+
+**マイルストーン104完了(2026-07-28)。**
+
+## マイルストーン105 — 戦闘のダイス化(原作Rogue仕様合わせ第6弾、2026-07-28)
+
+「原作Rogue仕様差分の棚卸し」(マイルストーン100の項を参照)の最後の1件に着手。現行の「決定的な引き算で必ず命中」する戦闘解決を、命中判定(外れることがある)+ダイスダメージ(幅を持つ)に置き換えた。原作のAC・レベル・STR依存のd20到達判定は、既存の`balance.ts`が採否判定を含め全域で使っている「percent値+`rng.getUniformInt(0,99)`」という慣用句(スポーン率・メデューサの視線判定など)にそのまま乗せる形で簡略化——d20+ACという別の数値体系を並行導入するより、既存の慣用句1つに寄せた方が学習コストが低いと判断した。杖はスコープ外(据え置き、確定命中のまま)。
+
+- [x] `balance.ts`: `PLAYER_BASE_HIT_CHANCE_PERCENT`(80)・`PLAYER_HIT_CHANCE_PER_ATTACK_BONUS`(3)・`ENEMY_BASE_HIT_CHANCE_PERCENT`(75)・`ENEMY_HIT_CHANCE_PER_DEFENSE_POINT`(4)・`MIN_HIT_CHANCE_PERCENT`(10)・`MAX_HIT_CHANCE_PERCENT`(95)・`PLAYER_DAMAGE_DICE_COUNT`/`SIDES`(1d4)・`ENEMY_DAMAGE_DICE_COUNT`/`SIDES`(1d4)を追加。`ENEMY_ATTACK_DAMAGE`(26種)は値そのものは変更せず「平均ダメージ」という既存の意味を保ったまま、ダイスの適用点(ロール時)でダイスの期待値を差し引く方式にしたため、26種分の新規バランス値を人力で書き起こす必要がなかった
+- [x] `damage.ts`: 既存の正規分布版`rollDamage`(未使用のまま維持)とは別に、離散ダイス版`rollDamageDice(rng, diceCount, diceSides, bonus, minimum)`(NdM+bonusを`getUniformInt`の合計で実装、消費rng回数が常にdiceCount回で決定的)・`rollToHit(rng, hitChancePercent)`・`damageDiceMean(diceSides)`を追加
+- [x] `items/hitChance.ts`(新規、equipment.tsから200行制限に触れる直前に分離): `calculatePlayerHitChancePercent`(装備中の剣のattackBonusで上昇)・`calculateEnemyHitChancePercent`(装備中の防具のdefenseBonusで低下)。いずれも[MIN_HIT_CHANCE_PERCENT, MAX_HIT_CHANCE_PERCENT]にクランプ
+- [x] `combat.ts`の`applyPlayerAttack`: 眠っている敵への不意打ちは命中判定なしの確定命中のまま(原作の奇襲は必ず当たる)。起きている敵への通常攻撃は`calculatePlayerHitChancePercent`で命中判定し、外れると`player-attack-missed`を記録して終了(ダメージなし、ただし`hasAttacked`は立つ——武器を振ったこと自体が非殺生コンダクトを破る)。杖(`applyWandStrike`/`applyMagicMissileWandStrike`)は据え置き
+- [x] `enemyHitLanded.ts`の`resolveEnemyHitLanded`: `calculateEnemyHitChancePercent`で先に命中判定し、外れると`enemy-attack-missed`を記録して終了(アクエーターの錆び・ヴァンパイアの吸血・レイスの弱体化など命中後エフェクトは一切発火しない)。命中時のみダイスダメージをロールし、以降(防御力減算・各種行動)は従来どおり
+- [x] `events.ts`/`format/validateGameState.ts`/`shell/eventMessages.ts`: `player-attack-missed`(payload: `target: EnemyKind`)・`enemy-attack-missed`(payload: `by: EnemyKind`)を追加(列挙値追加のみ、SAVE_FORMAT_VERSION据え置き)
+- [x] 既存テストの波及修正: `advanceTurn.test.ts`/`enemies.test.ts`の複数テストが「攻撃は必ず命中し、ダメージは常に同じ値」という前提のハードコードだったため失敗——多くは`seedToState`の小さい連番シードの最初の一様乱数draw値が0に極めて近い(≈seed×0.000487、`rng.ts`の実装特性)ことを利用して命中側の別シードに差し替え、待機ループのテストのみ「ちょうどPLAYER_MAX_HPターンで死ぬ」から「十分な猶予ターン内に必ず死ぬ」に緩和。アクエーターの錆びロール系テストの「rngが全く消費されない」という前提も「命中・ダメージのロール自体は必ず消費するが錆びロールだけは省略される」に修正
+- [x] 新規テスト追加: `damage.test.ts`(`rollToHit`/`rollDamageDice`/`damageDiceMean`)・`items/hitChance.test.ts`(新規ファイル)・`combat.test.ts`/`enemies.test.ts`に外れケースの専用テスト(`player-attack-missed`/`enemy-attack-missed`が記録されダメージが発生しないこと)。乱数のばらつきを検証するテストは連番シードでは偏るため、広く散らしたシード(`seedIndex * 70000`)を使用
+- [x] BOTの`combatPolicy.ts`は隣接する敵への方向を返すだけでダメージ計算を一切持たないため無改修で成立。BOTドライバでseed 1〜400超を実走し、クラッシュ0件・フロア7到達まで確認。勝利(status: won)は今回の探索範囲内では再現しなかったが、マイルストーン99時点の記録(「両指輪無効で勝率0%、通常構成でも勝率5.0%」)からして原作Rogue仕様合わせ以前から低い値だったため、今回の変更による退行とは判断していない
+- [x] `README.md`(戦闘とレベルの説明に命中判定・ダイスダメージを追記)・`docs/architecture.md`(`combat.ts`の説明に`hitChance.ts`/`damage.ts`のポインタを追加)を更新。`docs/catalog.md`は戦闘解決の変更では中身が変わらないため再生成のみ(差分なし)
+- [x] 型検査・Biome・structure-lint・Vitest 1027件・knip・build通過を確認
+
+**マイルストーン105完了(2026-07-28)。これで「原作Rogue仕様差分の棚卸し」バックログの7項目のうち、マップ生成・戦闘解決・敵ロースター・空腹(Weak相当)の4件が完了。武器・防具のバリエーション、指輪・巻物・杖の網羅率、空腹のFaint相当は引き続き未着手。**
+
 ## バックログ(マイルストーン未整理)
+- **原作Rogue仕様差分の棚卸し**(2026-07-28、`/goal`セッションでの調査): 「原作Rogueに仕様をできるだけ揃える」方針のもと、現状とのギャップを分野別に洗い出した。マイルストーン100(空腹Weak段階+睡眠ガストラップ)・104(マップ生成)・105(戦闘のダイス化)で3件着手済み、残りは未着手のまま優先度未定でここに記録:
+  - **マップ生成**: マイルストーン104で`createRogueMap`(原作Rogueアルゴリズム)への切替+接続保証を実装済み。完了
+  - **戦闘解決**: マイルストーン105で命中判定+ダイスダメージを実装済み。完了(杖は確定命中のまま据え置き)
+  - **敵ロースター**: マイルストーン101〜103で原作26種全て実装済み、ハエトリソウの拘束効果も含め完了
+  - **武器・防具のバリエーション**: 原作は複数武器種(ダイスダメージ)・防具種(段階的AC)があるが、現行は剣1種・防具1種(個体ごとに+1ボーナス)のみ
+  - **指輪・巻物・杖の網羅率**: 指輪は原作10種中5種(怪力・耐久・索敵・敏捷・防御目的が未実装)。杖も炎/冷気/雷・変身・無効化などが未実装。詳細はマイルストーン33付近の既存バックログ項目も参照
+  - **空腹**: マイルストーン100でWeak相当を追加済み。Faint相当(強制的にターンをスキップする等)は未着手
 - **バランス調整の宿題: 満腹度経済のタイトさと指輪の相対価値**(2026-07-21、BOT統計より): `src/bot/itemUsePolicy.ts`/`scripts/run-bot.mjs`にアイテム種別ごとの使用無効化トグル(`--disable=kind1,kind2`)を追加し、seed 1〜60×4設定(通常/再生の指輪無効/満腹の指輪無効/両方無効)でA/B比較を実施。結果: 全設定で死因の45〜60%が餓死(全踏破前提でも変わらず最多)。両指輪を無効化すると勝率5.0%→0.0%・平均生存ターン650→365まで低下し、特に満腹の指輪(食事tickを確率スキップ)の方が再生の指輪より効いていた(満腹の指輪だけ抜くと勝率0%・平均441ターン、再生の指輪だけ抜くと勝率1.7%・平均500ターン)。ただしシード単位では60中40シードが指輪の有無で到達フロア無変化(大半の回は指輪を見つける前に決着している)ため、効果は「指輪を引けた一部の回」に集中。**解釈: 指輪単体が強すぎるというより、満腹度経済が厳しすぎて勝利がほぼ満腹の指輪の運に懸かっている**——両者は別課題ではなく同じ根(食料経済のタイトさ)の表裏に見える。次にバランスへ手を入れるなら、FOOD_COUNT_PER_FLOORか満腹の指輪のスキップ率のどちらかをまず動かして同じ比較を再実行すると効果が測れる
 - **全踏破プレイBOT(`src/bot/`)の未識別アイテム問題**(2026-07-21指摘): `identifiedPotionKinds`はシェル表示用のマスキングでしかなく`GameState`自体は常に真の`kind`を持つため、BOTは未鑑定という概念を経由せず全ポーションの正体を最初から知っている(`itemUsePolicy.ts`が`poison`等を除外できているのはこれが理由)。人間プレイに近い判断をさせるなら、BOT側に「まだ`identifiedPotionKinds`に載っていない種類は不明」として扱う自前のフィルタ層と、未識別ポーションを飲むか様子見するかの別レイヤーの意思決定が必要。今は「バランス統計を大量に回す」目的の完全情報エージェントとして割り切っている——人間らしい手探りプレイの統計が欲しくなったら再評価
 - 状態異常の`statusEffects`コレクション化(現状は`xxxTurnsRemaining`6本+tickファイル6個+フラグ5本の並列増殖方式で、1種追加=7点セットの変更。汎化にもセーブ形式・検証の実コストがあるため、8種類目の状態異常を入れるときに再評価)

@@ -34,7 +34,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
                  └→ <GameScreen>           src/renderer/ (Inkが端末に描画)
 ```
 
-新しいフロアは `floor/layout.ts`(digger地形 + `floor/enemies.ts`/`floor/items.ts` のスポーンテーブル)が生成し、`floor/transitions.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
+新しいフロアは `floor/layout.ts`(原作Rogue生成アルゴリズム地形〈`map/rogue.ts`〉 + `floor/enemies.ts`/`floor/items.ts` のスポーンテーブル)が生成し、`floor/transitions.ts` の `descendStairs`/`ascendStairs` が遷移させる。**rngは常に `GameState.rng` 経由で消費される**ので、セーブ・リプレイ・シード共有が構造的に成立する。
 
 ## ディレクトリマップ(ゲーム層)
 
@@ -43,7 +43,8 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
-| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`) / 敵の1ターン(隣接時の特殊挙動は`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復へ切り出し済み) / A*追跡・徘徊 |
+| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`。命中判定は`items/hitChance.ts`、ダイスダメージは`damage.ts`の`rollToHit`/`rollDamageDice`) / 敵の1ターン(隣接時の命中処理は`enemyHitLanded.ts`に集約——`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化・`enemyRegen.ts`の毎ターン自己回復を内包) / A*追跡・徘徊+`resolveEnemyMovement`(ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃) |
+| `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理(空腹・混乱・浮遊・盲目・麻痺・索敵・再生・クロンの風)。1件=1ファイル、全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
@@ -51,7 +52,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 フォーク層は従来どおり: `src/map/`(生成器8種) `src/fov/`(3アルゴリズム) `src/path/`(A*/Dijkstra) `src/scheduler/`+`src/engine.ts`(未接続のまま温存) `src/lighting.ts` `src/color.ts` `src/text.ts` `src/noise/` `src/stringgenerator.ts`、共有ヘルパー `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts`、公開バレル `src/index.ts`。
 
@@ -63,7 +64,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 - 中級: `cellular.ts`(セルオートマトン+`connect()`で全空間接続保証)
 - 本丸: `digger.ts` + `features.ts`(Room/Corridorは判別可能union。`corridorIsValid`が検証中にcorridorを短縮するin-place副作用を持つのは原本由来の仕様)
 - `uniform.ts` はタイムアウトを `Result<_, GenerationTimedOut>` で返す唯一の生成器
-- `rogue.ts` は原本アルゴリズム自体が全部屋の接続を保証しない(接続失敗を静かにスキップ)
+- `rogue.ts` は原本アルゴリズム(3x3セルグリッド)そのものを移植したもので、実際のフロア生成(`floor/layout.ts`)がこれを使う。原本の接続パス(`connectRooms`/`connectUnconnectedRooms`)は部屋を接続し損ねることがあるため、`create()`が最後にセルグリッド上のUnion-Findで全接続を保証する(`guaranteeFullConnectivity`)。あわせて、部屋が地図端に接するほど縮んだ場合に壁位置計算がグリッド外に出る/部屋と面していない位置にドアを置く原本由来のバグも修正済み
 
 生成結果の構造保証は `src/map/invariants.test.ts`(25シード×全生成器で連結性・外周壁・決定性を検証)が担っている。生成器をいじったらまずこれを走らせる。
 

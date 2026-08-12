@@ -75,6 +75,8 @@ export const formatEvent = (
 			return `${ITEM_NAMES["remove-curse-scroll"]}を読んだ。呪いが解け、${event.payload.count}個のアイテムを外せるようになった!`;
 		case "player-hungry":
 			return "空腹を感じてきた";
+		case "player-weak":
+			return "空腹で力が入らなくなってきた";
 		case "player-starved":
 			return `空腹で${event.payload.damage}のダメージを受けた`;
 		case "player-ate":
@@ -176,5 +178,17 @@ export const formatEvent = (
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}を眠らせた!`;
 		case "vampire-healed":
 			return `${ENEMY_NAMES.vampire}が血を吸い、HPを${event.payload.amount}回復した`;
+		case "enemy-regenerated":
+			return `${ENEMY_NAMES[event.payload.target]}のHPが${event.payload.amount}回復した`;
+		case "player-drained":
+			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
+		case "player-gazed":
+			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
+		case "player-held":
+			return `${ENEMY_NAMES[event.payload.by]}に捕まっていて動けない!`;
+		case "player-attack-missed":
+			return `${ENEMY_NAMES[event.payload.target]}への攻撃は外れた`;
+		case "enemy-attack-missed":
+			return `${ENEMY_NAMES[event.payload.by]}の攻撃は外れた`;
 	}
 };

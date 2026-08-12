@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
+import { PLAYER_WEAK_THRESHOLD } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import {
 	calculatePlayerAttackDamage,
@@ -252,5 +253,34 @@ describe("items/equipment", () => {
 				(event) => event.type === "equip-blocked-cursed",
 			),
 		).toBe(true);
+	});
+
+	it("is unaffected by playerFood while above PLAYER_WEAK_THRESHOLD", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerFood: PLAYER_WEAK_THRESHOLD + 1,
+		};
+		expect(calculatePlayerAttackDamage(state)).toBe(state.playerPower);
+	});
+
+	it("subtracts WEAK_ATTACK_PENALTY once playerFood drops to PLAYER_WEAK_THRESHOLD or below", () => {
+		const weakened = {
+			...buildArenaGameState(9, 3, 1),
+			playerPower: 3,
+			playerFood: PLAYER_WEAK_THRESHOLD,
+		};
+		expect(calculatePlayerAttackDamage(weakened)).toBe(2);
+
+		const starving = { ...weakened, playerFood: 0 };
+		expect(calculatePlayerAttackDamage(starving)).toBe(2);
+	});
+
+	it("floors the weakened attack at MIN_PLAYER_ATTACK_DAMAGE instead of going to 0 or below", () => {
+		const unarmedAndWeak = {
+			...buildArenaGameState(9, 3, 1),
+			playerPower: 1,
+			playerFood: 0,
+		};
+		expect(calculatePlayerAttackDamage(unarmedAndWeak)).toBe(1);
 	});
 });

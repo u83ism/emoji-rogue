@@ -246,15 +246,17 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"armor-equipped": (payload) =>
 		isItemKind(payload.kind) && isNonNegativeInteger(payload.bonus),
 	"player-hungry": emptyPayload,
+	"player-weak": emptyPayload,
 	"player-starved": (payload) => isPositiveInteger(payload.damage),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
-	/* trapdoor, teleport, bear and rust are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE */
+	/* trapdoor, teleport, bear, rust and sleeping-gas are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE, SLEEPING_GAS_TRAP_DAMAGE */
 	"trap-triggered": (payload) =>
 		payload.kind === "trapdoor" ||
 		payload.kind === "teleport" ||
 		payload.kind === "bear" ||
-		payload.kind === "rust"
+		payload.kind === "rust" ||
+		payload.kind === "sleeping-gas"
 			? isNonNegativeInteger(payload.damage)
 			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
 	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
@@ -268,6 +270,11 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		payload.kind === undefined || isItemKind(payload.kind),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-regenerated": (payload) => isPositiveInteger(payload.amount),
+	"enemy-regenerated": (payload) =>
+		isEnemyKind(payload.target) && isPositiveInteger(payload.amount),
+	"player-drained": (payload) => isPositiveInteger(payload.amount),
+	"player-gazed": (payload) => isPositiveInteger(payload.turns),
+	"player-held": (payload) => isEnemyKind(payload.by),
 	"weapon-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
@@ -304,6 +311,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 	"enemy-slept": (payload) => isEnemyKind(payload.target),
 	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
+	"player-attack-missed": (payload) => isEnemyKind(payload.target),
+	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

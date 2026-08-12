@@ -3,6 +3,7 @@ import {
 	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
 	GOAL_FLOOR,
 	RUST_TRAP_SPAWN_CHANCE_PERCENT,
+	SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT,
 	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
@@ -14,8 +15,9 @@ import { drawSpawnTileWhere } from "./spawnPool.js";
  * Every trap on a fresh floor, drawn from (and removed from) `remaining` by
  * consuming `rng`: TRAP_COUNT_PER_FLOOR dart traps guaranteed, then the
  * chance-rolled trapdoor (never on GOAL_FLOOR — it would generate a floor
- * beyond it) and teleport trap (allowed on GOAL_FLOOR — it only relocates the
- * player within the floor). Split out of floor/items.ts's drawFloorItems
+ * beyond it), teleport, bear, rust, and sleeping-gas traps (all allowed on
+ * GOAL_FLOOR — none of them generate a floor beyond it). Split out of
+ * floor/items.ts's drawFloorItems
  * (milestone 85 follow-up) once that file passed the 200-line structure-lint
  * limit; rng consumption order is unchanged (this ran last inside
  * drawFloorItems already).
@@ -74,6 +76,15 @@ export const drawFloorTraps = (
 		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
 		if (tile !== undefined) {
 			traps.push({ ...tile, kind: "rust" });
+		}
+	}
+	if (
+		remaining.length > 0 &&
+		rng.getUniformInt(0, 99) < SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT
+	) {
+		const tile = drawSpawnTileWhere(remaining, rng, isTrapTileEligible);
+		if (tile !== undefined) {
+			traps.push({ ...tile, kind: "sleeping-gas" });
 		}
 	}
 	return traps;

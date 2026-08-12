@@ -1,4 +1,8 @@
-import { BEAR_TRAP_PARALYSIS_DURATION, TRAP_DAMAGE } from "./balance.js";
+import {
+	BEAR_TRAP_PARALYSIS_DURATION,
+	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
+	TRAP_DAMAGE,
+} from "./balance.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
 import { applyArmorRust, canRustEquippedArmor } from "./items/equipment.js";
@@ -21,6 +25,11 @@ const TRAP_SIDE_EFFECTS: Readonly<
 	bear: (state) => ({
 		...state,
 		paralyzedTurnsRemaining: BEAR_TRAP_PARALYSIS_DURATION,
+	}),
+	/** Same paralyzedTurnsRemaining field/tick/status-bar chip as a bear trap — just a longer hold, see SLEEPING_GAS_TRAP_PARALYSIS_DURATION. */
+	"sleeping-gas": (state) => ({
+		...state,
+		paralyzedTurnsRemaining: SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 	}),
 	/** Same armor-rusted degradation as an aquator's landed hit, but guaranteed on trigger rather than a rolled chance. */
 	rust: (state) => {
@@ -51,8 +60,11 @@ const TRAP_SIDE_EFFECTS: Readonly<
  * scroll, just triggered by a footstep instead of an inventory item. A bear
  * trap deals no damage either — instead it sets paralyzedTurnsRemaining,
  * reusing the same field/tick/status-bar chip the paralysis potion drives. A
- * rust trap also deals no damage — instead it degrades the equipped armor's
- * own defenseBonus exactly like an aquator's rust (see TRAP_SIDE_EFFECTS).
+ * sleeping gas trap deals no damage either — same paralyzedTurnsRemaining
+ * field, just held for SLEEPING_GAS_TRAP_PARALYSIS_DURATION turns instead of
+ * BEAR_TRAP_PARALYSIS_DURATION. A rust trap also deals no damage — instead
+ * it degrades the equipped armor's own defenseBonus exactly like an
+ * aquator's rust (see TRAP_SIDE_EFFECTS).
  * While levitationTurnsRemaining is set, no trap can trigger at all — the
  * player floats over it (any kind alike), and it stays armed underneath.
  */

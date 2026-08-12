@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { PLAYER_HUNGER_WARNING_THRESHOLD } from "../balance.js";
+import {
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+	PLAYER_WEAK_THRESHOLD,
+} from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyHungerTick } from "./hunger.js";
@@ -32,6 +35,21 @@ describe("applyHungerTick", () => {
 
 		const alreadyBelow = applyHungerTick(crossing);
 		expect(alreadyBelow.playerFood).toBe(PLAYER_HUNGER_WARNING_THRESHOLD - 1);
+		/* no new event this tick — the log carries over unchanged */
+		expect(alreadyBelow.events).toEqual(crossing.events);
+	});
+
+	it("fires player-weak exactly once, the turn food crosses PLAYER_WEAK_THRESHOLD", () => {
+		const state: GameState = {
+			...buildArenaGameState(5, 5, 1),
+			playerFood: PLAYER_WEAK_THRESHOLD + 1,
+		};
+		const crossing = applyHungerTick(state);
+		expect(crossing.playerFood).toBe(PLAYER_WEAK_THRESHOLD);
+		expect(crossing.events).toEqual([{ type: "player-weak", payload: {} }]);
+
+		const alreadyBelow = applyHungerTick(crossing);
+		expect(alreadyBelow.playerFood).toBe(PLAYER_WEAK_THRESHOLD - 1);
 		/* no new event this tick — the log carries over unchanged */
 		expect(alreadyBelow.events).toEqual(crossing.events);
 	});

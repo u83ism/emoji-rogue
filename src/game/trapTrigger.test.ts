@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
-import { BEAR_TRAP_PARALYSIS_DURATION, ZOMBIE_MAX_HP } from "./balance.js";
+import {
+	BEAR_TRAP_PARALYSIS_DURATION,
+	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
+	ZOMBIE_MAX_HP,
+} from "./balance.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy } from "./state.js";
 
@@ -171,6 +175,36 @@ describe("applyTrapTrigger", () => {
 			x: start.player.x + 1,
 			y: start.player.y,
 		});
+		expect(next.traps).toEqual(state.traps);
+	});
+
+	it("stepping onto a sleeping gas trap paralyzes the player without damage", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			traps: [{ x: 5, y: 1, kind: "sleeping-gas" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp); /* no damage */
+		expect(next.traps).toEqual([]); /* consumed */
+		/* applyTurnEndTicks' paralysis tick runs the same turn it's set, so the
+		 * duration is already one lower — same idiom as the bear trap. */
+		expect(next.paralyzedTurnsRemaining).toBe(
+			SLEEPING_GAS_TRAP_PARALYSIS_DURATION - 1,
+		);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "sleeping-gas", damage: 0 } },
+		]);
+	});
+
+	it("levitating floats over a sleeping gas trap: no paralysis, trap left armed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			levitationTurnsRemaining: 5,
+			traps: [{ x: 5, y: 1, kind: "sleeping-gas" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.player).toEqual({ x: 5, y: 1 });
+		expect(next.paralyzedTurnsRemaining).toBe(0);
 		expect(next.traps).toEqual(state.traps);
 	});
 

@@ -79,7 +79,7 @@ export const buildFloorLayout = (
 	const player: Position = { x: playerX, y: playerY };
 
 	const pool = collectSpawnPool(columns, player);
-	const enemies = drawFloorEnemies(rooms, firstRoom, pool, rng, floor);
+	const enemies = drawFloorEnemies(pool, rng, floor);
 
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);
 	const isWalkAroundTile = (position: Position): boolean =>

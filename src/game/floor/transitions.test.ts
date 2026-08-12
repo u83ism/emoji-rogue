@@ -4,7 +4,6 @@ import {
 	calculateEnemyCountForFloor,
 	FOOD_COUNT_PER_FLOOR,
 	GOAL_FLOOR,
-	MONSTER_HOUSE_ENEMY_COUNT,
 	POTION_COUNT_PER_FLOOR,
 } from "../balance.js";
 import { buildDungeonGameState } from "../initialState.js";
@@ -40,16 +39,12 @@ describe("descendStairs", () => {
 	});
 
 	it("spawns both zombies and bats", () => {
-		/* a monster house room, if it rolled on this floor, adds up to
-		 * MONSTER_HOUSE_ENEMY_COUNT more zombies/bats on top of the base count */
 		for (const state of [start, below]) {
 			const kinds = state.enemies.map((enemy) => enemy.kind);
 			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
 			const batCount = kinds.filter((kind) => kind === "bat").length;
-			expect(zombieCount).toBeGreaterThanOrEqual(3);
-			expect(zombieCount).toBeLessThanOrEqual(3 + MONSTER_HOUSE_ENEMY_COUNT);
-			expect(batCount).toBeGreaterThanOrEqual(2);
-			expect(batCount).toBeLessThanOrEqual(2 + MONSTER_HOUSE_ENEMY_COUNT);
+			expect(zombieCount).toBe(3);
+			expect(batCount).toBe(2);
 		}
 	});
 
@@ -139,22 +134,14 @@ describe("descendStairs", () => {
 	});
 
 	it("spawns more enemies on deeper floors, matching the scaling formula", () => {
-		/* a monster house room, if it rolled on this floor, adds up to
-		 * MONSTER_HOUSE_ENEMY_COUNT more zombies/bats on top of the scaled count */
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= 7; floor++) {
 			state = descendStairs(state);
 			const kinds = state.enemies.map((enemy) => enemy.kind);
-			const zombieBase = calculateEnemyCountForFloor("zombie", floor);
-			const batBase = calculateEnemyCountForFloor("bat", floor);
 			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
 			const batCount = kinds.filter((kind) => kind === "bat").length;
-			expect(zombieCount).toBeGreaterThanOrEqual(zombieBase);
-			expect(zombieCount).toBeLessThanOrEqual(
-				zombieBase + MONSTER_HOUSE_ENEMY_COUNT,
-			);
-			expect(batCount).toBeGreaterThanOrEqual(batBase);
-			expect(batCount).toBeLessThanOrEqual(batBase + MONSTER_HOUSE_ENEMY_COUNT);
+			expect(zombieCount).toBe(calculateEnemyCountForFloor("zombie", floor));
+			expect(batCount).toBe(calculateEnemyCountForFloor("bat", floor));
 		}
 	});
 });

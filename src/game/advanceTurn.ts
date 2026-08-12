@@ -21,7 +21,6 @@ import { applyHungerTick } from "./turnEnd/hunger.js";
 import { applyLevitationTick } from "./turnEnd/levitation.js";
 import { applyParalysisTick } from "./turnEnd/paralysis.js";
 import { applyRegenerationTick } from "./turnEnd/regeneration.js";
-import { applyWindsOfKronTick } from "./turnEnd/windsOfKron.js";
 import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
@@ -126,15 +125,21 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 	);
 };
 
+/** Counts turnsOnCurrentFloor up by one — see its field doc in state.ts for what consumes it. */
+const applyFloorTurnCounterTick = (state: GameState): GameState =>
+	state.status === "playing"
+		? { ...state, turnsOnCurrentFloor: state.turnsOnCurrentFloor + 1 }
+		: state;
+
 /**
  * Every status-tick that runs at the end of a turn-consuming action, in a
  * fixed order (hunger, regeneration, confusion, levitation, blindness,
- * paralysis, detect monsters, hallucination, winds of Kron). Each tick is
- * independently a no-op unless its own field/condition is active, so the
+ * paralysis, detect monsters, hallucination, floor turn counter). Each tick
+ * is independently a no-op unless its own field/condition is active, so the
  * order among them does not affect the result.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
-	applyWindsOfKronTick(
+	applyFloorTurnCounterTick(
 		applyHallucinationTick(
 			applyDetectMonstersTick(
 				applyParalysisTick(

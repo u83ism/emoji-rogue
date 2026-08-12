@@ -158,10 +158,6 @@ export const formatEvent = (
 			return "敵の気配を感じられなくなった";
 		case "player-revitalized":
 			return `${ITEM_NAMES.life}を飲んだ。最大HPが${event.payload.maxHpBonus}上がり、体力が全回復した!`;
-		case "winds-of-kron-warning":
-			return "不気味な風を感じる。長居は禁物のようだ…";
-		case "winds-of-kron-eviction":
-			return "クロンの風に吹き飛ばされた!";
 		case "orc-gold-drop":
 			return `オークが金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
 		case "enemy-teleported":

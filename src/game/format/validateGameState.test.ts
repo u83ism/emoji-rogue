@@ -598,20 +598,6 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts well-formed winds-of-kron-warning and winds-of-kron-eviction events", () => {
-		const warning = validateGameState({
-			...buildValidState(),
-			events: [{ type: "winds-of-kron-warning", payload: {} }],
-		});
-		expect(warning.ok).toBe(true);
-
-		const eviction = validateGameState({
-			...buildValidState(),
-			events: [{ type: "winds-of-kron-eviction", payload: {} }],
-		});
-		expect(eviction.ok).toBe(true);
-	});
-
 	it("accepts well-formed player-blinded and blindness-faded events and rejects a broken one", () => {
 		const blinded = validateGameState({
 			...buildValidState(),

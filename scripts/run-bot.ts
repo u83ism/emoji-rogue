@@ -126,8 +126,7 @@ while (state.status === "playing" && turn < maxTurns) {
 			if (
 				event.type === "player-died" ||
 				event.type === "amulet-obtained" ||
-				event.type === "game-won" ||
-				event.type === "winds-of-kron-eviction"
+				event.type === "game-won"
 			) {
 				console.log(`[turn ${entry.turn}] event: ${JSON.stringify(event)}`);
 			}

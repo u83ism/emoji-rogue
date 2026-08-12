@@ -108,9 +108,8 @@ export const decideAction = (
 	);
 
 	if (step === undefined) {
-		/* The chosen goal turned out unreachable from here (a stale amulet/loot
-		 * tile behind a wall after a Winds of Kron shuffle, in practice) —
-		 * blacklist it and try again next turn instead of retrying forever. */
+		/* The chosen goal turned out unreachable from here — blacklist it and
+		 * try again next turn instead of retrying forever. */
 		return {
 			action: { type: "wait" },
 			memory: {

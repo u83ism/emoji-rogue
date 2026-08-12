@@ -78,19 +78,6 @@ export const isRoomTileAwayFromDoors = (
 	);
 
 /**
- * Same as drawSpawnTile, but restricted to one room's interior (room.x1..x2,
- * room.y1..y2 are inclusive floor bounds — the walls sit one tile further
- * out). Undefined if the pool has no tile left inside that room — see
- * floorEnemies.ts's monster house roll.
- */
-export const drawSpawnTileInRoom = (
-	pool: Position[],
-	room: Room,
-	rng: Rng,
-): Position | undefined =>
-	drawSpawnTileWhere(pool, rng, (position) => isInsideRoom(room, position));
-
-/**
  * Floor tiles usable for spawning things away from the player: outside the
  * starting field of view when possible (nothing pops up on screen at turn
  * one), any floor tile except the player's own otherwise (tiny fully-visible

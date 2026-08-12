@@ -370,16 +370,6 @@ export type GameEvent =
 			readonly payload: { readonly maxHpBonus: number };
 	  }
 	| {
-			/** Fired once turnsOnCurrentFloor reaches WINDS_OF_KRON_WARNING_TURNS — see applyWindsOfKronTick. */
-			readonly type: "winds-of-kron-warning";
-			readonly payload: Record<string, never>;
-	  }
-	| {
-			/** Fired the turn turnsOnCurrentFloor reaches WINDS_OF_KRON_EVICTION_TURNS — see applyWindsOfKronTick. */
-			readonly type: "winds-of-kron-eviction";
-			readonly payload: Record<string, never>;
-	  }
-	| {
 			/** Taking off a sword/armor/ring — the mirror of weapon-equipped/armor-equipped/ring-equipped. */
 			readonly type: "item-unequipped";
 			readonly payload: { readonly kind: ItemKind };

@@ -267,7 +267,7 @@ export interface GameState {
 	readonly traps: readonly Trap[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
-	/** Turns spent on the current floor since arriving — see applyWindsOfKronTick. Resets to 0 on every floor transition. */
+	/** Turns spent on the current floor since arriving. Resets to 0 on every floor transition; drives the hallucination decoy glyph cycling in frame.ts. */
 	readonly turnsOnCurrentFloor: number;
 	/**
 	 * The staircase. An entity on top of the (still binary floor/wall)

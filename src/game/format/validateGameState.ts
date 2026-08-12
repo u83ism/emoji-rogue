@@ -295,8 +295,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-detected-monsters": (payload) => isPositiveInteger(payload.turns),
 	"detect-monsters-faded": emptyPayload,
 	"player-revitalized": (payload) => isPositiveInteger(payload.maxHpBonus),
-	"winds-of-kron-warning": emptyPayload,
-	"winds-of-kron-eviction": emptyPayload,
 	"item-unequipped": (payload) => isItemKind(payload.kind),
 	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
 	"curse-revealed": (payload) => isItemKind(payload.kind),

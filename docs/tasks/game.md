@@ -696,6 +696,21 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 
 **マイルストーン105完了(2026-07-28)。これで「原作Rogue仕様差分の棚卸し」バックログの7項目のうち、マップ生成・戦闘解決・敵ロースター・空腹(Weak相当)の4件が完了。武器・防具のバリエーション、指輪・巻物・杖の網羅率、空腹のFaint相当は引き続き未着手。**
 
+## マイルストーン106 — 不思議のダンジョン由来要素の削除(クロンの風・モンスターハウス)(2026-08-12)
+
+`docs/design.md`の「コンセプト方針」決定(2026-07-23)を受け、`docs/rogue-5.4-spec.md`で本家Rogue 5.4に precedent が無いと確認済みの2要素を削除。バックログの「不思議のダンジョン由来要素の削除」項目に対応。
+
+- [x] クロンの風: `applyWindsOfKronTick`(`src/game/turnEnd/windsOfKron.ts`、ファイルごと削除)・`WINDS_OF_KRON_WARNING_TURNS`/`WINDS_OF_KRON_EVICTION_TURNS`(balance.ts)・`winds-of-kron-warning`/`winds-of-kron-eviction`の`GameEvent`を削除。`turnsOnCurrentFloor`フィールド自体は残置(`frame.ts`が幻覚デコイ絵文字の周期演出にも流用していたため) — 削除したのはターン超過時の強制降下・警告イベントのみで、フィールドの増分は`advanceTurn.ts`内のシンプルな毎ターンインクリメント(`applyFloorTurnCounterTick`)に置き換え
+- [x] モンスターハウス: `MONSTER_HOUSE_SPAWN_CHANCE_PERCENT`/`MONSTER_HOUSE_ENEMY_COUNT`(balance.ts)と`drawFloorEnemies`(`src/game/floor/enemies.ts`)内の生成ロジックを削除。`drawFloorEnemies`は`rooms`/`firstRoom`引数が不要になったため`(pool, rng, floor)`のシグネチャに簡略化。呼び出し元が消滅した専用ヘルパー`drawSpawnTileInRoom`(spawnPool.ts)も削除
+- [x] `SAVE_FORMAT_VERSION`を31→32にbump(`GameEvent`ユニオンが2種類縮小したため)。`REPLAY_FORMAT_VERSION`は据え置き(`Action`の形は無関係)
+- [x] `docs/catalog.md`を`npm run docs:catalog`で再生成(敵一覧プローズの「モンスターハウスの敵だけは最初から警戒済み」の一文を削除したため)
+- [x] `README.md`のモンスターハウス・クロンの風の説明箇条書きを削除。`docs/idea-memo.md`の2026-07-23追記を「削除対象」→「削除済み」表現に更新
+- [x] 関連テスト一式を更新: `advanceTurn.test.ts`(2件のwinds-of-kronテストを1件の単純増分テストに置換)・`floor/enemies.test.ts`(モンスターハウス関連の記述・専用テストを削除、`drawFloorEnemies`呼び出しをシグネチャ変更に追従)・`floor/transitions.test.ts`(モンスターハウス分の上振れを許容していた敵数アサーションを厳密一致に変更)・`format/validateGameState.test.ts`・`shell/eventMessages.test.ts`(該当イベントのテストケースを削除)
+- [x] `src/bot/policy.ts`・`src/bot/memory.ts`のコメント、`scripts/run-bot.ts`の`winds-of-kron-eviction`ログ分岐を削除
+
+自動テスト(Vitest 1019件)・typecheck・lint(構造lint含む)・knip・build通過を確認して完了。
+**マイルストーン106完了(2026-08-12)。**
+
 ## バックログ(マイルストーン未整理)
 - **原作Rogue仕様差分の棚卸し**(2026-07-28、`/goal`セッションでの調査): 「原作Rogueに仕様をできるだけ揃える」方針のもと、現状とのギャップを分野別に洗い出した。マイルストーン100(空腹Weak段階+睡眠ガストラップ)・104(マップ生成)・105(戦闘のダイス化)で3件着手済み、残りは未着手のまま優先度未定でここに記録:
   - **マップ生成**: マイルストーン104で`createRogueMap`(原作Rogueアルゴリズム)への切替+接続保証を実装済み。完了
@@ -721,11 +736,6 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 - 絵文字セット(100種程度)の選定(`docs/design.md` の未解決項目)
 - 視界方式の再検討: 現行はshadowcasting(放射状・半径8)。オリジナルRogue/不思議のダンジョン式「部屋に入ったら部屋全体が見える+通路は周囲1マス」に変える場合は、部屋矩形をGameStateに保存する必要がある(マイルストーン65で`FloorLayout`までは部屋矩形を載せたが、GameStateには未保存=セーブ形式変更が必要)。プレイフィールを見て判断
 - リリース運用(正式リリースを始めるとき、2026-07-14の議論): ①アプリはsemver、セーブ形式は単調増加の整数、**両者は独立の軸**でCHANGELOGに対照表(アプリver↔形式ver)を記録 ②コードの互換判定は`formatVersion`のみ(アプリverをパースして判定に使わない) ③セーブに`appVersion`を参考情報として併記(サポート用、判定不使用) ④旧形式の切り捨てをやめる時期になったら`parseSaveFileContent`の`unsupported-version`分岐がマイグレーションの差し込み口 ⑤既製のsemverスキルはConventional Commits前提でGitmoji規約と不適合 — 必要になったら自作`/release`スキル(バンプ→CHANGELOG→タグ→push)を書く
-- **不思議のダンジョン由来要素の削除(2026-07-23、コンセプト方針決定に伴う)**: `docs/design.md`の「コンセプト方針」決定により、オリジナルRogueに precedent の無い要素は削除対象になった。`docs/rogue-5.4-spec.md`でRogue 5.4の実ソース(`lcn2/rogue5.4`)を確認した結果、以下2つは本家のどこにも存在しないシレン由来の移植と確定:
-  - **クロンの風**(`WINDS_OF_KRON_WARNING_TURNS`/`WINDS_OF_KRON_EVICTION_TURNS`、`applyWindsOfKronTick`)を削除
-  - **モンスターハウス**(`MONSTER_HOUSE_SPAWN_CHANCE_PERCENT`/`MONSTER_HOUSE_ENEMY_COUNT`、`buildFloorLayout`のモンスターハウス生成ロジック)を削除
-  - 両方とも`GameState`のフィールド削除を伴う可能性が高く、`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`のbumpが必要。関連テスト・`docs/catalog.md`の再生成も必要
-  - 着手時は影響範囲の洗い出し(該当フィールド・関数・テストファイルの棚卸し)から始める
 - **本家との忠実度ギャップ(削除対象ではなく、任意の検討事項、2026-07-23記録)**: `docs/rogue-5.4-spec.md`の調査中に見つかった差分。シレン由来ではないため今回の削除方針の対象ではないが、忠実度を重視するなら別途方針判断が要る:
   - 呪いはマイルストーン81で「数値ペナルティ廃止・ロックのみ」に変更したが、本家は呪いに数値ペナルティ(武器: 命中/ダメージ低下、防具: 防御低下、指輪: 効果値-1)を伴う仕様
   - `INVENTORY_CAPACITY = 20`はシレン初代のどうぐ袋基準採用の明記あり。本家の`MAXPACK`は26

@@ -243,14 +243,6 @@ describe("formatEvent", () => {
 				"生命の薬を飲んだ。最大HPが5上がり、体力が全回復した!",
 			],
 			[
-				{ type: "winds-of-kron-warning", payload: {} },
-				"不気味な風を感じる。長居は禁物のようだ…",
-			],
-			[
-				{ type: "winds-of-kron-eviction", payload: {} },
-				"クロンの風に吹き飛ばされた!",
-			],
-			[
 				{ type: "orc-gold-drop", payload: { amount: 7 } },
 				"オークが金貨を落とした!7ゴールド手に入れた",
 			],

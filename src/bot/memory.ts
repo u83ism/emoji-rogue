@@ -56,8 +56,7 @@ const buildProgressSignature = (state: GameState): string =>
 /**
  * Carries BotMemory forward by one turn: resets everything floor-scoped
  * (goal, blacklist, position history) when the floor changed since last
- * turn — including a Winds of Kron forced eviction, which moves the player
- * without the bot ever choosing to — and updates the stagnation counter.
+ * turn, and updates the stagnation counter.
  */
 export const updateMemoryForTurn = (
 	state: GameState,

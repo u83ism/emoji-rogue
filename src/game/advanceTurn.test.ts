@@ -6,8 +6,6 @@ import {
 	GOAL_FLOOR,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
-	WINDS_OF_KRON_EVICTION_TURNS,
-	WINDS_OF_KRON_WARNING_TURNS,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
@@ -169,30 +167,10 @@ describe("advanceTurn", () => {
 		).toBe(true);
 	});
 
-	it("fires winds-of-kron-warning after lingering on one floor", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 9, 1),
-			turnsOnCurrentFloor: WINDS_OF_KRON_WARNING_TURNS - 1,
-		};
+	it("increments turnsOnCurrentFloor by one on a turn-consuming action", () => {
+		const state = buildArenaGameState(9, 9, 1);
 		const next = advanceTurn(state, { type: "wait" });
-		expect(next.turnsOnCurrentFloor).toBe(WINDS_OF_KRON_WARNING_TURNS);
-		expect(
-			next.events.some((event) => event.type === "winds-of-kron-warning"),
-		).toBe(true);
-	});
-
-	it("forcibly descends and resets turnsOnCurrentFloor once the eviction threshold is reached", () => {
-		/* descendStairs needs digger-sized dimensions, unlike the tiny arena fixture */
-		const state: GameState = {
-			...buildDungeonGameState(40, 20, 7),
-			turnsOnCurrentFloor: WINDS_OF_KRON_EVICTION_TURNS - 1,
-		};
-		const next = advanceTurn(state, { type: "wait" });
-		expect(next.floor).toBe(state.floor + 1);
-		expect(next.turnsOnCurrentFloor).toBe(0);
-		expect(
-			next.events.some((event) => event.type === "winds-of-kron-eviction"),
-		).toBe(true);
+		expect(next.turnsOnCurrentFloor).toBe(state.turnsOnCurrentFloor + 1);
 	});
 
 	it("paralyzedTurnsRemaining reaches 0 and fires paralysis-faded", () => {

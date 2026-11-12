@@ -17,7 +17,7 @@
 		"declaration": true,
 		"declarationMap": true,
 		"rootDir": "src",
-		"outDir": "lib",
+		"noEmit": true,
 		"isolatedModules": true,
 		"skipLibCheck": true
 	},

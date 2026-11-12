@@ -1,6 +1,6 @@
 ﻿# emoji-rogue ゲーム開発タスクトラッカー
 
-ゲーム実装(GameState・入力ループ・敵・UI)の現行トラッカー。`develop` スキルはここを読んでタスクを選ぶ。**完了したマイルストーンは原文のまま `docs/tasks/game-history.md` へ移す運用**(2026-07-18導入。マイルストーン1〜108は移設済み — 「なぜこの仕様か」を遡るときはそちらを参照)。近代化改修(rot.jsフォークの関数型変換)の履歴は `docs/tasks/modernization.md`(タグ `modernization-complete` が完了地点)。
+ゲーム実装(GameState・入力ループ・敵・UI)の現行トラッカー。`develop` スキルはここを読んでタスクを選ぶ。**完了したマイルストーンは原文のまま `docs/tasks/game-history.md` へ移す運用**(2026-07-18導入。マイルストーン1〜109は移設済み — 「なぜこの仕様か」を遡るときはそちらを参照)。近代化改修(rot.jsフォークの関数型変換)の履歴は `docs/tasks/modernization.md`(タグ `modernization-complete` が完了地点)。
 
 ## ゲーム層の設計方針(2026-07-13決定)
 

@@ -28,8 +28,8 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
      └→ advanceTurn(state, action)         src/game/advanceTurn.ts
          ├→ applyMove → 攻撃/階段/拾得/わな    combat.ts, floor/, items/pickups.ts, trapTrigger.ts
          ├→ applyUseItem(網羅switch)          items/use.ts → 各カテゴリモジュール
-         ├→ advanceEnemies(敵の1ターン)       enemies.ts, enemyMovement.ts
-         └→ applyTurnEndTicks(状態異常等)     turnEnd/hunger.ts, turnEnd/confusion.ts, ...
+         ├→ advanceEnemies(敵の1ターン)       enemies/enemies.ts → enemies/action.ts
+         └→ applyTurnEndTicks(状態異常等)     turnEnd/hunger.ts, turnEnd/statusCountdowns.ts, ...
              └→ buildFrameGrid(state)      src/game/frame.ts + glyphs.ts
                  └→ <GameScreen>           src/renderer/ (Inkが端末に描画)
 ```
@@ -43,10 +43,11 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
-| `combat.ts` / `enemies.ts` / `enemyMovement.ts` | 攻撃解決(共通コア`applyEnemyHit`。命中判定は`items/hitChance.ts`、ダイスダメージは`damage.ts`の`rollToHit`/`rollDamageDice`) / 敵の1ターン(隣接時の命中処理は`enemyHitLanded.ts`に集約——`enemyFlee.ts`の盗んで逃げる・`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化・`enemyRegen.ts`の毎ターン自己回復を内包) / A*追跡・徘徊+`resolveEnemyMovement`(ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃) |
+| `combat.ts` | プレイヤー側の攻撃解決(共通コア`applyEnemyHit`。命中判定は`items/hitChance.ts`、ダイスダメージは`damage.ts`の`rollToHit`/`rollDamageDice`) |
+| `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結・行動回数)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。攻撃は`enemyHitLanded.ts`(命中処理。`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化を内包)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃)、毎ターン自己回復は`enemyRegen.ts`。出現テーブルは`floor/enemies.ts`、グリフは`enemyGlyphs.ts`で別物 |
 | `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
-| `turnEnd/` | ターン終了時に毎回自動で進む処理(空腹・混乱・浮遊・盲目・麻痺・索敵・再生)。1件=1ファイル、全て`applyTurnEndTicks`から呼ばれる |
+| `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(再生)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
 | `vision.ts` / `frame.ts` / `glyphs.ts` | FOV導出(可視集合は保存せず毎回導出、既踏破のみ状態) / フレーム構築 / 絵文字辞書 |
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |

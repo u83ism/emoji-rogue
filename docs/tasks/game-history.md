@@ -1778,3 +1778,14 @@ idea側の議論・経緯は`idea`リポジトリ`ideas/ai-program-skill-rules-s
 - [x] `docs/architecture.md`の陳腐化(アクション数・テスト件数・`src/bot/`の記載漏れ)と、旧パスを指すソースコメントを修正。小文字ドライブ文字のcwdでVitestが全滅する件を記録
 
 **マイルストーン108完了(2026-11-12)。**
+
+## マイルストーン109 — 構造監査: 敵処理のフォルダ化と状態異常カウントダウンの集約(2026-11-12)
+
+`structure-audit`スキルによる2回目の監査(前回2026-07-19)。挙動は不変(BOTのseed 1〜6で実施前後の結果が一致することを確認)。
+
+- [x] **`src/game/enemies/`を新設**(本人裁可): 直下に散っていた敵の1ターン関連7ファイル(`enemies.ts`・`enemyFlee.ts`・`enemyHitLanded.ts`・`enemyMovement.ts`・`enemyRegen.ts`・`vampireLifesteal.ts`・`wraithDrain.ts`)を移動。上限間際(199行)だった`advanceEnemies`から「敵1体の1行動」(隣接なら盗みか攻撃、離れていれば移動)を`enemies/action.ts`に切り出し(ファイル名は本人指定 — 当初案の`attack.ts`は攻撃以外も含むため不採用)。`src/game/`直下は26→19ファイルに
+- [x] **`turnEnd/statusCountdowns.ts`に集約**(本人裁可、「一旦統合」): フィールド名とイベント名以外が同一だった6ファイル(混乱・浮遊・盲目・麻痺・索敵・幻覚)を、フィールド表+共通処理1本に。`GameState`の形は不変でセーブ形式に影響なし。空腹・再生は別物なので据え置き
+- [x] **現状維持と判断**: kind追加のたびに8ファイル前後が同時に変わる件(観点ごとの表をkindで引く設計の帰結)、`shell/catalog/`の分割、`src/`直下15ファイル
+- 見送り: `enemyGlyphs.ts`は描画データ(`glyphs.ts`の兄弟)なので`enemies/`へは移していない。`enemyHitLanded.ts`の命中時効果はkind別の`if`が3本(アクアター・ヴァンパイア・レイス)で規則の上限 — 4種類目を足すときにkind別テーブルへ
+
+**マイルストーン109完了(2026-11-12)。**

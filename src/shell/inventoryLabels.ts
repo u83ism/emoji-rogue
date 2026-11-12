@@ -9,7 +9,7 @@ import { INVENTORY_TITLE } from "./systemMessages.js";
 // focused on formatEvent's log-line switch) once the two grew past the
 // 200-line structure-lint limit together (milestone 81).
 
-/** The inventory overlay's title line, with the fill level appended (e.g. "持ち物(iかEscで閉じる) 3/20"). */
+/** The inventory overlay's title line, with the fill level appended (e.g. "持ち物(Escで閉じる) 3/26"). */
 export const formatInventoryTitle = (heldCount: number): string =>
 	`${INVENTORY_TITLE} ${heldCount}/${INVENTORY_CAPACITY}`;
 

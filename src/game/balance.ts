@@ -58,14 +58,13 @@ export const ENEMY_DAMAGE_DICE_COUNT = 1;
 export const ENEMY_DAMAGE_DICE_SIDES = 4;
 
 /**
- * Max distinct item kinds the player can hold at once — one slot per held
- * kind (stacking more of an already-held kind never costs a slot). Picking
- * up a new kind is refused once at capacity — see applyItemPickup. Matches
- * the base どうぐ袋 capacity of Fushigi no Dungeon: Shiren the Wanderer (the
- * series this project's inventory UX takes its cues from); that series lets
- * the capacity grow via found items, which this project does not (yet).
+ * Max items the player can hold at once — one slot per held item (no
+ * stacking: two heal potions cost two slots). Any pickup is refused once at
+ * capacity — see applyItemPickup. Original Rogue 5.4's MAXPACK, which counts
+ * potions/scrolls/food individually the same way and pairs each slot with
+ * one of the selection letters a-z (see inventoryKeymap.ts).
  */
-export const INVENTORY_CAPACITY = 20;
+export const INVENTORY_CAPACITY = 26;
 
 export const ZOMBIE_MAX_HP = 2;
 export const ZOMBIE_ATTACK_DAMAGE = 1;

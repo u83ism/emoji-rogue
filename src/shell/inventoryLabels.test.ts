@@ -8,8 +8,8 @@ import {
 
 describe("formatInventoryTitle", () => {
 	it("appends the held count over capacity to the title", () => {
-		expect(formatInventoryTitle(0)).toBe("持ち物(iかEscで閉じる) 0/20");
-		expect(formatInventoryTitle(3)).toBe("持ち物(iかEscで閉じる) 3/20");
+		expect(formatInventoryTitle(0)).toBe("持ち物(Escで閉じる) 0/26");
+		expect(formatInventoryTitle(3)).toBe("持ち物(Escで閉じる) 3/26");
 	});
 });
 

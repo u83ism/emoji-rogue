@@ -312,7 +312,7 @@ const closeInventory = () => {
 window.addEventListener("keydown", (event) => {
 	if (isInventoryOpen) {
 		if (pendingTargetFor !== undefined) {
-			if (event.key === "i" || event.key === "Escape") {
+			if (event.key === "Escape") {
 				closeInventory();
 				render();
 				return;
@@ -331,7 +331,7 @@ window.addEventListener("keydown", (event) => {
 			return;
 		}
 		if (selectedItem !== undefined) {
-			if (event.key === "i" || event.key === "Escape") {
+			if (event.key === "Escape") {
 				closeInventory();
 				render();
 				return;
@@ -353,7 +353,7 @@ window.addEventListener("keydown", (event) => {
 			render();
 			return;
 		}
-		if (event.key === "i" || event.key === "Escape") {
+		if (event.key === "Escape") {
 			closeInventory();
 			render();
 			return;

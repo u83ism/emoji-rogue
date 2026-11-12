@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { INVENTORY_CAPACITY } from "./balance.js";
 import {
 	resolveTargetKind,
 	toInventoryLetter,
@@ -24,10 +25,11 @@ describe("toInventoryLetter", () => {
 		expect(toInventoryLetter(2)).toBe("c");
 	});
 
-	it("skips i (the close-overlay key), so the 9th row gets j", () => {
+	it("uses every letter a-z, i included, one per INVENTORY_CAPACITY slot", () => {
 		expect(toInventoryLetter(7)).toBe("h");
-		expect(toInventoryLetter(8)).toBe("j");
-		expect(toInventoryLetter(9)).toBe("k");
+		expect(toInventoryLetter(8)).toBe("i");
+		expect(toInventoryLetter(9)).toBe("j");
+		expect(toInventoryLetter(INVENTORY_CAPACITY - 1)).toBe("z");
 	});
 });
 
@@ -43,7 +45,7 @@ describe("toSelectedHeldItem", () => {
 		expect(toSelectedHeldItem("a", [])).toBeUndefined();
 	});
 
-	it("never maps i to a row — the 9th entry answers to j instead", () => {
+	it("maps i to the 9th row like any other letter", () => {
 		const nineItems: readonly HeldItem[] = [
 			potion(1),
 			{ itemId: 2, kind: "poison" },
@@ -62,8 +64,8 @@ describe("toSelectedHeldItem", () => {
 			{ itemId: 8, kind: "identify-scroll" },
 			{ itemId: 9, kind: "striking-wand" },
 		];
-		expect(toSelectedHeldItem("i", nineItems)).toBeUndefined();
-		expect(toSelectedHeldItem("j", nineItems)?.kind).toBe("striking-wand");
+		expect(toSelectedHeldItem("i", nineItems)?.kind).toBe("striking-wand");
+		expect(toSelectedHeldItem("j", nineItems)).toBeUndefined();
 	});
 });
 

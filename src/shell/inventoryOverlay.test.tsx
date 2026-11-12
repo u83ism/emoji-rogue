@@ -1,5 +1,6 @@
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
+import { INVENTORY_CAPACITY } from "../game/balance.js";
 import { buildArenaGameState } from "../game/initialState.js";
 import type { HeldItem } from "../game/state.js";
 import { InventoryOverlay } from "./inventoryOverlay.js";
@@ -15,7 +16,7 @@ describe("InventoryOverlay", () => {
 			/>,
 		);
 		const frame = lastFrame() ?? "";
-		expect(frame).toContain("持ち物(iかEscで閉じる) 0/20");
+		expect(frame).toContain("持ち物(Escで閉じる) 0/26");
 		expect(frame).toContain("何も持っていません");
 	});
 
@@ -36,10 +37,32 @@ describe("InventoryOverlay", () => {
 			/>,
 		);
 		const frame = lastFrame() ?? "";
-		expect(frame).toContain("持ち物(iかEscで閉じる) 3/20");
+		expect(frame).toContain("持ち物(Escで閉じる) 3/26");
 		expect(frame).toContain("a) 未鑑定の薬");
 		expect(frame).toContain("b) 未鑑定の薬");
 		expect(frame).toContain("c) 食料");
+	});
+
+	it("flows a full pack into two columns so all 26 lettered rows fit the map's 20-line height", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: Array.from(
+				{ length: INVENTORY_CAPACITY },
+				(_unused, index): HeldItem => ({ itemId: index + 1, kind: "food" }),
+			),
+		};
+		const { lastFrame } = render(
+			<InventoryOverlay
+				state={state}
+				selectedItem={undefined}
+				pendingTargetFor={undefined}
+			/>,
+		);
+		const frame = lastFrame() ?? "";
+		expect(frame).toContain("持ち物(Escで閉じる) 26/26");
+		expect(frame.split("\n").length).toBeLessThanOrEqual(20);
+		expect(frame).toMatch(/a\) 食料.*n\) 食料/);
+		expect(frame).toMatch(/m\) 食料.*z\) 食料/);
 	});
 
 	it("swaps the row list for the selected item's name and the use/drop prompt", () => {
@@ -136,7 +159,7 @@ describe("InventoryOverlay", () => {
 			/>,
 		);
 		const frame = lastFrame() ?? "";
-		expect(frame).toContain("対象を選んでください(iかEscで閉じる)");
+		expect(frame).toContain("対象を選んでください(Escで閉じる)");
 		expect(frame).toContain("a) 剣");
 		expect(frame).not.toContain("鎧");
 		expect(frame).not.toContain("持ち物(");

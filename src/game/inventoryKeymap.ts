@@ -3,14 +3,16 @@ import type { ItemKind } from "./events.js";
 import type { Action, HeldItem } from "./state.js";
 
 /**
- * Selection letters for inventory rows, in assignment order. `i` is
- * deliberately absent: inside the open overlay `i` closes it (see main.tsx),
- * so a row lettered `i` could never be selected (2026-07-18 playtest —
- * the 9th item was unreachable).
+ * Selection letters for inventory rows, in assignment order: all of a-z, one
+ * per INVENTORY_CAPACITY slot — original Rogue's MAXPACK = 26 pairing. `i`
+ * opens the overlay from the map but is an ordinary row letter (the 9th)
+ * inside it; only Esc closes the overlay (see shell/inventoryInteraction.ts).
+ * It used to close it too, which left the 9th row unreachable (2026-07-18
+ * playtest) and was first worked around by skipping the letter.
  */
-const INVENTORY_LETTERS = "abcdefghjklmnopqrstuvwxyz";
+const INVENTORY_LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
-/** The single letter assigned to the Nth inventory row (a, b, ..., h, j, ...). */
+/** The single letter assigned to the Nth inventory row (a, b, ..., z). */
 export const toInventoryLetter = (index: number): string =>
 	INVENTORY_LETTERS[index] ?? "?";
 

@@ -30,6 +30,39 @@ const HeldItemRow = ({
 	</Text>
 );
 
+/** Rows per column in a row list — two columns of this hold all INVENTORY_CAPACITY (26) rows inside the map-height box main.tsx pins the overlay to. */
+const ROWS_PER_COLUMN = 13;
+
+/**
+ * A lettered row list, column-major: rows past ROWS_PER_COLUMN flow into a
+ * second column so a full pack never outgrows the overlay's fixed height.
+ * Letters follow the position in `items`, matching toSelectedHeldItem.
+ */
+const HeldItemRowList = ({
+	items,
+	identifiedPotionKinds,
+}: {
+	readonly items: readonly HeldItem[];
+	readonly identifiedPotionKinds: GameState["identifiedPotionKinds"];
+}) => (
+	<Box flexDirection="row">
+		{[0, ROWS_PER_COLUMN].map((columnStart) => (
+			<Box key={columnStart} flexDirection="column" width="50%">
+				{items
+					.slice(columnStart, columnStart + ROWS_PER_COLUMN)
+					.map((item, rowIndex) => (
+						<HeldItemRow
+							key={item.itemId}
+							index={columnStart + rowIndex}
+							item={item}
+							identifiedPotionKinds={identifiedPotionKinds}
+						/>
+					))}
+			</Box>
+		))}
+	</Box>
+);
+
 /**
  * The held-items panel opened with `i`. Shown INSTEAD of the map (milestone
  * 70, 不思議のダンジョン style). Whether it is open, which row was picked
@@ -56,15 +89,10 @@ export const InventoryOverlay = ({
 		return (
 			<Box flexDirection="column" borderStyle="round">
 				<Text>{ITEM_TARGET_PROMPT}</Text>
-				{candidates.map((item, index) => (
-					<HeldItemRow
-						// biome-ignore lint/suspicious/noArrayIndexKey: rows repeat by kind (no stacking) and never reorder except by append/remove, so the index is a stable identity here
-						key={index}
-						index={index}
-						item={item}
-						identifiedPotionKinds={state.identifiedPotionKinds}
-					/>
-				))}
+				<HeldItemRowList
+					items={candidates}
+					identifiedPotionKinds={state.identifiedPotionKinds}
+				/>
 			</Box>
 		);
 	}
@@ -82,15 +110,10 @@ export const InventoryOverlay = ({
 			) : state.inventory.length === 0 ? (
 				<Text>{INVENTORY_EMPTY_MESSAGE}</Text>
 			) : (
-				state.inventory.map((item, index) => (
-					<HeldItemRow
-						// biome-ignore lint/suspicious/noArrayIndexKey: rows repeat by kind (no stacking) and never reorder except by append/remove, so the index is a stable identity here
-						key={index}
-						index={index}
-						item={item}
-						identifiedPotionKinds={state.identifiedPotionKinds}
-					/>
-				))
+				<HeldItemRowList
+					items={state.inventory}
+					identifiedPotionKinds={state.identifiedPotionKinds}
+				/>
 			)}
 		</Box>
 	);

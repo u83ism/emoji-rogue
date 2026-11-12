@@ -15,10 +15,10 @@ export const SAVE_LOAD_WARNING_MESSAGE =
 	"保存データを読み込めませんでした(壊れているか、対応していない形式です)。新しく開始します";
 
 /** Title line atop the inventory overlay while it's open. */
-export const INVENTORY_TITLE = "持ち物(iかEscで閉じる)";
+export const INVENTORY_TITLE = "持ち物(Escで閉じる)";
 
 /** Shown inside the inventory overlay when nothing is held. */
 export const INVENTORY_EMPTY_MESSAGE = "何も持っていません";
 
 /** Shown while picking which held sword/armor a targeted scroll (enchant-weapon, enchant-armor, protect-armor) applies to. */
-export const ITEM_TARGET_PROMPT = "対象を選んでください(iかEscで閉じる)";
+export const ITEM_TARGET_PROMPT = "対象を選んでください(Escで閉じる)";

@@ -57,7 +57,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 		inventory: readonly HeldItem[],
 	): Action | undefined => {
 		if (pendingTargetFor !== undefined) {
-			if (input === "i" || isEscape) {
+			if (isEscape) {
 				close();
 				return undefined;
 			}
@@ -73,7 +73,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 			return action;
 		}
 		if (selectedItem !== undefined) {
-			if (input === "i" || isEscape) {
+			if (isEscape) {
 				close();
 				return undefined;
 			}
@@ -90,7 +90,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 			}
 			return action;
 		}
-		if (input === "i" || isEscape) {
+		if (isEscape) {
 			close();
 			return undefined;
 		}

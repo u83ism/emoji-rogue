@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { PLAYER_HUNGER_WARNING_THRESHOLD } from "../game/balance.js";
+import {
+	INVENTORY_CAPACITY,
+	PLAYER_HUNGER_WARNING_THRESHOLD,
+} from "../game/balance.js";
 import { buildArenaGameState } from "../game/initialState.js";
 import type { GameState, Item } from "../game/state.js";
 import { chooseGoal, isGoalStillValid } from "./goals.js";
@@ -118,7 +121,7 @@ describe("chooseGoal", () => {
 	it("does not target a loot item once the inventory is already full", () => {
 		const state = {
 			...baseState(),
-			inventory: Array.from({ length: 20 }, (_, index) => ({
+			inventory: Array.from({ length: INVENTORY_CAPACITY }, (_, index) => ({
 				itemId: index,
 				kind: "food" as const,
 			})),

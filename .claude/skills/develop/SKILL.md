@@ -15,7 +15,10 @@ description: Spec check → implement → test (if logic involved) → update pr
    (This step exists because 50 milestones of "append one branch per feature" quietly grew
    `advanceTurn.ts` to 805 lines before anyone checked.)
 5. **Update progress docs**: update `docs/tasks/game.md` to check off the completed item(s) and note any
-   new follow-up tasks discovered along the way.
+   new follow-up tasks discovered along the way. Once a milestone is complete, move its whole section
+   verbatim to the end of `docs/tasks/game-history.md`, leaving `game.md` with only the design policy and
+   the backlog. (This sentence exists because 39 completed milestones piled up in `game.md` until the
+   tracker no longer fit in a single read — 2026-11-12.)
 6. **Keep documentation truthful**: if the change makes any project documentation wrong — player-facing
    behavior, codebase structure, commands, whatever document describes the thing you just changed — update
    that documentation in the same task. Deliberately phrased abstractly: the point is "docs must not lie

@@ -25,7 +25,8 @@ never auto-triggered, since judging an existing structure as newly wrong is inhe
    human to ratify before touching any file.
 5. **Apply only what's ratified**: rename/merge/move, update imports, then confirm with `npm run lint`,
    `npm run typecheck`, `npm test`.
-6. **Close the audit**: update `scripts/structure-audit-state.json` to the current HEAD commit hash and
-   today's date — even if the conclusion was "no change needed". An audit that finds nothing wrong still
+6. **Close the audit**: commit the ratified changes first, then update `scripts/structure-audit-state.json`
+   to that commit's hash and today's date, as a separate commit (recording HEAD before committing would
+   leave the checkpoint one step behind the refactor it just audited — what happened on 2026-11-12) — even if the conclusion was "no change needed". An audit that finds nothing wrong still
    resets the drift clock; leaving the old checkpoint in place would make the lint's drift hint re-fire
    immediately on the next run.

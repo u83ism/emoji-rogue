@@ -18,7 +18,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 
 **フォーク層を読むなら**: ①`src/rng.ts`(純粋な状態遷移 `stepUniform(state) => {value, state}` が全ての土台。グローバルシングルトンは存在しない — 乱数が必要な関数は全て `rng` を明示引数で受け取る) ②`src/result.ts`(10行のResult型。チェーンAPIなし、早期return一択) ③`src/map/digger.ts`(「クラス→ファクトリ関数+クロージャ」変換の代表例)。
 
-**ゲーム層を読むなら**: ①`src/game/state.ts`(`GameState`と`Action`の型定義 = ゲームの全語彙。関数値を含まない完全シリアライズ可能なデータ) ②`src/game/advanceTurn.ts`(リデューサ本体。move/wait/use-item/save/quitの5アクション) ③`src/game/events.ts`(`GameEvent` = ゲーム内の出来事の判別可能union。核は文字列を作らず、文言化はシェルの `src/messages.ts` に集約 — i18n規律)。
+**ゲーム層を読むなら**: ①`src/game/state.ts`(`GameState`と`Action`の型定義 = ゲームの全語彙。関数値を含まない完全シリアライズ可能なデータ) ②`src/game/advanceTurn.ts`(リデューサ本体。move/wait/use-item/drop-item/save/quitの6アクション) ③`src/game/events.ts`(`GameEvent` = ゲーム内の出来事の判別可能union。核は文字列を作らず、文言化はシェルの `src/shell/eventMessages.ts` に集約 — i18n規律)。
 
 ## 全体データフロー
 
@@ -53,6 +53,8 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
 シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+
+BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関数。ドライバは`scripts/run-bot.ts`でJSONLログを`~/.emoji-rogue/bot-logs/`へ出す。出荷するゲームの一部ではない)。
 
 フォーク層は従来どおり: `src/map/`(生成器8種) `src/fov/`(3アルゴリズム) `src/path/`(A*/Dijkstra) `src/scheduler/`+`src/engine.ts`(未接続のまま温存) `src/lighting.ts` `src/color.ts` `src/text.ts` `src/noise/` `src/stringgenerator.ts`、共有ヘルパー `src/indexing.ts` `src/pointkey.ts` `src/util.ts` `src/constants.ts`、公開バレル `src/index.ts`。
 
@@ -98,11 +100,14 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 npm run typecheck   # tsc --noEmit(エラー0が正常)
 npm run lint        # Biome + 構造lint(行数+フォルダ粒度、正当化ベース)
 npm run knip        # 未使用ファイル・export検出
-npm test            # Vitest(767件・2026-07-18時点)
+npm test            # Vitest
 npm run build       # tsdown → dist/
+npm run check       # 上の5つを順に全部(コミット前はこれ1本)
 ```
 
-CI(`.github/workflows/ci.yml`)はPR毎に全部走らせる。pushトリガーは`main`指定(2026-07-18、ブラウザデモ公開に合わせて`develop`から派生する形で`main`運用を開始。デフォルトブランチも`main`)。
+**cwdのドライブ文字が小文字(`c:...`、Git Bashなら`cd /c/...`)だと`npm test`は全テストファイルが`Cannot read properties of undefined (reading 'config')`で失敗する**(2026-11-12、同じファイルが`/c/`で失敗・`/C/`で成功することを確認)。大文字のドライブ文字で入り直すこと(`cd /C/Users/...`、またはPowerShellで`Set-Location C:...`)。
+
+CI(`.github/workflows/ci.yml`)はPRと`main`へのpushでだけ同じ5つを走らせる。無料枠のプロジェクトなので日常の`develop`作業ではCIを回さず、**ローカルの`npm run check`が正**(2026-11-12本人決定)。
 
 実機確認の手段: `npm run build && npm start`(Windows Terminal必須)、`npx unrun scripts/demo-renderer.ts`(レンダラー単体)、`npx unrun scripts/replay-verify.ts`(リプレイ再構築)、`demo/`(ブラウザ版)。
 

@@ -5,7 +5,7 @@ import {
 	type TrapKind,
 } from "../game/events.js";
 
-// The name dictionaries behind src/messages.ts — same i18n discipline: the
+// The name dictionaries behind eventMessages.ts / messages.ts — same i18n discipline: the
 // core never produces strings, and a locale swap touches this pair of files
 // only.
 

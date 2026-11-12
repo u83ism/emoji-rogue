@@ -53,9 +53,9 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
  * removed at all while equipped (logs equip-blocked-cursed, same as trying
  * to unequip it directly; see items/equipment.ts and items/rings.ts), so
  * dropping it must not be a back door around that lock. If an item already
- * lies on that exact tile (only reachable by dropping while standing on a
- * kind that couldn't be picked up due to INVENTORY_CAPACITY — see
- * applyItemPickup), the two simply share the tile; picking either back up
+ * lies on that exact tile (the player is standing on one it never picked up
+ * — INVENTORY_CAPACITY refused it, or a teleport landed there), the two
+ * simply share the tile; picking either back up
  * takes repeated visits, an accepted rare edge case.
  */
 export const applyItemDrop = (state: GameState, itemId: number): GameState => {

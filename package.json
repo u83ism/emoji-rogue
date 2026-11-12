@@ -30,6 +30,7 @@
 		"docs:catalog": "unrun scripts/generate-catalog.ts",
 		"lint:fix": "biome check --write .",
 		"knip": "knip",
+		"check": "npm run typecheck && npm run lint && npm run knip && npm test && npm run build",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},

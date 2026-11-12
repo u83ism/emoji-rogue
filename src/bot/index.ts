@@ -1,4 +1,4 @@
-// Public API for the headless autoplay bot (scripts/run-bot.mjs), separate
+// Public API for the headless autoplay bot (scripts/run-bot.ts), separate
 // from src/game/index.ts because this is a dev/analysis tool, not part of
 // the shipped game.
 

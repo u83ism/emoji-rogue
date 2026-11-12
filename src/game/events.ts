@@ -141,7 +141,7 @@ export type DeathCause = EnemyKind | "hunger" | "trap" | "poison";
  * app/session concerns like "saved" or input warnings are shell notices,
  * never events), as plain data. No human-readable strings live here —
  * turning events into prose is the shell's job, concentrated in one module
- * (src/messages.ts) so a future locale swap touches a single file.
+ * (src/shell/eventMessages.ts) so a future locale swap touches a single file.
  * See the i18n discipline in docs/tasks/game.md.
  */
 export type GameEvent =

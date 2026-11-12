@@ -1,6 +1,6 @@
 // Public API for the game layer, separate from src/index.ts (the modernized
 // rot.js toolbox barrel) — for embedding the game outside the CLI shell
-// (e.g. demo/'s browser renderer). Re-exports src/messages.ts too, so an
+// (e.g. demo/'s browser renderer). Re-exports the shell's wording (src/shell/) too, so an
 // embedder has a single import source instead of reaching into src/game/'s
 // internals or past it into the shell-facing i18n module.
 

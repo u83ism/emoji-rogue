@@ -21,7 +21,7 @@ import {
 
 // The imperative shell: reads keys, dispatches actions into the pure reducer,
 // hands the resulting frame to Ink. All game logic lives in src/game/; all
-// human-readable wording comes from src/messages.ts. Session bootstrapping
+// human-readable wording comes from src/shell/. Session bootstrapping
 // (resume-from-save vs. fresh dungeon) lives in shell/session.ts.
 
 const MAP_WIDTH = 40;

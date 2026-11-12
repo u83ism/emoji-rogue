@@ -4,7 +4,7 @@ import type { BotGoal } from "./goals.js";
 
 /**
  * One structured, pure-data line per turn for offline analysis — the driver
- * script (scripts/run-bot.mjs) is the only place that turns this into JSONL
+ * script (scripts/run-bot.ts) is the only place that turns this into JSONL
  * or console output. `recentEvents` is an approximation (the last couple of
  * log entries after this turn, not a precise before/after diff): GameEvent's
  * own log is capped (see EVENT_LOG_LIMIT), so a precise diff would need

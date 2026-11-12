@@ -7,7 +7,7 @@ import {
 } from "../game/format/saveFormat.js";
 import type { GameState } from "../game/state.js";
 
-// Shell-side file effects around the pure save format (src/game/save.ts).
+// Shell-side file effects around the pure save format (src/game/format/saveFormat.ts).
 // The path parameter exists for tests; the game always uses the default.
 
 const SAVE_FILE_PATH = join(homedir(), ".emoji-rogue", "save.json");

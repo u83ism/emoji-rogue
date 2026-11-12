@@ -7,7 +7,7 @@ import {
 	parseReplayFileContent,
 } from "../game/format/replayFormat.js";
 
-// Shell-side file effects around the pure replay format (src/game/replayFile.ts).
+// Shell-side file effects around the pure replay format (src/game/format/replayFormat.ts).
 // The path parameter exists for tests; the game always uses the default.
 
 const REPLAY_FILE_PATH = join(homedir(), ".emoji-rogue", "replay.json");

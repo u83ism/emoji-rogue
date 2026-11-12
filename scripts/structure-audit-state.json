@@ -1,5 +1,5 @@
 {
-	"//": "Drift checkpoint for scripts/check-structure.mjs's structure-audit hint. Updated only by completing a structure-audit (.claude/skills/structure-audit) — AI must not edit this file outside that flow.",
+	"//": "Drift checkpoint for scripts/check-structure.ts's structure-audit hint. Updated only by completing a structure-audit (.claude/skills/structure-audit) — AI must not edit this file outside that flow.",
 	"lastAuditCommit": "c2ac6965afb67bf91753bdbd1685fbf4cf9bce43",
 	"lastAuditDate": "2026-11-12"
 }

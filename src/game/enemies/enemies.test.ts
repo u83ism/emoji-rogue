@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../rng.js";
+import { seedToState } from "../../rng.js";
 import {
 	AQUATOR_MAX_HP,
 	BAT_MAX_HP,
@@ -23,11 +23,11 @@ import {
 	WRAITH_DRAIN_AMOUNT,
 	WRAITH_MAX_HP,
 	ZOMBIE_MAX_HP,
-} from "./balance.js";
+} from "../balance.js";
+import { buildArenaGameState } from "../initialState.js";
+import { calculatePlayerDefense } from "../items/equipment.js";
+import type { Enemy, GameState, HeldItem } from "../state.js";
 import { advanceEnemies } from "./enemies.js";
-import { buildArenaGameState } from "./initialState.js";
-import { calculatePlayerDefense } from "./items/equipment.js";
-import type { Enemy, GameState, HeldItem } from "./state.js";
 
 /** An equipped armor HeldItem with the given defenseBonus — the new stand-in for the old playerDefense field. */
 const equippedArmor = (

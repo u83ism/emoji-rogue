@@ -1,5 +1,5 @@
-import { VAMPIRE_LIFESTEAL_PERCENT } from "./balance.js";
-import type { GameEvent } from "./events.js";
+import { VAMPIRE_LIFESTEAL_PERCENT } from "../balance.js";
+import type { GameEvent } from "../events.js";
 
 /** The result of a vampire's self-heal roll — see enemies.ts's advanceEnemies. */
 export interface VampireLifestealResult {

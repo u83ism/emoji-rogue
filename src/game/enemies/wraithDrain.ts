@@ -1,4 +1,4 @@
-import type { GameEvent } from "./events.js";
+import type { GameEvent } from "../events.js";
 
 /** The result of a wraith's permanent playerMaxHp drain — see enemies.ts's advanceEnemies. */
 export interface WraithDrainResult {

@@ -1,9 +1,9 @@
-import type { RngState } from "../rng.js";
-import { stepUniform } from "../rng.js";
-import { THIEF_STEAL_AMOUNT } from "./balance.js";
-import type { GameEvent } from "./events.js";
-import { removeHeldItemAtIndex } from "./items/inventory.js";
-import type { HeldItem } from "./state.js";
+import type { RngState } from "../../rng.js";
+import { stepUniform } from "../../rng.js";
+import { THIEF_STEAL_AMOUNT } from "../balance.js";
+import type { GameEvent } from "../events.js";
+import { removeHeldItemAtIndex } from "../items/inventory.js";
+import type { HeldItem } from "../state.js";
 
 /**
  * The outcome of a thief/nymph's adjacent "steal and flee" turn — split out

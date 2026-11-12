@@ -1,13 +1,13 @@
-import { createAStarPath } from "../path/index.js";
-import { encodePointKey } from "../pointkey.js";
-import type { RngState } from "../rng.js";
-import { stepUniform } from "../rng.js";
+import { createAStarPath } from "../../path/index.js";
+import { encodePointKey } from "../../pointkey.js";
+import type { RngState } from "../../rng.js";
+import { stepUniform } from "../../rng.js";
 import {
 	MEDUSA_GAZE_CHANCE_PERCENT,
 	MEDUSA_GAZE_CONFUSE_DURATION,
-} from "./balance.js";
-import type { GameEvent } from "./events.js";
-import type { Enemy, GameState, Position } from "./state.js";
+} from "../balance.js";
+import type { GameEvent } from "../events.js";
+import type { Enemy, GameState, Position } from "../state.js";
 
 /** Enemies move like the player: 4 directions, floor only. */
 const ENEMY_DIRECTIONS: readonly (readonly [number, number])[] = [

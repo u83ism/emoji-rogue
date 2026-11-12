@@ -1,5 +1,5 @@
-import { GRIFFIN_REGEN_AMOUNT, TROLL_REGEN_AMOUNT } from "./balance.js";
-import type { EnemyKind, GameEvent } from "./events.js";
+import { GRIFFIN_REGEN_AMOUNT, TROLL_REGEN_AMOUNT } from "../balance.js";
+import type { EnemyKind, GameEvent } from "../events.js";
 
 /** The result of a griffin/troll's passive per-turn self-heal — see enemies.ts's advanceEnemies. */
 export interface EnemyRegenResult {

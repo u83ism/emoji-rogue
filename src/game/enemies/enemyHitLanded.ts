@@ -1,5 +1,5 @@
-import type { RngState } from "../rng.js";
-import { stepUniform } from "../rng.js";
+import type { RngState } from "../../rng.js";
+import { stepUniform } from "../../rng.js";
 import {
 	AQUATOR_RUST_CHANCE_PERCENT,
 	ENEMY_ATTACK_DAMAGE,
@@ -8,16 +8,16 @@ import {
 	ENEMY_MAX_HP,
 	MIN_DAMAGE_TAKEN,
 	WRAITH_DRAIN_AMOUNT,
-} from "./balance.js";
-import { damageDiceMean, rollDamageDice, rollToHit } from "./damage.js";
-import type { GameEvent } from "./events.js";
+} from "../balance.js";
+import { damageDiceMean, rollDamageDice, rollToHit } from "../damage.js";
+import type { GameEvent } from "../events.js";
 import {
 	applyArmorRust,
 	calculatePlayerDefense,
 	canRustEquippedArmor,
-} from "./items/equipment.js";
-import { calculateEnemyHitChancePercent } from "./items/hitChance.js";
-import type { Enemy, HeldItem } from "./state.js";
+} from "../items/equipment.js";
+import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
+import type { Enemy, HeldItem } from "../state.js";
 import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { resolveWraithDrain } from "./wraithDrain.js";
 

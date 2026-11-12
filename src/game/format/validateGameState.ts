@@ -299,7 +299,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
 	"curse-revealed": (payload) => isItemKind(payload.kind),
 	"items-decursed": (payload) => isPositiveInteger(payload.count),
-	"orc-gold-drop": (payload) => isPositiveInteger(payload.amount),
+	"enemy-gold-drop": (payload) =>
+		isEnemyKind(payload.by) && isPositiveInteger(payload.amount),
 	"enemy-teleported": (payload) => isEnemyKind(payload.target),
 	"enemy-confused": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),

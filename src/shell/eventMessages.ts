@@ -158,8 +158,8 @@ export const formatEvent = (
 			return "敵の気配を感じられなくなった";
 		case "player-revitalized":
 			return `${ITEM_NAMES.life}を飲んだ。最大HPが${event.payload.maxHpBonus}上がり、体力が全回復した!`;
-		case "orc-gold-drop":
-			return `オークが金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
+		case "enemy-gold-drop":
+			return `${ENEMY_NAMES[event.payload.by]}が金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
 		case "enemy-teleported":
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
 		case "enemy-confused":

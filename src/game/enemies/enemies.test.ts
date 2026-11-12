@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../../rng.js";
+import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import {
 	AQUATOR_MAX_HP,
 	BAT_MAX_HP,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
 	GRIFFIN_MAX_HP,
 	GRIFFIN_REGEN_AMOUNT,
 	ICKY_THING_MAX_HP,
@@ -12,6 +14,7 @@ import {
 	NYMPH_MAX_HP,
 	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
+	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	THIEF_MAX_HP,
 	TROLL_MAX_HP,
 	TROLL_REGEN_AMOUNT,
@@ -163,6 +166,20 @@ const wraith = (x: number, y: number): Enemy => ({
 });
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
+/**
+ * 60 well-spread rng states: one seed stepped 0..59 times. Neighboring small
+ * seeds are no good for this — their first uniform draws are all close to 0.
+ */
+const buildSpreadRngStates = (): readonly RngState[] => {
+	const states: RngState[] = [];
+	let current = seedToState(1);
+	for (let i = 0; i < 60; i++) {
+		states.push(current);
+		current = stepUniform(current).state;
+	}
+	return states;
+};
+
 const buildCorridorState = (enemies: GameState["enemies"]): GameState => ({
 	...buildArenaGameState(9, 3, 1),
 	enemies,
@@ -362,21 +379,59 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]); /* the thief is gone for good */
 		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
-		expect(next.goldCollected).toBe(40);
+		const stolen = state.goldCollected - next.goldCollected;
+		expect(stolen).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
 		expect(next.events).toEqual([
-			{ type: "gold-stolen", payload: { amount: 10 } },
+			{ type: "gold-stolen", payload: { amount: stolen } },
 		]);
+	});
+
+	it("a thief steals one gold pile's worth on a passed magic save, up to five piles' worth on a failed one", () => {
+		const thefts = buildSpreadRngStates().map((rng) => {
+			const state = {
+				...buildCorridorState([thief(5, 1)]),
+				rng,
+				goldCollected: 1000,
+			};
+			return state.goldCollected - advanceEnemies(state).goldCollected;
+		});
+		for (const stolen of thefts) {
+			expect(stolen).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
+			expect(stolen).toBeLessThanOrEqual(
+				GOLD_AMOUNT_MAX * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
+			);
+		}
+		/* a level-1 player fails the save most of the time (80%) but not always */
+		const bigThefts = thefts.filter((stolen) => stolen > GOLD_AMOUNT_MAX);
+		expect(bigThefts.length).toBeGreaterThan(thefts.length / 2);
+		expect(bigThefts.length).toBeLessThan(thefts.length);
+	});
+
+	it("a higher-level player passes the magic save more often, so loses less on average", () => {
+		const totalStolenAtLevel = (playerLevel: number): number =>
+			buildSpreadRngStates()
+				.map((rng) => {
+					const state = {
+						...buildCorridorState([thief(5, 1)]),
+						rng,
+						goldCollected: 1000,
+						playerLevel,
+					};
+					return state.goldCollected - advanceEnemies(state).goldCollected;
+				})
+				.reduce((total, stolen) => total + stolen, 0);
+		expect(totalStolenAtLevel(10)).toBeLessThan(totalStolenAtLevel(1));
 	});
 
 	it("a thief steals no more than the player's remaining gold", () => {
 		const state = {
 			...buildCorridorState([thief(5, 1)]),
-			goldCollected: 3,
+			goldCollected: 1,
 		};
 		const next = advanceEnemies(state);
 		expect(next.goldCollected).toBe(0);
 		expect(next.events).toEqual([
-			{ type: "gold-stolen", payload: { amount: 3 } },
+			{ type: "gold-stolen", payload: { amount: 1 } },
 		]);
 	});
 
@@ -388,6 +443,7 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]);
 		expect(next.goldCollected).toBe(0);
+		expect(next.rng).toEqual(state.rng); /* nothing to roll for */
 		expect(next.events).toEqual([
 			{ type: "gold-stolen", payload: { amount: 0 } },
 		]);
@@ -402,10 +458,16 @@ describe("advanceEnemies", () => {
 		expect(next.enemies).toEqual([
 			zombie(5, 1),
 		]); /* the thief is gone, the zombie remains */
-		expect(next.playerHp).toBe(
-			state.playerHp - 1,
-		); /* the zombie still attacked */
-		expect(next.goldCollected).toBe(40);
+		/* the zombie still got its attack attempt (hit or miss) */
+		expect(
+			next.events.some(
+				(event) =>
+					(event.type === "player-hit" ||
+						event.type === "enemy-attack-missed") &&
+					event.payload.by === "zombie",
+			),
+		).toBe(true);
+		expect(next.goldCollected).toBeLessThan(state.goldCollected);
 	});
 
 	it("an adjacent nymph steals the only held item slot and flees", () => {

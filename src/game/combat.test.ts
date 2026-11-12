@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { type RngState, seedToState, stepUniform } from "../rng.js";
 import {
 	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
 	ORC_MAX_HP,
+	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
+	THIEF_MAX_HP,
 	WAND_STRIKE_DAMAGE,
 	ZOMBIE_MAX_HP,
 } from "./balance.js";
@@ -28,6 +31,30 @@ const zombie = (
 	kind: "zombie",
 	hp,
 	awake,
+	slowedTurnsRemaining: 0,
+	confusedTurnsRemaining: 0,
+});
+
+/**
+ * 60 well-spread rng states: one seed stepped 0..59 times. Neighboring small
+ * seeds are no good for this — their first uniform draws are all close to 0.
+ */
+const buildSpreadRngStates = (): readonly RngState[] => {
+	const states: RngState[] = [];
+	let current = seedToState(1);
+	for (let i = 0; i < 60; i++) {
+		states.push(current);
+		current = stepUniform(current).state;
+	}
+	return states;
+};
+
+const thief = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "thief",
+	hp: THIEF_MAX_HP,
+	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
 });
@@ -245,7 +272,7 @@ describe("applyWandStrike", () => {
 	});
 });
 
-describe("orc gold drop", () => {
+describe("enemy gold drop", () => {
 	const state = buildArenaGameState(9, 9, 1);
 
 	it("drops a bonus between GOLD_AMOUNT_MIN and GOLD_AMOUNT_MAX into goldCollected on a melee kill", () => {
@@ -255,16 +282,51 @@ describe("orc gold drop", () => {
 		expect(dropped).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
 		expect(dropped).toBeLessThanOrEqual(GOLD_AMOUNT_MAX);
 		expect(next.events).toContainEqual({
-			type: "orc-gold-drop",
-			payload: { amount: dropped },
+			type: "enemy-gold-drop",
+			payload: { by: "orc", amount: dropped },
 		});
+	});
+
+	it("a killed thief drops one gold pile's worth, or five on a passed magic save — more often at a higher level", () => {
+		const dropsAtLevel = (playerLevel: number): readonly number[] =>
+			buildSpreadRngStates().map((rng) => {
+				const target = thief(5, 4);
+				const seeded = {
+					...state,
+					rng,
+					playerLevel,
+					enemies: [target],
+				};
+				/* a wand strike never misses, so every seed is a kill */
+				const next = applyMagicMissileWandStrike(seeded, target);
+				const dropped = next.goldCollected - seeded.goldCollected;
+				expect(next.events).toContainEqual({
+					type: "enemy-gold-drop",
+					payload: { by: "thief", amount: dropped },
+				});
+				return dropped;
+			});
+		const isBigDrop = (dropped: number): boolean => dropped > GOLD_AMOUNT_MAX;
+		const lowLevelDrops = dropsAtLevel(1);
+		for (const dropped of lowLevelDrops) {
+			expect(dropped).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
+			expect(dropped).toBeLessThanOrEqual(
+				GOLD_AMOUNT_MAX * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
+			);
+		}
+		const lowLevelBigDrops = lowLevelDrops.filter(isBigDrop).length;
+		expect(lowLevelBigDrops).toBeGreaterThan(0);
+		expect(lowLevelBigDrops).toBeLessThan(lowLevelDrops.length / 2);
+		expect(dropsAtLevel(10).filter(isBigDrop).length).toBeGreaterThan(
+			lowLevelBigDrops,
+		);
 	});
 
 	it("also drops gold on a wand kill", () => {
 		const target = orc(5, 4, WAND_STRIKE_DAMAGE);
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
 		expect(next.goldCollected).toBeGreaterThan(state.goldCollected);
-		expect(next.events.some((event) => event.type === "orc-gold-drop")).toBe(
+		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
 			true,
 		);
 	});
@@ -276,11 +338,11 @@ describe("orc gold drop", () => {
 		expect(first.goldCollected).toBe(second.goldCollected);
 	});
 
-	it("does not drop gold when a non-orc is killed", () => {
+	it("does not drop gold when a kind other than orc/thief is killed", () => {
 		const target = zombie(5, 4, 1);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.goldCollected).toBe(state.goldCollected);
-		expect(next.events.some((event) => event.type === "orc-gold-drop")).toBe(
+		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
 			false,
 		);
 	});

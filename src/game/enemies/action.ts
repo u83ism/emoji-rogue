@@ -90,6 +90,7 @@ export const resolveEnemyAction = (
 			progress.rng,
 			progress.goldCollected,
 			progress.inventory,
+			state.playerLevel,
 		);
 		return {
 			actor: { ...actor, fled: true },

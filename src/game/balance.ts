@@ -78,15 +78,29 @@ export const BAT_ATTACK_DAMAGE = 1;
 export const BAT_ACTIONS_PER_TURN = 2;
 export const BAT_COUNT_BASE = 2;
 
-// Never deals HP damage — it steals gold on contact and flees instead (see
-// advanceEnemies's kind-specific branch) and does not scale with depth like
-// zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an independent
-// per-floor roll like sword/armor.
+// Original Rogue's leprechaun under another name (the rename is a kept
+// arrangement — docs/tasks/game.md). Never deals HP damage — it steals gold
+// on contact and flees instead (see enemies/enemyFlee.ts) and does not scale
+// with depth like zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an
+// independent per-floor roll like sword/armor. Both the theft and the gold it
+// drops when killed first (combat.ts) are measured in gold piles' worth
+// (GOLD_AMOUNT_MIN..MAX rolls): one, or THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME when
+// the magic save goes the thief's way (failed → steals more) or the
+// player's (passed → drops more).
 export const THIEF_MAX_HP = 2;
 export const THIEF_ATTACK_DAMAGE = 0;
 export const THIEF_ACTIONS_PER_TURN = 1;
-export const THIEF_STEAL_AMOUNT = 10;
+export const THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME = 5;
 export const THIEF_SPAWN_CHANCE_PERCENT = 20;
+
+/**
+ * Percent chance the player passes a save against magic — original Rogue's
+ * `save(VS_MAGIC)`, a d20 that must reach 17 - level/2 (rounded down),
+ * restated on this file's percent-roll idiom: 20% at level 1, +5 points per
+ * two levels. The only caller so far is the thief's theft/drop size.
+ */
+export const calculateMagicSaveChancePercent = (playerLevel: number): number =>
+	(4 + Math.floor(playerLevel / 2)) * 5;
 
 // The item-stealing counterpart to the thief: never deals damage, steals one
 // random held item stack (instead of gold) on contact and flees. Same

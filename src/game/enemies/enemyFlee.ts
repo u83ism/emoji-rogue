@@ -1,6 +1,11 @@
 import type { RngState } from "../../rng.js";
 import { stepUniform } from "../../rng.js";
-import { THIEF_STEAL_AMOUNT } from "../balance.js";
+import {
+	calculateMagicSaveChancePercent,
+	GOLD_AMOUNT_MAX,
+	GOLD_AMOUNT_MIN,
+	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
+} from "../balance.js";
 import type { GameEvent } from "../events.js";
 import { removeHeldItemAtIndex } from "../items/inventory.js";
 import type { HeldItem } from "../state.js";
@@ -17,8 +22,25 @@ export interface FleeingTheftResult {
 	readonly event: GameEvent;
 }
 
+/** One gold pile's worth (GOLD_AMOUNT_MIN..GOLD_AMOUNT_MAX), off one rng step. */
+const rollGoldPileAmount = (
+	rng: RngState,
+): { readonly amount: number; readonly rng: RngState } => {
+	const step = stepUniform(rng);
+	return {
+		amount:
+			GOLD_AMOUNT_MIN +
+			Math.floor(step.value * (GOLD_AMOUNT_MAX - GOLD_AMOUNT_MIN + 1)),
+		rng: step.state,
+	};
+};
+
 /**
- * A thief steals up to THIEF_STEAL_AMOUNT gold; a nymph steals one random
+ * A thief (original Rogue's leprechaun) steals one gold pile's worth — or
+ * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME piles' worth when the player fails a
+ * magic save (calculateMagicSaveChancePercent, easier at higher
+ * playerLevel) — capped at what the player carries; with no gold at all it
+ * takes nothing and consumes no rng. A nymph steals one random
  * *unequipped* held item (equipped items are never stolen — item-stolen
  * fires with kind: undefined if nothing unequipped was held). Neither deals
  * damage; the caller always treats this as a flee (see advanceEnemies).
@@ -28,11 +50,31 @@ export const resolveFleeingTheft = (
 	rng: RngState,
 	goldCollected: number,
 	inventory: readonly HeldItem[],
+	playerLevel: number,
 ): FleeingTheftResult => {
 	if (kind === "thief") {
-		const stolen = Math.min(THIEF_STEAL_AMOUNT, goldCollected);
+		if (goldCollected === 0) {
+			return {
+				rng,
+				goldCollected,
+				inventory,
+				event: { type: "gold-stolen", payload: { amount: 0 } },
+			};
+		}
+		const saveRoll = stepUniform(rng);
+		const savedAgainstMagic =
+			saveRoll.value * 100 < calculateMagicSaveChancePercent(playerLevel);
+		const pileCount = savedAgainstMagic ? 1 : THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME;
+		let wanted = 0;
+		let nextRng = saveRoll.state;
+		for (let i = 0; i < pileCount; i++) {
+			const pile = rollGoldPileAmount(nextRng);
+			wanted += pile.amount;
+			nextRng = pile.rng;
+		}
+		const stolen = Math.min(wanted, goldCollected);
 		return {
-			rng,
+			rng: nextRng,
 			goldCollected: goldCollected - stolen,
 			inventory,
 			event: { type: "gold-stolen", payload: { amount: stolen } },

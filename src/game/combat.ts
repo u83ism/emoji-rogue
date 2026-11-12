@@ -1,6 +1,7 @@
 import type { RngState } from "../rng.js";
 import { createRng } from "../rng.js";
 import {
+	calculateMagicSaveChancePercent,
 	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
@@ -9,6 +10,7 @@ import {
 	PLAYER_DAMAGE_DICE_COUNT,
 	PLAYER_DAMAGE_DICE_SIDES,
 	SNEAK_ATTACK_MULTIPLIER,
+	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
 import {
@@ -24,20 +26,34 @@ import { calculatePlayerHitChancePercent } from "./items/hitChance.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
 /**
- * An orc's gold hoard, dropped straight into goldCollected the instant it
- * dies — no GoldPile entity involved, unlike gold found on the floor.
- * Consumes state.rng via the same "temporarily wake a stateful Rng" pattern
- * as teleport.ts's applyRandomTeleport.
+ * The gold an orc or thief leaves behind, dropped straight into
+ * goldCollected the instant it dies — no GoldPile entity involved, unlike
+ * gold found on the floor. An orc drops one gold pile's worth; a thief
+ * (original Rogue's leprechaun) drops one too, or
+ * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME of them when the player passes a magic
+ * save. Consumes state.rng via the same "temporarily wake a stateful Rng"
+ * pattern as teleport.ts's applyRandomTeleport.
  */
-const applyOrcGoldDrop = (state: GameState): GameState => {
+const applyEnemyGoldDrop = (
+	state: GameState,
+	kind: "orc" | "thief",
+): GameState => {
 	const rng = createRng(1).setState(state.rng);
-	const amount = rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX);
+	const savedAgainstMagic =
+		kind === "thief" &&
+		rng.getUniformInt(0, 99) <
+			calculateMagicSaveChancePercent(state.playerLevel);
+	const pileCount = savedAgainstMagic ? THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME : 1;
+	let amount = 0;
+	for (let i = 0; i < pileCount; i++) {
+		amount += rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX);
+	}
 	return {
 		...state,
 		goldCollected: state.goldCollected + amount,
 		rng: rng.getState(),
 		events: buildEventLog(state.events, [
-			{ type: "orc-gold-drop", payload: { amount } },
+			{ type: "enemy-gold-drop", payload: { by: kind, amount } },
 		]),
 	};
 };
@@ -84,8 +100,8 @@ const applyEnemyHit = (
 		next,
 		ENEMY_EXPERIENCE_REWARD[target.kind],
 	);
-	return target.kind === "orc"
-		? applyOrcGoldDrop(withExperience)
+	return target.kind === "orc" || target.kind === "thief"
+		? applyEnemyGoldDrop(withExperience, target.kind)
 		: withExperience;
 };
 

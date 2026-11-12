@@ -261,7 +261,7 @@ export type GameEvent =
 			readonly payload: { readonly bonus: number };
 	  }
 	| {
-			/** amount is the actual gold stolen — 0 when the thief struck with nothing to take. */
+			/** amount is the actual gold stolen (capped at what the player carried) — 0 when the thief struck with nothing to take. */
 			readonly type: "gold-stolen";
 			readonly payload: { readonly amount: number };
 	  }
@@ -390,9 +390,9 @@ export type GameEvent =
 			readonly payload: { readonly count: number };
 	  }
 	| {
-			/** An orc defeated by any means (melee or wand) drops a gold bonus on the spot — see combat.ts's applyEnemyHit. */
-			readonly type: "orc-gold-drop";
-			readonly payload: { readonly amount: number };
+			/** An orc or thief defeated by any means (melee or wand) drops gold on the spot — see combat.ts's applyEnemyHit. */
+			readonly type: "enemy-gold-drop";
+			readonly payload: { readonly by: EnemyKind; readonly amount: number };
 	  }
 	| {
 			/** A teleport wand forcibly relocating its target — see teleport.ts's applyEnemyTeleport. */

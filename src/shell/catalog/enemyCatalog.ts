@@ -26,6 +26,7 @@ import {
 	QUAGGA_SPAWN_CHANCE_PERCENT,
 	RAT_SPAWN_CHANCE_PERCENT,
 	SNAKE_SPAWN_CHANCE_PERCENT,
+	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	THIEF_SPAWN_CHANCE_PERCENT,
 	TROLL_MIN_SPAWN_FLOOR,
 	TROLL_REGEN_AMOUNT,
@@ -70,8 +71,7 @@ export const ENEMY_CATALOG: Readonly<Record<EnemyKind, EnemyCatalogEntry>> = {
 	},
 	thief: {
 		spawn: { type: "chance", percent: THIEF_SPAWN_CHANCE_PERCENT },
-		behavior:
-			"ダメージは与えず、接触すると所持金を盗んで姿を消す。倒せば盗まれない",
+		behavior: `ダメージは与えず、接触すると所持金を盗んで姿を消す(${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールド、運が悪いとその${THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME}回分。レベルが高いほど少額で済みやすい)。盗まれる前に倒せば逆に金貨を落とす`,
 	},
 	nymph: {
 		spawn: { type: "chance", percent: NYMPH_SPAWN_CHANCE_PERCENT },

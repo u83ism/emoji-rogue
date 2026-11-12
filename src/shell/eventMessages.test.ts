@@ -243,7 +243,7 @@ describe("formatEvent", () => {
 				"生命の薬を飲んだ。最大HPが5上がり、体力が全回復した!",
 			],
 			[
-				{ type: "orc-gold-drop", payload: { amount: 7 } },
+				{ type: "enemy-gold-drop", payload: { by: "orc", amount: 7 } },
 				"オークが金貨を落とした!7ゴールド手に入れた",
 			],
 			[

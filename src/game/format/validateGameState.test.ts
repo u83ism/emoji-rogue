@@ -866,17 +866,21 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed orc-gold-drop event and rejects broken ones", () => {
+	it("accepts a well-formed enemy-gold-drop event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "orc-gold-drop", payload: { amount: 5 } }],
+			events: [
+				{ type: "enemy-gold-drop", payload: { by: "thief", amount: 5 } },
+			],
 		});
 		expect(result.ok).toBe(true);
 
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "orc-gold-drop", payload: { amount: 0 } }],
+				events: [
+					{ type: "enemy-gold-drop", payload: { by: "orc", amount: 0 } },
+				],
 			},
 			"events",
 		);

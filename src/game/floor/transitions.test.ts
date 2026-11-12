@@ -133,6 +133,21 @@ describe("descendStairs", () => {
 		expect(state.terrain[state.stairs.x]?.[state.stairs.y]).toBe(0);
 	});
 
+	it("a forced fall while carrying the amulet still lands on a floor with an up staircase", () => {
+		const carrying = { ...start, floor: 5, hasAmulet: true };
+		const fallen = descendStairs(carrying);
+		expect(fallen.floor).toBe(6);
+		expect(fallen.stairs.direction).toBe("up");
+	});
+
+	it("falling back onto GOAL_FLOOR while carrying the amulet spawns no second amulet", () => {
+		const carrying = { ...start, floor: GOAL_FLOOR - 1, hasAmulet: true };
+		const fallen = descendStairs(carrying);
+		expect(fallen.floor).toBe(GOAL_FLOOR);
+		expect(fallen.amulet).toBeUndefined();
+		expect(fallen.stairs.direction).toBe("up");
+	});
+
 	it("spawns more enemies on deeper floors, matching the scaling formula", () => {
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= 7; floor++) {

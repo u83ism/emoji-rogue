@@ -39,7 +39,8 @@ const buildFloorTransition = (
 		goldPiles: layout.goldPiles,
 		traps: layout.traps,
 		stairs: layout.stairs,
-		amulet: layout.amulet,
+		/* already carried: a forced fall back onto GOAL_FLOOR must not spawn a second one */
+		amulet: state.hasAmulet ? undefined : layout.amulet,
 		events: buildEventLog(state.events, [event]),
 		rng: rng.getState(),
 		floor: nextFloor,
@@ -55,12 +56,22 @@ const buildFloorTransition = (
  * floor (buildFloorLayout forces its staircase to "up" and places the
  * amulet there) — there is no early return here anymore; the run only ends
  * once the player climbs back out, see ascendStairs.
+ *
+ * While the amulet is carried the new floor gets an "up" staircase: the only
+ * way down during the retrace is a forced one (a trapdoor), and a "down"
+ * staircase there would strand the player below with no way up short of
+ * walking all the way back to GOAL_FLOOR.
  */
 export const descendStairs = (state: GameState): GameState =>
-	buildFloorTransition(state, state.floor + 1, "down", {
-		type: "floor-descended",
-		payload: { floor: state.floor + 1 },
-	});
+	buildFloorTransition(
+		state,
+		state.floor + 1,
+		state.hasAmulet ? "up" : "down",
+		{
+			type: "floor-descended",
+			payload: { floor: state.floor + 1 },
+		},
+	);
 
 /**
  * The next floor up. The run only ends when ascending from floor 1: the

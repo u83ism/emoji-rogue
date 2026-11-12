@@ -142,7 +142,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyConfusionTick runs as part of the same turn-consuming action, so
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action, so
 		 * the drinking turn itself already counts as the first tick */
 		expect(next.confusedTurnsRemaining).toBe(CONFUSION_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
@@ -165,7 +165,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyLevitationTick runs as part of the same turn-consuming action */
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.levitationTurnsRemaining).toBe(LEVITATION_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
 		expect(next.identifiedPotionKinds).toEqual(["levitation"]);
@@ -187,7 +187,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyBlindnessTick runs as part of the same turn-consuming action */
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.blindTurnsRemaining).toBe(BLIND_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
 		expect(next.identifiedPotionKinds).toEqual(["blindness"]);
@@ -209,7 +209,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyParalysisTick runs as part of the same turn-consuming action */
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.paralyzedTurnsRemaining).toBe(PARALYSIS_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
 		expect(next.identifiedPotionKinds).toEqual(["paralysis"]);
@@ -252,7 +252,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyDetectMonstersTick runs as part of the same turn-consuming action */
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.detectMonstersTurnsRemaining).toBe(
 			DETECT_MONSTER_POTION_DURATION - 1,
 		);
@@ -298,7 +298,7 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		/* applyHallucinationTick runs as part of the same turn-consuming action */
+		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.hallucinatingTurnsRemaining).toBe(
 			HALLUCINATION_POTION_DURATION - 1,
 		);

@@ -234,17 +234,17 @@ export interface GameState {
 	readonly playerPower: number;
 	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
 	readonly playerFood: number;
-	/** Turns left of randomized movement — see applyConfusionTick and applyMove. 0 means not confused. */
+	/** Turns left of randomized movement — see applyStatusCountdownTicks and applyMove. 0 means not confused. */
 	readonly confusedTurnsRemaining: number;
-	/** Turns left of floating over traps unharmed — see applyLevitationTick and applyTrapTrigger. */
+	/** Turns left of floating over traps unharmed — see applyStatusCountdownTicks and applyTrapTrigger. */
 	readonly levitationTurnsRemaining: number;
-	/** Turns left of shrunk field of view — see applyBlindnessTick and resolveViewRadius. */
+	/** Turns left of shrunk field of view — see applyStatusCountdownTicks and resolveViewRadius. */
 	readonly blindTurnsRemaining: number;
-	/** Turns left of being unable to act at all — see applyParalysisTick and advanceTurn. */
+	/** Turns left of being unable to act at all — see applyStatusCountdownTicks and advanceTurn. */
 	readonly paralyzedTurnsRemaining: number;
-	/** Turns left of seeing every enemy regardless of FOV — see applyDetectMonstersTick and frame.ts. */
+	/** Turns left of seeing every enemy regardless of FOV — see applyStatusCountdownTicks and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
-	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/hallucination.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */
+	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/statusCountdowns.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */
 	readonly hallucinatingTurnsRemaining: number;
 	readonly enemies: readonly Enemy[];
 	readonly items: readonly Item[];

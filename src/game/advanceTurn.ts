@@ -13,14 +13,9 @@ import {
 import { applyUseItem } from "./items/use.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
-import { applyBlindnessTick } from "./turnEnd/blindness.js";
-import { applyConfusionTick } from "./turnEnd/confusion.js";
-import { applyDetectMonstersTick } from "./turnEnd/detectMonsters.js";
-import { applyHallucinationTick } from "./turnEnd/hallucination.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
-import { applyLevitationTick } from "./turnEnd/levitation.js";
-import { applyParalysisTick } from "./turnEnd/paralysis.js";
 import { applyRegenerationTick } from "./turnEnd/regeneration.js";
+import { applyStatusCountdownTicks } from "./turnEnd/statusCountdowns.js";
 import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
@@ -132,25 +127,15 @@ const applyFloorTurnCounterTick = (state: GameState): GameState =>
 		: state;
 
 /**
- * Every status-tick that runs at the end of a turn-consuming action, in a
- * fixed order (hunger, regeneration, confusion, levitation, blindness,
- * paralysis, detect monsters, hallucination, floor turn counter). Each tick
- * is independently a no-op unless its own field/condition is active, so the
- * order among them does not affect the result.
+ * Everything that runs at the end of a turn-consuming action, in a fixed
+ * order: hunger, regeneration, the status countdowns (confusion, levitation,
+ * blindness, paralysis, detect monsters, hallucination — see
+ * turnEnd/statusCountdowns.ts), then the floor turn counter. Each is
+ * independently a no-op unless its own field/condition is active.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
 	applyFloorTurnCounterTick(
-		applyHallucinationTick(
-			applyDetectMonstersTick(
-				applyParalysisTick(
-					applyBlindnessTick(
-						applyLevitationTick(
-							applyConfusionTick(applyRegenerationTick(applyHungerTick(state))),
-						),
-					),
-				),
-			),
-		),
+		applyStatusCountdownTicks(applyRegenerationTick(applyHungerTick(state))),
 	);
 
 /**

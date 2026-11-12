@@ -300,12 +300,12 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind; readonly damage: number };
 	  }
 	| {
-			/** Drinking a confusion potion — see applyConfusionTick and applyMove. */
+			/** Drinking a confusion potion — see applyStatusCountdownTicks and applyMove. */
 			readonly type: "player-confused";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn confusedTurnsRemaining reaches 0 — see applyConfusionTick. */
+			/** Fired the turn confusedTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "confusion-faded";
 			readonly payload: Record<string, never>;
 	  }
@@ -315,12 +315,12 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  }
 	| {
-			/** Drinking a levitation potion — see applyLevitationTick. */
+			/** Drinking a levitation potion — see applyStatusCountdownTicks. */
 			readonly type: "player-levitated";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn levitationTurnsRemaining reaches 0 — see applyLevitationTick. */
+			/** Fired the turn levitationTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "levitation-faded";
 			readonly payload: Record<string, never>;
 	  }
@@ -330,12 +330,12 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** Drinking a blindness potion — see applyBlindnessTick and resolveViewRadius. */
+			/** Drinking a blindness potion — see applyStatusCountdownTicks and resolveViewRadius. */
 			readonly type: "player-blinded";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn blindTurnsRemaining reaches 0 — see applyBlindnessTick. */
+			/** Fired the turn blindTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "blindness-faded";
 			readonly payload: Record<string, never>;
 	  }
@@ -345,22 +345,22 @@ export type GameEvent =
 			readonly payload: { readonly level: number };
 	  }
 	| {
-			/** Drinking a paralysis potion — see applyParalysisTick. */
+			/** Drinking a paralysis potion — see applyStatusCountdownTicks. */
 			readonly type: "player-paralyzed";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn paralyzedTurnsRemaining reaches 0 — see applyParalysisTick. */
+			/** Fired the turn paralyzedTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "paralysis-faded";
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** Drinking a detect monster potion — see applyDetectMonstersTick. */
+			/** Drinking a detect monster potion — see applyStatusCountdownTicks. */
 			readonly type: "player-detected-monsters";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn detectMonstersTurnsRemaining reaches 0 — see applyDetectMonstersTick. */
+			/** Fired the turn detectMonstersTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "detect-monsters-faded";
 			readonly payload: Record<string, never>;
 	  }
@@ -405,12 +405,12 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  }
 	| {
-			/** Drinking a hallucination potion — see turnEnd/hallucination.ts. Cosmetic only, no mechanical effect. */
+			/** Drinking a hallucination potion — see turnEnd/statusCountdowns.ts. Cosmetic only, no mechanical effect. */
 			readonly type: "player-hallucinated";
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired the turn hallucinatingTurnsRemaining reaches 0 — see turnEnd/hallucination.ts. */
+			/** Fired the turn hallucinatingTurnsRemaining reaches 0 — see turnEnd/statusCountdowns.ts. */
 			readonly type: "hallucination-faded";
 			readonly payload: Record<string, never>;
 	  }

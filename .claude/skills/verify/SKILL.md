@@ -43,3 +43,22 @@ drive it with Playwright (Chromium is pre-installed at
 don't run `playwright install`). `demo/main.js` reads `?seed=` from the URL.
 `npm install --no-save playwright-core` if it isn't already a project
 dependency; don't add it to package.json.
+
+## Windows (the author's machine)
+
+The two recipes above assume a Linux sandbox (tmux, a pre-installed
+Chromium). On Windows neither exists:
+
+- **Automated checks**: `npm run check` (typecheck, lint, knip, test,
+  build). Run it from a cwd whose drive letter is upper-case — with a
+  lower-case one (`c:...`, or `cd /c/...` in Git Bash) every Vitest file
+  fails with `Cannot read properties of undefined (reading 'config')`. Use
+  `cd /C/Users/...` or PowerShell's `Set-Location C:...`.
+- **CLI**: there is no PTY to drive Ink from an agent session. Cover what
+  you can with `ink-testing-library` tests and a headless reducer script
+  against `dist/game/index.mjs`, then hand the interactive check to the
+  human (Windows Terminal) and record it as pending in the tracker rather
+  than claiming it was done.
+- **Browser demo**: Playwright with the installed Edge
+  (`channel: "msedge"`, `npm install --no-save playwright-core`) — see
+  milestone 77 in docs/tasks/game-history.md.

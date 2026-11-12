@@ -51,6 +51,9 @@ describe("formatHeldItemLabel", () => {
 			rustProtected: false,
 		};
 		expect(formatHeldItemLabel(armor, [])).toBe("✅ 鎧(防御+1)");
+		expect(
+			formatHeldItemLabel({ ...armor, cursed: true, defenseBonus: -2 }, []),
+		).toBe("✅ 鎧(防御-2・呪い)");
 	});
 
 	it("adds a curse tag (and no bonus tag) for an equipped, cursed ring", () => {

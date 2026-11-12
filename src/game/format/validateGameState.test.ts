@@ -285,14 +285,37 @@ describe("validateGameState", () => {
 		expect(result.ok).toBe(true);
 	});
 
-	it("accepts a well-formed weapon-equipped event and rejects a broken one", () => {
+	it("accepts a well-formed weapon-equipped event (including a cursed negative bonus) and rejects a broken one", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
 				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -2 } },
 			],
 		});
 		expect(result.ok).toBe(true);
+
+		const cursedHeld = validateGameState({
+			...buildValidState(),
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword",
+					equipped: true,
+					cursed: true,
+					attackBonus: -2,
+				},
+				{
+					itemId: 2,
+					kind: "armor",
+					equipped: true,
+					cursed: true,
+					defenseBonus: -1,
+					rustProtected: false,
+				},
+			],
+		});
+		expect(cursedHeld.ok).toBe(true);
 
 		expectRejected(
 			{
@@ -902,7 +925,7 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed armor-equipped event (including a rusted-to-0 bonus) and rejects broken ones", () => {
+	it("accepts a well-formed armor-equipped event (including a rusted-to-0 or cursed negative bonus) and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
@@ -928,11 +951,19 @@ describe("validateGameState", () => {
 			},
 			"events",
 		);
+		const cursedNegative = validateGameState({
+			...buildValidState(),
+			events: [
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
+			],
+		});
+		expect(cursedNegative.ok).toBe(true);
+
 		expectRejected(
 			{
 				...buildValidState(),
 				events: [
-					{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
+					{ type: "armor-equipped", payload: { kind: "armor", bonus: 0.5 } },
 				],
 			},
 			"events",

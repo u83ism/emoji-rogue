@@ -42,7 +42,7 @@ export const calculatePlayerAttackDamage = (state: GameState): number => {
 	return Math.max(MIN_PLAYER_ATTACK_DAMAGE, baseDamage - WEAK_ATTACK_PENALTY);
 };
 
-/** The player's actual defense: the equipped armor's own defenseBonus, or 0 with nothing worn. */
+/** The player's actual defense: the equipped armor's own defenseBonus (negative for a cursed armor — worse than wearing nothing), or 0 with nothing worn. */
 export const calculatePlayerDefense = (
 	inventory: readonly HeldItem[],
 ): number => findEquippedArmor(inventory)?.defenseBonus ?? 0;
@@ -55,7 +55,7 @@ export const canRustEquippedArmor = (
 	return equippedArmor !== undefined && !equippedArmor.rustProtected;
 };
 
-/** Reduces the equipped armor's defenseBonus by 1 (floored at 0) — a no-op if none is equipped. */
+/** Reduces the equipped armor's defenseBonus by 1, never below 0 — a no-op if none is equipped or it is already at/below 0 (rust never raises a cursed armor's negative bonus to 0). */
 export const applyArmorRust = (
 	inventory: readonly HeldItem[],
 ): readonly HeldItem[] => {
@@ -65,7 +65,10 @@ export const applyArmorRust = (
 	}
 	return replaceHeldItem(inventory, equippedArmor.itemId, {
 		...equippedArmor,
-		defenseBonus: Math.max(0, equippedArmor.defenseBonus - 1),
+		defenseBonus:
+			equippedArmor.defenseBonus <= 0
+				? equippedArmor.defenseBonus
+				: equippedArmor.defenseBonus - 1,
 	});
 };
 

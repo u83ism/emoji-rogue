@@ -13,6 +13,10 @@ import { INVENTORY_TITLE } from "./systemMessages.js";
 export const formatInventoryTitle = (heldCount: number): string =>
 	`${INVENTORY_TITLE} ${heldCount}/${INVENTORY_CAPACITY}`;
 
+/** A sword/armor bonus with its sign spelled out ("+2", "+0", "-1") — a cursed item's bonus can be negative. */
+export const formatSignedBonus = (bonus: number): string =>
+	bonus < 0 ? `${bonus}` : `+${bonus}`;
+
 /**
  * The inventory row label for a held item: its display name, plus — only
  * once equipped, since that is the moment curse and bonus are revealed (see
@@ -29,9 +33,9 @@ export const formatHeldItemLabel = (
 	}
 	const bonus =
 		item.kind === "sword"
-			? `攻撃+${item.attackBonus}`
+			? `攻撃${formatSignedBonus(item.attackBonus)}`
 			: item.kind === "armor"
-				? `防御+${item.defenseBonus}`
+				? `防御${formatSignedBonus(item.defenseBonus)}`
 				: undefined;
 	const tags = [bonus, item.cursed ? "呪い" : undefined].filter(
 		(tag): tag is string => tag !== undefined,

@@ -129,12 +129,13 @@ export type Item = Position &
  * docs/tasks/game.md's cursor-selection backlog note on index fragility).
  *
  * Consumables (potions/scrolls/wands/food) carry only their kind. A
- * sword/armor/ring carries real equip state instead: `cursed` is rolled once
- * at pickup and stays hidden from the player until the item is equipped, so
- * it can be true even while `equipped` is false. `attackBonus`/
+ * sword/armor/ring carries real equip state instead: `cursed` is decided once
+ * at floor generation and stays hidden from the player until the item is
+ * equipped, so it can be true even while `equipped` is false. `attackBonus`/
  * `defenseBonus`/`rustProtected` are intrinsic to that specific item (raised
- * by enchant scrolls, degraded by rust) and persist whether or not the item
- * is currently worn — swapping equipment never resets them.
+ * by enchant scrolls, degraded by rust, negative on a cursed find) and
+ * persist whether or not the item is currently worn — swapping equipment
+ * never resets them.
  */
 export type HeldItem =
 	| {

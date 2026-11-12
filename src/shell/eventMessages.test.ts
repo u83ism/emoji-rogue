@@ -71,7 +71,15 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
-				"鎧を装備したが、錆びついていて防御力は上がらなかった",
+				"鎧を装備した。防御力+0",
+			],
+			[
+				{ type: "armor-equipped", payload: { kind: "armor", bonus: -2 } },
+				"鎧を装備した。防御力-2",
+			],
+			[
+				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -1 } },
+				"剣を装備した。攻撃力-1",
 			],
 			[{ type: "item-unequipped", payload: { kind: "sword" } }, "剣を外した"],
 			[

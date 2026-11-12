@@ -39,6 +39,24 @@ describe("calculatePlayerHitChancePercent", () => {
 		);
 	});
 
+	it("drops below the unarmed chance with a cursed sword's negative attackBonus", () => {
+		const cursedArmed = {
+			...state,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "sword" as const,
+					equipped: true,
+					cursed: true,
+					attackBonus: -2,
+				},
+			],
+		};
+		expect(calculatePlayerHitChancePercent(cursedArmed)).toBe(
+			PLAYER_BASE_HIT_CHANCE_PERCENT - 2 * PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
+		);
+	});
+
 	it("ignores an unequipped sword", () => {
 		const unequipped = {
 			...state,

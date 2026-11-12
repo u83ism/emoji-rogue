@@ -521,25 +521,35 @@ export const calculateEnemyCountForFloor = (
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
-/** A freshly picked-up sword's own attackBonus (see HeldItem) — raised further by enchant-weapon scrolls targeting it. */
+/** An ordinary sword's own attackBonus (see HeldItem) before the found-cursed/found-enchanted roll below — raised further by enchant-weapon scrolls targeting it. */
 export const SWORD_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a sword spawns. */
 export const SWORD_SPAWN_CHANCE_PERCENT = 15;
 /**
- * Chance (out of 100) that a sword turns out cursed — rolled once at pickup
- * (see items/pickups.ts) and hidden until equipped. A cursed item is exactly
- * as effective as an uncursed one; the only effect is that it cannot be
- * unequipped until a remove-curse scroll is read (milestone 81 dropped the
- * older "curse subtracts from the stat" design).
+ * Original Rogue 5.4's new_thing() roll for a found weapon/armor, decided
+ * once at floor generation (items/heldItemFactory.ts) and hidden until the
+ * item is equipped: a sword is cursed SWORD_CURSE_CHANCE_PERCENT of the
+ * time, found already enchanted SWORD_FOUND_ENCHANTED_CHANCE_PERCENT of the
+ * time, ordinary otherwise. A cursed one cannot be unequipped until a
+ * remove-curse scroll is read AND is worse by
+ * FOUND_BONUS_ADJUSTMENT_MIN..MAX points (so its bonus can go negative); a
+ * found-enchanted one is better by the same range. Milestone 81 had made
+ * the curse lock-only; the numeric side was restored for fidelity
+ * (2026-11-12). Rogue's weapon curse lowers to-hit only — here attackBonus
+ * drives both to-hit and damage until weapons get separate values.
  */
-export const SWORD_CURSE_CHANCE_PERCENT = 20;
+export const SWORD_CURSE_CHANCE_PERCENT = 10;
+export const SWORD_FOUND_ENCHANTED_CHANCE_PERCENT = 5;
+export const FOUND_BONUS_ADJUSTMENT_MIN = 1;
+export const FOUND_BONUS_ADJUSTMENT_MAX = 3;
 
-/** A freshly picked-up armor's own defenseBonus (see HeldItem) — raised further by enchant-armor scrolls targeting it. */
+/** An ordinary armor's own defenseBonus (see HeldItem) before the found-cursed/found-enchanted roll — raised further by enchant-armor scrolls targeting it. */
 export const ARMOR_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that armor spawns. */
 export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
-/** Chance (out of 100) that armor turns out cursed — same idiom and timing as SWORD_CURSE_CHANCE_PERCENT. */
+/** Armor's share of the same roll as SWORD_CURSE_CHANCE_PERCENT — Rogue curses armor twice as often as weapons. */
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
+export const ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT = 8;
 
 export const POISON_DAMAGE = 4;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
@@ -649,8 +659,6 @@ export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
 export const RING_SPAWN_CHANCE_PERCENT = 8;
-/** Chance (out of 100) that a ring turns out cursed — same pickup-time-roll, hidden-until-equipped idiom as SWORD_CURSE_CHANCE_PERCENT. */
-export const RING_CURSE_CHANCE_PERCENT = 20;
 /**
  * Chance (out of 100), rolled independently every turn a ring of
  * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it

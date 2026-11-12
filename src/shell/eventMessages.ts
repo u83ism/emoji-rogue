@@ -6,6 +6,7 @@ import {
 	resolveItemDisplayName,
 	TRAP_NAMES,
 } from "./gameNames.js";
+import { formatSignedBonus } from "./inventoryLabels.js";
 
 /**
  * The single place where game events become human-readable text (Japanese
@@ -60,11 +61,9 @@ export const formatEvent = (
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力+${event.payload.bonus}`;
+			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力${formatSignedBonus(event.payload.bonus)}`;
 		case "armor-equipped":
-			return event.payload.bonus > 0
-				? `${ITEM_NAMES[event.payload.kind]}を装備した。防御力+${event.payload.bonus}`
-				: `${ITEM_NAMES[event.payload.kind]}を装備したが、錆びついていて防御力は上がらなかった`;
+			return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力${formatSignedBonus(event.payload.bonus)}`;
 		case "item-unequipped":
 			return `${ITEM_NAMES[event.payload.kind]}を外した`;
 		case "equip-blocked-cursed":

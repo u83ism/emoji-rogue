@@ -3,16 +3,18 @@ import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_WEAK_THRESHOLD } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import {
+	applyArmorRust,
 	calculatePlayerAttackDamage,
 	calculatePlayerDefense,
 } from "./equipment.js";
 
 /*
- * Whether a freshly picked-up sword/armor turns out cursed is rolled once at
- * pickup (see items/pickups.ts) and stashed on the HeldItem — these tests
- * build already-picked-up HeldItem fixtures directly with an explicit
- * `cursed` value, so both the blessed and cursed cases are exercised
- * unconditionally instead of depending on any particular rng seed.
+ * Whether a sword/armor is cursed, and how far the curse drags its bonus
+ * down, is rolled once at floor generation (see items/heldItemFactory.ts)
+ * and carried on the HeldItem — these tests build already-picked-up
+ * HeldItem fixtures directly with explicit `cursed`/bonus values, so both
+ * the ordinary and cursed cases are exercised unconditionally instead of
+ * depending on any particular rng seed.
  */
 describe("items/equipment", () => {
 	it("equipping a held sword raises the player's effective attack damage", () => {
@@ -93,16 +95,17 @@ describe("items/equipment", () => {
 		expect(calculatePlayerAttackDamage(next)).toBe(state.playerPower + 3);
 	});
 
-	it("a cursed sword still grants its full attack bonus when equipped, but cannot be unequipped", () => {
+	it("a cursed sword applies its (negative) attack bonus when equipped — worse than unarmed — and cannot be unequipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
+			playerPower: 5,
 			inventory: [
 				{
 					itemId: 1,
 					kind: "sword" as const,
 					equipped: false,
 					cursed: true,
-					attackBonus: 1,
+					attackBonus: -2,
 				},
 			],
 		};
@@ -110,18 +113,18 @@ describe("items/equipment", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(calculatePlayerAttackDamage(equipped)).toBe(state.playerPower + 1);
+		expect(calculatePlayerAttackDamage(equipped)).toBe(state.playerPower - 2);
 		expect(equipped.inventory).toEqual([
 			{
 				itemId: 1,
 				kind: "sword",
 				equipped: true,
 				cursed: true,
-				attackBonus: 1,
+				attackBonus: -2,
 			},
 		]);
 		expect(equipped.events).toEqual([
-			{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+			{ type: "weapon-equipped", payload: { kind: "sword", bonus: -2 } },
 			{ type: "curse-revealed", payload: { kind: "sword" } },
 		]);
 
@@ -219,7 +222,7 @@ describe("items/equipment", () => {
 		expect(calculatePlayerDefense(next.inventory)).toBe(2);
 	});
 
-	it("cursed armor still grants its full defense bonus when equipped, but cannot be unequipped", () => {
+	it("cursed armor applies its (negative) defense bonus when equipped — worse than unarmored — and cannot be unequipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
@@ -228,7 +231,7 @@ describe("items/equipment", () => {
 					kind: "armor" as const,
 					equipped: false,
 					cursed: true,
-					defenseBonus: 1,
+					defenseBonus: -2,
 					rustProtected: false,
 				},
 			],
@@ -237,9 +240,9 @@ describe("items/equipment", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(calculatePlayerDefense(equipped.inventory)).toBe(1);
+		expect(calculatePlayerDefense(equipped.inventory)).toBe(-2);
 		expect(equipped.events).toEqual([
-			{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
+			{ type: "armor-equipped", payload: { kind: "armor", bonus: -2 } },
 			{ type: "curse-revealed", payload: { kind: "armor" } },
 		]);
 
@@ -253,6 +256,23 @@ describe("items/equipment", () => {
 				(event) => event.type === "equip-blocked-cursed",
 			),
 		).toBe(true);
+	});
+
+	it("rust lowers a positive defense bonus by 1 but never touches one already at or below 0", () => {
+		const armorWith = (defenseBonus: number) => [
+			{
+				itemId: 1,
+				kind: "armor" as const,
+				equipped: true,
+				cursed: defenseBonus < 0,
+				defenseBonus,
+				rustProtected: false,
+			},
+		];
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(2)))).toBe(1);
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(0)))).toBe(0);
+		/* a cursed -2 armor is not "rusted up" to 0 */
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(-2)))).toBe(-2);
 	});
 
 	it("is unaffected by playerFood while above PLAYER_WEAK_THRESHOLD", () => {

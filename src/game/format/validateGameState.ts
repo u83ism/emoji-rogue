@@ -30,6 +30,10 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 export const isPositiveInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value > 0;
 
+/** Any integer, negative included — a cursed sword/armor's bonus can go below 0. */
+const isInteger = (value: unknown): value is number =>
+	typeof value === "number" && Number.isInteger(value);
+
 const isNonNegativeInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value >= 0;
 
@@ -127,13 +131,10 @@ const isHeldItem = (value: unknown): value is HeldItem => {
 		return false;
 	}
 	if (value.kind === "sword") {
-		return isNonNegativeInteger(value.attackBonus);
+		return isInteger(value.attackBonus);
 	}
 	if (value.kind === "armor") {
-		return (
-			isNonNegativeInteger(value.defenseBonus) &&
-			isBooleanValue(value.rustProtected)
-		);
+		return isInteger(value.defenseBonus) && isBooleanValue(value.rustProtected);
 	}
 	return true;
 };
@@ -156,13 +157,10 @@ const isItemIdentity = (kind: ItemKind, value: unknown): boolean => {
 		return false;
 	}
 	if (kind === "sword") {
-		return isNonNegativeInteger(value.attackBonus);
+		return isInteger(value.attackBonus);
 	}
 	if (kind === "armor") {
-		return (
-			isNonNegativeInteger(value.defenseBonus) &&
-			isBooleanValue(value.rustProtected)
-		);
+		return isInteger(value.defenseBonus) && isBooleanValue(value.rustProtected);
 	}
 	return true;
 };
@@ -242,9 +240,9 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"item-dropped": (payload) => isItemKind(payload.kind),
 	"game-won": emptyPayload,
 	"weapon-equipped": (payload) =>
-		isItemKind(payload.kind) && isPositiveInteger(payload.bonus),
+		isItemKind(payload.kind) && isInteger(payload.bonus),
 	"armor-equipped": (payload) =>
-		isItemKind(payload.kind) && isNonNegativeInteger(payload.bonus),
+		isItemKind(payload.kind) && isInteger(payload.bonus),
 	"player-hungry": emptyPayload,
 	"player-weak": emptyPayload,
 	"player-starved": (payload) => isPositiveInteger(payload.damage),

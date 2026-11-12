@@ -39,20 +39,31 @@
 
 **出現階層**: `randmonster()`が`level + (rnd(10) - 6)`でA〜Zのインデックスを決める。単純化すると「深い階ほど後ろの文字(強いモンスター)が出やすい」——26種は26階層に緩やかに対応している。
 
-**emoji-rogueに存在しないモンスター名**: centaur/venus flytrap/griffin/hobgoblin/ice monster/jabberwock/kestrel/leprechaun/medusa/phantom/quagga/rattlesnake/troll/black unicorn/wraith/xeroc — balance.tsの10種(zombie/bat/thief/nymph/aquator/orc/dragon/yeti/snake/vampire)は本家26種の部分集合+1種の差異がある。
+**emoji-rogueの26種との名前の対応(2026-11-12更新)**: マイルストーン101〜103で26種まで実装したが、本家5.4と名前が一致しないものが4種ある——`thief`(本家L=leprechaun)、`rat`(本家R=rattlesnake)、`ur-vile`(本家U=black unicorn)、`icky-thing`(本家I=ice monster)。残り22種は本家と同名。`rat`・`ur-vile`・`icky-thing`は能力も本家5.4の該当モンスターと照合していない。
 
-**"thief"は本家に存在しない名前**: balance.tsの`thief`(金を盗んで逃げる)は、挙動的には本家の**leprechaun**(金を盗んで消える)のリネームに相当する。`nymph`は本家と同名・同挙動(アイテムを盗んで消える)で一致している。
+**"thief"は本家に存在しない名前**: `thief`(金を盗んで逃げる)は本家の**leprechaun**に相当する。名前は「盗賊」のままアレンジとして残し、挙動だけ本家に合わせた(2026-11-12本人決定、マイルストーン110)。`nymph`は本家と同名・同挙動(アイテムを盗んで消える)で一致している。
+
+**leprechaunの挙動**(`fight.c`の`attack()`と`killed()`、`rogue.h`の`GOLDCALC`、`monsters.c`の`save_throw()`):
+
+- 攻撃が当たると所持金から`GOLDCALC`(=`rnd(50 + 10 * level) + 2`。フロアに落ちている金貨の山1つと同じ式で、階が深いほど大きい)を奪う。`save(VS_MAGIC)`に失敗すると、さらに`GOLDCALC`4回分を奪う(合計5回分)。所持金は0未満にならない。奪った後、その場から消える
+- 倒すと金貨を落とす: `GOLDCALC`1回分、`save(VS_MAGIC)`に成功するとさらに4回分。ただし**最深到達階にいるとき(`level >= max_level`)だけ**
+- `save(VS_MAGIC)`: d20の出目が`14 + 3 - プレイヤーレベル/2`(切り捨て)以上で成功。レベル1なら17以上=20%。protectionの指輪は目標値を下げる
+- emoji-rogueの対応: 金貨の山は深さによらず2〜20なので「山1つ分/5つ分」として実装。最深到達階の条件は未実装
 
 ## 呪い(curse)の仕様 — `things.c`の`new_thing()`
 
 呪いは**装着不可ロックだけでなく数値ペナルティも伴う**、本家の仕様:
 
-- **武器**: 10%の確率で呪い(`o_hplus -= rnd(3)+1` — 命中/ダメージ補正が下がる)、別途5%の確率(呪いでない場合)で加護(+補正)
-- **防具**: 20%の確率で呪い(`o_arm += rnd(3)+1` — Rogueは値が小さいほど硬いため、上げるほど弱化)、別途8%の確率で加護(-補正、強化)
+- **武器**: 10%の確率で呪い(`o_hplus -= rnd(3)+1` — **命中補正だけ**が1〜3下がる。ダメージ補正`o_dplus`は変わらない)、別途5%の確率(呪いでない場合)で命中補正が1〜3上がる
+- **防具**: 20%の確率で呪い(`o_arm += rnd(3)+1` — Rogueは値が小さいほど硬いため、上げるほど弱化)、別途8%の確率で1〜3強化
 - **指輪**(add-strength/protection/add-hit/add-damage系): `rnd(3)`が0なら呪い(効果値-1)、そうでなければ+1/+2
 - **指輪**(aggravate monster/teleport): **必ず呪い**(デメリット専用の指輪という設計そのものが本家由来)
 
-呪われたアイテムは外せない(ロック)効果に加えて、上記の数値ペナルティが常に伴う。
+呪われたアイテムは外せない(ロック、`things.c`の`dropcheck()`)効果に加えて、上記の数値ペナルティが常に伴う。上に挙げた以外の指輪(regeneration・slow digestion・stealth・searchingなど)は呪われない。
+
+**呪いが解ける条件**(`scrolls.c`): remove curseの巻物は装備中の武器・防具・左右の指輪の呪いを解く。**enchant weapon・enchant armorの巻物も、装備中の武器/防具の呪いを解く**(強化と同時に`ISCURSED`を落とす)。
+
+**emoji-rogueの対応(マイルストーン110、2026-11-12)**: 剣・鎧の抽選と確率、指輪の「警報(aggravate monster)だけ必ず呪い」を本家どおりにした。差分は2つ——①剣の呪い/強化は`attackBonus`1本を動かすので、命中だけでなくダメージも変わる ②強化の巻物は呪いを解かない。
 
 ## 戦闘計算 — `fight.c`
 
@@ -63,7 +74,7 @@
 
 - `MAXROOMS = 9`(3×3グリッドの部屋配置、GOAL_FLOORの`10`とは無関係の本家定数)
 - `AMULETLEVEL = 26`(アミュレットのある最深階。emoji-rogueの`GOAL_FLOOR = 10`は明確な短縮版)
-- `MAXPACK = 26`(持ち物所持上限。a〜zのレター選択と1:1対応させた設計。emoji-rogueの`INVENTORY_CAPACITY = 20`は明記の通りシレン初代のどうぐ袋基準を採用したもので、本家準拠ではない)
+- `MAXPACK = 26`(持ち物所持上限。a〜zのレター選択と1:1対応させた設計。`pack.c`の`pack_room()`は薬・巻物・食料を重ねて持っても1個ずつ数える——矢のような「束」だけが束で1つ。emoji-rogueの`INVENTORY_CAPACITY`もマイルストーン110で26にした。1個=1スロットなので数え方も一致)
 
 ## アイテム表(`extern.c`の`*_info[]`)
 
@@ -137,9 +148,8 @@ emoji-rogueにあるのは **striking**(本家のこの14種に無い——NetHa
 
 以下はシレン由来ではないが、本家との忠実度という観点では差分として見つかったもの。**今回の「シレン由来要素の削除」の対象ではない**——別途方針判断が要る場合の材料として記録するのみ:
 
-- M81で「呪い=数値ペナルティ廃止、ロックのみ」に変更した経緯があるが、本家の呪いは数値ペナルティを伴うのが仕様
-- `INVENTORY_CAPACITY = 20`は本家の`MAXPACK = 26`と異なる(シレン基準採用の明記あり)
-- `thief`は本家に存在せず、`leprechaun`のリネーム相当
+- (解決済み、マイルストーン110)呪いの数値ペナルティ・持ち物上限26・盗賊の挙動は本家準拠にした。盗賊の名前だけはアレンジとして残す。残った細かい差分は各節の「emoji-rogueの対応」と`docs/tasks/game.md`のバックログを参照
+- `rat`・`ur-vile`・`icky-thing`は本家5.4の26種に無い名前(本家はrattlesnake・black unicorn・ice monster)
 - **生命の薬(life potion)は本家の薬14種に存在しない**——`docs/idea-memo.md`にも記載の通りBrogue由来。シレン由来ではないため今回の削除方針の対象外だが、忠実度観点では同じ性質の差分
 - **杖の「striking」は本家の杖14種に存在しない**——出どころ不明(NetHack等の可能性)
 - 武器・防具は本家がそれぞれ9種/8種の個別アイテムを持つのに対し、emoji-rogueは各1種+個体強化値に単純化されている(規模を抑える意図的な簡略化であり、本家不在という意味での「移植要素」ではない)

@@ -3,7 +3,7 @@ import type { GameState, HeldItem } from "../state.js";
 import {
 	type ArmorItem,
 	findEquippedArmor,
-	type SwordItem,
+	type WeaponItem,
 } from "./equipmentStats.js";
 import { replaceHeldItem } from "./inventory.js";
 
@@ -40,7 +40,7 @@ export const applyArmorRust = (
 };
 
 /**
- * Unequips whichever other held item among `otherKinds` (a second sword; for
+ * Unequips whichever other held item among `otherKinds` (a second weapon; for
  * rings, the other ring kind — regeneration and sustenance share one slot)
  * is currently equipped, if any.
  */
@@ -66,21 +66,21 @@ export const unequipOthers = (
 };
 
 /**
- * Toggles a held sword's equip state. Equipping unequips any other held
- * sword first and reveals the curse rolled at pickup (see items/pickups.ts).
- * Unequipping a cursed sword is refused (logs equip-blocked-cursed, no
+ * Toggles a held weapon's equip state. Equipping unequips any other held
+ * weapon first and reveals the curse rolled at pickup (see items/pickups.ts).
+ * Unequipping a cursed weapon is refused (logs equip-blocked-cursed, no
  * other state change).
  */
-export const applyToggleSwordEquip = (
+export const applyToggleWeaponEquip = (
 	state: GameState,
-	item: SwordItem,
+	item: WeaponItem,
 ): GameState => {
 	if (item.equipped) {
 		if (item.cursed) {
 			return {
 				...state,
 				events: buildEventLog(state.events, [
-					{ type: "equip-blocked-cursed", payload: { kind: "sword" } },
+					{ type: "equip-blocked-cursed", payload: { kind: "weapon" } },
 				]),
 			};
 		}
@@ -91,29 +91,29 @@ export const applyToggleSwordEquip = (
 				equipped: false,
 			}),
 			events: buildEventLog(state.events, [
-				{ type: "item-unequipped", payload: { kind: "sword" } },
+				{ type: "item-unequipped", payload: { kind: "weapon" } },
 			]),
 		};
 	}
 	const inventory = replaceHeldItem(
-		unequipOthers(state.inventory, item.itemId, ["sword"]),
+		unequipOthers(state.inventory, item.itemId, ["weapon"]),
 		item.itemId,
 		{ ...item, equipped: true },
 	);
 	const events: GameEvent[] = [
 		{
 			type: "weapon-equipped",
-			payload: { kind: "sword", bonus: item.attackBonus },
+			payload: { kind: "weapon", bonus: item.attackBonus },
 		},
 	];
 	if (item.cursed) {
-		events.push({ type: "curse-revealed", payload: { kind: "sword" } });
+		events.push({ type: "curse-revealed", payload: { kind: "weapon" } });
 	}
 	return { ...state, inventory, events: buildEventLog(state.events, events) };
 };
 
 /**
- * Toggles a held armor's equip state — same shape as applyToggleSwordEquip,
+ * Toggles a held armor's equip state — same shape as applyToggleWeaponEquip,
  * for the defenseBonus/rustProtected fields instead.
  */
 export const applyToggleArmorEquip = (

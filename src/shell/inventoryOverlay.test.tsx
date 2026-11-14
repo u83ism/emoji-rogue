@@ -66,21 +66,21 @@ describe("InventoryOverlay", () => {
 	});
 
 	it("swaps the row list for the selected item's name and the use/drop prompt", () => {
-		const sword: HeldItem = {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: false,
 			cursed: false,
 			attackBonus: 1,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [sword],
+			inventory: [weapon],
 		};
 		const { lastFrame } = render(
 			<InventoryOverlay
 				state={state}
-				selectedItem={sword}
+				selectedItem={weapon}
 				pendingTargetFor={undefined}
 			/>,
 		);
@@ -91,18 +91,18 @@ describe("InventoryOverlay", () => {
 	});
 
 	it("reads はずす for an already-equipped selected item", () => {
-		const sword: HeldItem = {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: true,
 			cursed: false,
 			attackBonus: 1,
 		};
-		const state = { ...buildArenaGameState(9, 3, 1), inventory: [sword] };
+		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
 			<InventoryOverlay
 				state={state}
-				selectedItem={sword}
+				selectedItem={weapon}
 				pendingTargetFor={undefined}
 			/>,
 		);
@@ -111,14 +111,14 @@ describe("InventoryOverlay", () => {
 	});
 
 	it("shows an equipped item's bonus with the equipped glyph", () => {
-		const sword: HeldItem = {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: true,
 			cursed: false,
 			attackBonus: 1,
 		};
-		const state = { ...buildArenaGameState(9, 3, 1), inventory: [sword] };
+		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
 			<InventoryOverlay
 				state={state}
@@ -132,9 +132,9 @@ describe("InventoryOverlay", () => {
 
 	it("shows a filtered target row list, prompt only, while pendingTargetFor is set", () => {
 		const scroll: HeldItem = { itemId: 1, kind: "enchant-weapon" };
-		const swordA: HeldItem = {
+		const weaponA: HeldItem = {
 			itemId: 2,
-			kind: "sword",
+			kind: "weapon",
 			equipped: false,
 			cursed: false,
 			attackBonus: 1,
@@ -149,7 +149,7 @@ describe("InventoryOverlay", () => {
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [scroll, swordA, armor],
+			inventory: [scroll, weaponA, armor],
 		};
 		const { lastFrame } = render(
 			<InventoryOverlay

@@ -42,7 +42,7 @@ describe("applyItemDrop", () => {
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: true,
 					cursed: true,
 					attackBonus: 1,
@@ -53,7 +53,7 @@ describe("applyItemDrop", () => {
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.items).toEqual(state.items);
 		expect(next.events).toEqual([
-			{ type: "equip-blocked-cursed", payload: { kind: "sword" } },
+			{ type: "equip-blocked-cursed", payload: { kind: "weapon" } },
 		]);
 	});
 
@@ -94,7 +94,7 @@ describe("applyItemDrop", () => {
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
 					attackBonus: 1,
@@ -111,7 +111,7 @@ describe("applyItemDrop", () => {
 			inventory: [
 				{
 					itemId: 7,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
 					attackBonus: 3,
@@ -123,7 +123,7 @@ describe("applyItemDrop", () => {
 			{
 				x: state.player.x,
 				y: state.player.y,
-				kind: "sword",
+				kind: "weapon",
 				identity: { itemId: 7, cursed: true, attackBonus: 3 },
 			},
 		]);

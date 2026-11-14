@@ -11,9 +11,9 @@ import {
 	calculatePlayerHitChancePercent,
 } from "./hitChance.js";
 
-const swordWith = (attackBonus: number, equipped = true): HeldItem => ({
+const weaponWith = (attackBonus: number, equipped = true): HeldItem => ({
 	itemId: 1,
-	kind: "sword",
+	kind: "weapon",
 	equipped,
 	cursed: attackBonus < 0,
 	attackBonus,
@@ -47,25 +47,25 @@ describe("calculatePlayerHitChancePercent", () => {
 		).toBe(40);
 	});
 
-	it("rises with the equipped sword's attackBonus and drops with a cursed one's", () => {
+	it("rises with the equipped weapon's attackBonus and drops with a cursed one's", () => {
 		expect(
 			calculatePlayerHitChancePercent(
-				{ ...state, inventory: [swordWith(2)] },
+				{ ...state, inventory: [weaponWith(2)] },
 				"zombie",
 			),
 		).toBe(55);
 		expect(
 			calculatePlayerHitChancePercent(
-				{ ...state, inventory: [swordWith(-2)] },
+				{ ...state, inventory: [weaponWith(-2)] },
 				"zombie",
 			),
 		).toBe(35);
 	});
 
-	it("ignores an unequipped sword", () => {
+	it("ignores an unequipped weapon", () => {
 		expect(
 			calculatePlayerHitChancePercent(
-				{ ...state, inventory: [swordWith(5, false)] },
+				{ ...state, inventory: [weaponWith(5, false)] },
 				"zombie",
 			),
 		).toBe(45);
@@ -74,7 +74,7 @@ describe("calculatePlayerHitChancePercent", () => {
 	it("stays within 0-100 at the extremes", () => {
 		expect(
 			calculatePlayerHitChancePercent(
-				{ ...state, inventory: [swordWith(100)] },
+				{ ...state, inventory: [weaponWith(100)] },
 				"zombie",
 			),
 		).toBe(100);

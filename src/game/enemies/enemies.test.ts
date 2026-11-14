@@ -439,7 +439,7 @@ describe("advanceEnemies", () => {
 				{ itemId: 1, kind: "heal-potion" } as const,
 				{
 					itemId: 2,
-					kind: "sword",
+					kind: "weapon",
 					equipped: false,
 					cursed: false,
 					attackBonus: 1,
@@ -452,21 +452,21 @@ describe("advanceEnemies", () => {
 		if (stolenEvent === undefined || stolenEvent.type !== "item-stolen") {
 			throw new Error("unreachable: expected an item-stolen event");
 		}
-		expect(["heal-potion", "sword"]).toContain(stolenEvent.payload.kind);
+		expect(["heal-potion", "weapon"]).toContain(stolenEvent.payload.kind);
 		expect(
 			next.inventory.some((item) => item.kind === stolenEvent.payload.kind),
 		).toBe(false);
 	});
 
 	it("an adjacent nymph never steals an equipped item, even alongside unequipped ones", () => {
-		/* the only unequipped candidate is the heal-potion — the equipped sword
+		/* the only unequipped candidate is the heal-potion — the equipped weapon
 		 * must never be picked, however the rng roll lands */
 		const state = {
 			...buildCorridorState([nymph(5, 1)]),
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword",
+					kind: "weapon",
 					equipped: true,
 					cursed: false,
 					attackBonus: 1,
@@ -478,7 +478,7 @@ describe("advanceEnemies", () => {
 		expect(next.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: false,
 				attackBonus: 1,

@@ -37,7 +37,7 @@ const buildPool = (size: number): Position[] =>
  * ITEM_SPAWN_TABLE must consciously extend this list too.
  */
 const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
-	"sword",
+	"weapon",
 	"enchant-weapon",
 	"armor",
 	"enchant-armor",

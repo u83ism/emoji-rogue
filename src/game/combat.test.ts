@@ -57,9 +57,9 @@ const orc = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
  */
 const SURE_HIT_LEVEL = 30;
 
-const swordWith = (attackBonus: number): HeldItem => ({
+const weaponWith = (attackBonus: number): HeldItem => ({
 	itemId: 1,
-	kind: "sword",
+	kind: "weapon",
 	equipped: true,
 	cursed: false,
 	attackBonus,
@@ -146,9 +146,9 @@ describe("applyPlayerAttack", () => {
 		expect(next.terrain).toBe(state.terrain);
 	});
 
-	it("an equipped sword rolls its own dice and adds its attackBonus", () => {
+	it("an equipped weapon rolls its own dice and adds its attackBonus", () => {
 		const target = zombie(5, 4, 100);
-		const armed = { ...state, inventory: [swordWith(2)], enemies: [target] };
+		const armed = { ...state, inventory: [weaponWith(2)], enemies: [target] };
 		const next = applyPlayerAttack(armed, target);
 		const damage = readDamage(next);
 		/* 3d4 + playerPower + 2 */
@@ -157,12 +157,12 @@ describe("applyPlayerAttack", () => {
 		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage)]);
 	});
 
-	it("a roll dragged below zero by a cursed sword deals 0, never negative damage", () => {
+	it("a roll dragged below zero by a cursed weapon deals 0, never negative damage", () => {
 		const target = zombie(5, 4, 100);
 		const cursed = {
 			...state,
 			playerLevel: 200 /* still lands despite the -50 to hit */,
-			inventory: [swordWith(-50)],
+			inventory: [weaponWith(-50)],
 			enemies: [target],
 		};
 		const next = applyPlayerAttack(cursed, target);
@@ -227,7 +227,7 @@ describe("applyPlayerAttack", () => {
 
 	it("a failed to-hit roll deals no damage, logs player-attack-missed, but still sets hasAttacked and consumes rng", () => {
 		/* a -100 to hit puts the chance at 0% */
-		const missState = { ...state, inventory: [swordWith(-100)] };
+		const missState = { ...state, inventory: [weaponWith(-100)] };
 		const target = zombie(5, 4);
 		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
 		expect(next.enemies).toEqual([target]);
@@ -240,7 +240,7 @@ describe("applyPlayerAttack", () => {
 
 	it("a sneak attack on a sleeping target never misses, however low the hit chance would otherwise be", () => {
 		/* the same 0% chance that misses an awake target still guarantees a sneak attack */
-		const missState = { ...state, inventory: [swordWith(-100)] };
+		const missState = { ...state, inventory: [weaponWith(-100)] };
 		const target = zombie(5, 4, 10, false);
 		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
 		expect(next.events[0]?.type).toBe("sneak-attack");

@@ -24,9 +24,9 @@ const armor = (
 	rustProtected: overrides.rustProtected ?? false,
 });
 
-const sword = (itemId: number, equipped = false): HeldItem => ({
+const weapon = (itemId: number, equipped = false): HeldItem => ({
 	itemId,
-	kind: "sword",
+	kind: "weapon",
 	equipped,
 	cursed: false,
 	attackBonus: 1,
@@ -112,9 +112,9 @@ describe("decideItemToUse", () => {
 	it("skips a disabled kind and falls through to the next priority item", () => {
 		const state = {
 			...baseState(),
-			inventory: [sword(1), consumable(2, "strength")],
+			inventory: [weapon(1), consumable(2, "strength")],
 		};
-		expect(decideItemToUse(state, new Set(["sword"]))).toEqual({ itemId: 2 });
+		expect(decideItemToUse(state, new Set(["weapon"]))).toEqual({ itemId: 2 });
 	});
 
 	it("skips a disabled kind even when it is the only priority-eligible item held", () => {
@@ -160,7 +160,7 @@ describe("decideItemToUse", () => {
 		expect(decideItemToUse(state)).toEqual({ itemId: 3, targetItemId: 2 });
 	});
 
-	it("holds onto an enchant-weapon scroll with no sword to target", () => {
+	it("holds onto an enchant-weapon scroll with no weapon to target", () => {
 		const state = {
 			...baseState(),
 			inventory: [consumable(1, "enchant-weapon")],
@@ -179,10 +179,10 @@ describe("decideItemToUse", () => {
 		expect(decideItemToUse(state)).toBeUndefined();
 	});
 
-	it("equips a newly found, strictly better sword", () => {
+	it("equips a newly found, strictly better weapon", () => {
 		const state = {
 			...baseState(),
-			inventory: [sword(1)],
+			inventory: [weapon(1)],
 		};
 		expect(decideItemToUse(state)).toEqual({ itemId: 1 });
 	});

@@ -25,20 +25,20 @@ import {
 	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
-	SWORD_ATTACK_BONUS,
-	SWORD_CURSE_CHANCE_PERCENT,
-	SWORD_FOUND_ENCHANTED_CHANCE_PERCENT,
-	SWORD_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
+	WEAPON_ATTACK_BONUS,
+	WEAPON_CURSE_CHANCE_PERCENT,
+	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
+	WEAPON_SPAWN_CHANCE_PERCENT,
 } from "../../game/balance.js";
 import type { ItemKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
 import { POTION_CATALOG } from "./potionCatalog.js";
 import { RING_CATALOG } from "./ringCatalog.js";
 
-// The scroll/wand/sword/armor/food rows of the item catalog, composed with
+// The scroll/wand/weapon/armor/food rows of the item catalog, composed with
 // POTION_CATALOG and RING_CATALOG into the full Record<ItemKind, ...> — the
 // annotation makes a kind missing from any of the three a compile error.
 // Same rules as catalogData.ts: numbers always interpolated from balance.ts.
@@ -153,11 +153,11 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: { type: "chance", percent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
 		effect: "視界内の最も近い敵を強制的に眠らせる。1回使い切り",
 	},
-	sword: {
+	weapon: {
 		catalogName: "剣",
 		category: "装備",
-		spawn: { type: "chance", percent: SWORD_SPAWN_CHANCE_PERCENT },
-		effect: `装備すると攻撃力が${SWORD_ATTACK_BONUS}上がる(持ち替えれば戻る個体ごとの値)。${SWORD_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い(マイナスにもなる)。${SWORD_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
+		spawn: { type: "chance", percent: WEAPON_SPAWN_CHANCE_PERCENT },
+		effect: `装備すると攻撃力が${WEAPON_ATTACK_BONUS}上がる(持ち替えれば戻る個体ごとの値)。${WEAPON_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い(マイナスにもなる)。${WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
 	},
 	armor: {
 		catalogName: "鎧",

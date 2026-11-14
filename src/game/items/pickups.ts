@@ -9,7 +9,7 @@ import { addToInventory } from "./inventory.js";
  * longer used immediately (that's the "use-item" action's job). Refused
  * (item stays on the floor) once the inventory is already at
  * INVENTORY_CAPACITY: every pickup takes its own slot, even of a kind
- * already held (no stacking — see GameState.inventory). A sword/armor/ring's
+ * already held (no stacking — see GameState.inventory). A weapon/armor/ring's
  * identity was already rolled at floor generation (see
  * heldItemFactory.ts's buildFloorItem) — toHeldItem just reads it back,
  * consuming no rng and no itemId. Only a consumable, which has no identity

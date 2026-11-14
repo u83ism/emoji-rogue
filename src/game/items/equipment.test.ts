@@ -9,7 +9,7 @@ import {
 } from "./equipmentStats.js";
 
 /*
- * Whether a sword/armor is cursed, and how far the curse drags its bonus
+ * Whether a weapon/armor is cursed, and how far the curse drags its bonus
  * down, is rolled once at floor generation (see items/heldItemFactory.ts)
  * and carried on the HeldItem — these tests build already-picked-up
  * HeldItem fixtures directly with explicit `cursed`/bonus values, so both
@@ -17,13 +17,13 @@ import {
  * depending on any particular rng seed.
  */
 describe("items/equipment", () => {
-	it("equipping a held sword raises the player's effective attack damage", () => {
+	it("equipping a held weapon raises the player's effective attack damage", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
 					attackBonus: 1,
@@ -37,35 +37,35 @@ describe("items/equipment", () => {
 		expect(calculatePlayerAttackDamage(next)).toBe(
 			calculatePlayerAttackDamage(state) + 1,
 		);
-		expect(next.playerHp).toBe(state.playerHp); /* swords don't heal */
+		expect(next.playerHp).toBe(state.playerHp); /* weapons don't heal */
 		expect(next.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: false,
 				attackBonus: 1,
 			},
 		]);
 		expect(next.events).toEqual([
-			{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+			{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
 		]);
 	});
 
-	it("equipping a second sword swaps out the first — only one sword slot exists", () => {
+	it("equipping a second weapon swaps out the first — only one weapon slot exists", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: true,
 					cursed: false,
 					attackBonus: 2,
 				},
 				{
 					itemId: 2,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
 					attackBonus: 3,
@@ -79,14 +79,14 @@ describe("items/equipment", () => {
 		expect(next.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: false,
 				cursed: false,
 				attackBonus: 2,
 			},
 			{
 				itemId: 2,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: false,
 				attackBonus: 3,
@@ -95,14 +95,14 @@ describe("items/equipment", () => {
 		expect(calculatePlayerAttackDamage(next)).toBe(state.playerPower + 3);
 	});
 
-	it("a cursed sword applies its (negative) attack bonus when equipped — worse than unarmed — and cannot be unequipped", () => {
+	it("a cursed weapon applies its (negative) attack bonus when equipped — worse than unarmed — and cannot be unequipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerPower: 5,
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
 					attackBonus: -2,
@@ -117,15 +117,15 @@ describe("items/equipment", () => {
 		expect(equipped.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: true,
 				attackBonus: -2,
 			},
 		]);
 		expect(equipped.events).toEqual([
-			{ type: "weapon-equipped", payload: { kind: "sword", bonus: -2 } },
-			{ type: "curse-revealed", payload: { kind: "sword" } },
+			{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -2 } },
+			{ type: "curse-revealed", payload: { kind: "weapon" } },
 		]);
 
 		const unequipAttempt = advanceTurn(equipped, {

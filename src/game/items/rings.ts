@@ -40,7 +40,7 @@ export const hasEquippedRing = (
  * Toggles a held ring's equip state. Only one ring can be equipped at a
  * time (regardless of kind) — equipping unequips whichever ring, of any
  * kind, was equipped before. Same curse-reveal and cursed-lock rules as
- * swords/armor. Equipping a ring of aggravate monster additionally wakes
+ * weapons/armor. Equipping a ring of aggravate monster additionally wakes
  * every enemy on the floor at once — its one-time "gotcha" effect (every
  * other ring's effect is a continuous passive read elsewhere via
  * hasEquippedRing, not something this toggle itself does).

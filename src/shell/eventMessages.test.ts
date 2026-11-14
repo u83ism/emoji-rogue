@@ -43,13 +43,13 @@ describe("formatEvent", () => {
 				{ type: "player-healed", payload: { by: "heal-potion", amount: 0 } },
 				"回復薬を飲んだが、HPは満タンだった",
 			],
-			[{ type: "item-picked-up", payload: { kind: "sword" } }, "剣を拾った"],
+			[{ type: "item-picked-up", payload: { kind: "weapon" } }, "剣を拾った"],
 			[
-				{ type: "inventory-full", payload: { kind: "sword" } },
+				{ type: "inventory-full", payload: { kind: "weapon" } },
 				"剣を持てなかった。持ち物がいっぱいだ",
 			],
 			[
-				{ type: "item-dropped", payload: { kind: "sword" } },
+				{ type: "item-dropped", payload: { kind: "weapon" } },
 				"剣を足元に置いた",
 			],
 			[
@@ -62,7 +62,7 @@ describe("formatEvent", () => {
 				"イェンダーの魔除けを手に入れた!",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
+				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
 				"剣を装備した。攻撃力+1",
 			],
 			[
@@ -78,10 +78,10 @@ describe("formatEvent", () => {
 				"鎧を装備した。防御力-2",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -1 } },
+				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -1 } },
 				"剣を装備した。攻撃力-1",
 			],
-			[{ type: "item-unequipped", payload: { kind: "sword" } }, "剣を外した"],
+			[{ type: "item-unequipped", payload: { kind: "weapon" } }, "剣を外した"],
 			[
 				{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
 				"鎧は呪われていて外せない!",
@@ -171,7 +171,7 @@ describe("formatEvent", () => {
 				"盗賊に襲われたが、何も盗られなかった",
 			],
 			[
-				{ type: "item-stolen", payload: { kind: "sword" } },
+				{ type: "item-stolen", payload: { kind: "weapon" } },
 				"ニンフに剣を盗まれた!",
 			],
 			[

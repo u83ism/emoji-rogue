@@ -52,7 +52,7 @@ describe("descendStairs", () => {
 
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
-			/* potions and food rations are guaranteed; the sword is a per-floor chance (0 or 1) */
+			/* potions and food rations are guaranteed; the weapon is a per-floor chance (0 or 1) */
 			expect(
 				state.items.filter((item) => item.kind === "heal-potion").length,
 			).toBe(POTION_COUNT_PER_FLOOR);
@@ -60,7 +60,7 @@ describe("descendStairs", () => {
 				FOOD_COUNT_PER_FLOOR,
 			);
 			expect(
-				state.items.filter((item) => item.kind === "sword").length,
+				state.items.filter((item) => item.kind === "weapon").length,
 			).toBeLessThanOrEqual(1);
 			expect(
 				state.items.filter((item) => item.kind === "armor").length,

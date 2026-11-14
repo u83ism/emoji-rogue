@@ -19,26 +19,26 @@ describe("formatHeldItemLabel", () => {
 		expect(formatHeldItemLabel(potion, [])).toBe("未鑑定の薬");
 	});
 
-	it("shows just the display name for an unequipped sword — curse/bonus stay hidden until equipped", () => {
-		const sword: HeldItem = {
+	it("shows just the display name for an unequipped weapon — curse/bonus stay hidden until equipped", () => {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: false,
 			cursed: true,
 			attackBonus: 3,
 		};
-		expect(formatHeldItemLabel(sword, [])).toBe("剣");
+		expect(formatHeldItemLabel(weapon, [])).toBe("剣");
 	});
 
-	it("prefixes the equipped glyph and shows the bonus for an equipped, uncursed sword", () => {
-		const sword: HeldItem = {
+	it("prefixes the equipped glyph and shows the bonus for an equipped, uncursed weapon", () => {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: true,
 			cursed: false,
 			attackBonus: 2,
 		};
-		expect(formatHeldItemLabel(sword, [])).toBe("✅ 剣(攻撃+2)");
+		expect(formatHeldItemLabel(weapon, [])).toBe("✅ 剣(攻撃+2)");
 	});
 
 	it("prefixes the equipped glyph and shows the bonus for an equipped armor", () => {
@@ -75,28 +75,28 @@ describe("resolveItemVerbPrompt", () => {
 		);
 	});
 
-	it("reads 装備する for an unequipped sword/armor/ring", () => {
-		const sword: HeldItem = {
+	it("reads 装備する for an unequipped weapon/armor/ring", () => {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: false,
 			cursed: false,
 			attackBonus: 1,
 		};
-		expect(resolveItemVerbPrompt(sword)).toBe(
+		expect(resolveItemVerbPrompt(weapon)).toBe(
 			"u: 装備する  d: すてる (Escで戻る)",
 		);
 	});
 
-	it("reads はずす for an equipped sword/armor/ring", () => {
-		const sword: HeldItem = {
+	it("reads はずす for an equipped weapon/armor/ring", () => {
+		const weapon: HeldItem = {
 			itemId: 1,
-			kind: "sword",
+			kind: "weapon",
 			equipped: true,
 			cursed: false,
 			attackBonus: 1,
 		};
-		expect(resolveItemVerbPrompt(sword)).toBe(
+		expect(resolveItemVerbPrompt(weapon)).toBe(
 			"u: はずす  d: すてる (Escで戻る)",
 		);
 	});

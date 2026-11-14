@@ -1,7 +1,7 @@
 import type { ItemKind } from "../game/events.js";
 import type { GameState, HeldItem } from "../game/state.js";
 
-type SwordItem = Extract<HeldItem, { kind: "sword" }>;
+type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 type RingItem = Extract<
 	HeldItem,
@@ -15,8 +15,8 @@ type RingItem = Extract<
 	}
 >;
 
-const isSwordItem = (item: HeldItem): item is SwordItem =>
-	item.kind === "sword";
+const isWeaponItem = (item: HeldItem): item is WeaponItem =>
+	item.kind === "weapon";
 const isArmorItem = (item: HeldItem): item is ArmorItem =>
 	item.kind === "armor";
 const isRingItem = (item: HeldItem): item is RingItem =>
@@ -41,23 +41,23 @@ const RING_PREFERENCE_ORDER: readonly ItemKind[] = [
 ];
 
 /**
- * The itemId of a sword worth equipping this turn, if any: the best-attack
- * held-but-unequipped sword, only when it beats (or nothing beats) whatever
- * sword is currently equipped — swords/armor/rings toggle equip state rather
+ * The itemId of a weapon worth equipping this turn, if any: the best-attack
+ * held-but-unequipped weapon, only when it beats (or nothing beats) whatever
+ * weapon is currently equipped — weapons/armor/rings toggle equip state rather
  * than being consumed (see items/equipment.ts), so blindly re-using an
  * already-equipped one would unequip it instead of helping.
  */
-export const decideSwordToEquip = (
+export const decideWeaponToEquip = (
 	state: GameState,
 	disabledKinds: ReadonlySet<ItemKind>,
 ): number | undefined => {
-	if (disabledKinds.has("sword")) {
+	if (disabledKinds.has("weapon")) {
 		return undefined;
 	}
-	const swords = state.inventory.filter(isSwordItem);
-	const equipped = swords.find((sword) => sword.equipped);
-	const bestUnequipped = swords
-		.filter((sword) => !sword.equipped)
+	const weapons = state.inventory.filter(isWeaponItem);
+	const equipped = weapons.find((weapon) => weapon.equipped);
+	const bestUnequipped = weapons
+		.filter((weapon) => !weapon.equipped)
 		.sort((left, right) => right.attackBonus - left.attackBonus)
 		.at(0);
 	if (bestUnequipped === undefined) {
@@ -72,7 +72,7 @@ export const decideSwordToEquip = (
 	return bestUnequipped.itemId;
 };
 
-/** Same idea as decideSwordToEquip, for defenseBonus instead of attackBonus. */
+/** Same idea as decideWeaponToEquip, for defenseBonus instead of attackBonus. */
 export const decideArmorToEquip = (
 	state: GameState,
 	disabledKinds: ReadonlySet<ItemKind>,

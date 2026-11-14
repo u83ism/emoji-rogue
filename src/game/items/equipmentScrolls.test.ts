@@ -4,13 +4,13 @@ import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 
 describe("items/equipmentScrolls", () => {
-	it("using a held enchant weapon scroll raises the targeted sword's own attackBonus, regardless of that sword's curse", () => {
+	it("using a held enchant weapon scroll raises the targeted weapon's own attackBonus, regardless of that weapon's curse", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: true /* enchanting works the same whether the target is cursed or not */,
 					attackBonus: 1,
@@ -25,7 +25,7 @@ describe("items/equipmentScrolls", () => {
 		expect(next.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: false,
 				cursed: true,
 				attackBonus: 1 + ENCHANT_WEAPON_BONUS,
@@ -37,7 +37,7 @@ describe("items/equipmentScrolls", () => {
 		]);
 	});
 
-	it("using a held enchant weapon scroll with no matching sword held is a no-op (not consumed)", () => {
+	it("using a held enchant weapon scroll with no matching weapon held is a no-op (not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "enchant-weapon" as const }],
@@ -144,7 +144,7 @@ describe("items/equipmentScrolls", () => {
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: true,
 					cursed: true,
 					attackBonus: 1,
@@ -182,7 +182,7 @@ describe("items/equipmentScrolls", () => {
 		expect(next.inventory).toEqual([
 			{
 				itemId: 1,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: false,
 				attackBonus: 1,

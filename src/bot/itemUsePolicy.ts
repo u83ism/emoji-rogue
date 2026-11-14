@@ -4,7 +4,7 @@ import type { GameState, HeldItem } from "../game/state.js";
 import {
 	decideArmorToEquip,
 	decideRingToEquip,
-	decideSwordToEquip,
+	decideWeaponToEquip,
 } from "./equipmentPolicy.js";
 
 /** What to send as the "use-item" action's payload this turn. */
@@ -76,7 +76,7 @@ const decideTargetedScrollUse = (
  * HP or worse, food once hunger crosses the warning threshold, freeing a
  * cursed equipped item, the targeted enchant/protect scrolls (only when
  * there is something eligible to target), equipping the best available
- * sword/armor/ring (see equipmentPolicy.ts), then any one-shot
+ * weapon/armor/ring (see equipmentPolicy.ts), then any one-shot
  * permanent-upside potion just sitting unused. Undefined means move instead.
  */
 export const decideItemToUse = (
@@ -114,7 +114,7 @@ export const decideItemToUse = (
 		state,
 		disabledKinds,
 		"enchant-weapon",
-		(item) => item.kind === "sword",
+		(item) => item.kind === "weapon",
 	);
 	if (enchantWeapon !== undefined) {
 		return enchantWeapon;
@@ -140,9 +140,9 @@ export const decideItemToUse = (
 		return protectArmor;
 	}
 
-	const swordToEquip = decideSwordToEquip(state, disabledKinds);
-	if (swordToEquip !== undefined) {
-		return { itemId: swordToEquip };
+	const weaponToEquip = decideWeaponToEquip(state, disabledKinds);
+	if (weaponToEquip !== undefined) {
+		return { itemId: weaponToEquip };
 	}
 
 	const armorToEquip = decideArmorToEquip(state, disabledKinds);

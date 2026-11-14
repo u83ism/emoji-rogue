@@ -39,7 +39,7 @@ export type EnemyKind = (typeof ENEMY_KIND_VALUES)[number];
 
 export const ITEM_KIND_VALUES = [
 	"heal-potion",
-	"sword",
+	"weapon",
 	"armor",
 	"food",
 	"poison",
@@ -76,7 +76,7 @@ export const ITEM_KIND_VALUES = [
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
 
 const EQUIPMENT_ITEM_KIND_VALUES = [
-	"sword",
+	"weapon",
 	"armor",
 	"regeneration-ring",
 	"sustenance-ring",
@@ -280,7 +280,7 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind | undefined };
 	  }
 	| {
-			/** Always a positive bonus — enchant-weapon is never cursed, unlike a found sword. */
+			/** Always a positive bonus — enchant-weapon is never cursed, unlike a found weapon. */
 			readonly type: "weapon-enchanted";
 			readonly payload: { readonly bonus: number };
 	  }
@@ -370,12 +370,12 @@ export type GameEvent =
 			readonly payload: { readonly maxHpBonus: number };
 	  }
 	| {
-			/** Taking off a sword/armor/ring — the mirror of weapon-equipped/armor-equipped/ring-equipped. */
+			/** Taking off a weapon/armor/ring — the mirror of weapon-equipped/armor-equipped/ring-equipped. */
 			readonly type: "item-unequipped";
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** Trying to unequip a cursed sword/armor/ring — no-op, see items/equipment.ts and items/rings.ts. */
+			/** Trying to unequip a cursed weapon/armor/ring — no-op, see items/equipment.ts and items/rings.ts. */
 			readonly type: "equip-blocked-cursed";
 			readonly payload: { readonly kind: ItemKind };
 	  }

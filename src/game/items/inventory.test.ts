@@ -54,17 +54,17 @@ describe("removeHeldItem", () => {
 
 describe("replaceHeldItem", () => {
 	it("replaces the held item matching itemId with the given next item, in place", () => {
-		const sword = {
+		const weapon = {
 			itemId: 2,
-			kind: "sword" as const,
+			kind: "weapon" as const,
 			equipped: false,
 			cursed: false,
 			attackBonus: 1,
 		};
-		const equippedSword = { ...sword, equipped: true };
-		expect(replaceHeldItem([food(1), sword], 2, equippedSword)).toEqual([
+		const equippedWeapon = { ...weapon, equipped: true };
+		expect(replaceHeldItem([food(1), weapon], 2, equippedWeapon)).toEqual([
 			food(1),
-			equippedSword,
+			equippedWeapon,
 		]);
 	});
 

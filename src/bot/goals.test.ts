@@ -9,10 +9,10 @@ import { chooseGoal, isGoalStillValid } from "./goals.js";
 
 const baseState = (): GameState => buildArenaGameState(9, 9, 1);
 
-const swordAt = (x: number, y: number): Item => ({
+const weaponAt = (x: number, y: number): Item => ({
 	x,
 	y,
-	kind: "sword",
+	kind: "weapon",
 	identity: { itemId: 1, cursed: false, attackBonus: 1 },
 });
 
@@ -27,7 +27,7 @@ const foodAt = (x: number, y: number): Item => ({ x, y, kind: "food" });
 
 describe("chooseGoal", () => {
 	it("targets the nearest item when loot is present", () => {
-		const state = { ...baseState(), items: [swordAt(6, 4)] };
+		const state = { ...baseState(), items: [weaponAt(6, 4)] };
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
 			x: 6,
@@ -68,7 +68,7 @@ describe("chooseGoal", () => {
 	it("excludes blacklisted tiles from consideration", () => {
 		const state = {
 			...baseState(),
-			items: [swordAt(6, 4), armorAt(5, 3)],
+			items: [weaponAt(6, 4), armorAt(5, 3)],
 		};
 		const blacklist = new Set(["6,4"]);
 		expect(chooseGoal(state, blacklist)).toEqual({
@@ -82,7 +82,7 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			items: [swordAt(3, 3), foodAt(7, 7)],
+			items: [weaponAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -96,7 +96,7 @@ describe("chooseGoal", () => {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
 			inventory: [{ itemId: 10, kind: "food" as const }],
-			items: [swordAt(3, 3), foodAt(7, 7)],
+			items: [weaponAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -109,7 +109,7 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD + 1,
-			items: [swordAt(3, 3), foodAt(7, 7)],
+			items: [weaponAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "loot",
@@ -125,7 +125,7 @@ describe("chooseGoal", () => {
 				itemId: index,
 				kind: "food" as const,
 			})),
-			items: [swordAt(6, 4)],
+			items: [weaponAt(6, 4)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
 			kind: "stairs",
@@ -137,7 +137,7 @@ describe("chooseGoal", () => {
 
 describe("isGoalStillValid", () => {
 	it("is true for a loot goal whose tile still has loot", () => {
-		const state = { ...baseState(), items: [swordAt(6, 4)] };
+		const state = { ...baseState(), items: [weaponAt(6, 4)] };
 		expect(isGoalStillValid(state, { kind: "loot", x: 6, y: 4 })).toBe(true);
 	});
 

@@ -5,15 +5,15 @@ import {
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
-	SWORD_ATTACK_BONUS,
-	SWORD_CURSE_CHANCE_PERCENT,
-	SWORD_FOUND_ENCHANTED_CHANCE_PERCENT,
+	WEAPON_ATTACK_BONUS,
+	WEAPON_CURSE_CHANCE_PERCENT,
+	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 } from "../balance.js";
 import { type ItemKind, isEquipmentItemKind } from "../events.js";
 import type { HeldItem, Item, Position } from "../state.js";
 
 /**
- * How a sword/armor/ring's identity is rolled and how a floor Item becomes a
+ * How a weapon/armor/ring's identity is rolled and how a floor Item becomes a
  * HeldItem — split out of items/pickups.ts (milestone 81 follow-up) once
  * that file grew past the 200-line structure-lint limit. Identity (curse,
  * starting bonus, itemId) is rolled once, at floor generation — see
@@ -23,7 +23,7 @@ import type { HeldItem, Item, Position } from "../state.js";
 
 /**
  * Original Rogue's found-weapon/armor roll (see balance.ts's
- * SWORD_CURSE_CHANCE_PERCENT): one percent roll picks cursed / found
+ * WEAPON_CURSE_CHANCE_PERCENT): one percent roll picks cursed / found
  * enchanted / ordinary, and only the first two roll a second time for how
  * many points the bonus moves (down for a curse, up for an enchantment).
  */
@@ -47,7 +47,7 @@ const rollFoundBonus = (
 };
 
 /**
- * The floor Item a sword/armor/ring spawn becomes: its identity (curse,
+ * The floor Item a weapon/armor/ring spawn becomes: its identity (curse,
  * starting bonus, itemId) rolled here, at generation time, consuming `rng`
  * directly — a live, mutating Rng (see rng.ts), matching floor generation's
  * existing idiom (unlike the RngState-wrapping pattern items/equipment.ts
@@ -68,16 +68,16 @@ export const buildFloorItem = (
 		return { ...position, kind };
 	}
 	switch (kind) {
-		case "sword": {
+		case "weapon": {
 			const found = rollFoundBonus(
 				rng,
-				SWORD_ATTACK_BONUS,
-				SWORD_CURSE_CHANCE_PERCENT,
-				SWORD_FOUND_ENCHANTED_CHANCE_PERCENT,
+				WEAPON_ATTACK_BONUS,
+				WEAPON_CURSE_CHANCE_PERCENT,
+				WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 			);
 			return {
 				...position,
-				kind: "sword",
+				kind: "weapon",
 				identity: { itemId, cursed: found.cursed, attackBonus: found.bonus },
 			};
 		}
@@ -110,7 +110,7 @@ export const buildFloorItem = (
 };
 
 /**
- * The HeldItem a picked-up floor Item becomes: for a sword/armor/ring, its
+ * The HeldItem a picked-up floor Item becomes: for a weapon/armor/ring, its
  * already-rolled `identity` verbatim (plus `equipped: false` — meaningless
  * on the ground); for a consumable, which has no identity concept, a fresh
  * `freshItemId` (items/pickups.ts passes state.nextItemId, and only bumps
@@ -118,8 +118,8 @@ export const buildFloorItem = (
  */
 export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 	switch (item.kind) {
-		case "sword":
-			return { kind: "sword", equipped: false, ...item.identity };
+		case "weapon":
+			return { kind: "weapon", equipped: false, ...item.identity };
 		case "armor":
 			return { kind: "armor", equipped: false, ...item.identity };
 		case "regeneration-ring":

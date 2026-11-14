@@ -3,17 +3,17 @@ import type { GameState, HeldItem, Item, Position } from "../state.js";
 import { removeHeldItem } from "./inventory.js";
 
 /**
- * The floor Item a dropped HeldItem becomes. A sword/armor/ring carries its
+ * The floor Item a dropped HeldItem becomes. A weapon/armor/ring carries its
  * already-rolled identity (itemId, curse, bonus) along so picking it back up
  * restores the exact same item instead of rolling a fresh one — see Item's
  * doc comment for why this field exists.
  */
 const toFloorItem = (item: HeldItem, position: Position): Item => {
 	switch (item.kind) {
-		case "sword":
+		case "weapon":
 			return {
 				...position,
-				kind: "sword",
+				kind: "weapon",
 				identity: {
 					itemId: item.itemId,
 					cursed: item.cursed,
@@ -49,7 +49,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 /**
  * Drops the held item matching `itemId` onto the tile under the player. A
  * no-op (same reference) when `itemId` is not held, or when it is a
- * currently-equipped cursed sword/armor/ring — a cursed item can't be
+ * currently-equipped cursed weapon/armor/ring — a cursed item can't be
  * removed at all while equipped (logs equip-blocked-cursed, same as trying
  * to unequip it directly; see items/equipment.ts and items/rings.ts), so
  * dropping it must not be a back door around that lock. If an item already

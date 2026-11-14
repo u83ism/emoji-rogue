@@ -4,7 +4,7 @@ import {
 	ARMOR_DEFENSE_BONUS,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
-	SWORD_ATTACK_BONUS,
+	WEAPON_ATTACK_BONUS,
 } from "../balance.js";
 import { buildFloorItem, toHeldItem } from "./heldItemFactory.js";
 
@@ -14,40 +14,40 @@ describe("buildFloorItem", () => {
 		expect(item).toEqual({ x: 0, y: 0, kind: "heal-potion" });
 	});
 
-	it("gives a sword an identity with the requested itemId", () => {
-		const item = buildFloorItem("sword", 5, { x: 1, y: 2 }, createRng(1));
-		if (item.kind !== "sword") {
-			throw new Error("unreachable: requested a sword");
+	it("gives a weapon an identity with the requested itemId", () => {
+		const item = buildFloorItem("weapon", 5, { x: 1, y: 2 }, createRng(1));
+		if (item.kind !== "weapon") {
+			throw new Error("unreachable: requested a weapon");
 		}
 		expect(item.identity.itemId).toBe(5);
 	});
 
-	it("rolls swords like original Rogue: cursed ones are 1-3 points worse, found-enchanted ones 1-3 better, the rest ordinary", () => {
+	it("rolls weapons like original Rogue: cursed ones are 1-3 points worse, found-enchanted ones 1-3 better, the rest ordinary", () => {
 		const rng = createRng(1);
 		const identities = Array.from({ length: 2000 }, () => {
-			const item = buildFloorItem("sword", 1, { x: 0, y: 0 }, rng);
-			if (item.kind !== "sword") {
-				throw new Error("unreachable: requested a sword");
+			const item = buildFloorItem("weapon", 1, { x: 0, y: 0 }, rng);
+			if (item.kind !== "weapon") {
+				throw new Error("unreachable: requested a weapon");
 			}
 			return item.identity;
 		});
 		const cursed = identities.filter((identity) => identity.cursed);
 		const uncursed = identities.filter((identity) => !identity.cursed);
 		const enchanted = uncursed.filter(
-			(identity) => identity.attackBonus > SWORD_ATTACK_BONUS,
+			(identity) => identity.attackBonus > WEAPON_ATTACK_BONUS,
 		);
 		for (const identity of cursed) {
 			expect(identity.attackBonus).toBeGreaterThanOrEqual(
-				SWORD_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MAX,
+				WEAPON_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MAX,
 			);
 			expect(identity.attackBonus).toBeLessThanOrEqual(
-				SWORD_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MIN,
+				WEAPON_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MIN,
 			);
 		}
 		for (const identity of uncursed) {
-			expect(identity.attackBonus).toBeGreaterThanOrEqual(SWORD_ATTACK_BONUS);
+			expect(identity.attackBonus).toBeGreaterThanOrEqual(WEAPON_ATTACK_BONUS);
 			expect(identity.attackBonus).toBeLessThanOrEqual(
-				SWORD_ATTACK_BONUS + FOUND_BONUS_ADJUSTMENT_MAX,
+				WEAPON_ATTACK_BONUS + FOUND_BONUS_ADJUSTMENT_MAX,
 			);
 		}
 		/* 10% cursed / 5% found enchanted, with generous sampling slack */
@@ -125,16 +125,16 @@ describe("buildFloorItem", () => {
 });
 
 describe("toHeldItem", () => {
-	it("restores a floor sword's exact identity, adding equipped: false", () => {
+	it("restores a floor weapon's exact identity, adding equipped: false", () => {
 		const item = {
 			x: 0,
 			y: 0,
-			kind: "sword" as const,
+			kind: "weapon" as const,
 			identity: { itemId: 7, cursed: true, attackBonus: 3 },
 		};
 		expect(toHeldItem(item, 999)).toEqual({
 			itemId: 7,
-			kind: "sword",
+			kind: "weapon",
 			equipped: false,
 			cursed: true,
 			attackBonus: 3,

@@ -4,18 +4,18 @@ import type { GameState, HeldItem } from "../game/state.js";
 import {
 	decideArmorToEquip,
 	decideRingToEquip,
-	decideSwordToEquip,
+	decideWeaponToEquip,
 } from "./equipmentPolicy.js";
 
 const baseState = (): GameState => buildArenaGameState(5, 5, 1);
 
-const sword = (
+const weapon = (
 	itemId: number,
 	attackBonus: number,
 	equipped = false,
 ): HeldItem => ({
 	itemId,
-	kind: "sword",
+	kind: "weapon",
 	equipped,
 	cursed: false,
 	attackBonus,
@@ -47,36 +47,36 @@ const ring = (
 
 const noDisabled = new Set<never>();
 
-describe("decideSwordToEquip", () => {
-	it("equips the only held sword when none is equipped", () => {
-		const state = { ...baseState(), inventory: [sword(1, 1)] };
-		expect(decideSwordToEquip(state, noDisabled)).toBe(1);
+describe("decideWeaponToEquip", () => {
+	it("equips the only held weapon when none is equipped", () => {
+		const state = { ...baseState(), inventory: [weapon(1, 1)] };
+		expect(decideWeaponToEquip(state, noDisabled)).toBe(1);
 	});
 
-	it("does not re-equip the sword already worn", () => {
-		const state = { ...baseState(), inventory: [sword(1, 1, true)] };
-		expect(decideSwordToEquip(state, noDisabled)).toBeUndefined();
+	it("does not re-equip the weapon already worn", () => {
+		const state = { ...baseState(), inventory: [weapon(1, 1, true)] };
+		expect(decideWeaponToEquip(state, noDisabled)).toBeUndefined();
 	});
 
-	it("swaps to a strictly better held sword", () => {
+	it("swaps to a strictly better held weapon", () => {
 		const state = {
 			...baseState(),
-			inventory: [sword(1, 1, true), sword(2, 3)],
+			inventory: [weapon(1, 1, true), weapon(2, 3)],
 		};
-		expect(decideSwordToEquip(state, noDisabled)).toBe(2);
+		expect(decideWeaponToEquip(state, noDisabled)).toBe(2);
 	});
 
-	it("does not swap to a worse or equal sword", () => {
+	it("does not swap to a worse or equal weapon", () => {
 		const state = {
 			...baseState(),
-			inventory: [sword(1, 3, true), sword(2, 1)],
+			inventory: [weapon(1, 3, true), weapon(2, 1)],
 		};
-		expect(decideSwordToEquip(state, noDisabled)).toBeUndefined();
+		expect(decideWeaponToEquip(state, noDisabled)).toBeUndefined();
 	});
 
 	it("is disabled by the balance-experiment knob", () => {
-		const state = { ...baseState(), inventory: [sword(1, 1)] };
-		expect(decideSwordToEquip(state, new Set(["sword"]))).toBeUndefined();
+		const state = { ...baseState(), inventory: [weapon(1, 1)] };
+		expect(decideWeaponToEquip(state, new Set(["weapon"]))).toBeUndefined();
 	});
 });
 

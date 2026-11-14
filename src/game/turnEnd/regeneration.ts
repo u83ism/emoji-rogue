@@ -8,7 +8,7 @@ import type { GameState } from "../state.js";
  * A no-op unless a ring of regeneration is currently equipped and playerHp
  * is below the cap. Otherwise rolls RING_REGEN_CHANCE_PERCENT (consuming
  * state.rng either way, win or lose, the same stateful-Rng wrap pattern as
- * descendStairs and the sword/armor curse roll) and heals 1 HP with a
+ * descendStairs and the weapon/armor curse roll) and heals 1 HP with a
  * player-regenerated event on success. Called alongside applyHungerTick
  * after every turn-consuming action. A no-op once the run is no longer
  * playing, for the same reason applyHungerTick is.

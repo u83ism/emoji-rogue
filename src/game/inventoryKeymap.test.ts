@@ -10,9 +10,9 @@ import {
 import type { HeldItem } from "./state.js";
 
 const potion = (itemId: number): HeldItem => ({ itemId, kind: "heal-potion" });
-const sword = (itemId: number): HeldItem => ({
+const weapon = (itemId: number): HeldItem => ({
 	itemId,
-	kind: "sword",
+	kind: "weapon",
 	equipped: false,
 	cursed: false,
 	attackBonus: 1,
@@ -50,7 +50,7 @@ describe("toSelectedHeldItem", () => {
 			potion(1),
 			{ itemId: 2, kind: "poison" },
 			{ itemId: 3, kind: "food" },
-			sword(4),
+			weapon(4),
 			{
 				itemId: 5,
 				kind: "armor",
@@ -70,8 +70,8 @@ describe("toSelectedHeldItem", () => {
 });
 
 describe("resolveTargetKind", () => {
-	it("maps enchant-weapon to sword", () => {
-		expect(resolveTargetKind("enchant-weapon")).toBe("sword");
+	it("maps enchant-weapon to weapon", () => {
+		expect(resolveTargetKind("enchant-weapon")).toBe("weapon");
 	});
 
 	it("maps enchant-armor and protect-armor to armor", () => {
@@ -81,7 +81,7 @@ describe("resolveTargetKind", () => {
 
 	it("returns undefined for every other kind", () => {
 		expect(resolveTargetKind("heal-potion")).toBeUndefined();
-		expect(resolveTargetKind("sword")).toBeUndefined();
+		expect(resolveTargetKind("weapon")).toBeUndefined();
 		expect(resolveTargetKind("remove-curse-scroll")).toBeUndefined();
 	});
 });
@@ -109,7 +109,7 @@ describe("toItemVerbAction", () => {
 describe("toTargetedUseAction", () => {
 	it("builds a use-item action carrying both the source and target itemIds", () => {
 		const scroll: HeldItem = { itemId: 10, kind: "enchant-weapon" };
-		expect(toTargetedUseAction(scroll, sword(4))).toEqual({
+		expect(toTargetedUseAction(scroll, weapon(4))).toEqual({
 			type: "use-item",
 			payload: { itemId: 10, targetItemId: 4 },
 		});

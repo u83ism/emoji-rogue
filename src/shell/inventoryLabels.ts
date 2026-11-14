@@ -13,7 +13,7 @@ import { INVENTORY_TITLE } from "./systemMessages.js";
 export const formatInventoryTitle = (heldCount: number): string =>
 	`${INVENTORY_TITLE} ${heldCount}/${INVENTORY_CAPACITY}`;
 
-/** A sword/armor bonus with its sign spelled out ("+2", "+0", "-1") — a cursed item's bonus can be negative. */
+/** A weapon/armor bonus with its sign spelled out ("+2", "+0", "-1") — a cursed item's bonus can be negative. */
 export const formatSignedBonus = (bonus: number): string =>
 	bonus < 0 ? `${bonus}` : `+${bonus}`;
 
@@ -32,7 +32,7 @@ export const formatHeldItemLabel = (
 		return name;
 	}
 	const bonus =
-		item.kind === "sword"
+		item.kind === "weapon"
 			? `攻撃${formatSignedBonus(item.attackBonus)}`
 			: item.kind === "armor"
 				? `防御${formatSignedBonus(item.defenseBonus)}`
@@ -46,7 +46,7 @@ export const formatHeldItemLabel = (
 
 /**
  * The verb prompt shown after selecting a row: "use" reads as 装備する/はずす
- * for a sword/armor/ring (matching what `u` actually does — toggle equip,
+ * for a weapon/armor/ring (matching what `u` actually does — toggle equip,
  * see items/equipment.ts and items/rings.ts) and つかう for everything else.
  * "drop" and the escape hint never change.
  */

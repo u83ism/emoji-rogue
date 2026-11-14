@@ -40,9 +40,9 @@ export const toSelectedHeldItem = (
  */
 export const resolveTargetKind = (
 	kind: ItemKind,
-): "sword" | "armor" | undefined => {
+): "weapon" | "armor" | undefined => {
 	if (kind === "enchant-weapon") {
-		return "sword";
+		return "weapon";
 	}
 	if (kind === "enchant-armor" || kind === "protect-armor") {
 		return "armor";

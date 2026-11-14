@@ -220,7 +220,7 @@ describe("validateGameState", () => {
 			items: [
 				{
 					...floorSpot,
-					kind: "sword",
+					kind: "weapon",
 					identity: { itemId: 7, cursed: true, attackBonus: 3 },
 				},
 			],
@@ -230,7 +230,7 @@ describe("validateGameState", () => {
 			expect(accepted.value.items).toEqual([
 				{
 					...floorSpot,
-					kind: "sword",
+					kind: "weapon",
 					identity: { itemId: 7, cursed: true, attackBonus: 3 },
 				},
 			]);
@@ -249,7 +249,7 @@ describe("validateGameState", () => {
 				items: [
 					{
 						...floorSpot,
-						kind: "sword",
+						kind: "weapon",
 						identity: { itemId: 7, cursed: true },
 					},
 				] /* missing attackBonus */,
@@ -289,8 +289,8 @@ describe("validateGameState", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1 } },
-				{ type: "weapon-equipped", payload: { kind: "sword", bonus: -2 } },
+				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
+				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -2 } },
 			],
 		});
 		expect(result.ok).toBe(true);
@@ -300,7 +300,7 @@ describe("validateGameState", () => {
 			inventory: [
 				{
 					itemId: 1,
-					kind: "sword",
+					kind: "weapon",
 					equipped: true,
 					cursed: true,
 					attackBonus: -2,
@@ -330,7 +330,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "weapon-equipped", payload: { kind: "sword", bonus: 1.5 } },
+					{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1.5 } },
 				],
 			},
 			"events",
@@ -1044,7 +1044,7 @@ describe("validateGameState", () => {
 	it("accepts well-formed item-unequipped/equip-blocked-cursed/curse-revealed/items-decursed events, rejects broken ones", () => {
 		const unequipped = validateGameState({
 			...buildValidState(),
-			events: [{ type: "item-unequipped", payload: { kind: "sword" } }],
+			events: [{ type: "item-unequipped", payload: { kind: "weapon" } }],
 		});
 		expect(unequipped.ok).toBe(true);
 
@@ -1084,13 +1084,13 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed inventory (including swords, armor and food, each its own slot) and rejects a broken one", () => {
+	it("accepts a well-formed inventory (including weapons, armor and food, each its own slot) and rejects a broken one", () => {
 		const inventory = [
 			{ itemId: 1, kind: "heal-potion" },
 			{ itemId: 2, kind: "heal-potion" },
 			{
 				itemId: 3,
-				kind: "sword",
+				kind: "weapon",
 				equipped: true,
 				cursed: false,
 				attackBonus: 1,
@@ -1121,7 +1121,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				inventory: [{ itemId: 1, kind: "sword", equipped: true }],
+				inventory: [{ itemId: 1, kind: "weapon", equipped: true }],
 			} /* cursed/attackBonus missing */,
 			"inventory",
 		);
@@ -1450,7 +1450,7 @@ describe("validateGameState", () => {
 	it("accepts a well-formed item-stolen event (including an empty-inventory steal), rejects a broken one", () => {
 		const stolenSomething = validateGameState({
 			...buildValidState(),
-			events: [{ type: "item-stolen", payload: { kind: "sword" } }],
+			events: [{ type: "item-stolen", payload: { kind: "weapon" } }],
 		});
 		expect(stolenSomething.ok).toBe(true);
 

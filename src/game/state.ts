@@ -26,7 +26,7 @@ export type Action =
 				/** The specific HeldItem.itemId to use — not a kind, since same-kind items can now differ (equip state, enchantment). */
 				readonly itemId: number;
 				/**
-				 * Which held sword/armor a targeted scroll (enchant-weapon,
+				 * Which held weapon/armor a targeted scroll (enchant-weapon,
 				 * enchant-armor, protect-armor) applies to, by itemId. Absent/
 				 * unheld clamps to a no-op, same as using an itemId not held.
 				 * Ignored by every other kind.
@@ -70,12 +70,12 @@ export type Enemy = Position & {
 };
 
 /**
- * A sword/armor/ring's already-rolled identity (see HeldItem) minus the
+ * A weapon/armor/ring's already-rolled identity (see HeldItem) minus the
  * fields meaningless on the ground (`kind` — carried by the Item itself —
  * and `equipped`, always false while lying on a tile).
  */
-type SwordIdentity = Omit<
-	Extract<HeldItem, { kind: "sword" }>,
+type WeaponIdentity = Omit<
+	Extract<HeldItem, { kind: "weapon" }>,
 	"kind" | "equipped"
 >;
 type ArmorIdentity = Omit<
@@ -98,19 +98,19 @@ type RingIdentity = Omit<
 >;
 
 /**
- * An item lying on the floor, waiting to be stepped on. A sword/armor/ring's
+ * An item lying on the floor, waiting to be stepped on. A weapon/armor/ring's
  * `identity` (curse, starting bonus, itemId) is rolled once, at floor
  * generation (floor/items.ts's drawFloorItems) — the item already "is" what
  * it is the moment it exists in the dungeon, same as original Rogue; the
  * player just doesn't know yet (see HeldItem's doc comment on when it's
  * revealed). Dropping it again (applyItemDrop) carries the same `identity`
- * along unchanged, so a dropped +2 sword or a cursed ring doesn't reroll
+ * along unchanged, so a dropped +2 weapon or a cursed ring doesn't reroll
  * into a fresh one on re-pickup (milestone 81 follow-up).
  */
 export type Item = Position &
 	(
 		| { readonly kind: Exclude<ItemKind, EquipmentItemKind> }
-		| { readonly kind: "sword"; readonly identity: SwordIdentity }
+		| { readonly kind: "weapon"; readonly identity: WeaponIdentity }
 		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
 		| {
 				readonly kind:
@@ -131,7 +131,7 @@ export type Item = Position &
  * docs/tasks/game.md's cursor-selection backlog note on index fragility).
  *
  * Consumables (potions/scrolls/wands/food) carry only their kind. A
- * sword/armor/ring carries real equip state instead: `cursed` is decided once
+ * weapon/armor/ring carries real equip state instead: `cursed` is decided once
  * at floor generation and stays hidden from the player until the item is
  * equipped, so it can be true even while `equipped` is false. `attackBonus`/
  * `defenseBonus`/`rustProtected` are intrinsic to that specific item (raised
@@ -146,7 +146,7 @@ export type HeldItem =
 	  }
 	| {
 			readonly itemId: number;
-			readonly kind: "sword";
+			readonly kind: "weapon";
 			readonly equipped: boolean;
 			readonly cursed: boolean;
 			readonly attackBonus: number;
@@ -231,7 +231,7 @@ export interface GameState {
 	/**
 	 * "Power" in the Fushigi no Dungeon sense: a permanent character stat
 	 * raised only by strength potions, meaningful even unarmed. The actual
-	 * attack total adds the equipped sword's own attackBonus on top — see
+	 * attack total adds the equipped weapon's own attackBonus on top — see
 	 * calculatePlayerAttackDamage in items/equipment.ts.
 	 */
 	readonly playerPower: number;
@@ -255,7 +255,7 @@ export interface GameState {
 	 * Items picked up but not yet used — stepping on an item no longer uses it
 	 * immediately. One entry per held item (no stacking): two heal potions are
 	 * two entries and cost two of INVENTORY_CAPACITY's (balance.ts) slots, not
-	 * one stack of quantity 2. Equipping a sword/armor/ring does not remove it
+	 * one stack of quantity 2. Equipping a weapon/armor/ring does not remove it
 	 * from here — the entry's own `equipped` flips instead (see HeldItem). See
 	 * applyItemPickup.
 	 */

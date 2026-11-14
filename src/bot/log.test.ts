@@ -19,7 +19,7 @@ describe("buildTurnLogEntry", () => {
 				{ itemId: 1, kind: "food" as const },
 				{
 					itemId: 2,
-					kind: "sword" as const,
+					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
 					attackBonus: 1,

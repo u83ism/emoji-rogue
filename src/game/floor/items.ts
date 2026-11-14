@@ -33,9 +33,9 @@ import {
 	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
-	SWORD_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
+	WEAPON_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
 import { type ItemKind, isEquipmentItemKind } from "../events.js";
 import { buildFloorItem } from "../items/heldItemFactory.js";
@@ -51,7 +51,7 @@ import { drawFloorTraps } from "./traps.js";
  * table — see drawFloorItems below.
  */
 const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
-	{ kind: "sword", chancePercent: SWORD_SPAWN_CHANCE_PERCENT },
+	{ kind: "weapon", chancePercent: WEAPON_SPAWN_CHANCE_PERCENT },
 	{
 		kind: "enchant-weapon",
 		chancePercent: ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -138,7 +138,7 @@ export interface FloorItems {
 	readonly items: readonly Item[];
 	readonly goldPiles: readonly GoldPile[];
 	readonly traps: readonly Trap[];
-	/** `nextItemId` after this floor's sword/armor/ring spawns each consumed one — see heldItemFactory.ts's buildFloorItem. */
+	/** `nextItemId` after this floor's weapon/armor/ring spawns each consumed one — see heldItemFactory.ts's buildFloorItem. */
 	readonly nextItemId: number;
 }
 
@@ -148,7 +148,7 @@ export interface FloorItems {
  * potions and FOOD_COUNT_PER_FLOOR food rations guaranteed, then the
  * chance-rolled kinds of ITEM_SPAWN_TABLE, then GOLD_PILES_PER_FLOOR gold
  * piles (random amount each), then every trap (see traps.ts's
- * drawFloorTraps). A spawned sword/armor/ring also gets its identity (curse,
+ * drawFloorTraps). A spawned weapon/armor/ring also gets its identity (curse,
  * starting bonus, itemId) rolled here, once, from `nextItemId` — see
  * heldItemFactory.ts's buildFloorItem.
  */

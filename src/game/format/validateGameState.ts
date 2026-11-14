@@ -30,7 +30,7 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 export const isPositiveInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value) && value > 0;
 
-/** Any integer, negative included — a cursed sword/armor's bonus can go below 0. */
+/** Any integer, negative included — a cursed weapon/armor's bonus can go below 0. */
 const isInteger = (value: unknown): value is number =>
 	typeof value === "number" && Number.isInteger(value);
 
@@ -115,7 +115,7 @@ const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
 
 /**
- * A held item: itemId + kind, plus (for sword/armor/ring kinds only) the
+ * A held item: itemId + kind, plus (for weapon/armor/ring kinds only) the
  * equip/curse/bonus state HeldItem carries — see state.ts's doc comment.
  */
 const isHeldItem = (value: unknown): value is HeldItem => {
@@ -132,7 +132,7 @@ const isHeldItem = (value: unknown): value is HeldItem => {
 	if (!isBooleanValue(value.equipped) || !isBooleanValue(value.cursed)) {
 		return false;
 	}
-	if (value.kind === "sword") {
+	if (value.kind === "weapon") {
 		return isInteger(value.attackBonus);
 	}
 	if (value.kind === "armor") {
@@ -145,7 +145,7 @@ const isHeldItemArray = (value: unknown): value is readonly HeldItem[] =>
 	Array.isArray(value) && value.every(isHeldItem);
 
 /**
- * A sword/armor/ring's identity on a floor Item — same shape as HeldItem's
+ * A weapon/armor/ring's identity on a floor Item — same shape as HeldItem's
  * equip state minus `equipped` (meaningless on the ground). Rolled once at
  * floor generation, so every equipment-kind Item always carries one — see
  * Item's doc comment in state.ts.
@@ -158,7 +158,7 @@ const isItemIdentity = (kind: ItemKind, value: unknown): boolean => {
 	) {
 		return false;
 	}
-	if (kind === "sword") {
+	if (kind === "weapon") {
 		return isInteger(value.attackBonus);
 	}
 	if (kind === "armor") {
@@ -558,8 +558,8 @@ export const validateGameState = (
 		items: items.map((item): Item => {
 			const position = { x: item.x, y: item.y };
 			switch (item.kind) {
-				case "sword":
-					return { ...position, kind: "sword", identity: item.identity };
+				case "weapon":
+					return { ...position, kind: "weapon", identity: item.identity };
 				case "armor":
 					return { ...position, kind: "armor", identity: item.identity };
 				case "regeneration-ring":

@@ -17,10 +17,10 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	confusedTurnsRemaining: 0,
 });
 
-const swordAt = (x: number, y: number): Item => ({
+const weaponAt = (x: number, y: number): Item => ({
 	x,
 	y,
-	kind: "sword",
+	kind: "weapon",
 	identity: { itemId: 99, cursed: false, attackBonus: 1 },
 });
 
@@ -52,7 +52,7 @@ describe("decideAction", () => {
 	it("attacks an adjacent enemy before continuing toward the goal", () => {
 		const state = {
 			...baseState(),
-			items: [swordAt(8, 8)],
+			items: [weaponAt(8, 8)],
 			enemies: [enemyAt(4, 3)],
 		};
 		const { action } = decideAction(state, createInitialBotMemory());
@@ -62,7 +62,7 @@ describe("decideAction", () => {
 	it("moves toward the nearest loot when nothing more urgent is going on", () => {
 		const state = {
 			...baseState(),
-			items: [swordAt(4, 2)],
+			items: [weaponAt(4, 2)],
 		};
 		const { action, memory } = decideAction(state, createInitialBotMemory());
 		expect(action).toEqual({ type: "move", payload: { direction: "north" } });
@@ -101,7 +101,7 @@ describe("decideAction", () => {
 	it("does not use a disabled item kind even if it would otherwise be used first", () => {
 		const state = {
 			...baseState(),
-			items: [swordAt(4, 2)],
+			items: [weaponAt(4, 2)],
 			playerHp: 1,
 			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
 		};
@@ -116,7 +116,7 @@ describe("decideAction", () => {
 	it("keeps pursuing the same committed goal across turns instead of re-choosing it", () => {
 		const state = {
 			...baseState(),
-			items: [swordAt(4, 1)],
+			items: [weaponAt(4, 1)],
 		};
 		const first = decideAction(state, createInitialBotMemory());
 		const second = decideAction(state, first.memory);

@@ -40,7 +40,7 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"heal-potion": "回復薬",
-	sword: "剣",
+	weapon: "剣",
 	armor: "鎧",
 	food: "食料",
 	poison: "毒薬",

@@ -1,6 +1,6 @@
 import { EQUIPMENT_ITEM_KINDS } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
-import { applyToggleArmorEquip, applyToggleSwordEquip } from "./equipment.js";
+import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
 import {
 	applyUseEnchantArmorScroll,
 	applyUseEnchantWeaponScroll,
@@ -29,7 +29,7 @@ import {
 /**
  * The per-item effect. Deliberately exhaustive with no default: adding an
  * ItemKind without wiring a handler here must be a compile error, never a
- * silent fallthrough into some other item's effect. Sword/armor/ring toggle
+ * silent fallthrough into some other item's effect. Weapon/armor/ring toggle
  * equip state instead of being consumed — see applyUseItem, which reads
  * item.kind (not a same-reference check) to decide whether to remove the
  * item from inventory afterward. Every other handler may return the input
@@ -44,8 +44,8 @@ const applyItemEffect = (
 	targetItemId: number | undefined,
 ): GameState => {
 	switch (item.kind) {
-		case "sword":
-			return applyToggleSwordEquip(state, item);
+		case "weapon":
+			return applyToggleWeaponEquip(state, item);
 		case "armor":
 			return applyToggleArmorEquip(state, item);
 		case "regeneration-ring":
@@ -102,7 +102,7 @@ const applyItemEffect = (
 /**
  * Uses the held item matching `itemId`: the effect from applyItemEffect,
  * then — for consumable kinds only — one item removed from inventory, in
- * this one place so a handler can never forget to consume. Sword/armor/ring
+ * this one place so a handler can never forget to consume. Weapon/armor/ring
  * are never removed here; toggling their `equipped` flag in place is the
  * whole effect (see items/equipment.ts, items/rings.ts). Using an itemId not
  * held, or a kind whose handler declared a no-op, returns the input state

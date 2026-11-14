@@ -39,8 +39,8 @@ export const HIT_CHANCE_PERCENT_PER_POINT = 5;
 export const UNARMORED_ARMOR_CLASS = 10;
 /** What a bare-handed hit rolls — original Rogue's INIT_STATS damage "1x4". */
 export const UNARMED_DAMAGE_DICE: DamageDice = { count: 1, sides: 4 };
-/** What an equipped sword rolls — the original long sword's 3d4, standing in until weapon kinds arrive (milestone 111 stage 2). */
-export const SWORD_DAMAGE_DICE: DamageDice = { count: 3, sides: 4 };
+/** What an equipped weapon rolls — the original long weapon's 3d4, standing in until weapon kinds arrive (milestone 111 stage 2). */
+export const WEAPON_DAMAGE_DICE: DamageDice = { count: 3, sides: 4 };
 
 /**
  * Max items the player can hold at once — one slot per held item (no
@@ -130,15 +130,15 @@ export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
-/** An ordinary sword's own attackBonus (see HeldItem) before the found-cursed/found-enchanted roll below — raised further by enchant-weapon scrolls targeting it. */
-export const SWORD_ATTACK_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that a sword spawns. */
-export const SWORD_SPAWN_CHANCE_PERCENT = 15;
+/** An ordinary weapon's own attackBonus (see HeldItem) before the found-cursed/found-enchanted roll below — raised further by enchant-weapon scrolls targeting it. */
+export const WEAPON_ATTACK_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that a weapon spawns. */
+export const WEAPON_SPAWN_CHANCE_PERCENT = 15;
 /**
  * Original Rogue 5.4's new_thing() roll for a found weapon/armor, decided
  * once at floor generation (items/heldItemFactory.ts) and hidden until the
- * item is equipped: a sword is cursed SWORD_CURSE_CHANCE_PERCENT of the
- * time, found already enchanted SWORD_FOUND_ENCHANTED_CHANCE_PERCENT of the
+ * item is equipped: a weapon is cursed WEAPON_CURSE_CHANCE_PERCENT of the
+ * time, found already enchanted WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT of the
  * time, ordinary otherwise. A cursed one cannot be unequipped until a
  * remove-curse scroll is read AND is worse by
  * FOUND_BONUS_ADJUSTMENT_MIN..MAX points (so its bonus can go negative); a
@@ -147,8 +147,8 @@ export const SWORD_SPAWN_CHANCE_PERCENT = 15;
  * (2026-11-12). Rogue's weapon curse lowers to-hit only — here attackBonus
  * drives both to-hit and damage until weapons get separate values.
  */
-export const SWORD_CURSE_CHANCE_PERCENT = 10;
-export const SWORD_FOUND_ENCHANTED_CHANCE_PERCENT = 5;
+export const WEAPON_CURSE_CHANCE_PERCENT = 10;
+export const WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT = 5;
 export const FOUND_BONUS_ADJUSTMENT_MIN = 1;
 export const FOUND_BONUS_ADJUSTMENT_MAX = 3;
 
@@ -156,7 +156,7 @@ export const FOUND_BONUS_ADJUSTMENT_MAX = 3;
 export const ARMOR_DEFENSE_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that armor spawns. */
 export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
-/** Armor's share of the same roll as SWORD_CURSE_CHANCE_PERCENT — Rogue curses armor twice as often as weapons. */
+/** Armor's share of the same roll as WEAPON_CURSE_CHANCE_PERCENT — Rogue curses armor twice as often as weapons. */
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 export const ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT = 8;
 
@@ -173,7 +173,7 @@ export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
 export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
-/** Permanent boost to playerPower per strength potion drunk — meaningful even with no sword equipped. */
+/** Permanent boost to playerPower per strength potion drunk — meaningful even with no weapon equipped. */
 export const STRENGTH_POTION_ATTACK_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
@@ -299,9 +299,9 @@ export const AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8;
 export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
 
 /**
- * Permanent boost to a targeted sword's own attackBonus per scroll read
- * (see items/scrolls.ts — the player picks which held sword, equipped or
- * not; no-op with no sword held). Same magnitude as a freshly found sword,
+ * Permanent boost to a targeted weapon's own attackBonus per scroll read
+ * (see items/scrolls.ts — the player picks which held weapon, equipped or
+ * not; no-op with no weapon held). Same magnitude as a freshly found weapon,
  * but the scroll itself is never cursed.
  */
 export const ENCHANT_WEAPON_BONUS = 1;

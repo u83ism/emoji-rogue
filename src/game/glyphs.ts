@@ -25,7 +25,7 @@ export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
 };
 /* Amulet of Yendor: single-codepoint, Unicode 6.0 — GOAL_FLOOR only. */
 export const AMULET_CELL: Cell = { glyph: "💎" };
-/* Sword uses a kitchen knife glyph (single-codepoint, no variation selector
+/* Weapon uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require
  * one — see docs/design.md's "avoid combining sequences" rule (re-verified
  * milestone 73: both 🗡️/⚔️ still need VS16). The defense equipment item
@@ -35,7 +35,7 @@ export const AMULET_CELL: Cell = { glyph: "💎" };
  * doesn't exist under this stability bar. */
 export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"heal-potion": { glyph: "💊" },
-	sword: { glyph: "🔪" },
+	weapon: { glyph: "🔪" },
 	armor: { glyph: "🦺" },
 	food: { glyph: "🍖" },
 	/* Same glyph as heal-potion, on purpose — poison is unidentified until drunk. */
@@ -116,7 +116,7 @@ export const DETECT_MONSTER_GLYPH = "🔭";
 export const HALLUCINATION_GLYPH = "🥴";
 
 /**
- * Marks a currently-equipped sword/armor/ring row in the inventory overlay
+ * Marks a currently-equipped weapon/armor/ring row in the inventory overlay
  * (src/shell/inventoryLabels.ts, demo/main.js) — same shared-glyph reasoning
  * as the status chips above. Single codepoint, no VS16, Unicode 6.0 (well
  * under the docs/emoji-policy.md ceiling); EAW Wide per Unicode's East Asian

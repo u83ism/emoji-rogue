@@ -22,7 +22,7 @@ const move = (direction: Direction): Action => ({
 const buildFullInventory = (): readonly HeldItem[] =>
 	ITEM_KIND_VALUES.slice(0, INVENTORY_CAPACITY).map((kind, index) => {
 		const itemId = index + 1;
-		if (kind === "sword") {
+		if (kind === "weapon") {
 			return { itemId, kind, equipped: false, cursed: false, attackBonus: 1 };
 		}
 		if (kind === "armor") {
@@ -105,23 +105,23 @@ describe("pickups", () => {
 		]);
 	});
 
-	it("re-picking up a previously-dropped sword restores its exact identity — no reroll, no rng consumed, no new itemId", () => {
-		const droppedSword = {
+	it("re-picking up a previously-dropped weapon restores its exact identity — no reroll, no rng consumed, no new itemId", () => {
+		const droppedWeapon = {
 			x: 5,
 			y: 1,
-			kind: "sword" as const,
+			kind: "weapon" as const,
 			identity: { itemId: 42, cursed: true, attackBonus: 3 },
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			items: [droppedSword],
+			items: [droppedWeapon],
 			nextItemId: 99,
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.inventory).toEqual([
 			{
 				itemId: 42,
-				kind: "sword",
+				kind: "weapon",
 				equipped: false,
 				cursed: true,
 				attackBonus: 3,

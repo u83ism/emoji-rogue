@@ -8,7 +8,7 @@ import { applyRandomTeleport } from "../teleport.js";
 import { findNearestVisibleEnemy, findVisibleEnemies } from "../vision.js";
 
 // The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
-// the sword/armor-targeting ones, split out once this file passed the
+// the weapon/armor-targeting ones, split out once this file passed the
 // 200-line structure-lint limit (milestone 94 follow-up). Consumption from
 // inventory happens in the dispatcher (items/use.ts), never in the handlers
 // here — a handler only applies its effect.

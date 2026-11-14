@@ -3,18 +3,18 @@ import { buildEventLog } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { replaceHeldItem } from "./inventory.js";
 
-// The scroll kinds that target a specific held sword/armor (or every
+// The scroll kinds that target a specific held weapon/armor (or every
 // currently-equipped cursed item), split out of scrolls.ts (milestone 94
 // follow-up) once that file passed the 200-line structure-lint limit.
 // Consumption from inventory happens in the dispatcher (items/use.ts), never
 // in the handlers here — a handler only applies its effect.
 
-type SwordItem = Extract<HeldItem, { kind: "sword" }>;
+type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 
 /**
- * Raises a targeted held sword's own attackBonus — equipped or not (see
- * HeldItem). No-op (same reference, not consumed) with no matching sword
+ * Raises a targeted held weapon's own attackBonus — equipped or not (see
+ * HeldItem). No-op (same reference, not consumed) with no matching weapon
  * held, same convention as an identify scroll with nothing left to identify.
  */
 export const applyUseEnchantWeaponScroll = (
@@ -22,8 +22,8 @@ export const applyUseEnchantWeaponScroll = (
 	targetItemId: number | undefined,
 ): GameState => {
 	const target = state.inventory.find(
-		(item): item is SwordItem =>
-			item.kind === "sword" && item.itemId === targetItemId,
+		(item): item is WeaponItem =>
+			item.kind === "weapon" && item.itemId === targetItemId,
 	);
 	if (target === undefined) {
 		return state;
@@ -95,7 +95,7 @@ export const applyUseProtectArmorScroll = (
 };
 
 /**
- * Frees every currently-equipped cursed item at once (sword/armor/ring
+ * Frees every currently-equipped cursed item at once (weapon/armor/ring
  * slots — up to three). Held-but-unequipped items keep whatever hidden
  * curse they rolled at pickup untouched. No-op with nothing to free.
  */

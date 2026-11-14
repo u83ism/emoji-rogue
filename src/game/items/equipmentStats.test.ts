@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	SWORD_DAMAGE_DICE,
 	UNARMED_DAMAGE_DICE,
 	UNARMORED_ARMOR_CLASS,
 	WEAK_ATTACK_PENALTY,
+	WEAPON_DAMAGE_DICE,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { HeldItem } from "../state.js";
@@ -14,9 +14,9 @@ import {
 	calculatePlayerDefense,
 } from "./equipmentStats.js";
 
-const swordWith = (attackBonus: number, equipped = true): HeldItem => ({
+const weaponWith = (attackBonus: number, equipped = true): HeldItem => ({
 	itemId: 1,
-	kind: "sword",
+	kind: "weapon",
 	equipped,
 	cursed: false,
 	attackBonus,
@@ -32,16 +32,16 @@ const armorWith = (defenseBonus: number, equipped = true): HeldItem => ({
 });
 
 describe("calculatePlayerDamageDice", () => {
-	it("is the bare-handed die with no sword equipped", () => {
+	it("is the bare-handed die with no weapon equipped", () => {
 		expect(calculatePlayerDamageDice([])).toEqual(UNARMED_DAMAGE_DICE);
-		expect(calculatePlayerDamageDice([swordWith(1, false)])).toEqual(
+		expect(calculatePlayerDamageDice([weaponWith(1, false)])).toEqual(
 			UNARMED_DAMAGE_DICE,
 		);
 	});
 
-	it("is the sword's dice once one is equipped", () => {
-		expect(calculatePlayerDamageDice([swordWith(1)])).toEqual(
-			SWORD_DAMAGE_DICE,
+	it("is the weapon's dice once one is equipped", () => {
+		expect(calculatePlayerDamageDice([weaponWith(1)])).toEqual(
+			WEAPON_DAMAGE_DICE,
 		);
 	});
 });
@@ -49,10 +49,10 @@ describe("calculatePlayerDamageDice", () => {
 describe("calculatePlayerAttackDamage", () => {
 	const state = buildArenaGameState(9, 3, 1);
 
-	it("is playerPower plus the equipped sword's attackBonus", () => {
+	it("is playerPower plus the equipped weapon's attackBonus", () => {
 		expect(calculatePlayerAttackDamage(state)).toBe(state.playerPower);
 		expect(
-			calculatePlayerAttackDamage({ ...state, inventory: [swordWith(2)] }),
+			calculatePlayerAttackDamage({ ...state, inventory: [weaponWith(2)] }),
 		).toBe(state.playerPower + 2);
 	});
 
@@ -61,7 +61,7 @@ describe("calculatePlayerAttackDamage", () => {
 			calculatePlayerAttackDamage({
 				...state,
 				playerFood: 0,
-				inventory: [swordWith(-3)],
+				inventory: [weaponWith(-3)],
 			}),
 		).toBe(state.playerPower - 3 - WEAK_ATTACK_PENALTY);
 	});

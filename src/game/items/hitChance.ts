@@ -2,7 +2,10 @@ import { HIT_CHANCE_PERCENT_PER_POINT } from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
-import { calculatePlayerArmorClass, type SwordItem } from "./equipmentStats.js";
+import {
+	calculatePlayerArmorClass,
+	type WeaponItem,
+} from "./equipmentStats.js";
 
 /**
  * Original Rogue's swing() as a percent: a d20 (0-19) plus `hitBonus` must
@@ -25,18 +28,18 @@ const calculateHitChancePercent = (
 		),
 	);
 
-/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped sword's attackBonus. */
+/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's attackBonus. */
 export const calculatePlayerHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
 ): number => {
-	const equippedSword = state.inventory.find(
-		(item): item is SwordItem => item.kind === "sword" && item.equipped,
+	const equippedWeapon = state.inventory.find(
+		(item): item is WeaponItem => item.kind === "weapon" && item.equipped,
 	);
 	return calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
-		equippedSword?.attackBonus ?? 0,
+		equippedWeapon?.attackBonus ?? 0,
 	);
 };
 

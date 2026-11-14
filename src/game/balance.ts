@@ -1,19 +1,23 @@
 /* file-size-exception: 調整ノブの単一責務カタログ — 1種1エントリで、分割するとノブが散る(2026-07-18裁可) */
-// Combat tuning knobs, all in one place. Values are provisional and expected
-// to change after real-terminal playtesting (docs/tasks/game-history.md, milestone 5).
-// Melee combat rolls a to-hit chance and a discrete NdM+bonus damage die
-// (docs/tasks/game.md milestone 104: original Rogue's d20-style AC/level
-// to-hit collapsed onto the percent-roll idiom already used everywhere else
-// in this file, rather than a parallel AC number space). damage.ts's older
-// rollDamage() (a normal-distribution roll tried and rolled back in
-// game-history.md milestone 15) stays dormant, unrelated to the dice below.
+// Tuning knobs, all in one place. Since milestone 111 the combat numbers
+// follow original Rogue 5.4 (docs/rogue-5.4-spec.md): the enemies' own table
+// lives in enemies/enemyStats.ts, and what stays here is the player's side
+// plus the knobs of this game's own mechanics. damage.ts's older rollDamage()
+// (a normal-distribution roll tried and rolled back in game-history.md
+// milestone 15) stays dormant, unrelated to the dice below.
 
-import type { EnemyKind, TrapKind } from "./events.js";
+import type { DamageDice } from "./damage.js";
+import type { TrapKind } from "./events.js";
 
-export const PLAYER_MAX_HP = 10;
+/** Original Rogue's starting hit points (INIT_STATS). */
+export const PLAYER_MAX_HP = 12;
+/**
+ * The flat damage every player hit adds on top of its dice — original
+ * Rogue's add_dam[] for the starting strength of 16. Raised by strength
+ * potions (STRENGTH_POTION_ATTACK_BONUS); this game has no separate strength
+ * stat, so a potion always adds a full point.
+ */
 export const PLAYER_ATTACK_DAMAGE = 1;
-/** However high playerDefense climbs, an enemy attack always deals at least this much. */
-export const MIN_DAMAGE_TAKEN = 1;
 /**
  * Standard deviation for damage.ts's rollDamage(), which nothing currently
  * calls — melee combat uses the discrete-dice constants below instead. Kept
@@ -22,40 +26,21 @@ export const MIN_DAMAGE_TAKEN = 1;
 export const DAMAGE_VARIANCE_STDDEV = 0.5;
 
 /**
- * Percent chance a player melee attack (bump or wand-free ranged strike)
- * connects, before the equipped sword's own bonus. Sneak attacks (target
- * still asleep) skip this roll entirely — original Rogue's surprise attacks
- * always land. See items/equipment.ts's calculatePlayerHitChancePercent.
+ * Original Rogue's swing(): a d20 plus the attacker's to-hit bonus must
+ * reach 20 - attacker level - defender armor class. Restated on the
+ * percent-roll idiom used everywhere else in this file, that is this many
+ * percent per point of (level + armor class + bonus) — see
+ * items/hitChance.ts. Sneak attacks (target still asleep) skip the roll
+ * entirely, an arrangement kept from before (the original gives +4 to hit
+ * instead — docs/tasks/game.md).
  */
-export const PLAYER_BASE_HIT_CHANCE_PERCENT = 80;
-/** Extra hit chance per point of the equipped sword's attackBonus — a sharper blade is easier to land, not just harder-hitting. */
-export const PLAYER_HIT_CHANCE_PER_ATTACK_BONUS = 3;
-/** Percent chance an adjacent enemy's attack connects with the player, before the equipped armor's defenseBonus reduces it. */
-export const ENEMY_BASE_HIT_CHANCE_PERCENT = 75;
-/** Hit chance removed from an attacking enemy per point of the player's equipped armor defenseBonus. */
-export const ENEMY_HIT_CHANCE_PER_DEFENSE_POINT = 4;
-/** Every hit-chance roll (player and enemy alike) clamps into this range — a heavily armored/leveled character can still be grazed, and a weak swing can still connect. */
-export const MIN_HIT_CHANCE_PERCENT = 10;
-export const MAX_HIT_CHANCE_PERCENT = 95;
-
-/**
- * The player's base weapon die — there's no per-weapon-type variety yet
- * (every sword rolls the same die), so playerPower/the sword's attackBonus/
- * the Weak penalty are folded in as a flat bonus on top, at the point of the
- * roll (see combat.ts), the same numbers calculatePlayerAttackDamage always
- * produced pre-dice.
- */
-export const PLAYER_DAMAGE_DICE_COUNT = 1;
-export const PLAYER_DAMAGE_DICE_SIDES = 4;
-/**
- * Every enemy kind's melee damage die. ENEMY_ATTACK_DAMAGE below keeps its
- * original meaning ("this kind's average hit") unchanged — the die's own
- * mean is subtracted from it at the point of the roll (see
- * enemyHitLanded.ts), so 1d4 of variance layers uniformly on top of the
- * already-tuned 26-kind table without hand-authoring a second table.
- */
-export const ENEMY_DAMAGE_DICE_COUNT = 1;
-export const ENEMY_DAMAGE_DICE_SIDES = 4;
+export const HIT_CHANCE_PERCENT_PER_POINT = 5;
+/** The player's armor class with nothing worn (original Rogue's INIT_STATS) — lower is harder to hit. */
+export const UNARMORED_ARMOR_CLASS = 10;
+/** What a bare-handed hit rolls — original Rogue's INIT_STATS damage "1x4". */
+export const UNARMED_DAMAGE_DICE: DamageDice = { count: 1, sides: 4 };
+/** What an equipped sword rolls — the original long sword's 3d4, standing in until weapon kinds arrive (milestone 111 stage 2). */
+export const SWORD_DAMAGE_DICE: DamageDice = { count: 3, sides: 4 };
 
 /**
  * Max items the player can hold at once — one slot per held item (no
@@ -66,32 +51,18 @@ export const ENEMY_DAMAGE_DICE_SIDES = 4;
  */
 export const INVENTORY_CAPACITY = 26;
 
-export const ZOMBIE_MAX_HP = 2;
-export const ZOMBIE_ATTACK_DAMAGE = 1;
-export const ZOMBIE_ACTIONS_PER_TURN = 1;
-export const ZOMBIE_COUNT_BASE = 3;
+// Enemy numbers (level, armor class, attack dice, experience) are original
+// Rogue's monsters[] table — see enemies/enemyStats.ts. What follows are the
+// knobs of this game's own per-kind mechanics.
 
-// A glass cannon: one hit kills it, but it acts twice per player turn, so
-// standing next to one costs as much HP as standing next to two zombies.
-export const BAT_MAX_HP = 1;
-export const BAT_ATTACK_DAMAGE = 1;
-export const BAT_ACTIONS_PER_TURN = 2;
-export const BAT_COUNT_BASE = 2;
-
-// Original Rogue's leprechaun under another name (the rename is a kept
-// arrangement — docs/tasks/game.md). Never deals HP damage — it steals gold
-// on contact and flees instead (see enemies/enemyFlee.ts) and does not scale
-// with depth like zombie/bat; it spawns via THIEF_SPAWN_CHANCE_PERCENT, an
-// independent per-floor roll like sword/armor. Both the theft and the gold it
-// drops when killed first (combat.ts) are measured in gold piles' worth
-// (GOLD_AMOUNT_MIN..MAX rolls): one, or THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME when
-// the magic save goes the thief's way (failed → steals more) or the
-// player's (passed → drops more).
-export const THIEF_MAX_HP = 2;
-export const THIEF_ATTACK_DAMAGE = 0;
-export const THIEF_ACTIONS_PER_TURN = 1;
+// The thief is original Rogue's leprechaun under another name (the rename
+// is a kept arrangement — docs/tasks/game.md). It steals gold on contact
+// and flees instead of fighting (see enemies/enemyFlee.ts). Both the theft
+// and the gold it drops when killed first (combat.ts) are measured in gold
+// piles' worth (GOLD_AMOUNT_MIN..MAX rolls): one, or
+// THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME when the magic save goes the thief's way
+// (failed → steals more) or the player's (passed → drops more).
 export const THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME = 5;
-export const THIEF_SPAWN_CHANCE_PERCENT = 20;
 
 /**
  * Percent chance the player passes a save against magic — original Rogue's
@@ -102,238 +73,29 @@ export const THIEF_SPAWN_CHANCE_PERCENT = 20;
 export const calculateMagicSaveChancePercent = (playerLevel: number): number =>
 	(4 + Math.floor(playerLevel / 2)) * 5;
 
-// The item-stealing counterpart to the thief: never deals damage, steals one
-// random held item stack (instead of gold) on contact and flees. Same
-// independent-per-floor spawn pattern, no depth scaling.
-export const NYMPH_MAX_HP = 1;
-export const NYMPH_ATTACK_DAMAGE = 0;
-export const NYMPH_ACTIONS_PER_TURN = 1;
-export const NYMPH_SPAWN_CHANCE_PERCENT = 20;
-
-// Neither flees nor scales with depth like zombie/bat — a sturdier enemy
-// that stands and fights, whose hits have a chance to also rust the
-// player's armor (see advanceEnemies's playerDefense accumulator).
-export const AQUATOR_MAX_HP = 3;
-export const AQUATOR_ATTACK_DAMAGE = 1;
-export const AQUATOR_ACTIONS_PER_TURN = 1;
-/** Chance (out of 100), independently rolled every time an aquator's attack lands, that it also rusts armor. */
-export const AQUATOR_RUST_CHANCE_PERCENT = 33;
-export const AQUATOR_SPAWN_CHANCE_PERCENT = 20;
-
-// A sturdier straight-up melee attacker than aquator — no special behavior of
-// its own in advanceEnemies (same "attack if adjacent, otherwise chase/wander"
-// as zombie/bat); its distinguishing trait is combat.ts's applyEnemyHit
-// dropping a bonus gold pile on death (see GOLD_AMOUNT_MIN/MAX), echoing
-// original Rogue's gold-hoarding orc. Independent per-floor spawn, no depth
-// scaling — same idiom as thief/nymph/aquator.
-export const ORC_MAX_HP = 4;
-export const ORC_ATTACK_DAMAGE = 2;
-export const ORC_ACTIONS_PER_TURN = 1;
-export const ORC_SPAWN_CHANCE_PERCENT = 20;
-
-// A boss-tier melee attacker, sturdier and harder-hitting than any other
-// enemy, differentiated purely by parameters — same "no advanceEnemies
-// branch" idiom as zombie/bat. Independent per-floor spawn like thief/nymph/
-// aquator/orc, but rare (same rate as ring/wand drops).
-export const DRAGON_MAX_HP = 8;
-export const DRAGON_ATTACK_DAMAGE = 4;
-export const DRAGON_ACTIONS_PER_TURN = 1;
-export const DRAGON_SPAWN_CHANCE_PERCENT = 8;
-
-// Another "parameters only" melee attacker, positioned between orc and
-// dragon on every axis. No single-codepoint stable emoji depicts a yeti, so
-// glyphs.ts substitutes a bear as the nearest mountain-beast stand-in.
-export const YETI_MAX_HP = 5;
-export const YETI_ATTACK_DAMAGE = 3;
-export const YETI_ACTIONS_PER_TURN = 1;
-export const YETI_SPAWN_CHANCE_PERCENT = 15;
-
-// Low HP but a harder bite than zombie/bat — the balance point is the extra
-// damage offsetting how easily it dies. Independent per-floor spawn, no
-// depth scaling — same idiom as thief/nymph/aquator/orc/yeti.
-export const SNAKE_MAX_HP = 2;
-export const SNAKE_ATTACK_DAMAGE = 2;
-export const SNAKE_ACTIONS_PER_TURN = 1;
-export const SNAKE_SPAWN_CHANCE_PERCENT = 20;
-
-// Stands and fights like aquator rather than fleeing — every landed hit
-// heals it for a percentage of the damage dealt, capped at VAMPIRE_MAX_HP
-// (see vampireLifesteal.ts). Independent per-floor spawn, no depth scaling.
-export const VAMPIRE_MAX_HP = 4;
-export const VAMPIRE_ATTACK_DAMAGE = 2;
-export const VAMPIRE_ACTIONS_PER_TURN = 1;
-/** Percentage (floored) of landed damage a vampire heals itself for — see vampireLifesteal.ts's resolveVampireLifesteal. */
+/** Percentage (floored) of the damage a vampire landed this turn that it heals itself for, capped at its own max HP — see vampireLifesteal.ts. An arrangement: the original vampire steals max HP instead. */
 export const VAMPIRE_LIFESTEAL_PERCENT = 50;
-export const VAMPIRE_SPAWN_CHANCE_PERCENT = 15;
-/**
- * A vampire's own heal (floor(VAMPIRE_ATTACK_DAMAGE * VAMPIRE_LIFESTEAL_PERCENT / 100) = 1/turn)
- * exactly cancels an unarmed player's PLAYER_ATTACK_DAMAGE (1/turn), making it an unkillable
- * stalemate before the player finds a sword or strength potion. Gating the spawn to floor 8+
- * (2026-07-23 player report, raised 3→8 same day: floor 3 still felt too early) pushes it later
- * than dragon/yeti, matching its ENEMY_EXPERIENCE_REWARD placement between the two.
- */
-export const VAMPIRE_MIN_SPAWN_FLOOR = 8;
 
-// Eight more "parameters only" melee attackers (no advanceEnemies branch of
-// their own — same idiom as orc/dragon/yeti), added 2026-07-28 to widen the
-// enemy roster toward original Rogue's full 26-letter cast. Chosen as a first
-// batch specifically because none of them need a new mechanic — the other
-// eight original monsters (Griffin/Troll's regen, Icky Thing's blindness,
-// Venus Flytrap's stationary hold, Medusa's gaze, Phantom's invisibility,
-// Wraith's stat drain, Xeroc's gold mimicry) each needed their own new game
-// system and followed in later milestones (101 and 102). Spawn percentages
-// are set conservatively (roughly half of an existing "common" kind's rate)
-// since adding eight more independent per-floor rolls on top of the existing
-// eight meaningfully raises enemy density — first-pass numbers, expect
-// retuning after playtesting like every other balance.ts value.
-
-// Weakest of the batch — below zombie in every stat, original Rogue's
-// earliest and most common trash mob.
-export const RAT_MAX_HP = 1;
-export const RAT_ATTACK_DAMAGE = 1;
-export const RAT_ACTIONS_PER_TURN = 1;
-export const RAT_SPAWN_CHANCE_PERCENT = 12;
-
-// A glass cannon in the same vein as snake — even less HP, still bites hard.
-export const EMU_MAX_HP = 1;
-export const EMU_ATTACK_DAMAGE = 2;
-export const EMU_ACTIONS_PER_TURN = 1;
-export const EMU_SPAWN_CHANCE_PERCENT = 10;
-
-// A second "acts twice per turn" kind alongside bat, tuned meaningfully more
-// dangerous than bat (same speed, sharper attack) rather than a plain
-// reskin.
-export const KESTREL_MAX_HP = 1;
-export const KESTREL_ATTACK_DAMAGE = 2;
-export const KESTREL_ACTIONS_PER_TURN = 2;
-export const KESTREL_SPAWN_CHANCE_PERCENT = 8;
-
-// A mid-tier grunt, weaker cousin of orc/centaur without either of their
-// gimmicks (no gold drop, no extra HP).
-export const HOBGOBLIN_MAX_HP = 3;
-export const HOBGOBLIN_ATTACK_DAMAGE = 2;
-export const HOBGOBLIN_ACTIONS_PER_TURN = 1;
-export const HOBGOBLIN_SPAWN_CHANCE_PERCENT = 15;
-
-// A sturdier mid-tier melee attacker, comparable to orc but without its
-// gold-drop gimmick.
-export const CENTAUR_MAX_HP = 4;
-export const CENTAUR_ATTACK_DAMAGE = 2;
-export const CENTAUR_ACTIONS_PER_TURN = 1;
-export const CENTAUR_SPAWN_CHANCE_PERCENT = 12;
-
-// The third "acts twice per turn" kind — two real hits at moderate power
-// makes it the most dangerous of the fast trio (bat/kestrel/quagga).
-export const QUAGGA_MAX_HP = 3;
-export const QUAGGA_ATTACK_DAMAGE = 2;
-export const QUAGGA_ACTIONS_PER_TURN = 2;
-export const QUAGGA_SPAWN_CHANCE_PERCENT = 8;
-
-// Upper-mid tier, positioned between yeti and dragon on every axis.
-export const UR_VILE_MAX_HP = 5;
-export const UR_VILE_ATTACK_DAMAGE = 3;
-export const UR_VILE_ACTIONS_PER_TURN = 1;
-export const UR_VILE_SPAWN_CHANCE_PERCENT = 8;
-
-// A second boss-tier attacker alongside dragon — comparably rare and
-// dangerous, gated to deeper floors the same way VAMPIRE_MIN_SPAWN_FLOOR
-// gates vampire.
-export const JABBERWOCK_MAX_HP = 7;
-export const JABBERWOCK_ATTACK_DAMAGE = 4;
-export const JABBERWOCK_ACTIONS_PER_TURN = 1;
-export const JABBERWOCK_SPAWN_CHANCE_PERCENT = 6;
-export const JABBERWOCK_MIN_SPAWN_FLOOR = 6;
-
-// The remaining eight original-Rogue monsters, each needing a genuinely new
-// advanceEnemies mechanic (added 2026-07-28, second half of the roster —
-// see docs/tasks/game.md milestone 101's backlog note). Gated to a
-// minFloor where the mechanic makes them meaningfully more dangerous than a
-// same-tier "parameters only" attacker, same reasoning as
-// VAMPIRE_MIN_SPAWN_FLOOR.
-
-// Fast (like bat/kestrel/quagga) AND passively regenerates — see
-// enemyRegen.ts. Gated deeper than troll since the two mechanics stack.
-export const GRIFFIN_MAX_HP = 6;
-export const GRIFFIN_ATTACK_DAMAGE = 3;
-export const GRIFFIN_ACTIONS_PER_TURN = 2;
-export const GRIFFIN_SPAWN_CHANCE_PERCENT = 6;
-export const GRIFFIN_MIN_SPAWN_FLOOR = 5;
-/** HP regenerated per awake turn while below GRIFFIN_MAX_HP — see enemyRegen.ts. */
+/** HP a griffin regenerates per awake turn while below its max HP — see enemyRegen.ts. */
 export const GRIFFIN_REGEN_AMOUNT = 1;
-
-// Not fast, but regenerates more per turn than griffin — its own signature
-// trait instead of a lesser copy of griffin's.
-export const TROLL_MAX_HP = 6;
-export const TROLL_ATTACK_DAMAGE = 3;
-export const TROLL_ACTIONS_PER_TURN = 1;
-export const TROLL_SPAWN_CHANCE_PERCENT = 8;
-export const TROLL_MIN_SPAWN_FLOOR = 4;
-/** HP regenerated per awake turn while below TROLL_MAX_HP — see enemyRegen.ts. */
+/** HP a troll regenerates per awake turn while below its max HP — see enemyRegen.ts. */
 export const TROLL_REGEN_AMOUNT = 2;
 
-// Blind: only wakes on adjacency (never on being seen), and never chases
-// once awake — always wanders, same as a confused enemy, except it can still
-// wake up and it is never actually confused. See advanceEnemies. Weak
-// otherwise and not gated — original Rogue's Icky Thing is an early nuisance.
-export const ICKY_THING_MAX_HP = 2;
-export const ICKY_THING_ATTACK_DAMAGE = 1;
-export const ICKY_THING_ACTIONS_PER_TURN = 1;
-export const ICKY_THING_SPAWN_CHANCE_PERCENT = 15;
-
-// Stationary: never chases or wanders, only ever attacks when the player
-// steps adjacent to it (see advanceEnemies). Also holds the player in place
-// while adjacent, matching original Rogue — see advanceTurn.ts's applyMove
-// (findHoldingFlytraps): any open-floor walk that would leave every
-// currently-holding flytrap is blocked (still spends the turn struggling).
-export const VENUS_FLYTRAP_MAX_HP = 3;
-export const VENUS_FLYTRAP_ATTACK_DAMAGE = 2;
-export const VENUS_FLYTRAP_ACTIONS_PER_TURN = 1;
-export const VENUS_FLYTRAP_SPAWN_CHANCE_PERCENT = 10;
-
-// A ranged gaze instead of chasing while visible but not adjacent — see
-// advanceEnemies. Reuses the player's own confusedTurnsRemaining field/tick,
-// same "same field, different source" idiom as the sleeping gas trap reusing
-// paralyzedTurnsRemaining.
-export const MEDUSA_MAX_HP = 5;
-export const MEDUSA_ATTACK_DAMAGE = 2;
-export const MEDUSA_ACTIONS_PER_TURN = 1;
-export const MEDUSA_SPAWN_CHANCE_PERCENT = 6;
-export const MEDUSA_MIN_SPAWN_FLOOR = 5;
 /** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands — same "roll every eligible turn" idiom as WAKE_CHANCE_PERCENT. */
 export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
 /** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */
 export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
 
-// Invisible unless adjacent (or detected — see frame.ts's buildFrameGrid).
-// No advanceEnemies branch of its own: it fights exactly like a
-// "parameters only" attacker once you bump into it, the danger is purely
-// that you cannot see it coming.
-export const PHANTOM_MAX_HP = 3;
-export const PHANTOM_ATTACK_DAMAGE = 2;
-export const PHANTOM_ACTIONS_PER_TURN = 1;
-export const PHANTOM_SPAWN_CHANCE_PERCENT = 8;
-export const PHANTOM_MIN_SPAWN_FLOOR = 3;
-
-// Every landed hit permanently lowers playerMaxHp — see wraithDrain.ts.
-// Gated like vampire: a permanent debuff is dangerous enough to delay.
-export const WRAITH_MAX_HP = 4;
-export const WRAITH_ATTACK_DAMAGE = 2;
-export const WRAITH_ACTIONS_PER_TURN = 1;
-export const WRAITH_SPAWN_CHANCE_PERCENT = 8;
-export const WRAITH_MIN_SPAWN_FLOOR = 4;
-/** Permanent playerMaxHp lost per landed hit — see wraithDrain.ts. Never drains playerMaxHp below 1. */
+/** Permanent playerMaxHp lost on a turn a wraith lands a hit — see wraithDrain.ts. Never drains playerMaxHp below 1. An arrangement: the original wraith drains a level instead. */
 export const WRAITH_DRAIN_AMOUNT = 1;
 
-// Disguised as a gold pile while still asleep (see frame.ts's
-// buildFrameGrid) — the instant it wakes (the same WAKE_CHANCE_PERCENT roll
-// every sleeping enemy uses) it draws as its real glyph instead. No
-// advanceEnemies branch of its own beyond that — a "parameters only"
-// attacker once revealed. Not gated: the disguise itself is what makes it
-// dangerous even early.
-export const XEROC_MAX_HP = 4;
-export const XEROC_ATTACK_DAMAGE = 3;
-export const XEROC_ACTIONS_PER_TURN = 1;
-export const XEROC_SPAWN_CHANCE_PERCENT = 10;
+/**
+ * Chance (out of 100), rolled once per room at floor generation, that the
+ * room holds one enemy — see floor/enemies.ts. Original Rogue rolls 80% for
+ * a room with gold in it and 25% otherwise, with gold in half the rooms;
+ * gold here is not placed per room, so the two are flattened into one rate.
+ */
+export const ROOM_ENEMY_SPAWN_CHANCE_PERCENT = 50;
 
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
@@ -353,170 +115,17 @@ export const SNEAK_ATTACK_MULTIPLIER = 3;
  */
 export const WAKE_CHANCE_PERCENT = 33;
 
+/** Max HP gained per level is one die of this many sides — original Rogue's check_level() `roll(levels gained, 10)`. */
+export const PLAYER_LEVEL_UP_HP_DICE_SIDES = 10;
 /**
- * Per-kind lookup tables so `advanceEnemies`/`floor.ts` stay kind-agnostic —
- * adding a third enemy kind means adding one entry here, not a new branch
- * elsewhere.
- */
-export const ENEMY_MAX_HP: Readonly<Record<EnemyKind, number>> = {
-	zombie: ZOMBIE_MAX_HP,
-	bat: BAT_MAX_HP,
-	thief: THIEF_MAX_HP,
-	nymph: NYMPH_MAX_HP,
-	aquator: AQUATOR_MAX_HP,
-	orc: ORC_MAX_HP,
-	dragon: DRAGON_MAX_HP,
-	yeti: YETI_MAX_HP,
-	snake: SNAKE_MAX_HP,
-	vampire: VAMPIRE_MAX_HP,
-	rat: RAT_MAX_HP,
-	emu: EMU_MAX_HP,
-	kestrel: KESTREL_MAX_HP,
-	hobgoblin: HOBGOBLIN_MAX_HP,
-	centaur: CENTAUR_MAX_HP,
-	quagga: QUAGGA_MAX_HP,
-	"ur-vile": UR_VILE_MAX_HP,
-	jabberwock: JABBERWOCK_MAX_HP,
-	griffin: GRIFFIN_MAX_HP,
-	troll: TROLL_MAX_HP,
-	"icky-thing": ICKY_THING_MAX_HP,
-	"venus-flytrap": VENUS_FLYTRAP_MAX_HP,
-	medusa: MEDUSA_MAX_HP,
-	phantom: PHANTOM_MAX_HP,
-	wraith: WRAITH_MAX_HP,
-	xeroc: XEROC_MAX_HP,
-};
-export const ENEMY_ATTACK_DAMAGE: Readonly<Record<EnemyKind, number>> = {
-	zombie: ZOMBIE_ATTACK_DAMAGE,
-	bat: BAT_ATTACK_DAMAGE,
-	thief: THIEF_ATTACK_DAMAGE,
-	nymph: NYMPH_ATTACK_DAMAGE,
-	aquator: AQUATOR_ATTACK_DAMAGE,
-	orc: ORC_ATTACK_DAMAGE,
-	dragon: DRAGON_ATTACK_DAMAGE,
-	yeti: YETI_ATTACK_DAMAGE,
-	snake: SNAKE_ATTACK_DAMAGE,
-	vampire: VAMPIRE_ATTACK_DAMAGE,
-	rat: RAT_ATTACK_DAMAGE,
-	emu: EMU_ATTACK_DAMAGE,
-	kestrel: KESTREL_ATTACK_DAMAGE,
-	hobgoblin: HOBGOBLIN_ATTACK_DAMAGE,
-	centaur: CENTAUR_ATTACK_DAMAGE,
-	quagga: QUAGGA_ATTACK_DAMAGE,
-	"ur-vile": UR_VILE_ATTACK_DAMAGE,
-	jabberwock: JABBERWOCK_ATTACK_DAMAGE,
-	griffin: GRIFFIN_ATTACK_DAMAGE,
-	troll: TROLL_ATTACK_DAMAGE,
-	"icky-thing": ICKY_THING_ATTACK_DAMAGE,
-	"venus-flytrap": VENUS_FLYTRAP_ATTACK_DAMAGE,
-	medusa: MEDUSA_ATTACK_DAMAGE,
-	phantom: PHANTOM_ATTACK_DAMAGE,
-	wraith: WRAITH_ATTACK_DAMAGE,
-	xeroc: XEROC_ATTACK_DAMAGE,
-};
-/**
- * How many times this kind acts per player turn. A closure-based Scheduler
- * (src/scheduler/) can't live inside a serializable GameState, so speed
- * differences are plain data instead — see docs/tasks/game-history.md milestone 9.
- */
-export const ENEMY_ACTIONS_PER_TURN: Readonly<Record<EnemyKind, number>> = {
-	zombie: ZOMBIE_ACTIONS_PER_TURN,
-	bat: BAT_ACTIONS_PER_TURN,
-	thief: THIEF_ACTIONS_PER_TURN,
-	nymph: NYMPH_ACTIONS_PER_TURN,
-	aquator: AQUATOR_ACTIONS_PER_TURN,
-	orc: ORC_ACTIONS_PER_TURN,
-	dragon: DRAGON_ACTIONS_PER_TURN,
-	yeti: YETI_ACTIONS_PER_TURN,
-	snake: SNAKE_ACTIONS_PER_TURN,
-	vampire: VAMPIRE_ACTIONS_PER_TURN,
-	rat: RAT_ACTIONS_PER_TURN,
-	emu: EMU_ACTIONS_PER_TURN,
-	kestrel: KESTREL_ACTIONS_PER_TURN,
-	hobgoblin: HOBGOBLIN_ACTIONS_PER_TURN,
-	centaur: CENTAUR_ACTIONS_PER_TURN,
-	quagga: QUAGGA_ACTIONS_PER_TURN,
-	"ur-vile": UR_VILE_ACTIONS_PER_TURN,
-	jabberwock: JABBERWOCK_ACTIONS_PER_TURN,
-	griffin: GRIFFIN_ACTIONS_PER_TURN,
-	troll: TROLL_ACTIONS_PER_TURN,
-	"icky-thing": ICKY_THING_ACTIONS_PER_TURN,
-	"venus-flytrap": VENUS_FLYTRAP_ACTIONS_PER_TURN,
-	medusa: MEDUSA_ACTIONS_PER_TURN,
-	phantom: PHANTOM_ACTIONS_PER_TURN,
-	wraith: WRAITH_ACTIONS_PER_TURN,
-	xeroc: XEROC_ACTIONS_PER_TURN,
-};
-/** Experience awarded for defeating each kind — see applyExperienceGain. Roughly tracks ENEMY_MAX_HP. */
-export const ENEMY_EXPERIENCE_REWARD: Readonly<Record<EnemyKind, number>> = {
-	zombie: 2,
-	bat: 1,
-	thief: 2,
-	nymph: 1,
-	aquator: 3,
-	orc: 3,
-	dragon: 6,
-	yeti: 4,
-	snake: 3,
-	vampire: 5,
-	rat: 1,
-	emu: 2,
-	kestrel: 2,
-	hobgoblin: 3,
-	centaur: 3,
-	quagga: 4,
-	"ur-vile": 4,
-	jabberwock: 6,
-	griffin: 7,
-	troll: 6,
-	"icky-thing": 1,
-	"venus-flytrap": 3,
-	medusa: 5,
-	phantom: 4,
-	wraith: 5,
-	xeroc: 4,
-};
-
-/** Max HP gained each time the player levels up — see applyExperienceGain. */
-export const PLAYER_LEVEL_UP_HP_BONUS = 3;
-/**
- * Cumulative experience needed to reach level 2, 3, ... 10 (index 0 = level
- * 2's threshold), roughly doubling each step like original Rogue. Level 10
- * is the cap — no further growth once playerExperience exceeds the last entry.
+ * Cumulative experience needed to reach level 2, 3, ... (index 0 = level
+ * 2's threshold) — original Rogue's e_levels[]. Level 21 is the cap: no
+ * further growth once playerExperience exceeds the last entry.
  */
 export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
-	10, 20, 40, 80, 160, 320, 640, 1280, 2560,
+	10, 20, 40, 80, 160, 320, 640, 1300, 2600, 5200, 13000, 26000, 50000, 100000,
+	200000, 400000, 800000, 2000000, 4000000, 8000000,
 ];
-
-/** How a kind's per-floor spawn count grows with depth: +1 every `growthInterval` floors, capped at `max`. */
-export interface EnemyCountScaling {
-	readonly base: number;
-	readonly growthInterval: number;
-	readonly max: number;
-}
-
-/** The enemy kinds whose per-floor count scales with depth — thief spawns independently instead (see THIEF_SPAWN_CHANCE_PERCENT). */
-type ScaledEnemyKind = "zombie" | "bat";
-
-/** Bats grow faster (every 2 floors vs. every 3) — deeper floors skew towards the faster kind. */
-export const ENEMY_COUNT_SCALING: Readonly<
-	Record<ScaledEnemyKind, EnemyCountScaling>
-> = {
-	zombie: { base: ZOMBIE_COUNT_BASE, growthInterval: 3, max: 8 },
-	bat: { base: BAT_COUNT_BASE, growthInterval: 2, max: 8 },
-};
-
-/** How many of `kind` spawn on the given (1-based) floor. */
-export const calculateEnemyCountForFloor = (
-	kind: ScaledEnemyKind,
-	floor: number,
-): number => {
-	const scaling = ENEMY_COUNT_SCALING[kind];
-	return Math.min(
-		scaling.base + Math.floor((floor - 1) / scaling.growthInterval),
-		scaling.max,
-	);
-};
 
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
@@ -570,12 +179,12 @@ export const STRENGTH_POTION_ATTACK_BONUS = 1;
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /**
- * The deepest floor — where the Amulet of Yendor lies. It has no down
- * staircase (nothing lower); reaching it and climbing all the way back to
- * the surface with the amulet is what actually wins the run. See
- * floor.ts's descendStairs/ascendStairs.
+ * The deepest floor — where the Amulet of Yendor lies (original Rogue's
+ * AMULETLEVEL). It has no down staircase (nothing lower); reaching it and
+ * climbing all the way back to the surface with the amulet is what actually
+ * wins the run. See floor.ts's descendStairs/ascendStairs.
  */
-export const GOAL_FLOOR = 10;
+export const GOAL_FLOOR = 26;
 
 export const PLAYER_MAX_FOOD = 100;
 /**
@@ -596,8 +205,6 @@ export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
 export const PLAYER_WEAK_THRESHOLD = 20;
 /** Flat reduction to calculatePlayerAttackDamage while playerFood <= PLAYER_WEAK_THRESHOLD. */
 export const WEAK_ATTACK_PENALTY = 1;
-/** Floor for calculatePlayerAttackDamage — keeps a weakened, unarmed player from dealing 0 damage. */
-export const MIN_PLAYER_ATTACK_DAMAGE = 1;
 /** HP lost per turn while playerFood is at 0. */
 export const STARVATION_DAMAGE_PER_TURN = 1;
 export const FOOD_RATION_RESTORE_AMOUNT = 50;
@@ -647,7 +254,7 @@ export const SLEEPING_GAS_TRAP_PARALYSIS_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a sleeping gas trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
 export const SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT = 15;
 
-/** Per-kind lookup table, same idiom as ENEMY_MAX_HP — a second kind is one entry. */
+/** Per-kind lookup table — a new kind is one entry. */
 export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 	dart: DART_TRAP_DAMAGE,
 	trapdoor: TRAPDOOR_DAMAGE,

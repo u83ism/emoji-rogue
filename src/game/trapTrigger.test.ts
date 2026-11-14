@@ -3,7 +3,6 @@ import { advanceTurn } from "./advanceTurn.js";
 import {
 	BEAR_TRAP_PARALYSIS_DURATION,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
-	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy } from "./state.js";
@@ -17,7 +16,8 @@ const zombie = (x: number, y: number): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
-	hp: ZOMBIE_MAX_HP,
+	hp: 2,
+	maxHp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,

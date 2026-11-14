@@ -1,15 +1,16 @@
+import { GOAL_FLOOR } from "../../game/balance.js";
+import type { DamageDice } from "../../game/damage.js";
 import {
-	ENEMY_ACTIONS_PER_TURN,
-	ENEMY_ATTACK_DAMAGE,
-	ENEMY_EXPERIENCE_REWARD,
-	ENEMY_MAX_HP,
-} from "../../game/balance.js";
+	ENEMY_HP_DICE_SIDES,
+	ENEMY_STATS,
+} from "../../game/enemies/enemyStats.js";
 import { ENEMY_GLYPHS } from "../../game/enemyGlyphs.js";
 import {
 	ENEMY_KIND_VALUES,
 	ITEM_KIND_VALUES,
 	TRAP_KIND_VALUES,
 } from "../../game/events.js";
+import { calculateEnemyFloorRange } from "../../game/floor/enemies.js";
 import { ITEM_GLYPHS } from "../../game/glyphs.js";
 import {
 	ENEMY_NAMES,
@@ -21,7 +22,7 @@ import {
 	type SpawnInfo,
 	TRAP_CATALOG,
 } from "./catalogData.js";
-import { ENEMY_CATALOG } from "./enemyCatalog.js";
+import { ENEMY_BEHAVIOR } from "./enemyCatalog.js";
 import { ITEM_CATALOG } from "./itemCatalog.js";
 
 // Builds docs/catalog.md from the same tables the game runs on (balance.ts,
@@ -45,22 +46,33 @@ const formatSpawn = (spawn: SpawnInfo): string => {
 			return `確定${spawn.countPerFloor}個/フロア`;
 		case "chance":
 			return `${spawn.percent}%/フロア`;
-		case "scaling":
-			return `${spawn.base}体+${spawn.growthInterval}フロアごとに1体(最大${spawn.max})`;
 	}
+};
+
+/** "1d8/1d8/3d10" — one die per attack; a 0-count die (a hit that deals no damage) prints as "0". */
+const formatAttacks = (attacks: readonly DamageDice[]): string =>
+	attacks
+		.map((dice) => (dice.count === 0 ? "0" : `${dice.count}d${dice.sides}`))
+		.join("/");
+
+const formatFloorRange = (kind: (typeof ENEMY_KIND_VALUES)[number]): string => {
+	const { firstFloor, lastFloor } = calculateEnemyFloorRange(kind);
+	return `${firstFloor}〜${Math.min(GOAL_FLOOR, lastFloor)}階`;
 };
 
 const buildEnemySection = (): string => {
 	const rows = ENEMY_KIND_VALUES.map((kind) => {
-		const entry = ENEMY_CATALOG[kind];
-		return `| ${ENEMY_GLYPHS[kind].glyph} | ${ENEMY_NAMES[kind]} | ${ENEMY_MAX_HP[kind]} | ${ENEMY_ATTACK_DAMAGE[kind]} | ${ENEMY_ACTIONS_PER_TURN[kind]} | ${ENEMY_EXPERIENCE_REWARD[kind]} | ${formatSpawn(entry.spawn)} | ${entry.behavior} |`;
+		const stats = ENEMY_STATS[kind];
+		return `| ${ENEMY_GLYPHS[kind].glyph} | ${ENEMY_NAMES[kind]} | ${stats.level} | ${stats.armorClass} | ${formatAttacks(stats.attacks)} | ${stats.experience} | ${formatFloorRange(kind)} | ${ENEMY_BEHAVIOR[kind]} |`;
 	});
 	return [
 		"## 敵一覧",
 		"",
-		"全ての敵は眠った状態で出現し、隣接または視界内で毎ターン確率で目を覚ます。眠っている敵への攻撃は3倍ダメージの不意打ちになる。",
+		`能力値は原作Rogue 5.4の表そのまま。HPは個体ごとに「レベル」個の${ENEMY_HP_DICE_SIDES}面ダイスで決まる。ACは小さいほど攻撃が当たりにくい。攻撃は「/」で区切った数だけ1ターンに命中判定があり、当たった分だけダイスのダメージを受ける(防具は当たりにくくするだけで、ダメージは減らさない)。経験値は表の値に、その個体のHPに応じた加算が付く。`,
 		"",
-		"| 絵文字 | 名前 | HP | 攻撃 | 行動/ターン | 経験値 | 出現 | 習性 |",
+		"敵は部屋ごとに確率で1体ずつ配置され、種類は階が深くなるほど強いものに入れ替わる。全ての敵は眠った状態で出現し、隣接または視界内で毎ターン確率で目を覚ます。眠っている敵への攻撃は3倍ダメージの不意打ちになる。",
+		"",
+		"| 絵文字 | 名前 | レベル | AC | 攻撃 | 経験値 | 出現階 | 習性 |",
 		"|---|---|---|---|---|---|---|---|",
 		...rows,
 	].join("\n");

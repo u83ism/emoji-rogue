@@ -1,33 +1,52 @@
-import {
-	ENEMY_BASE_HIT_CHANCE_PERCENT,
-	ENEMY_HIT_CHANCE_PER_DEFENSE_POINT,
-	MAX_HIT_CHANCE_PERCENT,
-	MIN_HIT_CHANCE_PERCENT,
-	PLAYER_BASE_HIT_CHANCE_PERCENT,
-	PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
-} from "../balance.js";
+import { HIT_CHANCE_PERCENT_PER_POINT } from "../balance.js";
+import { ENEMY_STATS } from "../enemies/enemyStats.js";
+import type { EnemyKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
-import { calculatePlayerDefense, type SwordItem } from "./equipment.js";
+import { calculatePlayerArmorClass, type SwordItem } from "./equipmentStats.js";
 
-const clampHitChancePercent = (hitChance: number): number =>
-	Math.min(MAX_HIT_CHANCE_PERCENT, Math.max(MIN_HIT_CHANCE_PERCENT, hitChance));
+/**
+ * Original Rogue's swing() as a percent: a d20 (0-19) plus `hitBonus` must
+ * reach 20 - attackerLevel - defenderArmorClass, which lands on exactly
+ * (attackerLevel + defenderArmorClass + hitBonus) of the 20 faces. Clamped
+ * to 0-100 — unlike the original's die there is no always-hit or
+ * always-miss face.
+ */
+const calculateHitChancePercent = (
+	attackerLevel: number,
+	defenderArmorClass: number,
+	hitBonus: number,
+): number =>
+	Math.min(
+		100,
+		Math.max(
+			0,
+			(attackerLevel + defenderArmorClass + hitBonus) *
+				HIT_CHANCE_PERCENT_PER_POINT,
+		),
+	);
 
-/** Percent chance a non-sneak player melee attack connects, boosted by the equipped sword's attackBonus and clamped into [MIN_HIT_CHANCE_PERCENT, MAX_HIT_CHANCE_PERCENT]. */
-export const calculatePlayerHitChancePercent = (state: GameState): number => {
+/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped sword's attackBonus. */
+export const calculatePlayerHitChancePercent = (
+	state: GameState,
+	targetKind: EnemyKind,
+): number => {
 	const equippedSword = state.inventory.find(
 		(item): item is SwordItem => item.kind === "sword" && item.equipped,
 	);
-	return clampHitChancePercent(
-		PLAYER_BASE_HIT_CHANCE_PERCENT +
-			(equippedSword?.attackBonus ?? 0) * PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
+	return calculateHitChancePercent(
+		state.playerLevel,
+		ENEMY_STATS[targetKind].armorClass,
+		equippedSword?.attackBonus ?? 0,
 	);
 };
 
-/** Percent chance an attacking enemy connects with the player, reduced by the equipped armor's defenseBonus and clamped into [MIN_HIT_CHANCE_PERCENT, MAX_HIT_CHANCE_PERCENT]. */
+/** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level against the player's armor class. */
 export const calculateEnemyHitChancePercent = (
+	attackerKind: EnemyKind,
 	inventory: readonly HeldItem[],
 ): number =>
-	clampHitChancePercent(
-		ENEMY_BASE_HIT_CHANCE_PERCENT -
-			calculatePlayerDefense(inventory) * ENEMY_HIT_CHANCE_PER_DEFENSE_POINT,
+	calculateHitChancePercent(
+		ENEMY_STATS[attackerKind].level,
+		calculatePlayerArmorClass(inventory),
+		0,
 	);

@@ -101,6 +101,8 @@ const isEnemyArray = (
 			standsOnFloor(enemy, terrain) &&
 			isEnemyKind(enemy.kind) &&
 			isPositiveInteger(enemy.hp) &&
+			isPositiveInteger(enemy.maxHp) &&
+			enemy.hp <= enemy.maxHp &&
 			isBooleanValue(enemy.awake) &&
 			isNonNegativeInteger(enemy.slowedTurnsRemaining) &&
 			isNonNegativeInteger(enemy.confusedTurnsRemaining),
@@ -222,12 +224,13 @@ const emptyPayload: PayloadValidator = () => true;
 const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	Record<GameEvent["type"], PayloadValidator>
 > = {
+	/* 0 is a real outcome on the original's scale: an aquator's hit only rusts, and a cursed weapon's penalty can cancel a low roll */
 	"player-hit": (payload) =>
-		isEnemyKind(payload.by) && isPositiveInteger(payload.damage),
+		isEnemyKind(payload.by) && isNonNegativeInteger(payload.damage),
 	"enemy-hit": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+		isEnemyKind(payload.target) && isNonNegativeInteger(payload.damage),
 	"sneak-attack": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+		isEnemyKind(payload.target) && isNonNegativeInteger(payload.damage),
 	"enemy-defeated": (payload) => isEnemyKind(payload.target),
 	"player-died": (payload) => isDeathCause(payload.by),
 	"floor-descended": (payload) => isPositiveInteger(payload.floor),
@@ -547,6 +550,7 @@ export const validateGameState = (
 			y: enemy.y,
 			kind: enemy.kind,
 			hp: enemy.hp,
+			maxHp: enemy.maxHp,
 			awake: enemy.awake,
 			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
 			confusedTurnsRemaining: enemy.confusedTurnsRemaining,

@@ -2,15 +2,24 @@ import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
-import {
-	GOAL_FLOOR,
-	PLAYER_MAX_FOOD,
-	PLAYER_MAX_HP,
-	ZOMBIE_MAX_HP,
-} from "./balance.js";
+import { GOAL_FLOOR, PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
-import type { Action, Direction, Enemy, GameState } from "./state.js";
+import type { Action, Direction, Enemy, GameState, HeldItem } from "./state.js";
+
+/** Fixture enemy HP — more than any one player hit in these tests removes. */
+const TEST_ENEMY_HP = 30;
+/** A player level whose to-hit chance is 100% against every kind — the player's swing lands without hunting for a seed. */
+const SURE_HIT_LEVEL = 30;
+/** Worn by the player, an armor class this bad makes every enemy attack land. */
+const EXPOSING_ARMOR: HeldItem = {
+	itemId: 99,
+	kind: "armor",
+	equipped: true,
+	cursed: false,
+	defenseBonus: -20,
+	rustProtected: false,
+};
 
 const move = (direction: Direction): Action => ({
 	type: "move",
@@ -21,7 +30,8 @@ const zombie = (x: number, y: number): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
-	hp: ZOMBIE_MAX_HP,
+	hp: TEST_ENEMY_HP,
+	maxHp: TEST_ENEMY_HP,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
@@ -44,30 +54,35 @@ describe("advanceTurn", () => {
 	});
 
 	it("moving into an enemy is a bump attack: damage, no movement, turn spent", () => {
-		/* seed 2: both the player's and the zombie's to-hit+damage rolls land with damage 1 — see combat dice-ification, milestone 105 */
-		const state = { ...buildArenaGameState(5, 5, 2), enemies: [zombie(3, 2)] };
+		const state = {
+			...buildArenaGameState(5, 5, 2),
+			playerLevel: SURE_HIT_LEVEL,
+			inventory: [EXPOSING_ARMOR],
+			enemies: [zombie(3, 2)],
+		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual(state.player);
-		expect(next.enemies).toEqual([{ ...zombie(3, 2), hp: ZOMBIE_MAX_HP - 1 }]);
+		expect(next.enemies[0]?.hp).toBeLessThan(TEST_ENEMY_HP);
 		/* the turn was spent, so the surviving adjacent enemy hits back */
-		expect(next.playerHp).toBe(state.playerHp - 1);
-		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.events.map((event) => event.type)).toEqual([
+			"enemy-hit",
+			"player-hit",
 		]);
 	});
 
 	it("a killing blow removes the enemy", () => {
 		const state = {
 			...buildArenaGameState(5, 5, 1),
+			playerLevel: SURE_HIT_LEVEL,
 			enemies: [{ ...zombie(3, 2), hp: 1 }],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.enemies).toEqual([]);
 		expect(next.playerHp).toBe(state.playerHp);
-		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		expect(next.events.map((event) => event.type)).toEqual([
+			"enemy-hit",
+			"enemy-defeated",
 		]);
 		expect(next.playerExperience).toBeGreaterThan(state.playerExperience);
 	});
@@ -81,17 +96,16 @@ describe("advanceTurn", () => {
 
 	it("waiting passes the turn to the enemies (no cornered soft-lock)", () => {
 		/* 9x3 arena: player (4,1) with an adjacent enemy — waiting must let
-		 * the enemy act instead of freezing time forever. Seed 1's first
-		 * to-hit+damage roll lands with damage 1; since attacks can now miss
-		 * (combat dice-ification, milestone 105), the death loop below uses a
-		 * generous turn budget instead of exactly PLAYER_MAX_HP turns. */
+		 * the enemy act instead of freezing time forever. EXPOSING_ARMOR
+		 * makes every one of its attacks land. */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
+			inventory: [EXPOSING_ARMOR],
 			enemies: [zombie(5, 1)],
 		};
 		const next = advanceTurn(state, { type: "wait" });
 		expect(next.player).toEqual(state.player);
-		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
 
 		/* waiting next to a persistently-attacking enemy long enough always ends the run eventually */
 		let current: GameState = state;
@@ -255,10 +269,11 @@ describe("advanceTurn", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			paralyzedTurnsRemaining: 3,
+			inventory: [EXPOSING_ARMOR],
 			enemies: [zombie(5, 1)],
 		};
 		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
 	});
 
 	it("moving while confused ignores the intended direction in favor of a random one", () => {
@@ -465,16 +480,18 @@ describe("advanceTurn", () => {
 				{
 					...stairsPosition,
 					kind: "zombie" as const,
-					hp: ZOMBIE_MAX_HP,
+					hp: TEST_ENEMY_HP,
+					maxHp: TEST_ENEMY_HP,
 					awake: true,
 					slowedTurnsRemaining: 0,
 					confusedTurnsRemaining: 0,
 				},
 			],
+			playerLevel: SURE_HIT_LEVEL,
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(1);
-		expect(next.enemies[0]?.hp).toBe(ZOMBIE_MAX_HP - 1);
+		expect(next.enemies[0]?.hp).toBeLessThan(TEST_ENEMY_HP);
 	});
 
 	it("an adjacent, awake venus-flytrap blocks a move that would leave its reach, but the turn is still spent", () => {
@@ -483,11 +500,16 @@ describe("advanceTurn", () => {
 			y: 2,
 			kind: "venus-flytrap",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
 		};
-		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			inventory: [EXPOSING_ARMOR],
+			enemies: [flytrap],
+		};
 		const next = advanceTurn(
 			state,
 			move("north"),
@@ -496,8 +518,8 @@ describe("advanceTurn", () => {
 		expect(next.playerFood).toBe(state.playerFood - 1); /* the turn was spent */
 		expect(next.events).toEqual([
 			{ type: "player-held", payload: { by: "venus-flytrap" } },
-			/* still adjacent and awake, the flytrap gets its own bite in too */
-			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
+			/* still adjacent and awake, the flytrap gets its own bite (1d1) in too */
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 1 } },
 		]);
 	});
 
@@ -506,15 +528,20 @@ describe("advanceTurn", () => {
 			x: 3,
 			y: 2,
 			kind: "venus-flytrap",
-			hp: 3,
+			hp: TEST_ENEMY_HP,
+			maxHp: TEST_ENEMY_HP,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
 		};
-		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			playerLevel: SURE_HIT_LEVEL,
+			enemies: [flytrap],
+		};
 		const next = advanceTurn(state, move("east")); /* bumps into the flytrap */
 		expect(next.player).toEqual(state.player); /* bump attacks never move */
-		expect(next.enemies).toEqual([{ ...flytrap, hp: 2 }]);
+		expect(next.enemies[0]?.hp).toBeLessThan(TEST_ENEMY_HP);
 		expect(next.events.some((event) => event.type === "player-held")).toBe(
 			false,
 		);
@@ -526,6 +553,7 @@ describe("advanceTurn", () => {
 			y: 2,
 			kind: "venus-flytrap",
 			hp: 3,
+			maxHp: 3,
 			awake: false,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -541,6 +569,7 @@ describe("advanceTurn", () => {
 			y: 3,
 			kind: "venus-flytrap",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -558,6 +587,7 @@ describe("advanceTurn", () => {
 			y: start.player.y,
 			kind: "venus-flytrap",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -590,6 +620,7 @@ describe("advanceTurn", () => {
 			y: 2,
 			kind: "venus-flytrap",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,

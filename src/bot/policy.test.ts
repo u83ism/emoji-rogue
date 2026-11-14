@@ -11,6 +11,7 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	y,
 	kind: "zombie",
 	hp: 2,
+	maxHp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,

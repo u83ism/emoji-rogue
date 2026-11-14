@@ -1,51 +1,18 @@
-import {
-	MIN_PLAYER_ATTACK_DAMAGE,
-	PLAYER_WEAK_THRESHOLD,
-	WEAK_ATTACK_PENALTY,
-} from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
+import {
+	type ArmorItem,
+	findEquippedArmor,
+	type SwordItem,
+} from "./equipmentStats.js";
 import { replaceHeldItem } from "./inventory.js";
 
-export type SwordItem = Extract<HeldItem, { kind: "sword" }>;
-type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 type EquippableItem = Extract<HeldItem, { equipped: boolean }>;
 
-export type { ArmorItem, EquippableItem };
-
-const findEquippedArmor = (
-	inventory: readonly HeldItem[],
-): ArmorItem | undefined =>
-	inventory.find(
-		(item): item is ArmorItem => item.kind === "armor" && item.equipped,
-	);
+export type { EquippableItem };
 
 const isEquippableItem = (item: HeldItem): item is EquippableItem =>
 	"equipped" in item;
-
-/**
- * The player's actual attack total: playerPower plus the equipped sword's
- * own attackBonus (0 unarmed), reduced by WEAK_ATTACK_PENALTY (floored at
- * MIN_PLAYER_ATTACK_DAMAGE) while playerFood <= PLAYER_WEAK_THRESHOLD —
- * original Rogue's Hungry→Weak→Faint progression, see balance.ts. Derived
- * straight from playerFood rather than a separate flag, so the penalty
- * lifts the instant food rises back above the threshold (eating a ration).
- */
-export const calculatePlayerAttackDamage = (state: GameState): number => {
-	const equippedSword = state.inventory.find(
-		(item): item is SwordItem => item.kind === "sword" && item.equipped,
-	);
-	const baseDamage = state.playerPower + (equippedSword?.attackBonus ?? 0);
-	if (state.playerFood > PLAYER_WEAK_THRESHOLD) {
-		return baseDamage;
-	}
-	return Math.max(MIN_PLAYER_ATTACK_DAMAGE, baseDamage - WEAK_ATTACK_PENALTY);
-};
-
-/** The player's actual defense: the equipped armor's own defenseBonus (negative for a cursed armor — worse than wearing nothing), or 0 with nothing worn. */
-export const calculatePlayerDefense = (
-	inventory: readonly HeldItem[],
-): number => findEquippedArmor(inventory)?.defenseBonus ?? 0;
 
 /** Whether an aquator's rust attack should even attempt a roll — only meaningful with an equipped, unprotected armor to degrade. */
 export const canRustEquippedArmor = (

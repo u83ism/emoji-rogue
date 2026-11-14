@@ -15,7 +15,7 @@ import {
 import {
 	calculatePlayerAttackDamage,
 	calculatePlayerDefense,
-} from "../game/items/equipment.js";
+} from "../game/items/equipmentStats.js";
 import type { GameState } from "../game/state.js";
 
 const LOW_HP_THRESHOLD = 3;

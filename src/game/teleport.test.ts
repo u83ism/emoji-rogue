@@ -44,6 +44,7 @@ describe("teleport wand", () => {
 			y: 1,
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: false,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,

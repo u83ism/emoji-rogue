@@ -455,7 +455,7 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** An adjacent enemy's attack that failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain) triggers on a miss. See enemyHitLanded.ts. */
+			/** An adjacent enemy's attack that failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain) triggers unless another of the same turn's attacks lands. See enemyAttack.ts. */
 			readonly type: "enemy-attack-missed";
 			readonly payload: { readonly by: EnemyKind };
 	  };

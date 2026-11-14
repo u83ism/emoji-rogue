@@ -1,145 +1,121 @@
 import { describe, expect, it } from "vitest";
 import {
-	ENEMY_BASE_HIT_CHANCE_PERCENT,
-	MAX_HIT_CHANCE_PERCENT,
-	MIN_HIT_CHANCE_PERCENT,
-	PLAYER_BASE_HIT_CHANCE_PERCENT,
-	PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
+	HIT_CHANCE_PERCENT_PER_POINT,
+	UNARMORED_ARMOR_CLASS,
 } from "../balance.js";
+import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import { buildArenaGameState } from "../initialState.js";
+import type { HeldItem } from "../state.js";
 import {
 	calculateEnemyHitChancePercent,
 	calculatePlayerHitChancePercent,
 } from "./hitChance.js";
 
+const swordWith = (attackBonus: number, equipped = true): HeldItem => ({
+	itemId: 1,
+	kind: "sword",
+	equipped,
+	cursed: attackBonus < 0,
+	attackBonus,
+});
+
+const armorWith = (defenseBonus: number, equipped = true): HeldItem => ({
+	itemId: 1,
+	kind: "armor",
+	equipped,
+	cursed: defenseBonus < 0,
+	defenseBonus,
+	rustProtected: false,
+});
+
 describe("calculatePlayerHitChancePercent", () => {
 	const state = buildArenaGameState(9, 3, 1);
 
-	it("is PLAYER_BASE_HIT_CHANCE_PERCENT unarmed", () => {
-		expect(calculatePlayerHitChancePercent(state)).toBe(
-			PLAYER_BASE_HIT_CHANCE_PERCENT,
+	it("is original Rogue's swing(): 5% per point of player level + target armor class", () => {
+		/* level 1 against a zombie (armor class 8): 9 of the d20's faces hit */
+		expect(calculatePlayerHitChancePercent(state, "zombie")).toBe(45);
+		expect(calculatePlayerHitChancePercent(state, "zombie")).toBe(
+			(state.playerLevel + ENEMY_STATS.zombie.armorClass) *
+				HIT_CHANCE_PERCENT_PER_POINT,
 		);
 	});
 
-	it("rises with the equipped sword's attackBonus", () => {
-		const armed = {
-			...state,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "sword" as const,
-					equipped: true,
-					cursed: false,
-					attackBonus: 2,
-				},
-			],
-		};
-		expect(calculatePlayerHitChancePercent(armed)).toBe(
-			PLAYER_BASE_HIT_CHANCE_PERCENT + 2 * PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
-		);
+	it("is lower against a harder (lower) armor class and higher at a higher level", () => {
+		expect(calculatePlayerHitChancePercent(state, "bat")).toBe(20);
+		expect(
+			calculatePlayerHitChancePercent({ ...state, playerLevel: 5 }, "bat"),
+		).toBe(40);
 	});
 
-	it("drops below the unarmed chance with a cursed sword's negative attackBonus", () => {
-		const cursedArmed = {
-			...state,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "sword" as const,
-					equipped: true,
-					cursed: true,
-					attackBonus: -2,
-				},
-			],
-		};
-		expect(calculatePlayerHitChancePercent(cursedArmed)).toBe(
-			PLAYER_BASE_HIT_CHANCE_PERCENT - 2 * PLAYER_HIT_CHANCE_PER_ATTACK_BONUS,
-		);
+	it("rises with the equipped sword's attackBonus and drops with a cursed one's", () => {
+		expect(
+			calculatePlayerHitChancePercent(
+				{ ...state, inventory: [swordWith(2)] },
+				"zombie",
+			),
+		).toBe(55);
+		expect(
+			calculatePlayerHitChancePercent(
+				{ ...state, inventory: [swordWith(-2)] },
+				"zombie",
+			),
+		).toBe(35);
 	});
 
 	it("ignores an unequipped sword", () => {
-		const unequipped = {
-			...state,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "sword" as const,
-					equipped: false,
-					cursed: false,
-					attackBonus: 5,
-				},
-			],
-		};
-		expect(calculatePlayerHitChancePercent(unequipped)).toBe(
-			PLAYER_BASE_HIT_CHANCE_PERCENT,
-		);
+		expect(
+			calculatePlayerHitChancePercent(
+				{ ...state, inventory: [swordWith(5, false)] },
+				"zombie",
+			),
+		).toBe(45);
 	});
 
-	it("never exceeds MAX_HIT_CHANCE_PERCENT, however high the sword's attackBonus climbs", () => {
-		const godSword = {
-			...state,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "sword" as const,
-					equipped: true,
-					cursed: false,
-					attackBonus: 100,
-				},
-			],
-		};
-		expect(calculatePlayerHitChancePercent(godSword)).toBe(
-			MAX_HIT_CHANCE_PERCENT,
-		);
+	it("stays within 0-100 at the extremes", () => {
+		expect(
+			calculatePlayerHitChancePercent(
+				{ ...state, inventory: [swordWith(100)] },
+				"zombie",
+			),
+		).toBe(100);
+		/* level 1 against a black-unicorn-grade armor class of -2 */
+		expect(calculatePlayerHitChancePercent(state, "ur-vile")).toBe(0);
 	});
 });
 
 describe("calculateEnemyHitChancePercent", () => {
-	it("is ENEMY_BASE_HIT_CHANCE_PERCENT with nothing equipped", () => {
-		expect(calculateEnemyHitChancePercent([])).toBe(
-			ENEMY_BASE_HIT_CHANCE_PERCENT,
+	it("is 5% per point of the enemy's level + the player's armor class", () => {
+		/* a level 1 hobgoblin against an unarmored player (armor class 10) */
+		expect(calculateEnemyHitChancePercent("hobgoblin", [])).toBe(55);
+		expect(calculateEnemyHitChancePercent("hobgoblin", [])).toBe(
+			(ENEMY_STATS.hobgoblin.level + UNARMORED_ARMOR_CLASS) *
+				HIT_CHANCE_PERCENT_PER_POINT,
 		);
 	});
 
-	it("falls as the equipped armor's defenseBonus rises", () => {
-		const lightlyArmored = calculateEnemyHitChancePercent([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: true,
-				cursed: false,
-				defenseBonus: 1,
-				rustProtected: false,
-			},
-		]);
-		expect(lightlyArmored).toBeLessThan(ENEMY_BASE_HIT_CHANCE_PERCENT);
+	it("falls 5 points per point of the equipped armor's defenseBonus", () => {
+		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(4)])).toBe(
+			35,
+		);
 	});
 
-	it("never drops below MIN_HIT_CHANCE_PERCENT, however high the armor's defenseBonus climbs", () => {
-		const heavilyArmored = calculateEnemyHitChancePercent([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: true,
-				cursed: false,
-				defenseBonus: 100,
-				rustProtected: false,
-			},
-		]);
-		expect(heavilyArmored).toBe(MIN_HIT_CHANCE_PERCENT);
+	it("rises against a cursed armor's negative defenseBonus", () => {
+		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(-2)])).toBe(
+			65,
+		);
 	});
 
 	it("ignores an unequipped armor", () => {
-		const unequipped = calculateEnemyHitChancePercent([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: false,
-				cursed: false,
-				defenseBonus: 5,
-				rustProtected: false,
-			},
-		]);
-		expect(unequipped).toBe(ENEMY_BASE_HIT_CHANCE_PERCENT);
+		expect(
+			calculateEnemyHitChancePercent("hobgoblin", [armorWith(5, false)]),
+		).toBe(55);
+	});
+
+	it("stays within 0-100 at the extremes", () => {
+		/* a level 15 jabberwock against an unarmored player */
+		expect(calculateEnemyHitChancePercent("jabberwock", [])).toBe(100);
+		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(100)])).toBe(
+			0,
+		);
 	});
 });

@@ -36,6 +36,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -58,6 +59,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -75,6 +77,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -99,6 +102,7 @@ describe("buildFrameGrid", () => {
 		const bat = {
 			kind: "bat",
 			hp: 1,
+			maxHp: 1,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -112,6 +116,7 @@ describe("buildFrameGrid", () => {
 		const thief = {
 			kind: "thief",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -252,6 +257,7 @@ describe("buildFrameGrid", () => {
 					y: 2,
 					kind: "zombie" as const,
 					hp: 2,
+					maxHp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
 					confusedTurnsRemaining: 0,
@@ -300,6 +306,7 @@ describe("buildFrameGrid", () => {
 					y: 2,
 					kind: "zombie" as const,
 					hp: 2,
+					maxHp: 2,
 					awake: true,
 					slowedTurnsRemaining: 0,
 					confusedTurnsRemaining: 0,
@@ -339,6 +346,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -354,6 +362,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -375,6 +384,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -396,6 +406,7 @@ describe("buildFrameGrid", () => {
 		const phantom = {
 			kind: "phantom",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -411,6 +422,7 @@ describe("buildFrameGrid", () => {
 		const phantom = {
 			kind: "phantom",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -426,6 +438,7 @@ describe("buildFrameGrid", () => {
 		const phantom = {
 			kind: "phantom",
 			hp: 3,
+			maxHp: 3,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -445,6 +458,7 @@ describe("buildFrameGrid", () => {
 		const xeroc = {
 			kind: "xeroc",
 			hp: 4,
+			maxHp: 4,
 			awake: false,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -460,6 +474,7 @@ describe("buildFrameGrid", () => {
 		const xeroc = {
 			kind: "xeroc",
 			hp: 4,
+			maxHp: 4,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -475,6 +490,7 @@ describe("buildFrameGrid", () => {
 		const xeroc = {
 			kind: "xeroc",
 			hp: 4,
+			maxHp: 4,
 			awake: false,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
@@ -494,6 +510,7 @@ describe("buildFrameGrid", () => {
 		const zombie = {
 			kind: "zombie",
 			hp: 2,
+			maxHp: 2,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,

@@ -6,6 +6,12 @@ export interface DamageRoll {
 	readonly rng: RngState;
 }
 
+/** Original Rogue's dice notation: `count`x`sides` (a "2x4" mace is { count: 2, sides: 4 }). */
+export interface DamageDice {
+	readonly count: number;
+	readonly sides: number;
+}
+
 export interface HitRoll {
 	readonly hit: boolean;
 	readonly rng: RngState;
@@ -17,29 +23,24 @@ export const rollToHit = (rng: RngState, hitChancePercent: number): HitRoll => {
 	return { hit: roll.value < hitChancePercent / 100, rng: roll.state };
 };
 
-/** The mean of a single `diceSides`-sided die — the amount a "1d`diceSides`+bonus" roll centers on. */
-export const damageDiceMean = (diceSides: number): number =>
-	Math.round((diceSides + 1) / 2);
-
 /**
- * A discrete `diceCount`d`diceSides` + `bonus` roll (original Rogue's dice
- * notation), floored at `minimum`. Each die consumes one uniform draw, so
- * the total rng consumption is exactly `diceCount` calls regardless of the
- * rolled values — unlike rollDamage's rejection-sampling normal
+ * A discrete `dice.count`d`dice.sides` + `bonus` roll (original Rogue's
+ * dice notation), floored at `minimum`. Each die consumes one uniform draw,
+ * so the total rng consumption is exactly `dice.count` calls regardless of
+ * the rolled values — unlike rollDamage's rejection-sampling normal
  * distribution, this fits the codebase's usual fixed-consumption-per-call
- * shape.
+ * shape. A 0-count die rolls nothing and consumes nothing.
  */
 export const rollDamageDice = (
 	rng: RngState,
-	diceCount: number,
-	diceSides: number,
+	dice: DamageDice,
 	bonus: number,
 	minimum: number,
 ): DamageRoll => {
 	const source = createRng(1).setState(rng);
 	let total = bonus;
-	for (let dieIndex = 0; dieIndex < diceCount; dieIndex++) {
-		total += source.getUniformInt(1, diceSides);
+	for (let dieIndex = 0; dieIndex < dice.count; dieIndex++) {
+		total += source.getUniformInt(1, dice.sides);
 	}
 	return { damage: Math.max(minimum, total), rng: source.getState() };
 };

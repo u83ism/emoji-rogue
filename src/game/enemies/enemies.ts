@@ -1,8 +1,6 @@
 import { encodePointKey } from "../../pointkey.js";
 import { stepUniform } from "../../rng.js";
 import {
-	ENEMY_ACTIONS_PER_TURN,
-	ENEMY_MAX_HP,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "../balance.js";
@@ -11,25 +9,23 @@ import { buildEventLog } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
-import {
-	type EnemyActor,
-	type EnemyTurnProgress,
-	resolveEnemyAction,
-} from "./action.js";
+import { type EnemyTurnProgress, resolveEnemyAction } from "./action.js";
 import { resolveEnemyRegen } from "./enemyRegen.js";
 
 /**
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
  * this turn only while adjacent/visible (icky-thing: adjacent only — it is
  * blind), via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
- * with a stealth ring worn). Once awake it takes ENEMY_ACTIONS_PER_TURN[kind]
- * actions — what one action is (attack, steal and flee, chase, wander, a
- * kind's own special case) lives in action.ts's resolveEnemyAction. A
+ * with a stealth ring worn). Once awake it takes one action per turn (as
+ * in original Rogue 5.4, no kind is faster than another) — what that action
+ * is (attack, steal and flee, chase, wander, a kind's own special case)
+ * lives in action.ts's resolveEnemyAction. A
  * slowedTurnsRemaining > 0 enemy (slow wand) skips its whole turn, just
  * ticking down. Griffin and troll additionally regenerate HP every awake
  * turn regardless of action (enemyRegen.ts), independent of whether they
- * landed a hit. The player's HP reaching zero ends the run and cuts short
- * any remaining actions.
+ * landed a hit. The player's HP reaching zero ends the run; the enemies
+ * after that one still take their turn, but resolveEnemyAction's attack
+ * path stops rolling against a dead player.
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
@@ -100,32 +96,24 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 
-		let actor: EnemyActor = { position: enemy, hp: enemy.hp, fled: false };
-		for (
-			let action = 0;
-			action < ENEMY_ACTIONS_PER_TURN[enemy.kind] &&
-			!progress.died &&
-			!actor.fled;
-			action++
-		) {
-			const result = resolveEnemyAction(
-				state,
-				enemy,
-				actor,
-				progress,
-				confused,
-				visiblePoints,
-				occupied,
-			);
-			actor = result.actor;
-			progress = result.progress;
+		if (progress.died) {
+			occupied.add(encodePointKey(enemy.x, enemy.y));
+			nextEnemies.push({ ...enemy, awake, confusedTurnsRemaining });
+			continue;
 		}
-
-		const regen = resolveEnemyRegen(
-			enemy.kind,
-			actor.hp,
-			ENEMY_MAX_HP[enemy.kind],
+		const result = resolveEnemyAction(
+			state,
+			enemy,
+			{ position: enemy, hp: enemy.hp, fled: false },
+			progress,
+			confused,
+			visiblePoints,
+			occupied,
 		);
+		const actor = result.actor;
+		progress = result.progress;
+
+		const regen = resolveEnemyRegen(enemy.kind, actor.hp, enemy.maxHp);
 		if (regen.event !== undefined) {
 			progress = { ...progress, events: [...progress.events, regen.event] };
 		}

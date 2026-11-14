@@ -1,153 +1,109 @@
+import { at } from "../../indexing.js";
+import type { Room } from "../../map/features.js";
 import type { Rng } from "../../rng.js";
+import { ROOM_ENEMY_SPAWN_CHANCE_PERCENT } from "../balance.js";
 import {
-	AQUATOR_SPAWN_CHANCE_PERCENT,
-	CENTAUR_SPAWN_CHANCE_PERCENT,
-	calculateEnemyCountForFloor,
-	DRAGON_SPAWN_CHANCE_PERCENT,
-	EMU_SPAWN_CHANCE_PERCENT,
-	ENEMY_MAX_HP,
-	GRIFFIN_MIN_SPAWN_FLOOR,
-	GRIFFIN_SPAWN_CHANCE_PERCENT,
-	HOBGOBLIN_SPAWN_CHANCE_PERCENT,
-	ICKY_THING_SPAWN_CHANCE_PERCENT,
-	JABBERWOCK_MIN_SPAWN_FLOOR,
-	JABBERWOCK_SPAWN_CHANCE_PERCENT,
-	KESTREL_SPAWN_CHANCE_PERCENT,
-	MEDUSA_MIN_SPAWN_FLOOR,
-	MEDUSA_SPAWN_CHANCE_PERCENT,
-	NYMPH_SPAWN_CHANCE_PERCENT,
-	ORC_SPAWN_CHANCE_PERCENT,
-	PHANTOM_MIN_SPAWN_FLOOR,
-	PHANTOM_SPAWN_CHANCE_PERCENT,
-	QUAGGA_SPAWN_CHANCE_PERCENT,
-	RAT_SPAWN_CHANCE_PERCENT,
-	SNAKE_SPAWN_CHANCE_PERCENT,
-	THIEF_SPAWN_CHANCE_PERCENT,
-	TROLL_MIN_SPAWN_FLOOR,
-	TROLL_SPAWN_CHANCE_PERCENT,
-	UR_VILE_SPAWN_CHANCE_PERCENT,
-	VAMPIRE_MIN_SPAWN_FLOOR,
-	VAMPIRE_SPAWN_CHANCE_PERCENT,
-	VENUS_FLYTRAP_SPAWN_CHANCE_PERCENT,
-	WRAITH_MIN_SPAWN_FLOOR,
-	WRAITH_SPAWN_CHANCE_PERCENT,
-	XEROC_SPAWN_CHANCE_PERCENT,
-	YETI_SPAWN_CHANCE_PERCENT,
-} from "../balance.js";
+	ENEMY_DEPTH_ORDER,
+	ENEMY_HP_DICE_SIDES,
+	ENEMY_STATS,
+} from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
-import { drawSpawnTile, type SpawnChance } from "./spawnPool.js";
+import { drawSpawnTileWhere, isInsideRoom } from "./spawnPool.js";
+
+/** How far below (and, minus one, above) its own floor's entry of ENEMY_DEPTH_ORDER a floor can draw — original Rogue's `level + (rnd(10) - 6)`. */
+const DEPTH_WINDOW_SIZE = 10;
+const DEPTH_WINDOW_OFFSET = 6;
+/** A draw that falls off either end of ENEMY_DEPTH_ORDER is redrawn among this many entries at that end. */
+const DEPTH_EDGE_SIZE = 5;
 
 /**
- * Chance-rolled enemies — thief/nymph/aquator, which never scale with depth
- * (zombie/bat counts come from calculateEnemyCountForFloor instead). Array
- * order is the exact order the rolls consume `rng`: reordering entries would
- * change every seeded dungeon, so new kinds go at the end.
+ * Which kind spawns on `floor` — original Rogue's randmonster(): an index
+ * into ENEMY_DEPTH_ORDER drawn from the 10-entry window floor-6..floor+3,
+ * so each floor deeper retires the weakest candidate and admits a stronger
+ * one. Off the front of the list it redraws among the first five kinds, off
+ * the back among the last five. Consumes `rng` once, or twice on a redraw.
  */
-const ENEMY_SPAWN_TABLE: readonly SpawnChance<EnemyKind>[] = [
-	{ kind: "thief", chancePercent: THIEF_SPAWN_CHANCE_PERCENT },
-	{ kind: "nymph", chancePercent: NYMPH_SPAWN_CHANCE_PERCENT },
-	{ kind: "aquator", chancePercent: AQUATOR_SPAWN_CHANCE_PERCENT },
-	{ kind: "orc", chancePercent: ORC_SPAWN_CHANCE_PERCENT },
-	{ kind: "dragon", chancePercent: DRAGON_SPAWN_CHANCE_PERCENT },
-	{ kind: "yeti", chancePercent: YETI_SPAWN_CHANCE_PERCENT },
-	{ kind: "snake", chancePercent: SNAKE_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "vampire",
-		chancePercent: VAMPIRE_SPAWN_CHANCE_PERCENT,
-		minFloor: VAMPIRE_MIN_SPAWN_FLOOR,
-	},
-	{ kind: "rat", chancePercent: RAT_SPAWN_CHANCE_PERCENT },
-	{ kind: "emu", chancePercent: EMU_SPAWN_CHANCE_PERCENT },
-	{ kind: "kestrel", chancePercent: KESTREL_SPAWN_CHANCE_PERCENT },
-	{ kind: "hobgoblin", chancePercent: HOBGOBLIN_SPAWN_CHANCE_PERCENT },
-	{ kind: "centaur", chancePercent: CENTAUR_SPAWN_CHANCE_PERCENT },
-	{ kind: "quagga", chancePercent: QUAGGA_SPAWN_CHANCE_PERCENT },
-	{ kind: "ur-vile", chancePercent: UR_VILE_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "jabberwock",
-		chancePercent: JABBERWOCK_SPAWN_CHANCE_PERCENT,
-		minFloor: JABBERWOCK_MIN_SPAWN_FLOOR,
-	},
-	{
-		kind: "griffin",
-		chancePercent: GRIFFIN_SPAWN_CHANCE_PERCENT,
-		minFloor: GRIFFIN_MIN_SPAWN_FLOOR,
-	},
-	{
-		kind: "troll",
-		chancePercent: TROLL_SPAWN_CHANCE_PERCENT,
-		minFloor: TROLL_MIN_SPAWN_FLOOR,
-	},
-	{ kind: "icky-thing", chancePercent: ICKY_THING_SPAWN_CHANCE_PERCENT },
-	{ kind: "venus-flytrap", chancePercent: VENUS_FLYTRAP_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "medusa",
-		chancePercent: MEDUSA_SPAWN_CHANCE_PERCENT,
-		minFloor: MEDUSA_MIN_SPAWN_FLOOR,
-	},
-	{
-		kind: "phantom",
-		chancePercent: PHANTOM_SPAWN_CHANCE_PERCENT,
-		minFloor: PHANTOM_MIN_SPAWN_FLOOR,
-	},
-	{
-		kind: "wraith",
-		chancePercent: WRAITH_SPAWN_CHANCE_PERCENT,
-		minFloor: WRAITH_MIN_SPAWN_FLOOR,
-	},
-	{ kind: "xeroc", chancePercent: XEROC_SPAWN_CHANCE_PERCENT },
-];
+export const drawEnemyKindForFloor = (rng: Rng, floor: number): EnemyKind => {
+	const drawn =
+		floor + rng.getUniformInt(0, DEPTH_WINDOW_SIZE - 1) - DEPTH_WINDOW_OFFSET;
+	if (drawn < 0) {
+		return at(ENEMY_DEPTH_ORDER, rng.getUniformInt(0, DEPTH_EDGE_SIZE - 1));
+	}
+	if (drawn >= ENEMY_DEPTH_ORDER.length) {
+		return at(
+			ENEMY_DEPTH_ORDER,
+			ENEMY_DEPTH_ORDER.length -
+				DEPTH_EDGE_SIZE +
+				rng.getUniformInt(0, DEPTH_EDGE_SIZE - 1),
+		);
+	}
+	return at(ENEMY_DEPTH_ORDER, drawn);
+};
+
+/** The first and last floor `kind` can spawn on (before clamping to the dungeon's own depth) — the floors whose window in drawEnemyKindForFloor reaches its entry. */
+export const calculateEnemyFloorRange = (
+	kind: EnemyKind,
+): { readonly firstFloor: number; readonly lastFloor: number } => {
+	const index = ENEMY_DEPTH_ORDER.indexOf(kind);
+	return {
+		firstFloor: Math.max(
+			1,
+			index - (DEPTH_WINDOW_SIZE - 1 - DEPTH_WINDOW_OFFSET),
+		),
+		lastFloor: index + DEPTH_WINDOW_OFFSET,
+	};
+};
+
+/** A fresh, sleeping `kind` at `position`, its HP rolled as level d8 (original Rogue's new_monster). */
+export const buildSpawnedEnemy = (
+	kind: EnemyKind,
+	position: Position,
+	rng: Rng,
+): Enemy => {
+	let maxHp = 0;
+	for (let dieIndex = 0; dieIndex < ENEMY_STATS[kind].level; dieIndex++) {
+		maxHp += rng.getUniformInt(1, ENEMY_HP_DICE_SIDES);
+	}
+	return {
+		...position,
+		kind,
+		hp: maxHp,
+		maxHp,
+		awake: false,
+		slowedTurnsRemaining: 0,
+		confusedTurnsRemaining: 0,
+	};
+};
 
 /**
  * Every enemy on a fresh floor, drawn from (and removed from) `pool` by
- * consuming `rng`: zombies and bats scaling with depth, then the
- * chance-rolled kinds of ENEMY_SPAWN_TABLE (vampire's roll is skipped, without
- * consuming rng, below its minFloor — see VAMPIRE_MIN_SPAWN_FLOOR). All spawn
- * asleep.
+ * consuming `rng`: each room rolls ROOM_ENEMY_SPAWN_CHANCE_PERCENT once for
+ * a single enemy on one of its own pooled tiles, of a kind
+ * drawEnemyKindForFloor picks for this depth. A room with no pooled tile
+ * (the player's own, fully in view) is skipped without drawing a kind. All
+ * spawn asleep.
  */
 export const drawFloorEnemies = (
 	pool: Position[],
 	rng: Rng,
 	floor: number,
+	rooms: readonly Room[],
 ): Enemy[] => {
 	const enemies: Enemy[] = [];
-	const zombieCount = calculateEnemyCountForFloor("zombie", floor);
-	for (let i = 0; i < zombieCount && pool.length > 0; i++) {
-		enemies.push({
-			...drawSpawnTile(pool, rng),
-			kind: "zombie",
-			hp: ENEMY_MAX_HP.zombie,
-			awake: false,
-			slowedTurnsRemaining: 0,
-			confusedTurnsRemaining: 0,
-		});
-	}
-	const batCount = calculateEnemyCountForFloor("bat", floor);
-	for (let i = 0; i < batCount && pool.length > 0; i++) {
-		enemies.push({
-			...drawSpawnTile(pool, rng),
-			kind: "bat",
-			hp: ENEMY_MAX_HP.bat,
-			awake: false,
-			slowedTurnsRemaining: 0,
-			confusedTurnsRemaining: 0,
-		});
-	}
-	for (const spawn of ENEMY_SPAWN_TABLE) {
-		if (spawn.minFloor !== undefined && floor < spawn.minFloor) {
+	for (const room of rooms) {
+		if (rng.getUniformInt(0, 99) >= ROOM_ENEMY_SPAWN_CHANCE_PERCENT) {
 			continue;
 		}
-		if (pool.length > 0 && rng.getUniformInt(0, 99) < spawn.chancePercent) {
-			enemies.push({
-				...drawSpawnTile(pool, rng),
-				kind: spawn.kind,
-				hp: ENEMY_MAX_HP[spawn.kind],
-				awake: false,
-				slowedTurnsRemaining: 0,
-				confusedTurnsRemaining: 0,
-			});
+		const position = drawSpawnTileWhere(pool, rng, (tile) =>
+			isInsideRoom(room, tile),
+		);
+		if (position === undefined) {
+			continue;
 		}
+		enemies.push(
+			buildSpawnedEnemy(drawEnemyKindForFloor(rng, floor), position, rng),
+		);
 	}
 	return enemies;
 };

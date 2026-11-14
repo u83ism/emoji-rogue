@@ -2,26 +2,21 @@ import type { RngState } from "../rng.js";
 import { createRng } from "../rng.js";
 import {
 	calculateMagicSaveChancePercent,
-	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
-	MIN_PLAYER_ATTACK_DAMAGE,
-	PLAYER_DAMAGE_DICE_COUNT,
-	PLAYER_DAMAGE_DICE_SIDES,
 	SNEAK_ATTACK_MULTIPLIER,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
-import {
-	type DamageRoll,
-	damageDiceMean,
-	rollDamageDice,
-	rollToHit,
-} from "./damage.js";
+import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
+import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
-import { calculatePlayerAttackDamage } from "./items/equipment.js";
+import {
+	calculatePlayerAttackDamage,
+	calculatePlayerDamageDice,
+} from "./items/equipmentStats.js";
 import { calculatePlayerHitChancePercent } from "./items/hitChance.js";
 import type { Enemy, GameState, Position } from "./state.js";
 
@@ -98,7 +93,7 @@ const applyEnemyHit = (
 	}
 	const withExperience = applyExperienceGain(
 		next,
-		ENEMY_EXPERIENCE_REWARD[target.kind],
+		calculateEnemyExperienceReward(target.kind, target.maxHp),
 	);
 	return target.kind === "orc" || target.kind === "thief"
 		? applyEnemyGoldDrop(withExperience, target.kind)
@@ -106,23 +101,17 @@ const applyEnemyHit = (
 };
 
 /**
- * Rolls the player's dice damage: PLAYER_DAMAGE_DICE_COUNT dPLAYER_DAMAGE_DICE_SIDES
- * plus calculatePlayerAttackDamage (playerPower, the equipped sword's own
- * attackBonus, the Weak penalty) as a flat bonus, with the die's own mean
- * subtracted so that bonus keeps meaning "average total" — see balance.ts.
+ * Rolls the player's damage as original Rogue does: the weapon's dice (bare
+ * hands otherwise) plus calculatePlayerAttackDamage (playerPower, the
+ * equipped sword's own attackBonus, the Weak penalty), never below 0.
  */
-const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll => {
-	const bonus =
-		calculatePlayerAttackDamage(state) -
-		damageDiceMean(PLAYER_DAMAGE_DICE_SIDES);
-	return rollDamageDice(
+const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
+	rollDamageDice(
 		rng,
-		PLAYER_DAMAGE_DICE_COUNT,
-		PLAYER_DAMAGE_DICE_SIDES,
-		bonus,
-		MIN_PLAYER_ATTACK_DAMAGE,
+		calculatePlayerDamageDice(state.inventory),
+		calculatePlayerAttackDamage(state),
+		0,
 	);
-};
 
 /**
  * The player's bump attack resolved against one enemy. A still-sleeping
@@ -146,7 +135,10 @@ export const applyPlayerAttack = (
 		});
 	}
 
-	const hitRoll = rollToHit(state.rng, calculatePlayerHitChancePercent(state));
+	const hitRoll = rollToHit(
+		state.rng,
+		calculatePlayerHitChancePercent(state, target.kind),
+	);
 	if (!hitRoll.hit) {
 		return {
 			...state,

@@ -59,6 +59,8 @@ export interface Position {
 export type Enemy = Position & {
 	readonly kind: EnemyKind;
 	readonly hp: number;
+	/** What `hp` was rolled as at spawn (level d8, see floor/enemies.ts) — the cap for regeneration and lifesteal, and part of the experience it is worth. */
+	readonly maxHp: number;
 	/** Sleeping enemies take no action at all until woken — see advanceEnemies. */
 	readonly awake: boolean;
 	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */

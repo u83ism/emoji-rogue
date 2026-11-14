@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { seedToState } from "../rng.js";
-import {
-	damageDiceMean,
-	rollDamage,
-	rollDamageDice,
-	rollToHit,
-} from "./damage.js";
+import { rollDamage, rollDamageDice, rollToHit } from "./damage.js";
 
 describe("rollDamage", () => {
 	it("is deterministic: same rng and mean in, same roll out", () => {
@@ -79,31 +74,51 @@ describe("rollToHit", () => {
 	});
 });
 
-describe("damageDiceMean", () => {
-	it("is the average face value of the die, rounded", () => {
-		expect(damageDiceMean(4)).toBe(3); /* (4+1)/2 = 2.5, rounds to 3 */
-		expect(damageDiceMean(6)).toBe(4); /* (6+1)/2 = 3.5, rounds to 4 */
-		expect(damageDiceMean(1)).toBe(1);
-	});
-});
-
 describe("rollDamageDice", () => {
+	const ONE_D4 = { count: 1, sides: 4 };
+
 	it("is deterministic: same rng and dice in, same roll out", () => {
 		const rng = seedToState(1);
-		expect(rollDamageDice(rng, 1, 4, 0, 1)).toEqual(
-			rollDamageDice(rng, 1, 4, 0, 1),
+		expect(rollDamageDice(rng, ONE_D4, 0, 1)).toEqual(
+			rollDamageDice(rng, ONE_D4, 0, 1),
 		);
 	});
 
-	it("consumes exactly diceCount uniform draws regardless of the rolled values", () => {
-		const oneDie = rollDamageDice(seedToState(1), 1, 4, 0, 1);
-		const twoDice = rollDamageDice(seedToState(1), 2, 4, 0, 1);
+	it("consumes exactly dice.count uniform draws regardless of the rolled values", () => {
+		const oneDie = rollDamageDice(seedToState(1), ONE_D4, 0, 1);
+		const twoDice = rollDamageDice(
+			seedToState(1),
+			{ count: 2, sides: 4 },
+			0,
+			1,
+		);
 		expect(oneDie.rng).not.toEqual(twoDice.rng);
+	});
+
+	it("a 0-count die rolls just the bonus and consumes no rng", () => {
+		const rng = seedToState(1);
+		expect(rollDamageDice(rng, { count: 0, sides: 0 }, 0, 0)).toEqual({
+			damage: 0,
+			rng,
+		});
+	});
+
+	it("sums every die: 3d4 stays within 3-12", () => {
+		for (let seed = 1; seed <= 50; seed++) {
+			const roll = rollDamageDice(
+				seedToState(seed),
+				{ count: 3, sides: 4 },
+				0,
+				0,
+			);
+			expect(roll.damage).toBeGreaterThanOrEqual(3);
+			expect(roll.damage).toBeLessThanOrEqual(12);
+		}
 	});
 
 	it("stays within [1 + bonus, diceSides + bonus] before the minimum floor applies", () => {
 		for (let seed = 1; seed <= 50; seed++) {
-			const roll = rollDamageDice(seedToState(seed), 1, 4, 10, 1);
+			const roll = rollDamageDice(seedToState(seed), ONE_D4, 10, 1);
 			expect(roll.damage).toBeGreaterThanOrEqual(11);
 			expect(roll.damage).toBeLessThanOrEqual(14);
 		}
@@ -111,7 +126,7 @@ describe("rollDamageDice", () => {
 
 	it("never rolls below the given minimum, even with a very negative bonus", () => {
 		for (let seed = 1; seed <= 20; seed++) {
-			const roll = rollDamageDice(seedToState(seed), 1, 4, -50, 1);
+			const roll = rollDamageDice(seedToState(seed), ONE_D4, -50, 1);
 			expect(roll.damage).toBe(1);
 		}
 	});
@@ -121,7 +136,7 @@ describe("rollDamageDice", () => {
 		const damages = new Set<number>();
 		for (let seedIndex = 1; seedIndex <= 30; seedIndex++) {
 			damages.add(
-				rollDamageDice(seedToState(seedIndex * 70000), 1, 4, 0, 1).damage,
+				rollDamageDice(seedToState(seedIndex * 70000), ONE_D4, 0, 1).damage,
 			);
 		}
 		expect(damages.size).toBeGreaterThan(1);

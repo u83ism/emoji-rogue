@@ -9,7 +9,6 @@ import {
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_HP,
-	ZOMBIE_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { Enemy } from "../state.js";
@@ -18,7 +17,8 @@ const zombie = (x: number, y: number): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
-	hp: ZOMBIE_MAX_HP,
+	hp: 2,
+	maxHp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
@@ -28,7 +28,8 @@ describe("items/potions", () => {
 	it("using a held potion drinks it: capped heal, one consumed from inventory", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerHp: 7 /* missing 3, potion heals 5: the cap must win */,
+			playerHp:
+				PLAYER_MAX_HP - 3 /* missing 3, potion heals 5: the cap must win */,
 			inventory: [
 				{ itemId: 1, kind: "heal-potion" as const },
 				{ itemId: 2, kind: "heal-potion" as const },

@@ -1,34 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import {
-	AQUATOR_MAX_HP,
-	BAT_MAX_HP,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
-	GRIFFIN_MAX_HP,
 	GRIFFIN_REGEN_AMOUNT,
-	ICKY_THING_MAX_HP,
 	MEDUSA_GAZE_CONFUSE_DURATION,
-	MEDUSA_MAX_HP,
-	MIN_DAMAGE_TAKEN,
-	NYMPH_MAX_HP,
 	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	THIEF_MAX_HP,
-	TROLL_MAX_HP,
 	TROLL_REGEN_AMOUNT,
-	VAMPIRE_ATTACK_DAMAGE,
-	VAMPIRE_MAX_HP,
-	VENUS_FLYTRAP_ATTACK_DAMAGE,
-	VENUS_FLYTRAP_MAX_HP,
-	WRAITH_ATTACK_DAMAGE,
+	VAMPIRE_LIFESTEAL_PERCENT,
 	WRAITH_DRAIN_AMOUNT,
-	WRAITH_MAX_HP,
-	ZOMBIE_MAX_HP,
 } from "../balance.js";
+import type { EnemyKind, GameEvent } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
-import { calculatePlayerDefense } from "../items/equipment.js";
+import { calculatePlayerDefense } from "../items/equipmentStats.js";
 import type { Enemy, GameState, HeldItem } from "../state.js";
 import { advanceEnemies } from "./enemies.js";
 
@@ -45,125 +31,77 @@ const equippedArmor = (
 	rustProtected,
 });
 
-const zombie = (x: number, y: number, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "zombie",
-	hp: ZOMBIE_MAX_HP,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
+/**
+ * Worn by the player in every test that needs an attack to land for sure:
+ * an armor class this bad puts every kind's to-hit chance at 100%. Its
+ * opposite, equippedArmor(100), makes every attack miss.
+ */
+const EXPOSING_ARMOR = equippedArmor(-20);
 
-const bat = (x: number, y: number, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "bat",
-	hp: BAT_MAX_HP,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
+/** Every fixture enemy's max HP — far more than any single test hit removes. */
+const TEST_ENEMY_HP = 30;
 
-const thief = (x: number, y: number, awake = true): Enemy => ({
+const enemyOf = (
+	kind: EnemyKind,
+	x: number,
+	y: number,
+	awake = true,
+	hp = TEST_ENEMY_HP,
+): Enemy => ({
 	x,
 	y,
-	kind: "thief",
-	hp: THIEF_MAX_HP,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const nymph = (x: number, y: number, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "nymph",
-	hp: NYMPH_MAX_HP,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const aquator = (x: number, y: number, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "aquator",
-	hp: AQUATOR_MAX_HP,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const vampire = (x: number, y: number, hp = VAMPIRE_MAX_HP): Enemy => ({
-	x,
-	y,
-	kind: "vampire",
+	kind,
 	hp,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const griffin = (x: number, y: number, hp = GRIFFIN_MAX_HP): Enemy => ({
-	x,
-	y,
-	kind: "griffin",
-	hp,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const troll = (x: number, y: number, hp = TROLL_MAX_HP): Enemy => ({
-	x,
-	y,
-	kind: "troll",
-	hp,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const ickyThing = (x: number, y: number, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "icky-thing",
-	hp: ICKY_THING_MAX_HP,
+	maxHp: TEST_ENEMY_HP,
 	awake,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
 });
 
-const venusFlytrap = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "venus-flytrap",
-	hp: VENUS_FLYTRAP_MAX_HP,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
+const zombie = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("zombie", x, y, awake);
+const bat = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("bat", x, y, awake);
+const thief = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("thief", x, y, awake);
+const nymph = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("nymph", x, y, awake);
+const aquator = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("aquator", x, y, awake);
+const vampire = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
+	enemyOf("vampire", x, y, true, hp);
+const griffin = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
+	enemyOf("griffin", x, y, true, hp);
+const troll = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
+	enemyOf("troll", x, y, true, hp);
+const ickyThing = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("icky-thing", x, y, awake);
+const venusFlytrap = (x: number, y: number): Enemy =>
+	enemyOf("venus-flytrap", x, y);
+const medusa = (x: number, y: number): Enemy => enemyOf("medusa", x, y);
+const wraith = (x: number, y: number): Enemy => enemyOf("wraith", x, y);
 
-const medusa = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "medusa",
-	hp: MEDUSA_MAX_HP,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
+/** The damage of every player-hit event, in order. */
+const collectHitDamages = (events: readonly GameEvent[]): number[] =>
+	events.flatMap((event) =>
+		event.type === "player-hit" ? [event.payload.damage] : [],
+	);
 
-const wraith = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "wraith",
-	hp: WRAITH_MAX_HP,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
+/**
+ * The first rng state (walking one seed's stream) for which `isWanted`
+ * holds — seed hunting done in code, so a test that needs a particular roll
+ * outcome states the outcome instead of a magic seed number.
+ */
+const findRngState = (isWanted: (rng: RngState) => boolean): RngState => {
+	let current = seedToState(1);
+	for (let attempt = 0; attempt < 5000; attempt++) {
+		if (isWanted(current)) {
+			return current;
+		}
+		current = stepUniform(current).state;
+	}
+	throw new Error("no rng state in the first 5000 satisfies the test");
+};
 
 /** 9x3 arena: one walkable row at y=1, player at (4,1). */
 /**
@@ -185,6 +123,14 @@ const buildCorridorState = (enemies: GameState["enemies"]): GameState => ({
 	enemies,
 });
 
+/** buildCorridorState with the player wearing EXPOSING_ARMOR (every attack lands) and enough HP to survive any one turn. */
+const buildExposedState = (enemies: GameState["enemies"]): GameState => ({
+	...buildCorridorState(enemies),
+	inventory: [EXPOSING_ARMOR],
+	playerHp: 200,
+	playerMaxHp: 200,
+});
+
 const buildUnexplored7x3 = (): boolean[][] => {
 	const columns: boolean[][] = [];
 	for (let x = 0; x < 7; x++) {
@@ -203,24 +149,28 @@ describe("advanceEnemies", () => {
 	});
 
 	it("an adjacent enemy attacks in place instead of moving", () => {
-		const state = buildCorridorState([zombie(5, 1)]);
+		const state = buildExposedState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(5, 1)]);
-		expect(next.playerHp).toBe(state.playerHp - 1);
+		const [damage] = collectHitDamages(next.events);
+		/* a zombie rolls 1d8 */
+		expect(damage).toBeGreaterThanOrEqual(1);
+		expect(damage).toBeLessThanOrEqual(8);
+		expect(next.playerHp).toBe(state.playerHp - (damage ?? 0));
 		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
+			{ type: "player-hit", payload: { by: "zombie", damage } },
 		]);
 		expect(next.status).toBe("playing");
 	});
 
 	it("the player's hp reaching zero ends the run", () => {
-		const state = { ...buildCorridorState([zombie(5, 1)]), playerHp: 1 };
+		const state = { ...buildExposedState([zombie(5, 1)]), playerHp: 1 };
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
-			{ type: "player-died", payload: { by: "zombie" } },
+		expect(next.events.map((event) => event.type)).toEqual([
+			"player-hit",
+			"player-died",
 		]);
 	});
 
@@ -302,73 +252,52 @@ describe("advanceEnemies", () => {
 		expect(advanceEnemies(state)).toEqual(advanceEnemies(state));
 	});
 
-	it("a bat chases two tiles per player turn (twice a zombie's speed)", () => {
+	it("a bat moves one tile per turn like every other kind — no kind is fast", () => {
 		const state = buildCorridorState([bat(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([bat(5, 1)]);
+		expect(next.enemies).toEqual([bat(6, 1)]);
 	});
 
-	it("a bat adjacent to the player attacks twice per turn", () => {
-		/* seed 2's two to-hit+damage rolls both land with damage 1 — see combat dice-ification, milestone 105 */
-		const state = { ...buildCorridorState([bat(5, 1)]), rng: seedToState(2) };
+	it("a kind with several attacks rolls each of them every turn", () => {
+		/* a troll attacks 1d8/1d8/2d6 */
+		const state = buildExposedState([troll(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([bat(5, 1)]);
-		expect(next.playerHp).toBe(state.playerHp - 2);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
-			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
-		]);
+		const damages = collectHitDamages(next.events);
+		expect(damages.length).toBe(3);
+		expect(next.playerHp).toBe(
+			state.playerHp - damages.reduce((sum, damage) => sum + damage, 0),
+		);
 	});
 
-	it("a bat's second attack is skipped once it already ended the run", () => {
-		const state = { ...buildCorridorState([bat(5, 1)]), playerHp: 1 };
+	it("the remaining attacks are skipped once one of them already ended the run", () => {
+		const state = { ...buildExposedState([troll(5, 1)]), playerHp: 1 };
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "bat", damage: 1 } },
-			{ type: "player-died", payload: { by: "bat" } },
+		expect(next.events.map((event) => event.type)).toEqual([
+			"player-hit",
+			"player-died",
 		]);
 	});
 
-	it("the equipped armor's defenseBonus reduces incoming damage", () => {
+	it("armor only makes attacks miss — a failed to-hit roll deals no damage and logs enemy-attack-missed instead of player-hit", () => {
 		const state = {
-			...buildCorridorState([zombie(5, 1)]),
-			inventory: [equippedArmor(1)],
-			playerHp: 5,
-		};
-		const next = advanceEnemies(state);
-		/* zombie deals 1; defense would reduce it to 0, but the floor wins */
-		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
-	});
-
-	it("however high the equipped armor's defenseBonus climbs, damage never drops below MIN_DAMAGE_TAKEN", () => {
-		const state = {
-			...buildCorridorState([zombie(5, 1)]),
+			...buildCorridorState([troll(5, 1)]),
 			inventory: [equippedArmor(100)],
-			playerHp: 5,
-		};
-		const next = advanceEnemies(state);
-		expect(next.playerHp).toBe(5 - MIN_DAMAGE_TAKEN);
-		expect(next.events).toEqual([
-			{
-				type: "player-hit",
-				payload: { by: "zombie", damage: MIN_DAMAGE_TAKEN },
-			},
-		]);
-	});
-
-	it("a failed to-hit roll deals no damage and logs enemy-attack-missed instead of player-hit", () => {
-		/* seed 1541's to-hit roll against the player misses outright */
-		const state = {
-			...buildArenaGameState(9, 3, 1541),
-			enemies: [zombie(5, 1)],
 		};
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(state.playerHp);
 		expect(next.events).toEqual([
-			{ type: "enemy-attack-missed", payload: { by: "zombie" } },
+			{ type: "enemy-attack-missed", payload: { by: "troll" } },
+			{ type: "enemy-attack-missed", payload: { by: "troll" } },
+			{ type: "enemy-attack-missed", payload: { by: "troll" } },
 		]);
+	});
+
+	it("a landed hit deals its dice in full, whatever the armor", () => {
+		/* a venus-flytrap's 1d1 is always exactly 1 */
+		const state = buildExposedState([venusFlytrap(5, 1)]);
+		expect(advanceEnemies(state).playerHp).toBe(state.playerHp - 1);
 	});
 
 	it("an adjacent thief steals gold and flees instead of dealing damage", () => {
@@ -587,124 +516,127 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
-		/* seed 2: the zombie's to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
 		const state = {
 			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
-			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
-			rng: seedToState(2),
+			inventory: [EXPOSING_ARMOR, { itemId: 2, kind: "heal-potion" } as const],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
 			zombie(5, 1),
 		]); /* the nymph is gone, the zombie remains */
-		expect(next.playerHp).toBe(
-			state.playerHp - 1,
+		expect(next.playerHp).toBeLessThan(
+			state.playerHp,
 		); /* the zombie still attacked */
-		expect(next.inventory).toEqual([]);
+		expect(next.inventory).toEqual([EXPOSING_ARMOR]);
 	});
 
 	/*
-	 * Whether a landed aquator hit also rusts armor is an
-	 * AQUATOR_RUST_CHANCE_PERCENT chance (see balance.ts) — seed 2's to-hit
-	 * roll lands and its rust roll succeeds (see combat dice-ification,
-	 * milestone 105), seed 1000's rust roll fails.
+	 * As in original Rogue, an aquator's hit deals no damage: it rusts the
+	 * armor instead, every time one of its two attacks lands. Rust only
+	 * shows on an armor with a positive defenseBonus, so these tests cannot
+	 * use EXPOSING_ARMOR — they hunt for an rng state where the aquator
+	 * lands a hit (or misses twice) against ordinary armor.
 	 */
-	it("an adjacent aquator deals damage, stands its ground, and may rust the equipped armor", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 2),
+	const findAquatorRngState = (state: GameState, wantsHit: boolean): RngState =>
+		findRngState(
+			(rng) =>
+				advanceEnemies({ ...state, rng }).events.some(
+					(event) => event.type === "player-hit",
+				) === wantsHit,
+		);
+
+	it("an adjacent aquator's hit deals no damage but rusts the equipped armor, and it stands its ground", () => {
+		const base: GameState = {
+			...buildCorridorState([aquator(5, 1)]),
 			inventory: [equippedArmor(2)],
-			enemies: [aquator(5, 1)],
 		};
+		const state = { ...base, rng: findAquatorRngState(base, true) };
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
 			aquator(5, 1),
 		]); /* stays, unlike thief/nymph */
-		expect(next.playerHp).toBe(state.playerHp - 1);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(collectHitDamages(next.events).every((damage) => damage === 0)).toBe(
+			true,
+		);
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory) - 1,
 		);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
-			{ type: "armor-rusted", payload: { amount: 1 } },
-		]);
+		expect(
+			next.events.filter((event) => event.type === "armor-rusted"),
+		).toEqual([{ type: "armor-rusted", payload: { amount: 1 } }]);
 	});
 
-	it("a rustProtected equipped armor skips the rust roll entirely, even on seed 1 which always rusts unprotected armor", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+	it("a rustProtected equipped armor never rusts, even when the aquator's hit lands", () => {
+		const base: GameState = {
+			...buildCorridorState([aquator(5, 1)]),
 			inventory: [equippedArmor(2, true)],
-			enemies: [aquator(5, 1)],
 		};
+		const state = { ...base, rng: findAquatorRngState(base, true) };
 		const next = advanceEnemies(state);
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory),
 		);
-		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
-		expect(next.rng).not.toEqual(state.rng);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
-		]);
+		expect(next.events.some((event) => event.type === "armor-rusted")).toBe(
+			false,
+		);
 	});
 
-	it("no armor equipped at all skips the rust roll entirely — nothing to degrade", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
-			enemies: [aquator(5, 1)],
-		};
+	it("no armor equipped at all: a landed aquator hit has nothing to degrade", () => {
+		const base = buildCorridorState([aquator(5, 1)]);
+		const state = { ...base, rng: findAquatorRngState(base, true) };
 		const next = advanceEnemies(state);
 		expect(next.inventory).toEqual([]);
-		/* the to-hit+damage rolls still consume rng, only the rust roll itself is skipped — see combat dice-ification, milestone 105 */
-		expect(next.rng).not.toEqual(state.rng);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
-		]);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events.some((event) => event.type === "armor-rusted")).toBe(
+			false,
+		);
 	});
 
-	it("an aquator hit that fails its rust roll only deals damage", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 1000),
+	it("an aquator whose attacks all miss rusts nothing", () => {
+		const base: GameState = {
+			...buildCorridorState([aquator(5, 1)]),
 			inventory: [equippedArmor(2)],
-			enemies: [aquator(5, 1)],
 		};
+		const state = { ...base, rng: findAquatorRngState(base, false) };
 		const next = advanceEnemies(state);
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory),
 		);
 		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "aquator", damage: 1 } },
+			{ type: "enemy-attack-missed", payload: { by: "aquator" } },
+			{ type: "enemy-attack-missed", payload: { by: "aquator" } },
 		]);
 	});
 
 	it("only an aquator's hits can rust armor — a zombie never does", () => {
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 1),
+		const base: GameState = {
+			...buildCorridorState([zombie(5, 1)]),
 			inventory: [equippedArmor(2)],
-			enemies: [zombie(5, 1)],
 		};
+		const state = { ...base, rng: findAquatorRngState(base, true) };
 		const next = advanceEnemies(state);
 		expect(calculatePlayerDefense(next.inventory)).toBe(
 			calculatePlayerDefense(state.inventory),
 		);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
-		]);
+		expect(next.events.some((event) => event.type === "armor-rusted")).toBe(
+			false,
+		);
 	});
 
 	it("rust from one aquator carries into the next aquator's turn via the shared accumulator", () => {
-		/* at seed 4, exactly one of these two aquators' hits also rusts — see combat dice-ification, milestone 105 */
-		const state: GameState = {
-			...buildArenaGameState(9, 3, 4),
+		const base: GameState = {
+			...buildCorridorState([aquator(5, 1), aquator(3, 1)]),
 			inventory: [equippedArmor(5)],
-			enemies: [aquator(5, 1), aquator(3, 1)],
 		};
-		const next = advanceEnemies(state);
-		const rustedEvents = next.events.filter(
-			(event) => event.type === "armor-rusted",
+		const rng = findRngState(
+			(candidate) =>
+				advanceEnemies({ ...base, rng: candidate }).events.filter(
+					(event) => event.type === "armor-rusted",
+				).length === 2,
 		);
-		expect(rustedEvents.length).toBe(1);
-		expect(calculatePlayerDefense(next.inventory)).toBe(
-			4,
-		); /* 5 - 1, from the one successful roll */
+		const next = advanceEnemies({ ...base, rng });
+		expect(calculatePlayerDefense(next.inventory)).toBe(3); /* 5 - 1 - 1 */
 	});
 
 	it("a slowed enemy takes no action at all — no movement, no attack — while frozen", () => {
@@ -720,19 +652,19 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a slowed enemy resumes normal behavior once the counter reaches 0", () => {
-		let current: GameState = buildCorridorState([
+		let current: GameState = buildExposedState([
 			{ ...zombie(5, 1), slowedTurnsRemaining: 1 },
 		]);
+		const startingHp = current.playerHp;
 		current =
 			advanceEnemies(current); /* countdown: 1 -> 0, still frozen this turn */
 		expect(current.enemies).toEqual([
 			{ ...zombie(5, 1), slowedTurnsRemaining: 0 },
 		]);
+		expect(current.playerHp).toBe(startingHp);
 		current = advanceEnemies(current); /* now acts normally */
-		expect(current.playerHp).toBe(9);
-		expect(current.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
-		]);
+		expect(current.playerHp).toBeLessThan(startingHp);
+		expect(current.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
 	it("a sleeping enemy outside the player's view takes no action at all", () => {
@@ -801,17 +733,16 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a sleeping enemy adjacent to the player wakes and attacks the same turn", () => {
-		/* seed 2: the wake roll succeeds and the following to-hit+damage roll lands with damage 1 — see combat dice-ification, milestone 105 */
-		const state = {
-			...buildCorridorState([zombie(5, 1, false)]),
-			rng: seedToState(2),
-		};
+		const base = buildExposedState([zombie(5, 1, false)]);
+		const rng = findRngState(
+			(candidate) =>
+				advanceEnemies({ ...base, rng: candidate }).enemies[0]?.awake === true,
+		);
+		const state = { ...base, rng };
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(5, 1, true)]);
-		expect(next.playerHp).toBe(state.playerHp - 1);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
-		]);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
 	it("a sleeping enemy adjacent to the player can fail its wake roll and stay asleep, taking no action", () => {
@@ -872,13 +803,11 @@ describe("advanceEnemies", () => {
 
 	it("a confused enemy still attacks when adjacent", () => {
 		const confused = { ...zombie(5, 1), confusedTurnsRemaining: 3 };
-		const state = buildCorridorState([confused]);
+		const state = buildExposedState([confused]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([{ ...confused, confusedTurnsRemaining: 2 }]);
-		expect(next.playerHp).toBe(state.playerHp - 1);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "zombie", damage: 1 } },
-		]);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
 	it("confusedTurnsRemaining ticks down by one per turn and stops at zero", () => {
@@ -896,32 +825,39 @@ describe("advanceEnemies", () => {
 	});
 
 	it("an adjacent vampire heals itself off its own landed hit and logs vampire-healed", () => {
-		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP - 2)]);
-		const next = advanceEnemies(state);
-		const healedAmount = Math.floor(VAMPIRE_ATTACK_DAMAGE * 0.5);
+		const base = buildExposedState([vampire(5, 1, TEST_ENEMY_HP - 10)]);
+		/* a vampire rolls 1d10 — a 1 would round its heal down to nothing */
+		const rng = findRngState(
+			(candidate) =>
+				(collectHitDamages(
+					advanceEnemies({ ...base, rng: candidate }).events,
+				)[0] ?? 0) >= 2,
+		);
+		const next = advanceEnemies({ ...base, rng });
+		const [damage] = collectHitDamages(next.events);
+		const healedAmount = Math.floor(
+			((damage ?? 0) * VAMPIRE_LIFESTEAL_PERCENT) / 100,
+		);
 		expect(next.enemies).toEqual([
-			vampire(5, 1, VAMPIRE_MAX_HP - 2 + healedAmount),
+			vampire(5, 1, TEST_ENEMY_HP - 10 + healedAmount),
 		]);
 		expect(next.events).toEqual([
-			{
-				type: "player-hit",
-				payload: { by: "vampire", damage: VAMPIRE_ATTACK_DAMAGE },
-			},
+			{ type: "player-hit", payload: { by: "vampire", damage } },
 			{ type: "vampire-healed", payload: { amount: healedAmount } },
 		]);
 	});
 
 	it("a vampire already at max HP does not overheal and logs no vampire-healed event", () => {
-		const state = buildCorridorState([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		const state = buildExposedState([vampire(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([vampire(5, 1, VAMPIRE_MAX_HP)]);
+		expect(next.enemies).toEqual([vampire(5, 1)]);
 		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
 			false,
 		);
 	});
 
 	it("a non-vampire adjacent enemy never heals off its own hit", () => {
-		const state = buildCorridorState([zombie(5, 1)]);
+		const state = buildExposedState([zombie(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
 			false,
@@ -929,10 +865,10 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a non-adjacent troll regenerates HP every turn even without landing a hit", () => {
-		const state = buildCorridorState([troll(7, 1, TROLL_MAX_HP - 3)]);
+		const state = buildCorridorState([troll(7, 1, TEST_ENEMY_HP - 3)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
-			troll(6, 1, TROLL_MAX_HP - 3 + TROLL_REGEN_AMOUNT),
+			troll(6, 1, TEST_ENEMY_HP - 3 + TROLL_REGEN_AMOUNT),
 		]);
 		expect(next.events).toEqual([
 			{
@@ -942,23 +878,26 @@ describe("advanceEnemies", () => {
 		]);
 	});
 
-	it("regeneration caps at maxHp and logs no event once already full", () => {
-		const state = buildCorridorState([troll(7, 1, TROLL_MAX_HP)]);
+	it("regeneration caps at the enemy's own maxHp and logs no event once already full", () => {
+		const almostFull = buildCorridorState([troll(7, 1, TEST_ENEMY_HP - 1)]);
+		expect(advanceEnemies(almostFull).enemies).toEqual([troll(6, 1)]);
+
+		const state = buildCorridorState([troll(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([troll(6, 1, TROLL_MAX_HP)]);
+		expect(next.enemies).toEqual([troll(6, 1)]);
 		expect(
 			next.events.some((event) => event.type === "enemy-regenerated"),
 		).toBe(false);
 	});
 
-	it("a griffin still only regenerates once per turn despite acting twice (fast)", () => {
-		const state = buildCorridorState([griffin(7, 1, GRIFFIN_MAX_HP - 3)]);
+	it("a griffin regenerates once per turn", () => {
+		const state = buildCorridorState([griffin(7, 1, TEST_ENEMY_HP - 3)]);
 		const next = advanceEnemies(state);
 		const regenEvents = next.events.filter(
 			(event) => event.type === "enemy-regenerated",
 		);
 		expect(regenEvents.length).toBe(1);
-		expect(next.enemies[0]?.hp).toBe(GRIFFIN_MAX_HP - 3 + GRIFFIN_REGEN_AMOUNT);
+		expect(next.enemies[0]?.hp).toBe(TEST_ENEMY_HP - 3 + GRIFFIN_REGEN_AMOUNT);
 	});
 
 	it("a sleeping icky-thing does not wake merely from being seen, consuming no rng", () => {
@@ -984,12 +923,10 @@ describe("advanceEnemies", () => {
 	});
 
 	it("an icky-thing still attacks when adjacent, despite being blind", () => {
-		const state = buildCorridorState([ickyThing(5, 1)]);
+		const state = buildExposedState([ickyThing(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.playerHp).toBe(state.playerHp - 1);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "icky-thing", damage: 1 } },
-		]);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
+		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
 	it("a venus-flytrap never moves — neither chasing nor wandering — while visible but not adjacent", () => {
@@ -1000,10 +937,10 @@ describe("advanceEnemies", () => {
 	});
 
 	it("an adjacent venus-flytrap still attacks in place", () => {
-		const state = buildCorridorState([venusFlytrap(5, 1)]);
+		const state = buildExposedState([venusFlytrap(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([venusFlytrap(5, 1)]);
-		expect(next.playerHp).toBe(state.playerHp - VENUS_FLYTRAP_ATTACK_DAMAGE);
+		expect(next.playerHp).toBeLessThan(state.playerHp);
 	});
 
 	/*
@@ -1037,24 +974,25 @@ describe("advanceEnemies", () => {
 	});
 
 	it("an adjacent medusa attacks instead of gazing", () => {
-		const state = buildCorridorState([medusa(5, 1)]);
+		const state = buildExposedState([medusa(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.confusedTurnsRemaining).toBe(0);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "medusa", damage: 2 } },
+		/* 3d4/3d4/2d5 — three attacks, nothing else */
+		expect(next.events.map((event) => event.type)).toEqual([
+			"player-hit",
+			"player-hit",
+			"player-hit",
 		]);
 	});
 
 	it("an adjacent wraith permanently drains playerMaxHp on a landed hit", () => {
-		const state = buildCorridorState([wraith(5, 1)]);
+		const state = buildExposedState([wraith(5, 1)]);
 		const next = advanceEnemies(state);
+		const [damage] = collectHitDamages(next.events);
 		expect(next.playerMaxHp).toBe(state.playerMaxHp - WRAITH_DRAIN_AMOUNT);
-		expect(next.playerHp).toBe(state.playerHp - WRAITH_ATTACK_DAMAGE);
+		expect(next.playerHp).toBe(state.playerHp - (damage ?? 0));
 		expect(next.events).toEqual([
-			{
-				type: "player-hit",
-				payload: { by: "wraith", damage: WRAITH_ATTACK_DAMAGE },
-			},
+			{ type: "player-hit", payload: { by: "wraith", damage } },
 			{ type: "player-drained", payload: { amount: WRAITH_DRAIN_AMOUNT } },
 		]);
 	});

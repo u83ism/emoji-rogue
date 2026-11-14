@@ -1,28 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { calculateEnemyCountForFloor } from "./balance.js";
+import {
+	calculateMagicSaveChancePercent,
+	LEVEL_EXPERIENCE_THRESHOLDS,
+} from "./balance.js";
 
-describe("calculateEnemyCountForFloor", () => {
-	it("returns the base count on floor 1", () => {
-		expect(calculateEnemyCountForFloor("zombie", 1)).toBe(3);
-		expect(calculateEnemyCountForFloor("bat", 1)).toBe(2);
+describe("calculateMagicSaveChancePercent", () => {
+	it("is original Rogue's save(VS_MAGIC): 20% at level 1, +5 points per two levels", () => {
+		expect(calculateMagicSaveChancePercent(1)).toBe(20);
+		expect(calculateMagicSaveChancePercent(2)).toBe(25);
+		expect(calculateMagicSaveChancePercent(3)).toBe(25);
+		expect(calculateMagicSaveChancePercent(4)).toBe(30);
+		expect(calculateMagicSaveChancePercent(10)).toBe(45);
 	});
+});
 
-	it("grows one at a time at each kind's own interval", () => {
-		/* zombies: +1 every 3 floors */
-		expect(calculateEnemyCountForFloor("zombie", 3)).toBe(3);
-		expect(calculateEnemyCountForFloor("zombie", 4)).toBe(4);
-		expect(calculateEnemyCountForFloor("zombie", 6)).toBe(4);
-		expect(calculateEnemyCountForFloor("zombie", 7)).toBe(5);
-
-		/* bats: +1 every 2 floors — grow faster than zombies */
-		expect(calculateEnemyCountForFloor("bat", 2)).toBe(2);
-		expect(calculateEnemyCountForFloor("bat", 3)).toBe(3);
-		expect(calculateEnemyCountForFloor("bat", 4)).toBe(3);
-		expect(calculateEnemyCountForFloor("bat", 5)).toBe(4);
-	});
-
-	it("caps out at deep floors instead of growing forever", () => {
-		expect(calculateEnemyCountForFloor("zombie", 1000)).toBe(8);
-		expect(calculateEnemyCountForFloor("bat", 1000)).toBe(8);
+describe("LEVEL_EXPERIENCE_THRESHOLDS", () => {
+	it("rises strictly, so each level needs more experience than the one before", () => {
+		for (let index = 1; index < LEVEL_EXPERIENCE_THRESHOLDS.length; index++) {
+			expect(LEVEL_EXPERIENCE_THRESHOLDS[index]).toBeGreaterThan(
+				LEVEL_EXPERIENCE_THRESHOLDS[index - 1] ?? 0,
+			);
+		}
 	});
 });

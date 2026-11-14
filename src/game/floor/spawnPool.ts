@@ -46,7 +46,8 @@ export const drawSpawnTileWhere = (
 	return picked;
 };
 
-const isInsideRoom = (room: Room, position: Position): boolean =>
+/** Whether `position` lies within the room's interior rectangle. */
+export const isInsideRoom = (room: Room, position: Position): boolean =>
 	position.x >= room.x1 &&
 	position.x <= room.x2 &&
 	position.y >= room.y1 &&

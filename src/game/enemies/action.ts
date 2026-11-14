@@ -2,8 +2,8 @@ import type { RngState } from "../../rng.js";
 import { isAdjacent } from "../combat.js";
 import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
+import { resolveEnemyAttack } from "./enemyAttack.js";
 import { resolveFleeingTheft } from "./enemyFlee.js";
-import { resolveEnemyHitLanded } from "./enemyHitLanded.js";
 import { resolveEnemyMovement } from "./enemyMovement.js";
 
 /**
@@ -45,8 +45,8 @@ const withEvents = (
 /**
  * One action of one awake, unfrozen enemy. Adjacent to the player it acts in
  * place: thief/nymph steal and flee (enemyFlee.ts), every other kind attacks
- * (enemyHitLanded.ts — to-hit roll, dice damage, the kind's own on-hit
- * effect). Otherwise it moves or does its kind's ranged thing
+ * (enemyAttack.ts — a to-hit and damage roll per attack die, the kind's own
+ * on-hit effect). Otherwise it moves or does its kind's ranged thing
  * (enemyMovement.ts's resolveEnemyMovement). `enemy` is the enemy as it
  * started the turn; `actor` is where it stands and what HP it has now.
  * `occupied` is the other enemies' tiles.
@@ -97,7 +97,7 @@ export const resolveEnemyAction = (
 			progress: withEvents({ ...progress, ...stolen }, [event]),
 		};
 	}
-	const hit = resolveEnemyHitLanded(
+	const hit = resolveEnemyAttack(
 		enemy,
 		actor.hp,
 		progress.playerHp,

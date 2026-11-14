@@ -44,7 +44,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
 | `combat.ts` | プレイヤー側の攻撃解決(共通コア`applyEnemyHit`。命中判定は`items/hitChance.ts`、ダイスダメージは`damage.ts`の`rollToHit`/`rollDamageDice`) |
-| `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結・行動回数)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。攻撃は`enemyHitLanded.ts`(命中処理。`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化を内包)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃)、毎ターン自己回復は`enemyRegen.ts`。出現テーブルは`floor/enemies.ts`、グリフは`enemyGlyphs.ts`で別物 |
+| `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結。全員1ターン1行動)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。攻撃は`enemyAttack.ts`(攻撃ダイス1個ごとの命中判定とダメージ。`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化を内包)。能力値は`enemyStats.ts`(原作Rogue 5.4の`monsters[]`表と出現順)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃)、毎ターン自己回復は`enemyRegen.ts`。出現(部屋ごとの抽選と、階に応じた種類の窓)は`floor/enemies.ts`、グリフは`enemyGlyphs.ts`で別物 |
 | `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(再生)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |

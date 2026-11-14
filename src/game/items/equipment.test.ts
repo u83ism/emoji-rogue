@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_WEAK_THRESHOLD } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
+import { applyArmorRust } from "./equipment.js";
 import {
-	applyArmorRust,
 	calculatePlayerAttackDamage,
 	calculatePlayerDefense,
-} from "./equipment.js";
+} from "./equipmentStats.js";
 
 /*
  * Whether a sword/armor is cursed, and how far the curse drags its bonus
@@ -295,12 +295,12 @@ describe("items/equipment", () => {
 		expect(calculatePlayerAttackDamage(starving)).toBe(2);
 	});
 
-	it("floors the weakened attack at MIN_PLAYER_ATTACK_DAMAGE instead of going to 0 or below", () => {
+	it("the Weak penalty can cancel the whole bonus — the dice still roll on top of it", () => {
 		const unarmedAndWeak = {
 			...buildArenaGameState(9, 3, 1),
 			playerPower: 1,
 			playerFood: 0,
 		};
-		expect(calculatePlayerAttackDamage(unarmedAndWeak)).toBe(1);
+		expect(calculatePlayerAttackDamage(unarmedAndWeak)).toBe(0);
 	});
 });

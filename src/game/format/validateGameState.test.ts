@@ -995,7 +995,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "sneak-attack", payload: { target: "zombie", damage: 0 } },
+					{ type: "sneak-attack", payload: { target: "zombie", damage: -1 } },
 				],
 			},
 			"events",

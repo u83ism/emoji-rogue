@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../../pointkey.js";
 import {
-	calculateEnemyCountForFloor,
 	FOOD_COUNT_PER_FLOOR,
 	GOAL_FLOOR,
 	POTION_COUNT_PER_FLOOR,
 } from "../balance.js";
 import { buildDungeonGameState } from "../initialState.js";
+import { calculateEnemyFloorRange } from "./enemies.js";
 import { ascendStairs, descendStairs } from "./transitions.js";
 
 describe("descendStairs", () => {
@@ -38,13 +38,15 @@ describe("descendStairs", () => {
 		expect(loitered.turnsOnCurrentFloor).toBe(0);
 	});
 
-	it("spawns both zombies and bats", () => {
+	it("spawns only floor-appropriate enemies, all asleep at full HP", () => {
 		for (const state of [start, below]) {
-			const kinds = state.enemies.map((enemy) => enemy.kind);
-			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
-			const batCount = kinds.filter((kind) => kind === "bat").length;
-			expect(zombieCount).toBe(3);
-			expect(batCount).toBe(2);
+			for (const enemy of state.enemies) {
+				expect(
+					calculateEnemyFloorRange(enemy.kind).firstFloor,
+				).toBeLessThanOrEqual(state.floor);
+				expect(enemy.awake).toBe(false);
+				expect(enemy.hp).toBe(enemy.maxHp);
+			}
 		}
 	});
 
@@ -148,15 +150,16 @@ describe("descendStairs", () => {
 		expect(fallen.stairs.direction).toBe("up");
 	});
 
-	it("spawns more enemies on deeper floors, matching the scaling formula", () => {
+	it("only spawns kinds whose floor range covers the new floor", () => {
 		let state = buildDungeonGameState(40, 20, 7);
-		for (let floor = 2; floor <= 7; floor++) {
+		for (let floor = 2; floor <= 12; floor++) {
 			state = descendStairs(state);
-			const kinds = state.enemies.map((enemy) => enemy.kind);
-			const zombieCount = kinds.filter((kind) => kind === "zombie").length;
-			const batCount = kinds.filter((kind) => kind === "bat").length;
-			expect(zombieCount).toBe(calculateEnemyCountForFloor("zombie", floor));
-			expect(batCount).toBe(calculateEnemyCountForFloor("bat", floor));
+			for (const enemy of state.enemies) {
+				const range = calculateEnemyFloorRange(enemy.kind);
+				expect(floor).toBeGreaterThanOrEqual(range.firstFloor);
+				expect(floor).toBeLessThanOrEqual(range.lastFloor);
+				expect(enemy.hp).toBe(enemy.maxHp);
+			}
 		}
 	});
 });

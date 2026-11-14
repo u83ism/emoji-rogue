@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { type RngState, seedToState, stepUniform } from "../rng.js";
 import {
-	ENEMY_EXPERIENCE_REWARD,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
-	ORC_MAX_HP,
+	SNEAK_ATTACK_MULTIPLIER,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	THIEF_MAX_HP,
 	WAND_STRIKE_DAMAGE,
-	ZOMBIE_MAX_HP,
 } from "./balance.js";
 import {
 	applyMagicMissileWandStrike,
@@ -17,22 +14,55 @@ import {
 	applyWandStrike,
 	isAdjacent,
 } from "./combat.js";
+import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
+import type { EnemyKind } from "./events.js";
 import { buildArenaGameState } from "./initialState.js";
-import type { Enemy } from "./state.js";
+import type { Enemy, HeldItem } from "./state.js";
 
-const zombie = (
+/** Every fixture enemy's max HP (what its experience reward is computed from) and default HP — more than one unarmed hit (1d4+1) removes. */
+const TEST_ENEMY_HP = 12;
+
+const enemyOf = (
+	kind: EnemyKind,
 	x: number,
 	y: number,
-	hp = ZOMBIE_MAX_HP,
+	hp = TEST_ENEMY_HP,
 	awake = true,
 ): Enemy => ({
 	x,
 	y,
-	kind: "zombie",
+	kind,
 	hp,
+	maxHp: TEST_ENEMY_HP,
 	awake,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
+});
+
+const zombie = (
+	x: number,
+	y: number,
+	hp = TEST_ENEMY_HP,
+	awake = true,
+): Enemy => enemyOf("zombie", x, y, hp, awake);
+/** 1 HP: any wand strike kills it. */
+const thief = (x: number, y: number): Enemy => enemyOf("thief", x, y, 1);
+const orc = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
+	enemyOf("orc", x, y, hp);
+
+/**
+ * A player level at which the to-hit chance is 100% against every kind's
+ * armor class, so a test's swing lands without hunting for a seed. Level
+ * does not enter the damage roll.
+ */
+const SURE_HIT_LEVEL = 30;
+
+const swordWith = (attackBonus: number): HeldItem => ({
+	itemId: 1,
+	kind: "sword",
+	equipped: true,
+	cursed: false,
+	attackBonus,
 });
 
 /**
@@ -49,26 +79,6 @@ const buildSpreadRngStates = (): readonly RngState[] => {
 	return states;
 };
 
-const thief = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "thief",
-	hp: THIEF_MAX_HP,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
-const orc = (x: number, y: number, hp = ORC_MAX_HP, awake = true): Enemy => ({
-	x,
-	y,
-	kind: "orc",
-	hp,
-	awake,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
-
 describe("isAdjacent", () => {
 	it("is true for the four orthogonal neighbors only", () => {
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 1 })).toBe(true);
@@ -81,18 +91,34 @@ describe("isAdjacent", () => {
 });
 
 describe("applyPlayerAttack", () => {
-	const state = buildArenaGameState(9, 9, 1);
+	const state = {
+		...buildArenaGameState(9, 9, 1),
+		playerLevel: SURE_HIT_LEVEL,
+	};
+	/** The damage of the first enemy-hit / sneak-attack event. */
+	const readDamage = (next: typeof state): number => {
+		const event = next.events[0];
+		return event?.type === "enemy-hit" || event?.type === "sneak-attack"
+			? event.payload.damage
+			: Number.NaN;
+	};
 
-	it("damages the target and logs the hit", () => {
+	it("damages the target by the unarmed roll (1d4 + playerPower) and logs the hit", () => {
 		const target = zombie(5, 4);
 		const bystander = zombie(7, 7);
 		const next = applyPlayerAttack(
 			{ ...state, enemies: [target, bystander] },
 			target,
 		);
-		expect(next.enemies).toEqual([zombie(5, 4, ZOMBIE_MAX_HP - 1), bystander]);
+		const damage = readDamage(next);
+		expect(damage).toBeGreaterThanOrEqual(1 + state.playerPower);
+		expect(damage).toBeLessThanOrEqual(4 + state.playerPower);
+		expect(next.enemies).toEqual([
+			zombie(5, 4, TEST_ENEMY_HP - damage),
+			bystander,
+		]);
 		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{ type: "enemy-hit", payload: { target: "zombie", damage } },
 		]);
 	});
 
@@ -105,7 +131,10 @@ describe("applyPlayerAttack", () => {
 		);
 		expect(next.enemies).toEqual([bystander]);
 		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
+			{
+				type: "enemy-hit",
+				payload: { target: "zombie", damage: readDamage(next) },
+			},
 			{ type: "enemy-defeated", payload: { target: "zombie" } },
 		]);
 	});
@@ -117,34 +146,46 @@ describe("applyPlayerAttack", () => {
 		expect(next.terrain).toBe(state.terrain);
 	});
 
-	it("deals calculatePlayerAttackDamage's total, not a hardcoded amount (an equipped sword raises it)", () => {
-		const target = zombie(5, 4, 10);
-		const boosted = {
+	it("an equipped sword rolls its own dice and adds its attackBonus", () => {
+		const target = zombie(5, 4, 100);
+		const armed = { ...state, inventory: [swordWith(2)], enemies: [target] };
+		const next = applyPlayerAttack(armed, target);
+		const damage = readDamage(next);
+		/* 3d4 + playerPower + 2 */
+		expect(damage).toBeGreaterThanOrEqual(3 + state.playerPower + 2);
+		expect(damage).toBeLessThanOrEqual(12 + state.playerPower + 2);
+		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage)]);
+	});
+
+	it("a roll dragged below zero by a cursed sword deals 0, never negative damage", () => {
+		const target = zombie(5, 4, 100);
+		const cursed = {
 			...state,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "sword" as const,
-					equipped: true,
-					cursed: false,
-					attackBonus: 2,
-				},
-			],
+			playerLevel: 200 /* still lands despite the -50 to hit */,
+			inventory: [swordWith(-50)],
 			enemies: [target],
 		};
-		const next = applyPlayerAttack(boosted, target);
-		expect(next.enemies).toEqual([zombie(5, 4, 7)]);
+		const next = applyPlayerAttack(cursed, target);
 		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 3 } },
+			{ type: "enemy-hit", payload: { target: "zombie", damage: 0 } },
 		]);
+		expect(next.enemies).toEqual([target]);
 	});
 
 	it("a sneak attack on a sleeping target deals SNEAK_ATTACK_MULTIPLIER times the damage and wakes it", () => {
-		const target = zombie(5, 4, 10, false);
+		const target = zombie(5, 4, 100, false);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.enemies).toEqual([zombie(5, 4, 7, true)]);
+		const damage = readDamage(next);
+		expect(damage % SNEAK_ATTACK_MULTIPLIER).toBe(0);
+		expect(damage).toBeGreaterThanOrEqual(
+			(1 + state.playerPower) * SNEAK_ATTACK_MULTIPLIER,
+		);
+		expect(damage).toBeLessThanOrEqual(
+			(4 + state.playerPower) * SNEAK_ATTACK_MULTIPLIER,
+		);
+		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage, true)]);
 		expect(next.events).toEqual([
-			{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
+			{ type: "sneak-attack", payload: { target: "zombie", damage } },
 		]);
 	});
 
@@ -152,25 +193,24 @@ describe("applyPlayerAttack", () => {
 		const target = zombie(5, 4, 3, false);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.enemies).toEqual([]);
-		expect(next.events).toEqual([
-			{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
+		expect(next.events.map((event) => event.type)).toEqual([
+			"sneak-attack",
+			"enemy-defeated",
 		]);
 	});
 
 	it("a follow-up attack on an already-awake target is a normal hit, not another sneak attack", () => {
-		const target = zombie(5, 4, 10, true);
+		const target = zombie(5, 4, 100, true);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.enemies).toEqual([zombie(5, 4, 9, true)]);
-		expect(next.events).toEqual([
-			{ type: "enemy-hit", payload: { target: "zombie", damage: 1 } },
-		]);
+		expect(next.events.map((event) => event.type)).toEqual(["enemy-hit"]);
 	});
 
-	it("a kill awards experience for the target's kind", () => {
+	it("a kill awards the experience that individual is worth", () => {
 		const target = zombie(5, 4, 1);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.zombie);
+		expect(next.playerExperience).toBe(
+			calculateEnemyExperienceReward("zombie", TEST_ENEMY_HP),
+		);
 	});
 
 	it("a non-lethal hit awards no experience", () => {
@@ -186,8 +226,8 @@ describe("applyPlayerAttack", () => {
 	});
 
 	it("a failed to-hit roll deals no damage, logs player-attack-missed, but still sets hasAttacked and consumes rng", () => {
-		/* seed 1643's to-hit roll against an awake target misses outright */
-		const missState = buildArenaGameState(9, 9, 1643);
+		/* a -100 to hit puts the chance at 0% */
+		const missState = { ...state, inventory: [swordWith(-100)] };
 		const target = zombie(5, 4);
 		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
 		expect(next.enemies).toEqual([target]);
@@ -199,8 +239,8 @@ describe("applyPlayerAttack", () => {
 	});
 
 	it("a sneak attack on a sleeping target never misses, however low the hit chance would otherwise be", () => {
-		/* the same seed that misses an awake target's to-hit roll still guarantees a sneak attack */
-		const missState = buildArenaGameState(9, 9, 1643);
+		/* the same 0% chance that misses an awake target still guarantees a sneak attack */
+		const missState = { ...state, inventory: [swordWith(-100)] };
 		const target = zombie(5, 4, 10, false);
 		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
 		expect(next.events[0]?.type).toBe("sneak-attack");
@@ -262,7 +302,9 @@ describe("applyWandStrike", () => {
 	it("a kill awards experience for the target's kind", () => {
 		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.zombie);
+		expect(next.playerExperience).toBe(
+			calculateEnemyExperienceReward("zombie", TEST_ENEMY_HP),
+		);
 	});
 
 	it("sets hasAttacked — the pacifist conduct is broken by a wand strike too", () => {
@@ -273,7 +315,10 @@ describe("applyWandStrike", () => {
 });
 
 describe("enemy gold drop", () => {
-	const state = buildArenaGameState(9, 9, 1);
+	const state = {
+		...buildArenaGameState(9, 9, 1),
+		playerLevel: SURE_HIT_LEVEL,
+	};
 
 	it("drops a bonus between GOLD_AMOUNT_MIN and GOLD_AMOUNT_MAX into goldCollected on a melee kill", () => {
 		const target = orc(5, 4, 1);
@@ -393,22 +438,28 @@ describe("applyMagicMissileWandStrike", () => {
 });
 
 describe("dragon", () => {
-	const state = buildArenaGameState(9, 9, 1);
+	const state = {
+		...buildArenaGameState(9, 9, 1),
+		playerLevel: SURE_HIT_LEVEL,
+	};
 
-	it("awards more experience than aquator on defeat, purely via the balance.ts lookup", () => {
+	it("awards more experience than aquator on defeat, purely via the enemyStats.ts lookup", () => {
 		const target: Enemy = {
 			x: 5,
 			y: 4,
 			kind: "dragon",
 			hp: 1,
+			maxHp: 1,
 			awake: true,
 			slowedTurnsRemaining: 0,
 			confusedTurnsRemaining: 0,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.playerExperience).toBe(ENEMY_EXPERIENCE_REWARD.dragon);
-		expect(ENEMY_EXPERIENCE_REWARD.dragon).toBeGreaterThan(
-			ENEMY_EXPERIENCE_REWARD.aquator,
+		expect(next.playerExperience).toBe(
+			calculateEnemyExperienceReward("dragon", 1),
+		);
+		expect(calculateEnemyExperienceReward("dragon", 1)).toBeGreaterThan(
+			calculateEnemyExperienceReward("aquator", 1),
 		);
 	});
 });

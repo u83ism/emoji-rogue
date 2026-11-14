@@ -56,7 +56,7 @@ export {
 export {
 	calculatePlayerAttackDamage,
 	calculatePlayerDefense,
-} from "./items/equipment.js";
+} from "./items/equipmentStats.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,

@@ -4,7 +4,6 @@ import {
 	MAGIC_MISSILE_WAND_DAMAGE,
 	SLOW_WAND_DURATION,
 	WAND_STRIKE_DAMAGE,
-	ZOMBIE_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { Enemy } from "../state.js";
@@ -14,7 +13,8 @@ const zombie = (x: number, y: number): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
-	hp: ZOMBIE_MAX_HP,
+	hp: 2,
+	maxHp: 2,
 	awake: true,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
@@ -22,7 +22,7 @@ const zombie = (x: number, y: number): Enemy => ({
 
 describe("items/wands", () => {
 	it("using a held wand strikes the nearest visible (non-adjacent) enemy", () => {
-		/* WAND_STRIKE_DAMAGE exceeds ZOMBIE_MAX_HP, so a single hit kills it */
+		/* WAND_STRIKE_DAMAGE exceeds the fixture zombie's 2 HP, so a single hit kills it */
 		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
 		const state = {
 			...buildArenaGameState(9, 3, 1),

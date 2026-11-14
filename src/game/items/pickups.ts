@@ -1,6 +1,7 @@
 import { INVENTORY_CAPACITY } from "../balance.js";
 import { buildEventLog, isEquipmentItemKind } from "../events.js";
 import type { GameState } from "../state.js";
+import { toItemEventPayload } from "./equipmentKinds.js";
 import { toHeldItem } from "./heldItemFactory.js";
 import { addToInventory } from "./inventory.js";
 
@@ -23,25 +24,23 @@ export const applyItemPickup = (state: GameState): GameState => {
 	if (item === undefined) {
 		return state;
 	}
+	const heldItem = toHeldItem(item, state.nextItemId);
 	if (state.inventory.length >= INVENTORY_CAPACITY) {
 		return {
 			...state,
 			events: buildEventLog(state.events, [
-				{ type: "inventory-full", payload: { kind: item.kind } },
+				{ type: "inventory-full", payload: toItemEventPayload(heldItem) },
 			]),
 		};
 	}
 	const isFreshConsumable = !isEquipmentItemKind(item.kind);
 	return {
 		...state,
-		inventory: addToInventory(
-			state.inventory,
-			toHeldItem(item, state.nextItemId),
-		),
+		inventory: addToInventory(state.inventory, heldItem),
 		nextItemId: isFreshConsumable ? state.nextItemId + 1 : state.nextItemId,
 		items: state.items.filter((candidate) => candidate !== item),
 		events: buildEventLog(state.events, [
-			{ type: "item-picked-up", payload: { kind: item.kind } },
+			{ type: "item-picked-up", payload: toItemEventPayload(heldItem) },
 		]),
 	};
 };

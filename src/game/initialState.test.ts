@@ -52,8 +52,38 @@ describe("buildDungeonGameState", () => {
 		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 	});
 
-	it("starts with an empty inventory — nothing has been picked up yet", () => {
-		expect(state.inventory).toEqual([]);
+	it("starts with original Rogue's kit: a +1,+1 mace wielded, +1 ring mail worn, one food ration", () => {
+		expect(state.inventory).toEqual([
+			{
+				itemId: 1,
+				kind: "weapon",
+				weaponKind: "mace",
+				equipped: true,
+				cursed: false,
+				hitBonus: 1,
+				damageBonus: 1,
+			},
+			{
+				itemId: 2,
+				kind: "armor",
+				armorKind: "ring-mail",
+				equipped: true,
+				cursed: false,
+				defenseBonus: 1,
+				rustProtected: false,
+			},
+			{ itemId: 3, kind: "food" },
+		]);
+	});
+
+	it("hands out item ids after the starting kit's, never reusing one", () => {
+		const startingIds = state.inventory.map((item) => item.itemId);
+		expect(state.nextItemId).toBeGreaterThan(Math.max(...startingIds));
+		for (const item of state.items) {
+			if ("identity" in item) {
+				expect(startingIds).not.toContain(item.identity.itemId);
+			}
+		}
 	});
 
 	it("stores the post-generation rng state, not the seed's initial state", () => {

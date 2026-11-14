@@ -1,11 +1,13 @@
 /* file-size-exception: GameState/Actionの型定義=ゲームの全語彙を1箇所で読める価値を優先(events.ts/balance.tsと同じ理屈、2026-07-19裁可) */
 import type { RngState } from "../rng.js";
 import type {
+	ArmorKind,
 	EnemyKind,
 	EquipmentItemKind,
 	GameEvent,
 	ItemKind,
 	TrapKind,
+	WeaponKind,
 } from "./events.js";
 
 export type Direction = "north" | "south" | "west" | "east";
@@ -133,7 +135,9 @@ export type Item = Position &
  * Consumables (potions/scrolls/wands/food) carry only their kind. A
  * weapon/armor/ring carries real equip state instead: `cursed` is decided once
  * at floor generation and stays hidden from the player until the item is
- * equipped, so it can be true even while `equipped` is false. `attackBonus`/
+ * equipped, so it can be true even while `equipped` is false. `weaponKind`/
+ * `armorKind` say which of original Rogue's weapons/armors it is (see
+ * items/equipmentKinds.ts). `hitBonus`/`damageBonus`/
  * `defenseBonus`/`rustProtected` are intrinsic to that specific item (raised
  * by enchant scrolls, degraded by rust, negative on a cursed find) and
  * persist whether or not the item is currently worn — swapping equipment
@@ -147,15 +151,21 @@ export type HeldItem =
 	| {
 			readonly itemId: number;
 			readonly kind: "weapon";
+			readonly weaponKind: WeaponKind;
 			readonly equipped: boolean;
 			readonly cursed: boolean;
-			readonly attackBonus: number;
+			/** Added to the to-hit roll — what a found weapon's curse lowers. */
+			readonly hitBonus: number;
+			/** Added to the damage roll. */
+			readonly damageBonus: number;
 	  }
 	| {
 			readonly itemId: number;
 			readonly kind: "armor";
+			readonly armorKind: ArmorKind;
 			readonly equipped: boolean;
 			readonly cursed: boolean;
+			/** This armor's own points better (positive) or worse (negative) than its kind's armor class. */
 			readonly defenseBonus: number;
 			readonly rustProtected: boolean;
 	  }

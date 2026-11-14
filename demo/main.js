@@ -11,12 +11,12 @@ import {
 	buildFrameGrid,
 	buildSaveFileContent,
 	CONFUSION_GLYPH,
-	calculatePlayerAttackDamage,
 	calculatePlayerDefense,
 	DETECT_MONSTER_GLYPH,
 	formatEvent,
 	formatHeldItemLabel,
 	formatInventoryTitle,
+	formatPlayerAttack,
 	GOAL_FLOOR,
 	HALLUCINATION_GLYPH,
 	INVENTORY_EMPTY_MESSAGE,
@@ -219,7 +219,7 @@ const renderStatus = () => {
 					: undefined,
 	);
 	appendStatusSegment(
-		` 💪 ${calculatePlayerAttackDamage(state)} 🦺 ${calculatePlayerDefense(state.inventory)}`,
+		` 💪 ${formatPlayerAttack(state)} 🦺 ${calculatePlayerDefense(state.inventory)}`,
 	);
 	appendStatusSegment(` 💰 ${state.goldCollected}`, "#fd6");
 	for (const chip of STATUS_CHIPS) {

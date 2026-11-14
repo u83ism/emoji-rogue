@@ -13,14 +13,26 @@ const weaponAt = (x: number, y: number): Item => ({
 	x,
 	y,
 	kind: "weapon",
-	identity: { itemId: 1, cursed: false, attackBonus: 1 },
+	identity: {
+		itemId: 1,
+		cursed: false,
+		weaponKind: "long-sword" as const,
+		hitBonus: 1,
+		damageBonus: 1,
+	},
 });
 
 const armorAt = (x: number, y: number): Item => ({
 	x,
 	y,
 	kind: "armor",
-	identity: { itemId: 2, cursed: false, defenseBonus: 1, rustProtected: false },
+	identity: {
+		itemId: 2,
+		cursed: false,
+		armorKind: "ring-mail" as const,
+		defenseBonus: 1,
+		rustProtected: false,
+	},
 });
 
 const foodAt = (x: number, y: number): Item => ({ x, y, kind: "food" });

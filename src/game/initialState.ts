@@ -8,7 +8,7 @@ import {
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildFloorLayout } from "./floor/layout.js";
-import type { GameState, Position, Stairs } from "./state.js";
+import type { GameState, HeldItem, Position, Stairs } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
 /**
@@ -41,6 +41,35 @@ const INITIAL_RUN_STATE = {
 	events: [],
 	status: "playing",
 } as const satisfies Partial<GameState>;
+
+/**
+ * What a real run starts with, as in original Rogue's init_player(): a +1,+1
+ * mace wielded, +1 ring mail worn, and one food ration. (The original's bow
+ * and arrows wait for a throw command.) The arena fixture starts
+ * empty-handed instead — it exists for tests, which build their own
+ * inventories.
+ */
+const STARTING_INVENTORY: readonly HeldItem[] = [
+	{
+		itemId: 1,
+		kind: "weapon",
+		weaponKind: "mace",
+		equipped: true,
+		cursed: false,
+		hitBonus: 1,
+		damageBonus: 1,
+	},
+	{
+		itemId: 2,
+		kind: "armor",
+		armorKind: "ring-mail",
+		equipped: true,
+		cursed: false,
+		defenseBonus: 1,
+		rustProtected: false,
+	},
+	{ itemId: 3, kind: "food" },
+];
 
 /**
  * The bottom-right-most floor tile that is not the player's own — a fixed,
@@ -108,7 +137,7 @@ export const buildArenaGameState = (
 
 /**
  * A digger-generated dungeon (floor 1) with the player at the center of the
- * first room. The RNG state stored in the result is the state *after*
+ * first room, carrying STARTING_INVENTORY. The RNG state stored in the result is the state *after*
  * generation consumed it, so later turns — and later floors — continue the
  * same seeded stream; this is what makes a whole run reproducible from
  * (dimensions, seed) alone. Pure: deterministic in its arguments.
@@ -125,7 +154,7 @@ export const buildDungeonGameState = (
 		rng,
 		1,
 		"down",
-		INITIAL_RUN_STATE.nextItemId,
+		INITIAL_RUN_STATE.nextItemId + STARTING_INVENTORY.length,
 	);
 
 	return deriveExploredState({
@@ -141,6 +170,7 @@ export const buildDungeonGameState = (
 		traps: layout.traps,
 		stairs: layout.stairs,
 		amulet: layout.amulet,
+		inventory: STARTING_INVENTORY,
 		rng: rng.getState(),
 		nextItemId: layout.nextItemId,
 	});

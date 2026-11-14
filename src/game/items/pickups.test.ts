@@ -23,7 +23,15 @@ const buildFullInventory = (): readonly HeldItem[] =>
 	ITEM_KIND_VALUES.slice(0, INVENTORY_CAPACITY).map((kind, index) => {
 		const itemId = index + 1;
 		if (kind === "weapon") {
-			return { itemId, kind, equipped: false, cursed: false, attackBonus: 1 };
+			return {
+				itemId,
+				kind,
+				equipped: false,
+				cursed: false,
+				weaponKind: "long-sword" as const,
+				hitBonus: 1,
+				damageBonus: 1,
+			};
 		}
 		if (kind === "armor") {
 			return {
@@ -31,6 +39,7 @@ const buildFullInventory = (): readonly HeldItem[] =>
 				kind,
 				equipped: false,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			};
@@ -110,7 +119,13 @@ describe("pickups", () => {
 			x: 5,
 			y: 1,
 			kind: "weapon" as const,
-			identity: { itemId: 42, cursed: true, attackBonus: 3 },
+			identity: {
+				itemId: 42,
+				cursed: true,
+				weaponKind: "long-sword" as const,
+				hitBonus: 3,
+				damageBonus: 3,
+			},
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -124,7 +139,9 @@ describe("pickups", () => {
 				kind: "weapon",
 				equipped: false,
 				cursed: true,
-				attackBonus: 3,
+				weaponKind: "long-sword" as const,
+				hitBonus: 3,
+				damageBonus: 3,
 			},
 		]);
 		expect(next.nextItemId).toBe(99);

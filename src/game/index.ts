@@ -11,6 +11,7 @@ export { resolveItemDisplayName } from "../shell/gameNames.js";
 export {
 	formatHeldItemLabel,
 	formatInventoryTitle,
+	formatPlayerAttack,
 	resolveItemVerbPrompt,
 } from "../shell/inventoryLabels.js";
 export {
@@ -53,10 +54,7 @@ export {
 	toSelectedHeldItem,
 	toTargetedUseAction,
 } from "./inventoryKeymap.js";
-export {
-	calculatePlayerAttackDamage,
-	calculatePlayerDefense,
-} from "./items/equipmentStats.js";
+export { calculatePlayerDefense } from "./items/equipmentStats.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,

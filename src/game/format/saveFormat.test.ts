@@ -60,7 +60,18 @@ describe("save file shape guard", () => {
 					},
 				],
 				items: [{ x: "number", y: "number", kind: "string" }],
-				inventory: [],
+				/* the starting kit — describeShape samples the first entry, the wielded mace */
+				inventory: [
+					{
+						itemId: "number",
+						kind: "string",
+						weaponKind: "string",
+						equipped: "boolean",
+						cursed: "boolean",
+						hitBonus: "number",
+						damageBonus: "number",
+					},
+				],
 				nextItemId: "number",
 				identifiedPotionKinds: [],
 				goldPiles: [{ x: "number", y: "number", amount: "number" }],

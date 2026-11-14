@@ -39,8 +39,6 @@ export const HIT_CHANCE_PERCENT_PER_POINT = 5;
 export const UNARMORED_ARMOR_CLASS = 10;
 /** What a bare-handed hit rolls — original Rogue's INIT_STATS damage "1x4". */
 export const UNARMED_DAMAGE_DICE: DamageDice = { count: 1, sides: 4 };
-/** What an equipped weapon rolls — the original long weapon's 3d4, standing in until weapon kinds arrive (milestone 111 stage 2). */
-export const WEAPON_DAMAGE_DICE: DamageDice = { count: 3, sides: 4 };
 
 /**
  * Max items the player can hold at once — one slot per held item (no
@@ -130,9 +128,7 @@ export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
 export const POTION_COUNT_PER_FLOOR = 1;
 export const POTION_HEAL_AMOUNT = 5;
 
-/** An ordinary weapon's own attackBonus (see HeldItem) before the found-cursed/found-enchanted roll below — raised further by enchant-weapon scrolls targeting it. */
-export const WEAPON_ATTACK_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that a weapon spawns. */
+/** Chance (out of 100), independently rolled per floor, that a weapon spawns — which of the five kinds is a weighted draw, see items/equipmentKinds.ts. */
 export const WEAPON_SPAWN_CHANCE_PERCENT = 15;
 /**
  * Original Rogue 5.4's new_thing() roll for a found weapon/armor, decided
@@ -140,21 +136,19 @@ export const WEAPON_SPAWN_CHANCE_PERCENT = 15;
  * item is equipped: a weapon is cursed WEAPON_CURSE_CHANCE_PERCENT of the
  * time, found already enchanted WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT of the
  * time, ordinary otherwise. A cursed one cannot be unequipped until a
- * remove-curse scroll is read AND is worse by
- * FOUND_BONUS_ADJUSTMENT_MIN..MAX points (so its bonus can go negative); a
- * found-enchanted one is better by the same range. Milestone 81 had made
- * the curse lock-only; the numeric side was restored for fidelity
- * (2026-11-12). Rogue's weapon curse lowers to-hit only — here attackBonus
- * drives both to-hit and damage until weapons get separate values.
+ * remove-curse scroll (or an enchant scroll aimed at it) is read AND is
+ * worse by FOUND_BONUS_ADJUSTMENT_MIN..MAX points (so its bonus can go
+ * negative); a found-enchanted one is better by the same range. For a
+ * weapon the points move its hitBonus only, never its damageBonus; for
+ * armor, its defenseBonus. Milestone 81 had made the curse lock-only; the
+ * numeric side was restored for fidelity (2026-11-12).
  */
 export const WEAPON_CURSE_CHANCE_PERCENT = 10;
 export const WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT = 5;
 export const FOUND_BONUS_ADJUSTMENT_MIN = 1;
 export const FOUND_BONUS_ADJUSTMENT_MAX = 3;
 
-/** An ordinary armor's own defenseBonus (see HeldItem) before the found-cursed/found-enchanted roll — raised further by enchant-armor scrolls targeting it. */
-export const ARMOR_DEFENSE_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that armor spawns. */
+/** Chance (out of 100), independently rolled per floor, that armor spawns — which of the eight kinds is a weighted draw, see items/equipmentKinds.ts. */
 export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
 /** Armor's share of the same roll as WEAPON_CURSE_CHANCE_PERCENT — Rogue curses armor twice as often as weapons. */
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
@@ -299,18 +293,18 @@ export const AWARENESS_RING_SPAWN_CHANCE_PERCENT = 8;
 export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
 
 /**
- * Permanent boost to a targeted weapon's own attackBonus per scroll read
- * (see items/scrolls.ts — the player picks which held weapon, equipped or
- * not; no-op with no weapon held). Same magnitude as a freshly found weapon,
- * but the scroll itself is never cursed.
+ * Permanent boost per scroll read to a targeted weapon's hitBonus or
+ * damageBonus — a coin flip picks which, as in original Rogue — also
+ * lifting its curse (see items/equipmentScrolls.ts — the player picks which
+ * held weapon, equipped or not; no-op with no weapon held).
  */
 export const ENCHANT_WEAPON_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
 export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
- * Permanent boost to a targeted armor's own defenseBonus per scroll read —
- * same targeting and never-cursed rules as ENCHANT_WEAPON_BONUS.
+ * Permanent boost to a targeted armor's own defenseBonus per scroll read,
+ * also lifting its curse — same targeting rules as ENCHANT_WEAPON_BONUS.
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */

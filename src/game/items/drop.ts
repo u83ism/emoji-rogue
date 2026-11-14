@@ -1,5 +1,6 @@
 import { buildEventLog } from "../events.js";
 import type { GameState, HeldItem, Item, Position } from "../state.js";
+import { toItemEventPayload } from "./equipmentKinds.js";
 import { removeHeldItem } from "./inventory.js";
 
 /**
@@ -16,8 +17,10 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 				kind: "weapon",
 				identity: {
 					itemId: item.itemId,
+					weaponKind: item.weaponKind,
 					cursed: item.cursed,
-					attackBonus: item.attackBonus,
+					hitBonus: item.hitBonus,
+					damageBonus: item.damageBonus,
 				},
 			};
 		case "armor":
@@ -26,6 +29,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 				kind: "armor",
 				identity: {
 					itemId: item.itemId,
+					armorKind: item.armorKind,
 					cursed: item.cursed,
 					defenseBonus: item.defenseBonus,
 					rustProtected: item.rustProtected,
@@ -79,7 +83,7 @@ export const applyItemDrop = (state: GameState, itemId: number): GameState => {
 			toFloorItem(item, { x: state.player.x, y: state.player.y }),
 		],
 		events: buildEventLog(state.events, [
-			{ type: "item-dropped", payload: { kind: item.kind } },
+			{ type: "item-dropped", payload: toItemEventPayload(item) },
 		]),
 	};
 };

@@ -1,25 +1,50 @@
 import type { Rng } from "../../rng.js";
 import {
 	ARMOR_CURSE_CHANCE_PERCENT,
-	ARMOR_DEFENSE_BONUS,
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
-	WEAPON_ATTACK_BONUS,
 	WEAPON_CURSE_CHANCE_PERCENT,
 	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 } from "../balance.js";
-import { type ItemKind, isEquipmentItemKind } from "../events.js";
+import {
+	ARMOR_KIND_VALUES,
+	type ItemKind,
+	isEquipmentItemKind,
+	WEAPON_KIND_VALUES,
+} from "../events.js";
 import type { HeldItem, Item, Position } from "../state.js";
+import { ARMOR_STATS, WEAPON_STATS } from "./equipmentKinds.js";
 
 /**
- * How a weapon/armor/ring's identity is rolled and how a floor Item becomes a
- * HeldItem — split out of items/pickups.ts (milestone 81 follow-up) once
- * that file grew past the 200-line structure-lint limit. Identity (curse,
- * starting bonus, itemId) is rolled once, at floor generation — see
- * buildFloorItem — never re-rolled afterward; picking one up is just reading
- * that already-decided data off the floor Item (toHeldItem).
+ * How a weapon/armor/ring's identity is rolled and how a floor Item becomes
+ * a HeldItem — split out of items/pickups.ts (milestone 81 follow-up) once
+ * that file grew past the 200-line structure-lint limit. Identity (which
+ * weapon/armor it is, curse, bonus, itemId) is rolled once, at floor
+ * generation — see buildFloorItem — never re-rolled afterward; picking one
+ * up is just reading that already-decided data off the floor Item
+ * (toHeldItem).
  */
+
+/** One kind out of `kinds`, each as likely as its spawnWeight — original Rogue's pick_one() over a weighted table. Consumes `rng` once. */
+const drawWeightedKind = <Kind extends string>(
+	rng: Rng,
+	kinds: readonly Kind[],
+	stats: Readonly<Record<Kind, { readonly spawnWeight: number }>>,
+): Kind => {
+	const totalWeight = kinds.reduce(
+		(sum, kind) => sum + stats[kind].spawnWeight,
+		0,
+	);
+	let remaining = rng.getUniformInt(0, totalWeight - 1);
+	for (const kind of kinds) {
+		remaining -= stats[kind].spawnWeight;
+		if (remaining < 0) {
+			return kind;
+		}
+	}
+	throw new Error("unreachable: the roll is below the total weight");
+};
 
 /**
  * Original Rogue's found-weapon/armor roll (see balance.ts's
@@ -29,34 +54,35 @@ import type { HeldItem, Item, Position } from "../state.js";
  */
 const rollFoundBonus = (
 	rng: Rng,
-	baseBonus: number,
 	curseChancePercent: number,
 	enchantedChancePercent: number,
 ): { readonly cursed: boolean; readonly bonus: number } => {
 	const roll = rng.getUniformInt(0, 99);
 	if (roll >= curseChancePercent + enchantedChancePercent) {
-		return { cursed: false, bonus: baseBonus };
+		return { cursed: false, bonus: 0 };
 	}
 	const adjustment = rng.getUniformInt(
 		FOUND_BONUS_ADJUSTMENT_MIN,
 		FOUND_BONUS_ADJUSTMENT_MAX,
 	);
 	return roll < curseChancePercent
-		? { cursed: true, bonus: baseBonus - adjustment }
-		: { cursed: false, bonus: baseBonus + adjustment };
+		? { cursed: true, bonus: -adjustment }
+		: { cursed: false, bonus: adjustment };
 };
 
 /**
- * The floor Item a weapon/armor/ring spawn becomes: its identity (curse,
- * starting bonus, itemId) rolled here, at generation time, consuming `rng`
- * directly — a live, mutating Rng (see rng.ts), matching floor generation's
- * existing idiom (unlike the RngState-wrapping pattern items/equipment.ts
- * and turnEnd/ use for rolls that happen mid-run). A consumable kind is
- * returned as-is; it has no identity concept and never consumes `rng` here
- * (its itemId is assigned lazily, at pickup — see items/pickups.ts). Rings
- * roll nothing either: as in original Rogue, the aggravate-monster ring is
- * always cursed and the other kinds (none of which carries a numeric value
- * a curse could turn negative) never are.
+ * The floor Item a weapon/armor/ring spawn becomes: its identity rolled
+ * here, at generation time, consuming `rng` directly — a live, mutating Rng
+ * (see rng.ts), matching floor generation's existing idiom (unlike the
+ * RngState-wrapping pattern items/equipment.ts and turnEnd/ use for rolls
+ * that happen mid-run). A weapon or armor first draws which kind it is
+ * (weighted, see items/equipmentKinds.ts), then its found bonus — which for
+ * a weapon moves the to-hit bonus only, as in original Rogue. A consumable
+ * kind is returned as-is; it has no identity concept and never consumes
+ * `rng` here (its itemId is assigned lazily, at pickup — see
+ * items/pickups.ts). Rings roll nothing either: the aggravate-monster ring
+ * is always cursed and the other kinds (none of which carries a numeric
+ * value a curse could turn negative) never are.
  */
 export const buildFloorItem = (
 	kind: ItemKind,
@@ -69,22 +95,32 @@ export const buildFloorItem = (
 	}
 	switch (kind) {
 		case "weapon": {
+			const weaponKind = drawWeightedKind(
+				rng,
+				WEAPON_KIND_VALUES,
+				WEAPON_STATS,
+			);
 			const found = rollFoundBonus(
 				rng,
-				WEAPON_ATTACK_BONUS,
 				WEAPON_CURSE_CHANCE_PERCENT,
 				WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 			);
 			return {
 				...position,
 				kind: "weapon",
-				identity: { itemId, cursed: found.cursed, attackBonus: found.bonus },
+				identity: {
+					itemId,
+					weaponKind,
+					cursed: found.cursed,
+					hitBonus: found.bonus,
+					damageBonus: 0,
+				},
 			};
 		}
 		case "armor": {
+			const armorKind = drawWeightedKind(rng, ARMOR_KIND_VALUES, ARMOR_STATS);
 			const found = rollFoundBonus(
 				rng,
-				ARMOR_DEFENSE_BONUS,
 				ARMOR_CURSE_CHANCE_PERCENT,
 				ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 			);
@@ -93,6 +129,7 @@ export const buildFloorItem = (
 				kind: "armor",
 				identity: {
 					itemId,
+					armorKind,
 					cursed: found.cursed,
 					defenseBonus: found.bonus,
 					rustProtected: false,

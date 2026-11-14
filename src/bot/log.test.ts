@@ -7,7 +7,13 @@ const armorAt = (x: number, y: number): Item => ({
 	x,
 	y,
 	kind: "armor",
-	identity: { itemId: 2, cursed: false, defenseBonus: 1, rustProtected: false },
+	identity: {
+		itemId: 2,
+		cursed: false,
+		armorKind: "ring-mail" as const,
+		defenseBonus: 1,
+		rustProtected: false,
+	},
 });
 
 describe("buildTurnLogEntry", () => {
@@ -22,7 +28,9 @@ describe("buildTurnLogEntry", () => {
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				},
 			],
 			items: [armorAt(1, 1)],

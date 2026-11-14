@@ -45,7 +45,9 @@ describe("applyItemDrop", () => {
 					kind: "weapon" as const,
 					equipped: true,
 					cursed: true,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				},
 			],
 		};
@@ -66,6 +68,7 @@ describe("applyItemDrop", () => {
 					kind: "armor" as const,
 					equipped: true,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: 1,
 					rustProtected: false,
 				},
@@ -81,6 +84,7 @@ describe("applyItemDrop", () => {
 				identity: {
 					itemId: 1,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: 1,
 					rustProtected: false,
 				},
@@ -97,7 +101,9 @@ describe("applyItemDrop", () => {
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				},
 			],
 		};
@@ -114,7 +120,9 @@ describe("applyItemDrop", () => {
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
-					attackBonus: 3,
+					weaponKind: "long-sword" as const,
+					hitBonus: 3,
+					damageBonus: 3,
 				},
 			],
 		};
@@ -124,7 +132,13 @@ describe("applyItemDrop", () => {
 				x: state.player.x,
 				y: state.player.y,
 				kind: "weapon",
-				identity: { itemId: 7, cursed: true, attackBonus: 3 },
+				identity: {
+					itemId: 7,
+					cursed: true,
+					weaponKind: "long-sword" as const,
+					hitBonus: 3,
+					damageBonus: 3,
+				},
 			},
 		]);
 	});

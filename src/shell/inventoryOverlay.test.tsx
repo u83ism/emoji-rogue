@@ -71,7 +71,9 @@ describe("InventoryOverlay", () => {
 			kind: "weapon",
 			equipped: false,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -85,7 +87,7 @@ describe("InventoryOverlay", () => {
 			/>,
 		);
 		const frame = lastFrame() ?? "";
-		expect(frame).toContain("剣");
+		expect(frame).toContain("長剣");
 		expect(frame).toContain("u: 装備する  d: すてる (Escで戻る)");
 		expect(frame).not.toContain("a) ");
 	});
@@ -96,7 +98,9 @@ describe("InventoryOverlay", () => {
 			kind: "weapon",
 			equipped: true,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
@@ -116,7 +120,9 @@ describe("InventoryOverlay", () => {
 			kind: "weapon",
 			equipped: true,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
@@ -127,7 +133,7 @@ describe("InventoryOverlay", () => {
 			/>,
 		);
 		const frame = lastFrame() ?? "";
-		expect(frame).toContain("✅ 剣(攻撃+1)");
+		expect(frame).toContain("✅ 長剣(命中+1・ダメージ+1)");
 	});
 
 	it("shows a filtered target row list, prompt only, while pendingTargetFor is set", () => {
@@ -137,13 +143,16 @@ describe("InventoryOverlay", () => {
 			kind: "weapon",
 			equipped: false,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		const armor: HeldItem = {
 			itemId: 3,
 			kind: "armor",
 			equipped: false,
 			cursed: false,
+			armorKind: "ring-mail" as const,
 			defenseBonus: 1,
 			rustProtected: false,
 		};
@@ -160,8 +169,8 @@ describe("InventoryOverlay", () => {
 		);
 		const frame = lastFrame() ?? "";
 		expect(frame).toContain("対象を選んでください(Escで閉じる)");
-		expect(frame).toContain("a) 剣");
-		expect(frame).not.toContain("鎧");
+		expect(frame).toContain("a) 長剣");
+		expect(frame).not.toContain("リングメイル");
 		expect(frame).not.toContain("持ち物(");
 	});
 });

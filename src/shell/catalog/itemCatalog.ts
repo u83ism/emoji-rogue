@@ -1,6 +1,5 @@
 import {
 	ARMOR_CURSE_CHANCE_PERCENT,
-	ARMOR_DEFENSE_BONUS,
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 	ARMOR_SPAWN_CHANCE_PERCENT,
 	CONFUSE_MONSTER_SCROLL_DURATION,
@@ -28,7 +27,6 @@ import {
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WAND_SPAWN_CHANCE_PERCENT,
 	WAND_STRIKE_DAMAGE,
-	WEAPON_ATTACK_BONUS,
 	WEAPON_CURSE_CHANCE_PERCENT,
 	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 	WEAPON_SPAWN_CHANCE_PERCENT,
@@ -89,7 +87,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `所持中の剣を1つ選んで指定し、その剣の攻撃力を${ENCHANT_WEAPON_BONUS}恒久的に上げる(装備中でなくてもよい)。巻物自体に呪いはない`,
+		effect: `所持中の武器を1つ選んで指定し、その武器の命中補正かダメージ補正のどちらか(半々)を${ENCHANT_WEAPON_BONUS}恒久的に上げ、呪いも解く(装備中でなくてもよい)`,
 	},
 	"enchant-armor": {
 		catalogName: "防具強化の巻物",
@@ -98,7 +96,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `所持中の防具を1つ選んで指定し、その防具の防御力を${ENCHANT_ARMOR_BONUS}恒久的に上げる(装備中でなくてもよい)。巻物自体に呪いはない`,
+		effect: `所持中の防具を1つ選んで指定し、その防具の防御力を${ENCHANT_ARMOR_BONUS}恒久的に上げ、呪いも解く(装備中でなくてもよい)`,
 	},
 	"protect-armor": {
 		catalogName: "防具保護の巻物",
@@ -117,7 +115,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: "装備中で呪われている剣・防具・指輪を全て解呪する(対象選択不要)",
+		effect: "装備中で呪われている武器・防具・指輪を全て解呪する(対象選択不要)",
 	},
 	"striking-wand": {
 		catalogName: "攻撃の杖",
@@ -154,16 +152,16 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		effect: "視界内の最も近い敵を強制的に眠らせる。1回使い切り",
 	},
 	weapon: {
-		catalogName: "剣",
+		catalogName: "武器",
 		category: "装備",
 		spawn: { type: "chance", percent: WEAPON_SPAWN_CHANCE_PERCENT },
-		effect: `装備すると攻撃力が${WEAPON_ATTACK_BONUS}上がる(持ち替えれば戻る個体ごとの値)。${WEAPON_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い(マイナスにもなる)。${WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
+		effect: `5種類のどれか(下の「武器の種類」)。装備すると攻撃のダメージが素手の1d4からその武器のダイスに変わる。個体ごとに命中補正とダメージ補正を持つ。${WEAPON_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い。${WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
 	},
 	armor: {
-		catalogName: "鎧",
+		catalogName: "防具",
 		category: "装備",
 		spawn: { type: "chance", percent: ARMOR_SPAWN_CHANCE_PERCENT },
-		effect: `装備すると防御力が${ARMOR_DEFENSE_BONUS}上がる(持ち替えれば戻る個体ごとの値)。${ARMOR_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い(マイナスにもなる)。${ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており値が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
+		effect: `8種類のどれか(下の「防具の種類」)。装備すると種類ごとの防御力が付き、敵の攻撃が当たりにくくなる(ダメージは減らない)。${ARMOR_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ防御力が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い。${ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており防御力が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
 	},
 	food: {
 		catalogName: "食料",

@@ -1,5 +1,6 @@
 import {
 	type EnemyKind,
+	type EquipmentVariant,
 	type ItemKind,
 	POTION_KINDS,
 	type TrapKind,
@@ -40,8 +41,9 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"heal-potion": "回復薬",
-	weapon: "剣",
-	armor: "鎧",
+	/* The category names — a held or picked-up one is shown by its own kind's name, see EQUIPMENT_NAMES. */
+	weapon: "武器",
+	armor: "防具",
 	food: "食料",
 	poison: "毒薬",
 	"teleport-scroll": "巻物",
@@ -97,6 +99,23 @@ export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
 		"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
 	};
 
+/** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */
+export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
+	mace: "メイス",
+	"long-sword": "長剣",
+	dagger: "短剣",
+	"two-handed-sword": "両手剣",
+	spear: "槍",
+	"leather-armor": "革鎧",
+	"ring-mail": "リングメイル",
+	"studded-leather-armor": "鋲革鎧",
+	"scale-mail": "スケイルメイル",
+	"chain-mail": "チェインメイル",
+	"splint-mail": "スプリントメイル",
+	"banded-mail": "バンデッドメイル",
+	"plate-mail": "プレートメイル",
+};
+
 /** Shown for any potion-family item not yet identified this run. */
 const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
 
@@ -113,11 +132,16 @@ export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
  * The name to show for `kind`: the real name once identified (or for any
  * non-potion kind), the shared generic name otherwise — this is what makes
  * a potion and a poison potion indistinguishable until drunk or identified.
+ * A weapon or armor is named by `variant` (which one it is) when given.
  */
 export const resolveItemDisplayName = (
 	kind: ItemKind,
 	identifiedPotionKinds: readonly ItemKind[],
+	variant?: EquipmentVariant,
 ): string => {
+	if (variant !== undefined) {
+		return EQUIPMENT_NAMES[variant];
+	}
 	if (POTION_KINDS.includes(kind) && !identifiedPotionKinds.includes(kind)) {
 		return UNIDENTIFIED_POTION_NAME;
 	}

@@ -62,7 +62,9 @@ const weaponWith = (attackBonus: number): HeldItem => ({
 	kind: "weapon",
 	equipped: true,
 	cursed: false,
-	attackBonus,
+	weaponKind: "long-sword" as const,
+	hitBonus: attackBonus,
+	damageBonus: attackBonus,
 });
 
 /**

@@ -4,7 +4,7 @@ import type { EnemyKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import {
 	calculatePlayerArmorClass,
-	type WeaponItem,
+	calculatePlayerHitBonus,
 } from "./equipmentStats.js";
 
 /**
@@ -28,20 +28,16 @@ const calculateHitChancePercent = (
 		),
 	);
 
-/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's attackBonus. */
+/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus. */
 export const calculatePlayerHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
-): number => {
-	const equippedWeapon = state.inventory.find(
-		(item): item is WeaponItem => item.kind === "weapon" && item.equipped,
-	);
-	return calculateHitChancePercent(
+): number =>
+	calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
-		equippedWeapon?.attackBonus ?? 0,
+		calculatePlayerHitBonus(state.inventory),
 	);
-};
 
 /** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level against the player's armor class. */
 export const calculateEnemyHitChancePercent = (

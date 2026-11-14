@@ -14,7 +14,7 @@ import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
 import {
-	calculatePlayerAttackDamage,
+	calculatePlayerDamageBonus,
 	calculatePlayerDamageDice,
 } from "./items/equipmentStats.js";
 import { calculatePlayerHitChancePercent } from "./items/hitChance.js";
@@ -102,14 +102,14 @@ const applyEnemyHit = (
 
 /**
  * Rolls the player's damage as original Rogue does: the weapon's dice (bare
- * hands otherwise) plus calculatePlayerAttackDamage (playerPower, the
- * equipped weapon's own attackBonus, the Weak penalty), never below 0.
+ * hands otherwise) plus calculatePlayerDamageBonus (playerPower, the
+ * equipped weapon's own damageBonus, the Weak penalty), never below 0.
  */
 const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
 	rollDamageDice(
 		rng,
 		calculatePlayerDamageDice(state.inventory),
-		calculatePlayerAttackDamage(state),
+		calculatePlayerDamageBonus(state),
 		0,
 	);
 

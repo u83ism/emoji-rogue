@@ -3,8 +3,8 @@ import type { Replay } from "./replay.js";
 import { isRecord } from "./validateGameState.js";
 import { validateReplay } from "./validateReplay.js";
 
-/** Independent of SAVE_FORMAT_VERSION — a replay and a save are different files. 2: ItemKind renames (use-item actions carry the kind). 3: ItemKind rename (shield -> armor). 4: use-item/drop-item address a held item by itemId instead of kind (milestone 81); drop-item validation added (was missing). */
-export const REPLAY_FORMAT_VERSION = 4;
+/** Independent of SAVE_FORMAT_VERSION — a replay and a save are different files. 2: ItemKind renames (use-item actions carry the kind). 3: ItemKind rename (shield -> armor). 4: use-item/drop-item address a held item by itemId instead of kind (milestone 81); drop-item validation added (was missing). 5: the file shape is unchanged, but milestone 111 (original Rogue's combat scale, 26 floors, a starting kit holding itemIds 1-3) makes every older replay play out differently — refused rather than replayed wrong. */
+export const REPLAY_FORMAT_VERSION = 5;
 
 export type ReplayFileError =
 	| { readonly kind: "malformed-json" }

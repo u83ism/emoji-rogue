@@ -1,4 +1,6 @@
 import type { ItemKind } from "../game/events.js";
+import { WEAPON_STATS } from "../game/items/equipmentKinds.js";
+import { calculateArmorClass } from "../game/items/equipmentStats.js";
 import type { GameState, HeldItem } from "../game/state.js";
 
 type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
@@ -40,8 +42,19 @@ const RING_PREFERENCE_ORDER: readonly ItemKind[] = [
 	"stealth-ring",
 ];
 
+/** A weapon's average damage per hit (dice mean + its own damageBonus) plus its hitBonus — a rough single score, good enough to rank a long sword over a dagger. */
+const scoreWeapon = (weapon: WeaponItem): number => {
+	const dice = WEAPON_STATS[weapon.weaponKind].damageDice;
+	return (
+		(dice.count * (dice.sides + 1)) / 2 + weapon.damageBonus + weapon.hitBonus
+	);
+};
+
+/** Higher is better: the negated armor class the armor gives. */
+const scoreArmor = (armor: ArmorItem): number => -calculateArmorClass(armor);
+
 /**
- * The itemId of a weapon worth equipping this turn, if any: the best-attack
+ * The itemId of a weapon worth equipping this turn, if any: the best-scoring
  * held-but-unequipped weapon, only when it beats (or nothing beats) whatever
  * weapon is currently equipped — weapons/armor/rings toggle equip state rather
  * than being consumed (see items/equipment.ts), so blindly re-using an
@@ -58,21 +71,21 @@ export const decideWeaponToEquip = (
 	const equipped = weapons.find((weapon) => weapon.equipped);
 	const bestUnequipped = weapons
 		.filter((weapon) => !weapon.equipped)
-		.sort((left, right) => right.attackBonus - left.attackBonus)
+		.sort((left, right) => scoreWeapon(right) - scoreWeapon(left))
 		.at(0);
 	if (bestUnequipped === undefined) {
 		return undefined;
 	}
 	if (
 		equipped !== undefined &&
-		equipped.attackBonus >= bestUnequipped.attackBonus
+		scoreWeapon(equipped) >= scoreWeapon(bestUnequipped)
 	) {
 		return undefined;
 	}
 	return bestUnequipped.itemId;
 };
 
-/** Same idea as decideWeaponToEquip, for defenseBonus instead of attackBonus. */
+/** Same idea as decideWeaponToEquip, ranking by the armor class each armor gives. */
 export const decideArmorToEquip = (
 	state: GameState,
 	disabledKinds: ReadonlySet<ItemKind>,
@@ -84,14 +97,14 @@ export const decideArmorToEquip = (
 	const equipped = armors.find((armor) => armor.equipped);
 	const bestUnequipped = armors
 		.filter((armor) => !armor.equipped)
-		.sort((left, right) => right.defenseBonus - left.defenseBonus)
+		.sort((left, right) => scoreArmor(right) - scoreArmor(left))
 		.at(0);
 	if (bestUnequipped === undefined) {
 		return undefined;
 	}
 	if (
 		equipped !== undefined &&
-		equipped.defenseBonus >= bestUnequipped.defenseBonus
+		scoreArmor(equipped) >= scoreArmor(bestUnequipped)
 	) {
 		return undefined;
 	}

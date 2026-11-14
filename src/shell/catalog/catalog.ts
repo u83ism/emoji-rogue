@@ -1,4 +1,4 @@
-import { GOAL_FLOOR } from "../../game/balance.js";
+import { GOAL_FLOOR, UNARMORED_ARMOR_CLASS } from "../../game/balance.js";
 import type { DamageDice } from "../../game/damage.js";
 import {
 	ENEMY_HP_DICE_SIDES,
@@ -6,14 +6,18 @@ import {
 } from "../../game/enemies/enemyStats.js";
 import { ENEMY_GLYPHS } from "../../game/enemyGlyphs.js";
 import {
+	ARMOR_KIND_VALUES,
 	ENEMY_KIND_VALUES,
 	ITEM_KIND_VALUES,
 	TRAP_KIND_VALUES,
+	WEAPON_KIND_VALUES,
 } from "../../game/events.js";
 import { calculateEnemyFloorRange } from "../../game/floor/enemies.js";
 import { ITEM_GLYPHS } from "../../game/glyphs.js";
+import { ARMOR_STATS, WEAPON_STATS } from "../../game/items/equipmentKinds.js";
 import {
 	ENEMY_NAMES,
+	EQUIPMENT_NAMES,
 	resolveItemDisplayName,
 	TRAP_NAMES,
 } from "../gameNames.js";
@@ -98,6 +102,46 @@ const buildItemSection = (): string => {
 	].join("\n");
 };
 
+/** "出現比" as a percentage of the kinds' combined spawn weight. */
+const formatSpawnShare = (weight: number, totalWeight: number): string =>
+	`${Math.round((weight * 100) / totalWeight)}%`;
+
+const buildEquipmentSection = (): string => {
+	const weaponWeight = WEAPON_KIND_VALUES.reduce(
+		(sum, kind) => sum + WEAPON_STATS[kind].spawnWeight,
+		0,
+	);
+	const armorWeight = ARMOR_KIND_VALUES.reduce(
+		(sum, kind) => sum + ARMOR_STATS[kind].spawnWeight,
+		0,
+	);
+	const weaponRows = WEAPON_KIND_VALUES.map((kind) => {
+		const { damageDice, spawnWeight } = WEAPON_STATS[kind];
+		return `| ${EQUIPMENT_NAMES[kind]} | ${damageDice.count}d${damageDice.sides} | ${formatSpawnShare(spawnWeight, weaponWeight)} |`;
+	});
+	const armorRows = ARMOR_KIND_VALUES.map((kind) => {
+		const { armorClass, spawnWeight } = ARMOR_STATS[kind];
+		return `| ${EQUIPMENT_NAMES[kind]} | ${UNARMORED_ARMOR_CLASS - armorClass} | ${armorClass} | ${formatSpawnShare(spawnWeight, armorWeight)} |`;
+	});
+	return [
+		"## 武器の種類",
+		"",
+		"原作Rogue 5.4の近接武器5種。ダメージはその武器で殴ったときのダイス(素手は1d4)。「出現比」は拾った武器がその種類である割合。冒険は命中+1・ダメージ+1のメイスを装備して始まる。",
+		"",
+		"| 名前 | ダメージ | 出現比 |",
+		"|---|---|---|",
+		...weaponRows,
+		"",
+		"## 防具の種類",
+		"",
+		`原作Rogue 5.4の防具8種。防御力は「${UNARMORED_ARMOR_CLASS}−AC」で、1点ごとに敵の命中率が5ポイント下がる。革鎧だけは錆びない。冒険は防御力+1のリングメイルを装備して始まる。`,
+		"",
+		"| 名前 | 防御力 | AC | 出現比 |",
+		"|---|---|---|---|",
+		...armorRows,
+	].join("\n");
+};
+
 const buildTrapSection = (): string => {
 	const rows = TRAP_KIND_VALUES.map((kind) => {
 		const entry = TRAP_CATALOG[kind];
@@ -124,6 +168,8 @@ export const buildCatalogMarkdown = (): string =>
 		buildEnemySection(),
 		"",
 		buildItemSection(),
+		"",
+		buildEquipmentSection(),
 		"",
 		buildTrapSection(),
 		"",

@@ -25,9 +25,11 @@ describe("formatHeldItemLabel", () => {
 			kind: "weapon",
 			equipped: false,
 			cursed: true,
-			attackBonus: 3,
+			weaponKind: "long-sword" as const,
+			hitBonus: 3,
+			damageBonus: 3,
 		};
-		expect(formatHeldItemLabel(weapon, [])).toBe("剣");
+		expect(formatHeldItemLabel(weapon, [])).toBe("長剣");
 	});
 
 	it("prefixes the equipped glyph and shows the bonus for an equipped, uncursed weapon", () => {
@@ -36,9 +38,11 @@ describe("formatHeldItemLabel", () => {
 			kind: "weapon",
 			equipped: true,
 			cursed: false,
-			attackBonus: 2,
+			weaponKind: "long-sword" as const,
+			hitBonus: 2,
+			damageBonus: 2,
 		};
-		expect(formatHeldItemLabel(weapon, [])).toBe("✅ 剣(攻撃+2)");
+		expect(formatHeldItemLabel(weapon, [])).toBe("✅ 長剣(命中+2・ダメージ+2)");
 	});
 
 	it("prefixes the equipped glyph and shows the bonus for an equipped armor", () => {
@@ -47,13 +51,22 @@ describe("formatHeldItemLabel", () => {
 			kind: "armor",
 			equipped: true,
 			cursed: false,
+			armorKind: "ring-mail" as const,
 			defenseBonus: 1,
 			rustProtected: false,
 		};
-		expect(formatHeldItemLabel(armor, [])).toBe("✅ 鎧(防御+1)");
+		expect(formatHeldItemLabel(armor, [])).toBe("✅ リングメイル(防御4)");
 		expect(
-			formatHeldItemLabel({ ...armor, cursed: true, defenseBonus: -2 }, []),
-		).toBe("✅ 鎧(防御-2・呪い)");
+			formatHeldItemLabel(
+				{
+					...armor,
+					cursed: true,
+					armorKind: "ring-mail" as const,
+					defenseBonus: -2,
+				},
+				[],
+			),
+		).toBe("✅ リングメイル(防御1・呪い)");
 	});
 
 	it("adds a curse tag (and no bonus tag) for an equipped, cursed ring", () => {
@@ -81,7 +94,9 @@ describe("resolveItemVerbPrompt", () => {
 			kind: "weapon",
 			equipped: false,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		expect(resolveItemVerbPrompt(weapon)).toBe(
 			"u: 装備する  d: すてる (Escで戻る)",
@@ -94,7 +109,9 @@ describe("resolveItemVerbPrompt", () => {
 			kind: "weapon",
 			equipped: true,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		expect(resolveItemVerbPrompt(weapon)).toBe(
 			"u: はずす  d: すてる (Escで戻る)",

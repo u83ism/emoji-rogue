@@ -1,6 +1,8 @@
+import { UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import {
 	ENEMY_NAMES,
+	EQUIPMENT_NAMES,
 	ITEM_NAMES,
 	RING_EQUIPPED_EFFECT,
 	resolveItemDisplayName,
@@ -53,17 +55,17 @@ export const formatEvent = (
 				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 		case "item-picked-up":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を拾った`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を拾った`;
 		case "inventory-full":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を持てなかった。持ち物がいっぱいだ`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を持てなかった。持ち物がいっぱいだ`;
 		case "item-dropped":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を足元に置いた`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を足元に置いた`;
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を装備した。攻撃力${formatSignedBonus(event.payload.bonus)}`;
+			return `${EQUIPMENT_NAMES[event.payload.weaponKind]}を装備した。命中${formatSignedBonus(event.payload.hitBonus)}・ダメージ${formatSignedBonus(event.payload.damageBonus)}`;
 		case "armor-equipped":
-			return `${ITEM_NAMES[event.payload.kind]}を装備した。防御力${formatSignedBonus(event.payload.bonus)}`;
+			return `${EQUIPMENT_NAMES[event.payload.armorKind]}を装備した。防御力${UNARMORED_ARMOR_CLASS - event.payload.armorClass}`;
 		case "item-unequipped":
 			return `${ITEM_NAMES[event.payload.kind]}を外した`;
 		case "equip-blocked-cursed":
@@ -101,14 +103,14 @@ export const formatEvent = (
 			 * and kinds not held looked like vanished items). */
 			return `${ITEM_NAMES[event.payload.kind]}がどれか判明した。以後この種類は実名で表示される`;
 		case "player-strengthened":
-			return `${ITEM_NAMES.strength}を飲んだ。攻撃力が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES.strength}を飲んだ。ダメージが${event.payload.bonus}上がった!`;
 		case "gold-stolen":
 			return event.payload.amount > 0
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 		case "item-stolen":
 			return event.payload.kind !== undefined
-				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds)}を盗まれた!`
+				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を盗まれた!`
 				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
 		case "ring-equipped": {
 			const effect = RING_EQUIPPED_EFFECT[event.payload.kind];
@@ -122,7 +124,7 @@ export const formatEvent = (
 		case "player-regenerated":
 			return `指輪の力でHPが${event.payload.amount}回復した`;
 		case "weapon-enchanted":
-			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した剣の攻撃力が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":
 			return `${ITEM_NAMES["enchant-armor"]}を読んだ。指定した防具の防御力が${event.payload.bonus}上がった!`;
 		case "armor-rusted":

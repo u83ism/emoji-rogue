@@ -1,3 +1,4 @@
+import { stepUniform } from "../../rng.js";
 import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
 import { buildEventLog } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
@@ -13,9 +14,11 @@ type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 
 /**
- * Raises a targeted held weapon's own attackBonus — equipped or not (see
- * HeldItem). No-op (same reference, not consumed) with no matching weapon
- * held, same convention as an identify scroll with nothing left to identify.
+ * Enchants a targeted held weapon — equipped or not (see HeldItem) — as
+ * original Rogue's scroll does: a coin flip (consuming state.rng once)
+ * raises either its hitBonus or its damageBonus, and its curse is lifted.
+ * No-op (same reference, not consumed) with no matching weapon held, same
+ * convention as an identify scroll with nothing left to identify.
  */
 export const applyUseEnchantWeaponScroll = (
 	state: GameState,
@@ -28,20 +31,28 @@ export const applyUseEnchantWeaponScroll = (
 	if (target === undefined) {
 		return state;
 	}
-	const attackBonus = target.attackBonus + ENCHANT_WEAPON_BONUS;
+	const coinFlip = stepUniform(state.rng);
+	const stat = coinFlip.value < 0.5 ? "hit" : "damage";
 	return {
 		...state,
+		rng: coinFlip.state,
 		inventory: replaceHeldItem(state.inventory, target.itemId, {
 			...target,
-			attackBonus,
+			cursed: false,
+			hitBonus: target.hitBonus + (stat === "hit" ? ENCHANT_WEAPON_BONUS : 0),
+			damageBonus:
+				target.damageBonus + (stat === "damage" ? ENCHANT_WEAPON_BONUS : 0),
 		}),
 		events: buildEventLog(state.events, [
-			{ type: "weapon-enchanted", payload: { bonus: ENCHANT_WEAPON_BONUS } },
+			{
+				type: "weapon-enchanted",
+				payload: { stat, bonus: ENCHANT_WEAPON_BONUS },
+			},
 		]),
 	};
 };
 
-/** Raises a targeted held armor's own defenseBonus — same targeting/no-op rules as applyUseEnchantWeaponScroll. */
+/** Raises a targeted held armor's own defenseBonus and lifts its curse — same targeting/no-op rules as applyUseEnchantWeaponScroll. */
 export const applyUseEnchantArmorScroll = (
 	state: GameState,
 	targetItemId: number | undefined,
@@ -58,6 +69,7 @@ export const applyUseEnchantArmorScroll = (
 		...state,
 		inventory: replaceHeldItem(state.inventory, target.itemId, {
 			...target,
+			cursed: false,
 			defenseBonus,
 		}),
 		events: buildEventLog(state.events, [

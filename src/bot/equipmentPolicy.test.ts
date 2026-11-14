@@ -18,7 +18,9 @@ const weapon = (
 	kind: "weapon",
 	equipped,
 	cursed: false,
-	attackBonus,
+	weaponKind: "long-sword" as const,
+	hitBonus: attackBonus,
+	damageBonus: attackBonus,
 });
 
 const armor = (
@@ -30,6 +32,7 @@ const armor = (
 	kind: "armor",
 	equipped,
 	cursed: false,
+	armorKind: "ring-mail" as const,
 	defenseBonus,
 	rustProtected: false,
 });

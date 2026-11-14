@@ -1,8 +1,13 @@
-import { INVENTORY_CAPACITY } from "../game/balance.js";
+import { INVENTORY_CAPACITY, UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { ItemKind } from "../game/events.js";
 import { EQUIPPED_GLYPH } from "../game/glyphs.js";
-import type { HeldItem } from "../game/state.js";
-import { resolveItemDisplayName } from "./gameNames.js";
+import {
+	calculateArmorClass,
+	calculatePlayerDamageBonus,
+	calculatePlayerDamageDice,
+} from "../game/items/equipmentStats.js";
+import type { GameState, HeldItem } from "../game/state.js";
+import { EQUIPMENT_NAMES, resolveItemDisplayName } from "./gameNames.js";
 import { INVENTORY_TITLE } from "./systemMessages.js";
 
 // Inventory-row display wording, split out of messages.ts (which stays
@@ -17,25 +22,38 @@ export const formatInventoryTitle = (heldCount: number): string =>
 export const formatSignedBonus = (bonus: number): string =>
 	bonus < 0 ? `${bonus}` : `+${bonus}`;
 
+/** What the player's hits roll right now, in dice notation with the flat bonus appended ("2d4+2", "1d4+1", "3d4-1") — the status bar's attack readout. */
+export const formatPlayerAttack = (state: GameState): string => {
+	const dice = calculatePlayerDamageDice(state.inventory);
+	const bonus = calculatePlayerDamageBonus(state);
+	return `${dice.count}d${dice.sides}${bonus === 0 ? "" : formatSignedBonus(bonus)}`;
+};
+
 /**
- * The inventory row label for a held item: its display name, plus — only
- * once equipped, since that is the moment curse and bonus are revealed (see
- * HeldItem's doc comment) — an EQUIPPED_GLYPH prefix and a parenthetical of
- * its own bonus and curse status.
+ * The inventory row label for a held item: its display name (a weapon or
+ * armor by which one it is), plus — only once equipped, since that is the
+ * moment curse and bonus are revealed (see HeldItem's doc comment) — an
+ * EQUIPPED_GLYPH prefix and a parenthetical of its own bonus and curse
+ * status.
  */
 export const formatHeldItemLabel = (
 	item: HeldItem,
 	identifiedPotionKinds: readonly ItemKind[],
 ): string => {
-	const name = resolveItemDisplayName(item.kind, identifiedPotionKinds);
+	const name =
+		item.kind === "weapon"
+			? EQUIPMENT_NAMES[item.weaponKind]
+			: item.kind === "armor"
+				? EQUIPMENT_NAMES[item.armorKind]
+				: resolveItemDisplayName(item.kind, identifiedPotionKinds);
 	if (!("equipped" in item) || !item.equipped) {
 		return name;
 	}
 	const bonus =
 		item.kind === "weapon"
-			? `攻撃${formatSignedBonus(item.attackBonus)}`
+			? `命中${formatSignedBonus(item.hitBonus)}・ダメージ${formatSignedBonus(item.damageBonus)}`
 			: item.kind === "armor"
-				? `防御${formatSignedBonus(item.defenseBonus)}`
+				? `防御${UNARMORED_ARMOR_CLASS - calculateArmorClass(item)}`
 				: undefined;
 	const tags = [bonus, item.cursed ? "呪い" : undefined].filter(
 		(tag): tag is string => tag !== undefined,

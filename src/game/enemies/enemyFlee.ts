@@ -7,6 +7,7 @@ import {
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
 import type { GameEvent } from "../events.js";
+import { toItemEventPayload } from "../items/equipmentKinds.js";
 import { removeHeldItemAtIndex } from "../items/inventory.js";
 import type { HeldItem } from "../state.js";
 
@@ -101,6 +102,6 @@ export const resolveFleeingTheft = (
 		rng: pick.state,
 		goldCollected,
 		inventory: removeHeldItemAtIndex(inventory, picked.itemIndex),
-		event: { type: "item-stolen", payload: { kind: picked.item.kind } },
+		event: { type: "item-stolen", payload: toItemEventPayload(picked.item) },
 	};
 };

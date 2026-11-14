@@ -1,12 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "../../rng.js";
 import {
-	ARMOR_DEFENSE_BONUS,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
-	WEAPON_ATTACK_BONUS,
 } from "../balance.js";
+import { ARMOR_KIND_VALUES, WEAPON_KIND_VALUES } from "../events.js";
 import { buildFloorItem, toHeldItem } from "./heldItemFactory.js";
+
+const rollWeaponIdentities = (count: number) => {
+	const rng = createRng(1);
+	return Array.from({ length: count }, () => {
+		const item = buildFloorItem("weapon", 1, { x: 0, y: 0 }, rng);
+		if (item.kind !== "weapon") {
+			throw new Error("unreachable: requested a weapon");
+		}
+		return item.identity;
+	});
+};
+
+const rollArmorIdentities = (count: number) => {
+	const rng = createRng(1);
+	return Array.from({ length: count }, () => {
+		const item = buildFloorItem("armor", 1, { x: 0, y: 0 }, rng);
+		if (item.kind !== "armor") {
+			throw new Error("unreachable: requested armor");
+		}
+		return item.identity;
+	});
+};
 
 describe("buildFloorItem", () => {
 	it("gives a consumable just its position and kind, no identity, never touching rng", () => {
@@ -22,67 +43,77 @@ describe("buildFloorItem", () => {
 		expect(item.identity.itemId).toBe(5);
 	});
 
-	it("rolls weapons like original Rogue: cursed ones are 1-3 points worse, found-enchanted ones 1-3 better, the rest ordinary", () => {
-		const rng = createRng(1);
-		const identities = Array.from({ length: 2000 }, () => {
-			const item = buildFloorItem("weapon", 1, { x: 0, y: 0 }, rng);
-			if (item.kind !== "weapon") {
-				throw new Error("unreachable: requested a weapon");
-			}
-			return item.identity;
-		});
+	it("draws every weapon kind, the heavier-weighted spear more often than the dagger", () => {
+		const identities = rollWeaponIdentities(2000);
+		const countOf = (weaponKind: string): number =>
+			identities.filter((identity) => identity.weaponKind === weaponKind)
+				.length;
+		for (const weaponKind of WEAPON_KIND_VALUES) {
+			expect(countOf(weaponKind)).toBeGreaterThan(0);
+		}
+		/* spawn weights 12 vs 8 */
+		expect(countOf("spear")).toBeGreaterThan(countOf("dagger"));
+	});
+
+	it("rolls weapons like original Rogue: a curse lowers the to-hit bonus by 1-3, a found enchantment raises it by 1-3, and the damage bonus is never touched", () => {
+		const identities = rollWeaponIdentities(2000);
 		const cursed = identities.filter((identity) => identity.cursed);
-		const uncursed = identities.filter((identity) => !identity.cursed);
-		const enchanted = uncursed.filter(
-			(identity) => identity.attackBonus > WEAPON_ATTACK_BONUS,
-		);
+		const enchanted = identities.filter((identity) => identity.hitBonus > 0);
+		for (const identity of identities) {
+			expect(identity.damageBonus).toBe(0);
+		}
 		for (const identity of cursed) {
-			expect(identity.attackBonus).toBeGreaterThanOrEqual(
-				WEAPON_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MAX,
+			expect(identity.hitBonus).toBeGreaterThanOrEqual(
+				-FOUND_BONUS_ADJUSTMENT_MAX,
 			);
-			expect(identity.attackBonus).toBeLessThanOrEqual(
-				WEAPON_ATTACK_BONUS - FOUND_BONUS_ADJUSTMENT_MIN,
+			expect(identity.hitBonus).toBeLessThanOrEqual(
+				-FOUND_BONUS_ADJUSTMENT_MIN,
 			);
 		}
-		for (const identity of uncursed) {
-			expect(identity.attackBonus).toBeGreaterThanOrEqual(WEAPON_ATTACK_BONUS);
-			expect(identity.attackBonus).toBeLessThanOrEqual(
-				WEAPON_ATTACK_BONUS + FOUND_BONUS_ADJUSTMENT_MAX,
-			);
+		for (const identity of enchanted) {
+			expect(identity.cursed).toBe(false);
+			expect(identity.hitBonus).toBeLessThanOrEqual(FOUND_BONUS_ADJUSTMENT_MAX);
 		}
 		/* 10% cursed / 5% found enchanted, with generous sampling slack */
 		expect(cursed.length).toBeGreaterThan(140);
 		expect(cursed.length).toBeLessThan(260);
 		expect(enchanted.length).toBeGreaterThan(60);
 		expect(enchanted.length).toBeLessThan(140);
-		/* every step of the range actually occurs — the bonus can go negative */
-		expect(new Set(cursed.map((identity) => identity.attackBonus))).toEqual(
-			new Set([0, -1, -2]),
+		/* every step of the range actually occurs */
+		expect(new Set(cursed.map((identity) => identity.hitBonus))).toEqual(
+			new Set([-1, -2, -3]),
 		);
 	});
 
-	it("rolls armor the same way at its own rates (20% cursed / 8% found enchanted)", () => {
-		const rng = createRng(1);
-		const identities = Array.from({ length: 2000 }, () => {
-			const item = buildFloorItem("armor", 1, { x: 0, y: 0 }, rng);
-			if (item.kind !== "armor") {
-				throw new Error("unreachable: requested armor");
-			}
-			return item.identity;
-		});
+	it("draws every armor kind, leather the most often and plate mail the least", () => {
+		const identities = rollArmorIdentities(2000);
+		const countOf = (armorKind: string): number =>
+			identities.filter((identity) => identity.armorKind === armorKind).length;
+		for (const armorKind of ARMOR_KIND_VALUES) {
+			expect(countOf(armorKind)).toBeGreaterThan(0);
+		}
+		/* spawn weights 20 vs 5 */
+		expect(countOf("leather-armor")).toBeGreaterThan(countOf("plate-mail"));
+	});
+
+	it("rolls armor the same way at its own rates (20% cursed / 8% found enchanted), on its defenseBonus", () => {
+		const identities = rollArmorIdentities(2000);
 		const cursed = identities.filter((identity) => identity.cursed);
 		const enchanted = identities.filter(
-			(identity) => identity.defenseBonus > ARMOR_DEFENSE_BONUS,
+			(identity) => identity.defenseBonus > 0,
 		);
 		expect(cursed.length).toBeGreaterThan(320);
 		expect(cursed.length).toBeLessThan(480);
 		expect(enchanted.length).toBeGreaterThan(110);
 		expect(enchanted.length).toBeLessThan(210);
 		for (const identity of cursed) {
-			expect(identity.defenseBonus).toBeLessThan(ARMOR_DEFENSE_BONUS);
+			expect(identity.defenseBonus).toBeLessThan(0);
 		}
 		for (const identity of enchanted) {
 			expect(identity.cursed).toBe(false);
+		}
+		for (const identity of identities) {
+			expect(identity.rustProtected).toBe(false);
 		}
 	});
 
@@ -130,14 +161,22 @@ describe("toHeldItem", () => {
 			x: 0,
 			y: 0,
 			kind: "weapon" as const,
-			identity: { itemId: 7, cursed: true, attackBonus: 3 },
+			identity: {
+				itemId: 7,
+				cursed: true,
+				weaponKind: "long-sword" as const,
+				hitBonus: 3,
+				damageBonus: 3,
+			},
 		};
 		expect(toHeldItem(item, 999)).toEqual({
 			itemId: 7,
 			kind: "weapon",
 			equipped: false,
 			cursed: true,
-			attackBonus: 3,
+			weaponKind: "long-sword" as const,
+			hitBonus: 3,
+			damageBonus: 3,
 		});
 	});
 

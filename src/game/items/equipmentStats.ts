@@ -3,10 +3,10 @@ import {
 	UNARMED_DAMAGE_DICE,
 	UNARMORED_ARMOR_CLASS,
 	WEAK_ATTACK_PENALTY,
-	WEAPON_DAMAGE_DICE,
 } from "../balance.js";
 import type { DamageDice } from "../damage.js";
 import type { GameState, HeldItem } from "../state.js";
+import { ARMOR_STATS, WEAPON_STATS } from "./equipmentKinds.js";
 
 // What the player's worn items add up to in combat — pure derivations from
 // the inventory, split out of equipment.ts (which keeps the equip/unequip
@@ -23,45 +23,60 @@ export const findEquippedArmor = (
 		(item): item is ArmorItem => item.kind === "armor" && item.equipped,
 	);
 
-const findEquippedWeapon = (
+export const findEquippedWeapon = (
 	inventory: readonly HeldItem[],
 ): WeaponItem | undefined =>
 	inventory.find(
 		(item): item is WeaponItem => item.kind === "weapon" && item.equipped,
 	);
 
-/** The dice a player hit rolls: the equipped weapon's, or bare hands. */
+/** The dice a player hit rolls: the equipped weapon's own kind's, or bare hands. */
 export const calculatePlayerDamageDice = (
 	inventory: readonly HeldItem[],
-): DamageDice =>
-	findEquippedWeapon(inventory) === undefined
+): DamageDice => {
+	const equippedWeapon = findEquippedWeapon(inventory);
+	return equippedWeapon === undefined
 		? UNARMED_DAMAGE_DICE
-		: WEAPON_DAMAGE_DICE;
+		: WEAPON_STATS[equippedWeapon.weaponKind].damageDice;
+};
 
 /**
  * The flat amount every player hit adds on top of its dice: playerPower
- * plus the equipped weapon's own attackBonus (0 unarmed), reduced by
+ * plus the equipped weapon's own damageBonus (0 unarmed), reduced by
  * WEAK_ATTACK_PENALTY while playerFood <= PLAYER_WEAK_THRESHOLD — original
  * Rogue's Hungry→Weak→Faint progression, see balance.ts. Derived straight
  * from playerFood rather than a separate flag, so the penalty lifts the
  * instant food rises back above the threshold (eating a ration). Can be
- * zero or negative (a cursed weapon); the roll itself is floored at 0 in
- * combat.ts.
+ * zero or negative; the roll itself is floored at 0 in combat.ts.
  */
-export const calculatePlayerAttackDamage = (state: GameState): number => {
+export const calculatePlayerDamageBonus = (state: GameState): number => {
 	const baseDamage =
-		state.playerPower + (findEquippedWeapon(state.inventory)?.attackBonus ?? 0);
+		state.playerPower + (findEquippedWeapon(state.inventory)?.damageBonus ?? 0);
 	return state.playerFood > PLAYER_WEAK_THRESHOLD
 		? baseDamage
 		: baseDamage - WEAK_ATTACK_PENALTY;
 };
 
-/** The player's actual defense: the equipped armor's own defenseBonus (negative for a cursed armor — worse than wearing nothing), or 0 with nothing worn. */
-export const calculatePlayerDefense = (
+/** The to-hit bonus of the equipped weapon — what a found weapon's curse lowers and its enchantment raises. 0 unarmed. */
+export const calculatePlayerHitBonus = (
 	inventory: readonly HeldItem[],
-): number => findEquippedArmor(inventory)?.defenseBonus ?? 0;
+): number => findEquippedWeapon(inventory)?.hitBonus ?? 0;
 
-/** The player's armor class — UNARMORED_ARMOR_CLASS lowered by every point of defense. Lower is harder to hit (see items/hitChance.ts). */
+/** One armor's own armor class: its kind's, lowered by its defenseBonus (raised by a cursed one's negative bonus or by rust). */
+export const calculateArmorClass = (armor: ArmorItem): number =>
+	ARMOR_STATS[armor.armorKind].armorClass - armor.defenseBonus;
+
+/** The player's armor class — the equipped armor's, or UNARMORED_ARMOR_CLASS with nothing worn. Lower is harder to hit (see items/hitChance.ts). */
 export const calculatePlayerArmorClass = (
 	inventory: readonly HeldItem[],
-): number => UNARMORED_ARMOR_CLASS - calculatePlayerDefense(inventory);
+): number => {
+	const equippedArmor = findEquippedArmor(inventory);
+	return equippedArmor === undefined
+		? UNARMORED_ARMOR_CLASS
+		: calculateArmorClass(equippedArmor);
+};
+
+/** The player's defense as shown to the player: how far the armor class sits below UNARMORED_ARMOR_CLASS (0 with nothing worn, negative for armor cursed past useless). */
+export const calculatePlayerDefense = (
+	inventory: readonly HeldItem[],
+): number => UNARMORED_ARMOR_CLASS - calculatePlayerArmorClass(inventory);

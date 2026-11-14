@@ -1,7 +1,12 @@
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import {
+	RUST_ARMOR_CLASS_LIMIT,
+	RUSTPROOF_ARMOR_KIND,
+} from "./equipmentKinds.js";
+import {
 	type ArmorItem,
+	calculateArmorClass,
 	findEquippedArmor,
 	type WeaponItem,
 } from "./equipmentStats.js";
@@ -14,28 +19,34 @@ export type { EquippableItem };
 const isEquippableItem = (item: HeldItem): item is EquippableItem =>
 	"equipped" in item;
 
-/** Whether an aquator's rust attack should even attempt a roll — only meaningful with an equipped, unprotected armor to degrade. */
+/**
+ * Whether rust (an aquator's hit, a rust trap) has anything to degrade —
+ * original Rogue's rust_armor(): an equipped armor that is not leather, not
+ * rust-protected, and not already rusted down to RUST_ARMOR_CLASS_LIMIT.
+ */
 export const canRustEquippedArmor = (
 	inventory: readonly HeldItem[],
 ): boolean => {
 	const equippedArmor = findEquippedArmor(inventory);
-	return equippedArmor !== undefined && !equippedArmor.rustProtected;
+	return (
+		equippedArmor !== undefined &&
+		!equippedArmor.rustProtected &&
+		equippedArmor.armorKind !== RUSTPROOF_ARMOR_KIND &&
+		calculateArmorClass(equippedArmor) < RUST_ARMOR_CLASS_LIMIT
+	);
 };
 
-/** Reduces the equipped armor's defenseBonus by 1, never below 0 — a no-op if none is equipped or it is already at/below 0 (rust never raises a cursed armor's negative bonus to 0). */
+/** Worsens the equipped armor by one point (defenseBonus - 1) — a no-op unless canRustEquippedArmor. */
 export const applyArmorRust = (
 	inventory: readonly HeldItem[],
 ): readonly HeldItem[] => {
 	const equippedArmor = findEquippedArmor(inventory);
-	if (equippedArmor === undefined) {
+	if (equippedArmor === undefined || !canRustEquippedArmor(inventory)) {
 		return inventory;
 	}
 	return replaceHeldItem(inventory, equippedArmor.itemId, {
 		...equippedArmor,
-		defenseBonus:
-			equippedArmor.defenseBonus <= 0
-				? equippedArmor.defenseBonus
-				: equippedArmor.defenseBonus - 1,
+		defenseBonus: equippedArmor.defenseBonus - 1,
 	});
 };
 
@@ -103,7 +114,11 @@ export const applyToggleWeaponEquip = (
 	const events: GameEvent[] = [
 		{
 			type: "weapon-equipped",
-			payload: { kind: "weapon", bonus: item.attackBonus },
+			payload: {
+				weaponKind: item.weaponKind,
+				hitBonus: item.hitBonus,
+				damageBonus: item.damageBonus,
+			},
 		},
 	];
 	if (item.cursed) {
@@ -113,8 +128,8 @@ export const applyToggleWeaponEquip = (
 };
 
 /**
- * Toggles a held armor's equip state — same shape as applyToggleWeaponEquip,
- * for the defenseBonus/rustProtected fields instead.
+ * Toggles a held armor's equip state — same shape as applyToggleWeaponEquip.
+ * The event carries the armor class the player now has from it.
  */
 export const applyToggleArmorEquip = (
 	state: GameState,
@@ -148,7 +163,10 @@ export const applyToggleArmorEquip = (
 	const events: GameEvent[] = [
 		{
 			type: "armor-equipped",
-			payload: { kind: "armor", bonus: item.defenseBonus },
+			payload: {
+				armorKind: item.armorKind,
+				armorClass: calculateArmorClass(item),
+			},
 		},
 	];
 	if (item.cursed) {

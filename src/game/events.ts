@@ -96,6 +96,40 @@ export const isEquipmentItemKind = (
 	kind: ItemKind,
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
+/** The five melee weapons of original Rogue 5.4 — which one a held/floor "weapon" item is. Stats live in items/equipmentKinds.ts. */
+export const WEAPON_KIND_VALUES = [
+	"mace",
+	"long-sword",
+	"dagger",
+	"two-handed-sword",
+	"spear",
+] as const;
+
+export type WeaponKind = (typeof WEAPON_KIND_VALUES)[number];
+
+/** The eight armors of original Rogue 5.4 — which one a held/floor "armor" item is. Stats live in items/equipmentKinds.ts. */
+export const ARMOR_KIND_VALUES = [
+	"leather-armor",
+	"ring-mail",
+	"studded-leather-armor",
+	"scale-mail",
+	"chain-mail",
+	"splint-mail",
+	"banded-mail",
+	"plate-mail",
+] as const;
+
+export type ArmorKind = (typeof ARMOR_KIND_VALUES)[number];
+
+/** Which weapon or armor an event's "weapon"/"armor" item is — absent for every other ItemKind. */
+export type EquipmentVariant = WeaponKind | ArmorKind;
+
+/** How an event names one item: see items/equipmentKinds.ts's toItemEventPayload. */
+interface ItemEventPayload {
+	readonly kind: ItemKind;
+	readonly variant?: EquipmentVariant;
+}
+
 const POTION_KIND_VALUES = [
 	"heal-potion",
 	"poison",
@@ -182,17 +216,17 @@ export type GameEvent =
 	  }
 	| {
 			readonly type: "item-picked-up";
-			readonly payload: { readonly kind: ItemKind };
+			readonly payload: ItemEventPayload;
 	  }
 	| {
 			/** Stepping onto a new kind while at INVENTORY_CAPACITY — the item stays on the floor. */
 			readonly type: "inventory-full";
-			readonly payload: { readonly kind: ItemKind };
+			readonly payload: ItemEventPayload;
 	  }
 	| {
 			/** The "drop" verb — one unit of `kind` leaves the inventory and lands under the player. */
 			readonly type: "item-dropped";
-			readonly payload: { readonly kind: ItemKind };
+			readonly payload: ItemEventPayload;
 	  }
 	| {
 			/** Winning always means the same thing now: surfacing with the amulet. */
@@ -205,12 +239,21 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
+			/** The weapon's own to-hit and damage bonuses, revealed the moment it is wielded. */
 			readonly type: "weapon-equipped";
-			readonly payload: { readonly kind: ItemKind; readonly bonus: number };
+			readonly payload: {
+				readonly weaponKind: WeaponKind;
+				readonly hitBonus: number;
+				readonly damageBonus: number;
+			};
 	  }
 	| {
+			/** armorClass is what the player's armor class becomes — the kind's own class adjusted by this armor's enchantment, curse and rust. */
 			readonly type: "armor-equipped";
-			readonly payload: { readonly kind: ItemKind; readonly bonus: number };
+			readonly payload: {
+				readonly armorKind: ArmorKind;
+				readonly armorClass: number;
+			};
 	  }
 	| {
 			/** Fired once, the turn playerFood crosses the warning threshold going down. */
@@ -277,15 +320,21 @@ export type GameEvent =
 	| {
 			/** kind is undefined when the inventory was empty — see advanceEnemies. */
 			readonly type: "item-stolen";
-			readonly payload: { readonly kind: ItemKind | undefined };
+			readonly payload: {
+				readonly kind: ItemKind | undefined;
+				readonly variant?: EquipmentVariant;
+			};
 	  }
 	| {
-			/** Always a positive bonus — enchant-weapon is never cursed, unlike a found weapon. */
+			/** Which of the weapon's two bonuses the scroll raised (a coin flip, as in original Rogue) and by how much. Also lifts the weapon's curse. */
 			readonly type: "weapon-enchanted";
-			readonly payload: { readonly bonus: number };
+			readonly payload: {
+				readonly stat: "hit" | "damage";
+				readonly bonus: number;
+			};
 	  }
 	| {
-			/** Always a positive bonus — enchant-armor is never cursed, unlike found armor. */
+			/** Always a positive bonus. Also lifts the armor's curse. */
 			readonly type: "armor-enchanted";
 			readonly payload: { readonly bonus: number };
 	  }

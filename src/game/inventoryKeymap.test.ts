@@ -15,7 +15,9 @@ const weapon = (itemId: number): HeldItem => ({
 	kind: "weapon",
 	equipped: false,
 	cursed: false,
-	attackBonus: 1,
+	weaponKind: "long-sword" as const,
+	hitBonus: 1,
+	damageBonus: 1,
 });
 
 describe("toInventoryLetter", () => {
@@ -56,6 +58,7 @@ describe("toSelectedHeldItem", () => {
 				kind: "armor",
 				equipped: false,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			},

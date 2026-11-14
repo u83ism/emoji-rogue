@@ -221,7 +221,13 @@ describe("validateGameState", () => {
 				{
 					...floorSpot,
 					kind: "weapon",
-					identity: { itemId: 7, cursed: true, attackBonus: 3 },
+					identity: {
+						itemId: 7,
+						cursed: true,
+						weaponKind: "long-sword" as const,
+						hitBonus: 3,
+						damageBonus: 3,
+					},
 				},
 			],
 		});
@@ -231,7 +237,13 @@ describe("validateGameState", () => {
 				{
 					...floorSpot,
 					kind: "weapon",
-					identity: { itemId: 7, cursed: true, attackBonus: 3 },
+					identity: {
+						itemId: 7,
+						cursed: true,
+						weaponKind: "long-sword" as const,
+						hitBonus: 3,
+						damageBonus: 3,
+					},
 				},
 			]);
 		}
@@ -289,8 +301,14 @@ describe("validateGameState", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
-				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -2 } },
+				{
+					type: "weapon-equipped",
+					payload: { weaponKind: "mace", hitBonus: 1, damageBonus: 0 },
+				},
+				{
+					type: "weapon-equipped",
+					payload: { weaponKind: "mace", hitBonus: -2, damageBonus: 0 },
+				},
 			],
 		});
 		expect(result.ok).toBe(true);
@@ -303,13 +321,16 @@ describe("validateGameState", () => {
 					kind: "weapon",
 					equipped: true,
 					cursed: true,
-					attackBonus: -2,
+					weaponKind: "long-sword" as const,
+					hitBonus: -2,
+					damageBonus: -2,
 				},
 				{
 					itemId: 2,
 					kind: "armor",
 					equipped: true,
 					cursed: true,
+					armorKind: "ring-mail" as const,
 					defenseBonus: -1,
 					rustProtected: false,
 				},
@@ -330,7 +351,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1.5 } },
+					{
+						type: "weapon-equipped",
+						payload: { weaponKind: "mace", hitBonus: 1.5, damageBonus: 0 },
+					},
 				],
 			},
 			"events",
@@ -340,21 +364,27 @@ describe("validateGameState", () => {
 	it("accepts a well-formed weapon-enchanted event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "weapon-enchanted", payload: { bonus: 1 } }],
+			events: [
+				{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 1 } },
+			],
 		});
 		expect(result.ok).toBe(true);
 
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "weapon-enchanted", payload: { bonus: 0 } }],
+				events: [
+					{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 0 } },
+				],
 			},
 			"events",
 		);
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "weapon-enchanted", payload: { bonus: -1 } }],
+				events: [
+					{ type: "weapon-enchanted", payload: { stat: "hit", bonus: -1 } },
+				],
 			},
 			"events",
 		);
@@ -929,7 +959,10 @@ describe("validateGameState", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
+				{
+					type: "armor-equipped",
+					payload: { armorKind: "ring-mail", armorClass: 1 },
+				},
 			],
 		});
 		expect(result.ok).toBe(true);
@@ -937,7 +970,10 @@ describe("validateGameState", () => {
 		const rustedToZero = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
+				{
+					type: "armor-equipped",
+					payload: { armorKind: "ring-mail", armorClass: 0 },
+				},
 			],
 		});
 		expect(rustedToZero.ok).toBe(true);
@@ -954,7 +990,10 @@ describe("validateGameState", () => {
 		const cursedNegative = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: -1 } },
+				{
+					type: "armor-equipped",
+					payload: { armorKind: "ring-mail", armorClass: -1 },
+				},
 			],
 		});
 		expect(cursedNegative.ok).toBe(true);
@@ -963,7 +1002,10 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "armor-equipped", payload: { kind: "armor", bonus: 0.5 } },
+					{
+						type: "armor-equipped",
+						payload: { armorKind: "ring-mail", armorClass: 0.5 },
+					},
 				],
 			},
 			"events",
@@ -1093,13 +1135,16 @@ describe("validateGameState", () => {
 				kind: "weapon",
 				equipped: true,
 				cursed: false,
-				attackBonus: 1,
+				weaponKind: "long-sword" as const,
+				hitBonus: 1,
+				damageBonus: 1,
 			},
 			{
 				itemId: 4,
 				kind: "armor",
 				equipped: false,
 				cursed: true,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			},

@@ -17,6 +17,7 @@ const EXPOSING_ARMOR: HeldItem = {
 	kind: "armor",
 	equipped: true,
 	cursed: false,
+	armorKind: "ring-mail" as const,
 	defenseBonus: -20,
 	rustProtected: false,
 };

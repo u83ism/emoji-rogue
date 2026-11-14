@@ -43,14 +43,14 @@ describe("formatEvent", () => {
 				{ type: "player-healed", payload: { by: "heal-potion", amount: 0 } },
 				"回復薬を飲んだが、HPは満タンだった",
 			],
-			[{ type: "item-picked-up", payload: { kind: "weapon" } }, "剣を拾った"],
+			[{ type: "item-picked-up", payload: { kind: "weapon" } }, "武器を拾った"],
 			[
 				{ type: "inventory-full", payload: { kind: "weapon" } },
-				"剣を持てなかった。持ち物がいっぱいだ",
+				"武器を持てなかった。持ち物がいっぱいだ",
 			],
 			[
 				{ type: "item-dropped", payload: { kind: "weapon" } },
-				"剣を足元に置いた",
+				"武器を足元に置いた",
 			],
 			[
 				{ type: "game-won", payload: {} },
@@ -62,29 +62,58 @@ describe("formatEvent", () => {
 				"イェンダーの魔除けを手に入れた!",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
-				"剣を装備した。攻撃力+1",
+				{
+					type: "weapon-equipped",
+					payload: { weaponKind: "mace", hitBonus: 1, damageBonus: 1 },
+				},
+				"メイスを装備した。命中+1・ダメージ+1",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
-				"鎧を装備した。防御力+1",
+				{
+					type: "weapon-equipped",
+					payload: {
+						weaponKind: "two-handed-sword",
+						hitBonus: -2,
+						damageBonus: 0,
+					},
+				},
+				"両手剣を装備した。命中-2・ダメージ+0",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: 0 } },
-				"鎧を装備した。防御力+0",
+				{
+					type: "armor-equipped",
+					payload: { armorKind: "ring-mail", armorClass: 6 },
+				},
+				"リングメイルを装備した。防御力4",
 			],
 			[
-				{ type: "armor-equipped", payload: { kind: "armor", bonus: -2 } },
-				"鎧を装備した。防御力-2",
+				{
+					type: "armor-equipped",
+					payload: { armorKind: "leather-armor", armorClass: 11 },
+				},
+				"革鎧を装備した。防御力-1",
 			],
 			[
-				{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -1 } },
-				"剣を装備した。攻撃力-1",
+				{
+					type: "item-picked-up",
+					payload: { kind: "weapon", variant: "spear" },
+				},
+				"槍を拾った",
 			],
-			[{ type: "item-unequipped", payload: { kind: "weapon" } }, "剣を外した"],
+			[
+				{
+					type: "item-stolen",
+					payload: { kind: "armor", variant: "plate-mail" },
+				},
+				"ニンフにプレートメイルを盗まれた!",
+			],
+			[
+				{ type: "item-unequipped", payload: { kind: "weapon" } },
+				"武器を外した",
+			],
 			[
 				{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
-				"鎧は呪われていて外せない!",
+				"防具は呪われていて外せない!",
 			],
 			[
 				{
@@ -160,7 +189,7 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "player-strengthened", payload: { bonus: 1 } },
-				"怪力の薬を飲んだ。攻撃力が1上がった!",
+				"怪力の薬を飲んだ。ダメージが1上がった!",
 			],
 			[
 				{ type: "gold-stolen", payload: { amount: 10 } },
@@ -172,7 +201,7 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "item-stolen", payload: { kind: "weapon" } },
-				"ニンフに剣を盗まれた!",
+				"ニンフに武器を盗まれた!",
 			],
 			[
 				{ type: "item-stolen", payload: { kind: undefined } },
@@ -191,8 +220,12 @@ describe("formatEvent", () => {
 				"指輪の力でHPが1回復した",
 			],
 			[
-				{ type: "weapon-enchanted", payload: { bonus: 1 } },
-				"武器強化の巻物を読んだ。指定した剣の攻撃力が1上がった!",
+				{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 1 } },
+				"武器強化の巻物を読んだ。指定した武器の命中が1上がった!",
+			],
+			[
+				{ type: "weapon-enchanted", payload: { stat: "damage", bonus: 1 } },
+				"武器強化の巻物を読んだ。指定した武器のダメージが1上がった!",
 			],
 			[
 				{ type: "armor-enchanted", payload: { bonus: 1 } },

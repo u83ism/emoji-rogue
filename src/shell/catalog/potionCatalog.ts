@@ -47,7 +47,7 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		catalogName: "怪力の薬",
 		category: "薬",
 		spawn: { type: "chance", percent: STRENGTH_POTION_SPAWN_CHANCE_PERCENT },
-		effect: `攻撃力が${STRENGTH_POTION_ATTACK_BONUS}恒久的に上がる`,
+		effect: `攻撃のダメージが${STRENGTH_POTION_ATTACK_BONUS}恒久的に上がる`,
 	},
 	confusion: {
 		catalogName: "混乱の薬",

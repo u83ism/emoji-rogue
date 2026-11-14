@@ -20,6 +20,7 @@ const armor = (
 	kind: "armor",
 	equipped: overrides.equipped ?? false,
 	cursed: false,
+	armorKind: "ring-mail" as const,
 	defenseBonus: 1,
 	rustProtected: overrides.rustProtected ?? false,
 });
@@ -29,7 +30,9 @@ const weapon = (itemId: number, equipped = false): HeldItem => ({
 	kind: "weapon",
 	equipped,
 	cursed: false,
-	attackBonus: 1,
+	weaponKind: "long-sword" as const,
+	hitBonus: 1,
+	damageBonus: 1,
 });
 
 describe("decideItemToUse", () => {

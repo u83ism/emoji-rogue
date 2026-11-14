@@ -21,7 +21,13 @@ const weaponAt = (x: number, y: number): Item => ({
 	x,
 	y,
 	kind: "weapon",
-	identity: { itemId: 99, cursed: false, attackBonus: 1 },
+	identity: {
+		itemId: 99,
+		cursed: false,
+		weaponKind: "long-sword" as const,
+		hitBonus: 1,
+		damageBonus: 1,
+	},
 });
 
 describe("decideAction", () => {

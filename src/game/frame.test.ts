@@ -168,7 +168,13 @@ describe("buildFrameGrid", () => {
 			x: 12,
 			y: 2,
 			kind: "weapon" as const,
-			identity: { itemId: 1, cursed: false, attackBonus: 1 },
+			identity: {
+				itemId: 1,
+				cursed: false,
+				weaponKind: "long-sword" as const,
+				hitBonus: 1,
+				damageBonus: 1,
+			},
 		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [weapon] })[2]?.[12]?.glyph).toBe(
 			"🔪",
@@ -184,6 +190,7 @@ describe("buildFrameGrid", () => {
 			identity: {
 				itemId: 1,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			},

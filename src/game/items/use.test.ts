@@ -26,6 +26,7 @@ describe("applyUseItem dispatch", () => {
 					kind: "armor" as const,
 					equipped: true,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: -20,
 					rustProtected: false,
 				},

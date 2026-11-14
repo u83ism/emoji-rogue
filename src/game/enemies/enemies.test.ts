@@ -27,6 +27,7 @@ const equippedArmor = (
 	kind: "armor",
 	equipped: true,
 	cursed: false,
+	armorKind: "ring-mail" as const,
 	defenseBonus,
 	rustProtected,
 });
@@ -442,7 +443,9 @@ describe("advanceEnemies", () => {
 					kind: "weapon",
 					equipped: false,
 					cursed: false,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				} as const,
 			],
 		};
@@ -469,7 +472,9 @@ describe("advanceEnemies", () => {
 					kind: "weapon",
 					equipped: true,
 					cursed: false,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				} as const,
 				{ itemId: 2, kind: "heal-potion" } as const,
 			],
@@ -481,7 +486,9 @@ describe("advanceEnemies", () => {
 				kind: "weapon",
 				equipped: true,
 				cursed: false,
-				attackBonus: 1,
+				weaponKind: "long-sword" as const,
+				hitBonus: 1,
+				damageBonus: 1,
 			},
 		]);
 		expect(next.events).toEqual([
@@ -636,7 +643,9 @@ describe("advanceEnemies", () => {
 				).length === 2,
 		);
 		const next = advanceEnemies({ ...base, rng });
-		expect(calculatePlayerDefense(next.inventory)).toBe(3); /* 5 - 1 - 1 */
+		expect(calculatePlayerDefense(next.inventory)).toBe(
+			calculatePlayerDefense(base.inventory) - 2,
+		);
 	});
 
 	it("a slowed enemy takes no action at all — no movement, no attack — while frozen", () => {

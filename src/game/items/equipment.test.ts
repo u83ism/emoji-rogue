@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_WEAK_THRESHOLD } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import { applyArmorRust } from "./equipment.js";
+import { applyArmorRust, canRustEquippedArmor } from "./equipment.js";
 import {
-	calculatePlayerAttackDamage,
+	calculatePlayerDamageBonus as calculatePlayerAttackDamage,
 	calculatePlayerDefense,
 } from "./equipmentStats.js";
 
@@ -26,7 +26,9 @@ describe("items/equipment", () => {
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
-					attackBonus: 1,
+					weaponKind: "long-sword" as const,
+					hitBonus: 1,
+					damageBonus: 1,
 				},
 			],
 		};
@@ -44,11 +46,16 @@ describe("items/equipment", () => {
 				kind: "weapon",
 				equipped: true,
 				cursed: false,
-				attackBonus: 1,
+				weaponKind: "long-sword" as const,
+				hitBonus: 1,
+				damageBonus: 1,
 			},
 		]);
 		expect(next.events).toEqual([
-			{ type: "weapon-equipped", payload: { kind: "weapon", bonus: 1 } },
+			{
+				type: "weapon-equipped",
+				payload: { weaponKind: "long-sword", hitBonus: 1, damageBonus: 1 },
+			},
 		]);
 	});
 
@@ -61,14 +68,18 @@ describe("items/equipment", () => {
 					kind: "weapon" as const,
 					equipped: true,
 					cursed: false,
-					attackBonus: 2,
+					weaponKind: "long-sword" as const,
+					hitBonus: 2,
+					damageBonus: 2,
 				},
 				{
 					itemId: 2,
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: false,
-					attackBonus: 3,
+					weaponKind: "long-sword" as const,
+					hitBonus: 3,
+					damageBonus: 3,
 				},
 			],
 		};
@@ -82,14 +93,18 @@ describe("items/equipment", () => {
 				kind: "weapon",
 				equipped: false,
 				cursed: false,
-				attackBonus: 2,
+				weaponKind: "long-sword" as const,
+				hitBonus: 2,
+				damageBonus: 2,
 			},
 			{
 				itemId: 2,
 				kind: "weapon",
 				equipped: true,
 				cursed: false,
-				attackBonus: 3,
+				weaponKind: "long-sword" as const,
+				hitBonus: 3,
+				damageBonus: 3,
 			},
 		]);
 		expect(calculatePlayerAttackDamage(next)).toBe(state.playerPower + 3);
@@ -105,7 +120,9 @@ describe("items/equipment", () => {
 					kind: "weapon" as const,
 					equipped: false,
 					cursed: true,
-					attackBonus: -2,
+					weaponKind: "long-sword" as const,
+					hitBonus: -2,
+					damageBonus: -2,
 				},
 			],
 		};
@@ -120,11 +137,16 @@ describe("items/equipment", () => {
 				kind: "weapon",
 				equipped: true,
 				cursed: true,
-				attackBonus: -2,
+				weaponKind: "long-sword" as const,
+				hitBonus: -2,
+				damageBonus: -2,
 			},
 		]);
 		expect(equipped.events).toEqual([
-			{ type: "weapon-equipped", payload: { kind: "weapon", bonus: -2 } },
+			{
+				type: "weapon-equipped",
+				payload: { weaponKind: "long-sword", hitBonus: -2, damageBonus: -2 },
+			},
 			{ type: "curse-revealed", payload: { kind: "weapon" } },
 		]);
 
@@ -149,6 +171,7 @@ describe("items/equipment", () => {
 					kind: "armor" as const,
 					equipped: false,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: 1,
 					rustProtected: false,
 				},
@@ -158,7 +181,8 @@ describe("items/equipment", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(calculatePlayerDefense(next.inventory)).toBe(1);
+		/* ring mail's own 3 points of defense (armor class 7) plus its +1 */
+		expect(calculatePlayerDefense(next.inventory)).toBe(4);
 		expect(next.playerHp).toBe(state.playerHp); /* armor doesn't heal */
 		expect(next.inventory).toEqual([
 			{
@@ -166,12 +190,16 @@ describe("items/equipment", () => {
 				kind: "armor",
 				equipped: true,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			},
 		]);
 		expect(next.events).toEqual([
-			{ type: "armor-equipped", payload: { kind: "armor", bonus: 1 } },
+			{
+				type: "armor-equipped",
+				payload: { armorKind: "ring-mail", armorClass: 6 },
+			},
 		]);
 	});
 
@@ -184,6 +212,7 @@ describe("items/equipment", () => {
 					kind: "armor" as const,
 					equipped: true,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: 1,
 					rustProtected: false,
 				},
@@ -192,6 +221,7 @@ describe("items/equipment", () => {
 					kind: "armor" as const,
 					equipped: false,
 					cursed: false,
+					armorKind: "ring-mail" as const,
 					defenseBonus: 2,
 					rustProtected: false,
 				},
@@ -207,6 +237,7 @@ describe("items/equipment", () => {
 				kind: "armor",
 				equipped: false,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 1,
 				rustProtected: false,
 			},
@@ -215,11 +246,12 @@ describe("items/equipment", () => {
 				kind: "armor",
 				equipped: true,
 				cursed: false,
+				armorKind: "ring-mail" as const,
 				defenseBonus: 2,
 				rustProtected: false,
 			},
 		]);
-		expect(calculatePlayerDefense(next.inventory)).toBe(2);
+		expect(calculatePlayerDefense(next.inventory)).toBe(5);
 	});
 
 	it("cursed armor applies its (negative) defense bonus when equipped — worse than unarmored — and cannot be unequipped", () => {
@@ -231,6 +263,7 @@ describe("items/equipment", () => {
 					kind: "armor" as const,
 					equipped: false,
 					cursed: true,
+					armorKind: "ring-mail" as const,
 					defenseBonus: -2,
 					rustProtected: false,
 				},
@@ -240,9 +273,13 @@ describe("items/equipment", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(calculatePlayerDefense(equipped.inventory)).toBe(-2);
+		/* ring mail's 3 points, dragged down by the curse's -2 */
+		expect(calculatePlayerDefense(equipped.inventory)).toBe(1);
 		expect(equipped.events).toEqual([
-			{ type: "armor-equipped", payload: { kind: "armor", bonus: -2 } },
+			{
+				type: "armor-equipped",
+				payload: { armorKind: "ring-mail", armorClass: 9 },
+			},
 			{ type: "curse-revealed", payload: { kind: "armor" } },
 		]);
 
@@ -258,21 +295,33 @@ describe("items/equipment", () => {
 		).toBe(true);
 	});
 
-	it("rust lowers a positive defense bonus by 1 but never touches one already at or below 0", () => {
+	it("rust worsens the armor by 1 per hit, as in original Rogue: never past armor class 9, and never leather", () => {
 		const armorWith = (defenseBonus: number) => [
 			{
 				itemId: 1,
 				kind: "armor" as const,
 				equipped: true,
 				cursed: defenseBonus < 0,
+				armorKind: "ring-mail" as const,
 				defenseBonus,
 				rustProtected: false,
 			},
 		];
-		expect(calculatePlayerDefense(applyArmorRust(armorWith(2)))).toBe(1);
-		expect(calculatePlayerDefense(applyArmorRust(armorWith(0)))).toBe(0);
-		/* a cursed -2 armor is not "rusted up" to 0 */
-		expect(calculatePlayerDefense(applyArmorRust(armorWith(-2)))).toBe(-2);
+		/* ring mail is armor class 7, i.e. 3 points of defense before its own bonus */
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(2)))).toBe(4);
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(0)))).toBe(2);
+		/* a cursed one keeps rusting too, down to armor class 9 (1 point of defense)... */
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(-1)))).toBe(1);
+		/* ...and no further */
+		expect(calculatePlayerDefense(applyArmorRust(armorWith(-2)))).toBe(1);
+		expect(canRustEquippedArmor(armorWith(-2))).toBe(false);
+
+		const leather = armorWith(0).map((armor) => ({
+			...armor,
+			armorKind: "leather-armor" as const,
+		}));
+		expect(canRustEquippedArmor(leather)).toBe(false);
+		expect(applyArmorRust(leather)).toBe(leather);
 	});
 
 	it("is unaffected by playerFood while above PLAYER_WEAK_THRESHOLD", () => {

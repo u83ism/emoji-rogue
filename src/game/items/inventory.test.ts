@@ -59,7 +59,9 @@ describe("replaceHeldItem", () => {
 			kind: "weapon" as const,
 			equipped: false,
 			cursed: false,
-			attackBonus: 1,
+			weaponKind: "long-sword" as const,
+			hitBonus: 1,
+			damageBonus: 1,
 		};
 		const equippedWeapon = { ...weapon, equipped: true };
 		expect(replaceHeldItem([food(1), weapon], 2, equippedWeapon)).toEqual([

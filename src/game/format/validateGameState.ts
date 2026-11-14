@@ -3,6 +3,7 @@ import { err, ok, type Result } from "../../result.js";
 import type { RngState } from "../../rng.js";
 import { PLAYER_MAX_FOOD } from "../balance.js";
 import {
+	ARMOR_KIND_VALUES,
 	type DeathCause,
 	ENEMY_KIND_VALUES,
 	type EnemyKind,
@@ -12,6 +13,7 @@ import {
 	isEquipmentItemKind,
 	TRAP_KIND_VALUES,
 	type TrapKind,
+	WEAPON_KIND_VALUES,
 } from "../events.js";
 import type {
 	Enemy,
@@ -114,6 +116,36 @@ export const isItemKind = (value: unknown): value is ItemKind =>
 const isItemKindArray = (value: unknown): value is readonly ItemKind[] =>
 	Array.isArray(value) && value.every(isItemKind);
 
+/** The fields a weapon or armor carries beyond itemId/cursed — which kind it is and its own bonuses. Rings carry none. */
+const hasEquipmentStats = (
+	kind: ItemKind,
+	value: Record<string, unknown>,
+): boolean => {
+	if (kind === "weapon") {
+		return (
+			isOneOf(WEAPON_KIND_VALUES, value.weaponKind) &&
+			isInteger(value.hitBonus) &&
+			isInteger(value.damageBonus)
+		);
+	}
+	if (kind === "armor") {
+		return (
+			isOneOf(ARMOR_KIND_VALUES, value.armorKind) &&
+			isInteger(value.defenseBonus) &&
+			isBooleanValue(value.rustProtected)
+		);
+	}
+	return true;
+};
+
+/** An event payload naming one item: its ItemKind, plus which weapon/armor it is when it is one. */
+const isItemEventPayload = (payload: Record<string, unknown>): boolean =>
+	isItemKind(payload.kind) &&
+	(payload.variant === undefined ||
+		(payload.kind === "weapon" &&
+			isOneOf(WEAPON_KIND_VALUES, payload.variant)) ||
+		(payload.kind === "armor" && isOneOf(ARMOR_KIND_VALUES, payload.variant)));
+
 /**
  * A held item: itemId + kind, plus (for weapon/armor/ring kinds only) the
  * equip/curse/bonus state HeldItem carries — see state.ts's doc comment.
@@ -132,13 +164,7 @@ const isHeldItem = (value: unknown): value is HeldItem => {
 	if (!isBooleanValue(value.equipped) || !isBooleanValue(value.cursed)) {
 		return false;
 	}
-	if (value.kind === "weapon") {
-		return isInteger(value.attackBonus);
-	}
-	if (value.kind === "armor") {
-		return isInteger(value.defenseBonus) && isBooleanValue(value.rustProtected);
-	}
-	return true;
+	return hasEquipmentStats(value.kind, value);
 };
 
 const isHeldItemArray = (value: unknown): value is readonly HeldItem[] =>
@@ -158,13 +184,7 @@ const isItemIdentity = (kind: ItemKind, value: unknown): boolean => {
 	) {
 		return false;
 	}
-	if (kind === "weapon") {
-		return isInteger(value.attackBonus);
-	}
-	if (kind === "armor") {
-		return isInteger(value.defenseBonus) && isBooleanValue(value.rustProtected);
-	}
-	return true;
+	return hasEquipmentStats(kind, value);
 };
 
 const isItemArray = (
@@ -238,14 +258,17 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"amulet-obtained": emptyPayload,
 	"player-healed": (payload) =>
 		isItemKind(payload.by) && isNonNegativeInteger(payload.amount),
-	"item-picked-up": (payload) => isItemKind(payload.kind),
-	"inventory-full": (payload) => isItemKind(payload.kind),
-	"item-dropped": (payload) => isItemKind(payload.kind),
+	"item-picked-up": isItemEventPayload,
+	"inventory-full": isItemEventPayload,
+	"item-dropped": isItemEventPayload,
 	"game-won": emptyPayload,
 	"weapon-equipped": (payload) =>
-		isItemKind(payload.kind) && isInteger(payload.bonus),
+		isOneOf(WEAPON_KIND_VALUES, payload.weaponKind) &&
+		isInteger(payload.hitBonus) &&
+		isInteger(payload.damageBonus),
 	"armor-equipped": (payload) =>
-		isItemKind(payload.kind) && isInteger(payload.bonus),
+		isOneOf(ARMOR_KIND_VALUES, payload.armorKind) &&
+		isInteger(payload.armorClass),
 	"player-hungry": emptyPayload,
 	"player-weak": emptyPayload,
 	"player-starved": (payload) => isPositiveInteger(payload.damage),
@@ -268,7 +291,9 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-strengthened": (payload) => isPositiveInteger(payload.bonus),
 	"gold-stolen": (payload) => isNonNegativeInteger(payload.amount),
 	"item-stolen": (payload) =>
-		payload.kind === undefined || isItemKind(payload.kind),
+		payload.kind === undefined
+			? payload.variant === undefined
+			: isItemEventPayload(payload),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-regenerated": (payload) => isPositiveInteger(payload.amount),
 	"enemy-regenerated": (payload) =>
@@ -276,7 +301,9 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-drained": (payload) => isPositiveInteger(payload.amount),
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),
-	"weapon-enchanted": (payload) => isPositiveInteger(payload.bonus),
+	"weapon-enchanted": (payload) =>
+		(payload.stat === "hit" || payload.stat === "damage") &&
+		isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
 	"wand-struck": (payload) =>

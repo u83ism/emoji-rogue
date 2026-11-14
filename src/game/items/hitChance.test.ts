@@ -16,7 +16,9 @@ const weaponWith = (attackBonus: number, equipped = true): HeldItem => ({
 	kind: "weapon",
 	equipped,
 	cursed: attackBonus < 0,
-	attackBonus,
+	weaponKind: "long-sword" as const,
+	hitBonus: attackBonus,
+	damageBonus: attackBonus,
 });
 
 const armorWith = (defenseBonus: number, equipped = true): HeldItem => ({
@@ -24,6 +26,7 @@ const armorWith = (defenseBonus: number, equipped = true): HeldItem => ({
 	kind: "armor",
 	equipped,
 	cursed: defenseBonus < 0,
+	armorKind: "ring-mail" as const,
 	defenseBonus,
 	rustProtected: false,
 });
@@ -93,15 +96,19 @@ describe("calculateEnemyHitChancePercent", () => {
 		);
 	});
 
-	it("falls 5 points per point of the equipped armor's defenseBonus", () => {
+	it("falls 5 points per point of defense: the armor kind's own class plus its defenseBonus", () => {
+		/* ring mail is armor class 7 */
+		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(0)])).toBe(
+			40,
+		);
 		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(4)])).toBe(
-			35,
+			20,
 		);
 	});
 
 	it("rises against a cursed armor's negative defenseBonus", () => {
 		expect(calculateEnemyHitChancePercent("hobgoblin", [armorWith(-2)])).toBe(
-			65,
+			50,
 		);
 	});
 

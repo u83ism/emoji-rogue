@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { buildArenaGameState } from "../game/initialState.js";
 import type { Enemy, GameState } from "../game/state.js";
-import { findAdjacentEnemyDirection } from "./combatPolicy.js";
+import {
+	findAdjacentEnemyDirection,
+	shouldRestToHeal,
+} from "./combatPolicy.js";
 
 const baseState = (): GameState => buildArenaGameState(9, 9, 1);
 
@@ -52,5 +55,37 @@ describe("findAdjacentEnemyDirection", () => {
 			enemies: [{ ...enemyAt(4, 3), awake: false }],
 		};
 		expect(findAdjacentEnemyDirection(state)).toBe("north");
+	});
+});
+
+describe("shouldRestToHeal", () => {
+	const wounded = (): GameState => ({
+		...baseState(),
+		playerHp: 10,
+		playerMaxHp: 30,
+	});
+
+	it("rests while below two thirds of max HP with nothing awake on the floor", () => {
+		expect(shouldRestToHeal(wounded())).toBe(true);
+		expect(
+			shouldRestToHeal({
+				...wounded(),
+				enemies: [{ ...enemyAt(7, 7), awake: false }],
+			}),
+		).toBe(true);
+	});
+
+	it("does not rest at two thirds of max HP or above", () => {
+		expect(shouldRestToHeal({ ...wounded(), playerHp: 20 })).toBe(false);
+	});
+
+	it("does not rest while any enemy on the floor is awake", () => {
+		expect(shouldRestToHeal({ ...wounded(), enemies: [enemyAt(7, 7)] })).toBe(
+			false,
+		);
+	});
+
+	it("does not rest once food has run down to the weak stage", () => {
+		expect(shouldRestToHeal({ ...wounded(), playerFood: 100 })).toBe(false);
 	});
 });

@@ -37,7 +37,8 @@ const countExploredCells = (state: GameState): number =>
 /**
  * A cheap fingerprint of "has anything the run cares about changed": floor
  * depth, what is left lying around, inventory size, gold, the amulet,
- * experience, and how much of the map has been seen. Two turns with the
+ * experience, HP (resting to heal is progress — see combatPolicy.ts's
+ * shouldRestToHeal), and how much of the map has been seen. Two turns with the
  * same signature mean the run is not moving forward by any measure, whether
  * that is a policy bug looping in place or a genuine dead end.
  */
@@ -50,6 +51,7 @@ const buildProgressSignature = (state: GameState): string =>
 		state.goldCollected,
 		state.hasAmulet,
 		state.playerExperience,
+		state.playerHp,
 		countExploredCells(state),
 	].join("|");
 

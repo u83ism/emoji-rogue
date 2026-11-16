@@ -116,7 +116,24 @@ describe("decideAction", () => {
 			createInitialBotMemory(),
 			new Set(["heal-potion"]),
 		);
-		expect(action).toEqual({ type: "move", payload: { direction: "north" } });
+		/* not the potion — with nothing awake nearby, the wounded bot rests instead */
+		expect(action).toEqual({ type: "wait" });
+	});
+
+	it("rests while wounded and unthreatened, then goes back to its goal once healed", () => {
+		const wounded = {
+			...baseState(),
+			items: [weaponAt(4, 2)],
+			playerHp: 1,
+		};
+		expect(decideAction(wounded, createInitialBotMemory()).action).toEqual({
+			type: "wait",
+		});
+		const healed = { ...wounded, playerHp: wounded.playerMaxHp };
+		expect(decideAction(healed, createInitialBotMemory()).action).toEqual({
+			type: "move",
+			payload: { direction: "north" },
+		});
 	});
 
 	it("keeps pursuing the same committed goal across turns instead of re-choosing it", () => {

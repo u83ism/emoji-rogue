@@ -1,7 +1,10 @@
 import type { ItemKind } from "../game/events.js";
 import type { Action, Direction, GameState, Position } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
-import { findAdjacentEnemyDirection } from "./combatPolicy.js";
+import {
+	findAdjacentEnemyDirection,
+	shouldRestToHeal,
+} from "./combatPolicy.js";
 import { chooseGoal, isGoalStillValid } from "./goals.js";
 import { decideItemToUse } from "./itemUsePolicy.js";
 import {
@@ -47,7 +50,9 @@ export interface BotDecision {
  *  3. Use a beneficial held item if one is worth using this turn.
  *  4. Attack an adjacent enemy, if any — it attacks every turn regardless of
  *     what the player does, so finishing it off beats walking past it.
- *  5. Otherwise walk toward the current goal, recomputing it when reached,
+ *  5. Rest in place while wounded and nothing on the floor is awake (see
+ *     combatPolicy.ts's shouldRestToHeal).
+ *  6. Otherwise walk toward the current goal, recomputing it when reached,
  *     invalidated, or stuck oscillating in place (see isCyclingInPlace).
  *
  * `disabledItemKinds` is a balance-experiment knob (see itemUsePolicy.ts's
@@ -82,6 +87,10 @@ export const decideAction = (
 			action: { type: "move", payload: { direction: adjacentEnemyDirection } },
 			memory,
 		};
+	}
+
+	if (shouldRestToHeal(state)) {
+		return { action: { type: "wait" }, memory };
 	}
 
 	const cycling = isCyclingInPlace(memory);

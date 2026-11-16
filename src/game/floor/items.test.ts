@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng, type Rng } from "../../rng.js";
-import {
-	GOLD_AMOUNT_MAX,
-	GOLD_AMOUNT_MIN,
-	GOLD_PILES_PER_FLOOR,
-	POTION_COUNT_PER_FLOOR,
-	TRAP_COUNT_PER_FLOOR,
-} from "../balance.js";
+import { POTION_COUNT_PER_FLOOR, TRAP_COUNT_PER_FLOOR } from "../balance.js";
 import type { ItemKind } from "../events.js";
 import type { Position } from "../state.js";
 import { drawFloorItems } from "./items.js";
@@ -114,32 +108,6 @@ describe("drawFloorItems", () => {
 		).toBe(true);
 	});
 
-	it("always spawns the guaranteed gold piles; the amount range follows the roll", () => {
-		const generous = drawFloorItems(
-			buildPool(100),
-			createAlwaysHitRng(),
-			1,
-			() => true,
-			1,
-			TEST_FOOD_COUNT,
-		);
-		expect(generous.goldPiles.length).toBe(GOLD_PILES_PER_FLOOR);
-		for (const pile of generous.goldPiles) {
-			expect(pile.amount).toBe(GOLD_AMOUNT_MIN); /* lower bound of the roll */
-		}
-		const stingy = drawFloorItems(
-			buildPool(100),
-			createAlwaysMissRng(),
-			1,
-			() => true,
-			1,
-			TEST_FOOD_COUNT,
-		);
-		for (const pile of stingy.goldPiles) {
-			expect(pile.amount).toBe(GOLD_AMOUNT_MAX); /* upper bound of the roll */
-		}
-	});
-
 	it("draws a floor's worth of traps too, but leaves the eligibility/GOAL_FLOOR rules to drawFloorTraps (see traps.test.ts)", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
@@ -152,7 +120,7 @@ describe("drawFloorItems", () => {
 		expect(drawn.traps.length).toBeGreaterThanOrEqual(TRAP_COUNT_PER_FLOOR);
 	});
 
-	it("items and gold ignore the trap eligibility predicate", () => {
+	it("items ignore the trap eligibility predicate", () => {
 		const none = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
@@ -163,6 +131,5 @@ describe("drawFloorItems", () => {
 		);
 		expect(none.traps.length).toBe(0);
 		expect(none.items.length).toBeGreaterThan(0);
-		expect(none.goldPiles.length).toBeGreaterThan(0);
 	});
 });

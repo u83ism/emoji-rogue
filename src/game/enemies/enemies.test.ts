@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import {
-	GOLD_AMOUNT_MAX,
+	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	GRIFFIN_REGEN_AMOUNT,
 	MEDUSA_GAZE_CONFUSE_DURATION,
@@ -232,6 +232,7 @@ describe("advanceEnemies", () => {
 			goldCollected: 0,
 			traps: [],
 			floor: 1,
+			deepestFloor: 1,
 			turnsOnCurrentFloor: 0,
 			quietTurns: 0,
 			floorsWithoutFood: 0,
@@ -332,11 +333,13 @@ describe("advanceEnemies", () => {
 		for (const stolen of thefts) {
 			expect(stolen).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
 			expect(stolen).toBeLessThanOrEqual(
-				GOLD_AMOUNT_MAX * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
+				calculateGoldAmountMax(1) * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 			);
 		}
 		/* a level-1 player fails the save most of the time (80%) but not always */
-		const bigThefts = thefts.filter((stolen) => stolen > GOLD_AMOUNT_MAX);
+		const bigThefts = thefts.filter(
+			(stolen) => stolen > calculateGoldAmountMax(1),
+		);
 		expect(bigThefts.length).toBeGreaterThan(thefts.length / 2);
 		expect(bigThefts.length).toBeLessThan(thefts.length);
 	});
@@ -719,6 +722,7 @@ describe("advanceEnemies", () => {
 			goldCollected: 0,
 			traps: [],
 			floor: 1,
+			deepestFloor: 1,
 			turnsOnCurrentFloor: 0,
 			quietTurns: 0,
 			floorsWithoutFood: 0,

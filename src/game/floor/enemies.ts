@@ -1,7 +1,5 @@
 import { at } from "../../indexing.js";
-import type { Room } from "../../map/features.js";
 import type { Rng } from "../../rng.js";
-import { ROOM_ENEMY_SPAWN_CHANCE_PERCENT } from "../balance.js";
 import {
 	ENEMY_DEPTH_ORDER,
 	ENEMY_HP_DICE_SIDES,
@@ -10,7 +8,6 @@ import {
 } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
-import { drawSpawnTileWhere, isInsideRoom } from "./spawnPool.js";
 
 /** How far below (and, minus one, above) its own floor's entry of ENEMY_DEPTH_ORDER a floor can draw — original Rogue's `level + (rnd(10) - 6)`. */
 const DEPTH_WINDOW_SIZE = 10;
@@ -94,36 +91,4 @@ export const buildSpawnedEnemy = (
 		slowedTurnsRemaining: 0,
 		confusedTurnsRemaining: 0,
 	};
-};
-
-/**
- * Every enemy on a fresh floor, drawn from (and removed from) `pool` by
- * consuming `rng`: each room rolls ROOM_ENEMY_SPAWN_CHANCE_PERCENT once for
- * a single enemy on one of its own pooled tiles, of a kind
- * drawEnemyKindForFloor picks for this depth. A room with no pooled tile
- * (the player's own, fully in view) is skipped without drawing a kind. All
- * spawn asleep.
- */
-export const drawFloorEnemies = (
-	pool: Position[],
-	rng: Rng,
-	floor: number,
-	rooms: readonly Room[],
-): Enemy[] => {
-	const enemies: Enemy[] = [];
-	for (const room of rooms) {
-		if (rng.getUniformInt(0, 99) >= ROOM_ENEMY_SPAWN_CHANCE_PERCENT) {
-			continue;
-		}
-		const position = drawSpawnTileWhere(pool, rng, (tile) =>
-			isInsideRoom(room, tile),
-		);
-		if (position === undefined) {
-			continue;
-		}
-		enemies.push(
-			buildSpawnedEnemy(drawEnemyKindForFloor(rng, floor), position, rng),
-		);
-	}
-	return enemies;
 };

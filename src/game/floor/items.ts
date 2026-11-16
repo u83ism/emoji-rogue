@@ -9,9 +9,6 @@ import {
 	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
-	GOLD_AMOUNT_MAX,
-	GOLD_AMOUNT_MIN,
-	GOLD_PILES_PER_FLOOR,
 	HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
 	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -38,7 +35,7 @@ import {
 } from "../balance.js";
 import { type ItemKind, isEquipmentItemKind } from "../events.js";
 import { buildFloorItem } from "../items/heldItemFactory.js";
-import type { GoldPile, Item, Position, Trap } from "../state.js";
+import type { Item, Position, Trap } from "../state.js";
 import { drawSpawnTile, type SpawnChance } from "./spawnPool.js";
 import { drawFloorTraps } from "./traps.js";
 
@@ -46,7 +43,7 @@ import { drawFloorTraps } from "./traps.js";
  * Chance-rolled items, one independent roll per entry. Same rng-order caveat
  * as floorEnemies.ts's ENEMY_SPAWN_TABLE: the array order is the historical
  * roll order and new kinds go at the end, or every seeded dungeon changes.
- * Guaranteed spawns (healing potions, food, gold, traps) stay outside this
+ * Guaranteed spawns (healing potions, food, traps) stay outside this
  * table — see drawFloorItems below.
  */
 const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
@@ -132,23 +129,20 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 	{ kind: "sleep-wand", chancePercent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
 ];
 
-/** Everything drawFloorItems scatters on a floor besides enemies and the staircase. */
+/** Everything drawFloorItems scatters on a floor — gold and enemies are placed per room instead (rooms.ts). */
 export interface FloorItems {
 	readonly items: readonly Item[];
-	readonly goldPiles: readonly GoldPile[];
 	readonly traps: readonly Trap[];
 	/** `nextItemId` after this floor's weapon/armor/ring spawns each consumed one — see heldItemFactory.ts's buildFloorItem. */
 	readonly nextItemId: number;
 }
 
 /**
- * Every item, gold pile and trap on a fresh floor, drawn from (and removed
- * from) `remaining` by consuming `rng`: POTION_COUNT_PER_FLOOR healing
- * potions guaranteed, `foodCount` food rations (floor/food.ts decides how
- * many), then the
- * chance-rolled kinds of ITEM_SPAWN_TABLE, then GOLD_PILES_PER_FLOOR gold
- * piles (random amount each), then every trap (see traps.ts's
- * drawFloorTraps). A spawned weapon/armor/ring also gets its identity (curse,
+ * Every item and trap on a fresh floor, drawn from (and removed from)
+ * `remaining` by consuming `rng`: POTION_COUNT_PER_FLOOR healing potions
+ * guaranteed, `foodCount` food rations (floor/food.ts decides how many),
+ * then the chance-rolled kinds of ITEM_SPAWN_TABLE, then every trap (see
+ * traps.ts's drawFloorTraps). A spawned weapon/armor/ring also gets its identity (curse,
  * starting bonus, itemId) rolled here, once, from `nextItemId` — see
  * heldItemFactory.ts's buildFloorItem.
  */
@@ -181,15 +175,7 @@ export const drawFloorItems = (
 		}
 	}
 
-	const goldPiles: GoldPile[] = [];
-	for (let i = 0; i < GOLD_PILES_PER_FLOOR && remaining.length > 0; i++) {
-		goldPiles.push({
-			...drawSpawnTile(remaining, rng),
-			amount: rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX),
-		});
-	}
-
 	const traps = drawFloorTraps(remaining, rng, floor, isTrapTileEligible);
 
-	return { items, goldPiles, traps, nextItemId: itemId };
+	return { items, traps, nextItemId: itemId };
 };

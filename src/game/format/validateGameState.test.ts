@@ -1532,6 +1532,11 @@ describe("validateGameState", () => {
 	it("rejects a broken floor counter or misplaced stairs", () => {
 		expectRejected({ ...buildValidState(), floor: 0 }, "floor");
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");
+		expectRejected({ ...buildValidState(), deepestFloor: 0 }, "deepestFloor");
+		expectRejected(
+			{ ...buildValidState(), floor: 3, deepestFloor: 2 },
+			"deepestFloor",
+		);
 		expectRejected(
 			{ ...buildValidState(), stairs: { x: 0, y: 0 } } /* perimeter wall */,
 			"stairs",

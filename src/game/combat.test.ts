@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type RngState, seedToState, stepUniform } from "../rng.js";
 import {
-	GOLD_AMOUNT_MAX,
+	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
 	SNEAK_ATTACK_MULTIPLIER,
@@ -323,7 +323,10 @@ describe("enemy gold drop", () => {
 		playerLevel: SURE_HIT_LEVEL,
 	};
 
-	it("drops a bonus between GOLD_AMOUNT_MIN and GOLD_AMOUNT_MAX into goldCollected on a melee kill", () => {
+	/* the arena fixture is floor 1 */
+	const GOLD_AMOUNT_MAX = calculateGoldAmountMax(1);
+
+	it("drops one pile of gold's worth for the floor into goldCollected on a melee kill", () => {
 		const target = orc(5, 4, 1);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		const dropped = next.goldCollected - state.goldCollected;
@@ -368,6 +371,24 @@ describe("enemy gold drop", () => {
 		expect(dropsAtLevel(10).filter(isBigDrop).length).toBeGreaterThan(
 			lowLevelBigDrops,
 		);
+	});
+
+	it("a thief killed above the deepest floor reached drops nothing", () => {
+		const target = thief(5, 4);
+		const climbing = { ...state, floor: 3, deepestFloor: 5, enemies: [target] };
+		const next = applyMagicMissileWandStrike(climbing, target);
+		expect(next.enemies).toEqual([]);
+		expect(next.goldCollected).toBe(climbing.goldCollected);
+		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
+			false,
+		);
+	});
+
+	it("an orc still drops its gold above the deepest floor reached", () => {
+		const target = orc(5, 4, 1);
+		const climbing = { ...state, floor: 3, deepestFloor: 5, enemies: [target] };
+		const next = applyPlayerAttack(climbing, target);
+		expect(next.goldCollected).toBeGreaterThan(climbing.goldCollected);
 	});
 
 	it("also drops gold on a wand kill", () => {

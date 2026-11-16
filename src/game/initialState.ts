@@ -39,6 +39,7 @@ const INITIAL_RUN_STATE = {
 	identifiedPotionKinds: [],
 	goldCollected: 0,
 	floor: 1,
+	deepestFloor: 1,
 	turnsOnCurrentFloor: 0,
 	quietTurns: 0,
 	floorsWithoutFood: 0,
@@ -140,6 +141,7 @@ export const buildDungeonGameState = (
 		"down",
 		INITIAL_RUN_STATE.nextItemId + startingInventory.length,
 		INITIAL_RUN_STATE.floorsWithoutFood,
+		true,
 	);
 
 	return deriveExploredState({

@@ -2,8 +2,6 @@ import type { RngState } from "../rng.js";
 import { createRng } from "../rng.js";
 import {
 	calculateMagicSaveChancePercent,
-	GOLD_AMOUNT_MAX,
-	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
 	SNEAK_ATTACK_MULTIPLIER,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
@@ -13,6 +11,7 @@ import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
 import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
 import { buildEventLog, type GameEvent } from "./events.js";
 import { applyExperienceGain } from "./experience.js";
+import { drawGoldAmount } from "./floor/rooms.js";
 import {
 	calculatePlayerDamageBonus,
 	calculatePlayerDamageDice,
@@ -26,13 +25,18 @@ import type { Enemy, GameState, Position } from "./state.js";
  * gold found on the floor. An orc drops one gold pile's worth; a thief
  * (original Rogue's leprechaun) drops one too, or
  * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME of them when the player passes a magic
- * save. Consumes state.rng via the same "temporarily wake a stateful Rng"
+ * save — but only on the deepest floor reached so far, never while
+ * climbing back up (the original's guard against farming them on the way
+ * out). Consumes state.rng via the same "temporarily wake a stateful Rng"
  * pattern as teleport.ts's applyRandomTeleport.
  */
 const applyEnemyGoldDrop = (
 	state: GameState,
 	kind: "orc" | "thief",
 ): GameState => {
+	if (kind === "thief" && state.floor < state.deepestFloor) {
+		return state;
+	}
 	const rng = createRng(1).setState(state.rng);
 	const savedAgainstMagic =
 		kind === "thief" &&
@@ -41,7 +45,7 @@ const applyEnemyGoldDrop = (
 	const pileCount = savedAgainstMagic ? THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME : 1;
 	let amount = 0;
 	for (let i = 0; i < pileCount; i++) {
-		amount += rng.getUniformInt(GOLD_AMOUNT_MIN, GOLD_AMOUNT_MAX);
+		amount += drawGoldAmount(rng, state.floor);
 	}
 	return {
 		...state,

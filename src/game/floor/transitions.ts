@@ -21,6 +21,7 @@ const buildFloorTransition = (
 	event: GameEvent,
 ): GameState => {
 	const rng = createRng(1).setState(state.rng);
+	const deepestFloor = Math.max(state.deepestFloor, nextFloor);
 	const layout = buildFloorLayout(
 		state.width,
 		state.height,
@@ -29,6 +30,8 @@ const buildFloorTransition = (
 		stairsDirection,
 		state.nextItemId,
 		state.floorsWithoutFood,
+		/* original Rogue: no gold on the floors climbed back through with the amulet */
+		!state.hasAmulet || nextFloor >= deepestFloor,
 	);
 	return deriveExploredState({
 		...state,
@@ -45,6 +48,7 @@ const buildFloorTransition = (
 		events: buildEventLog(state.events, [event]),
 		rng: rng.getState(),
 		floor: nextFloor,
+		deepestFloor,
 		turnsOnCurrentFloor: 0,
 		nextItemId: layout.nextItemId,
 		floorsWithoutFood: layout.floorsWithoutFood,

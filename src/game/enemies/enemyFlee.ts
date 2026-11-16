@@ -1,8 +1,8 @@
 import type { RngState } from "../../rng.js";
 import { stepUniform } from "../../rng.js";
 import {
+	calculateGoldAmountMax,
 	calculateMagicSaveChancePercent,
-	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
@@ -23,21 +23,25 @@ export interface FleeingTheftResult {
 	readonly event: GameEvent;
 }
 
-/** One gold pile's worth (GOLD_AMOUNT_MIN..GOLD_AMOUNT_MAX), off one rng step. */
+/** One gold pile's worth on `floor` (GOLD_AMOUNT_MIN..calculateGoldAmountMax), off one rng step. */
 const rollGoldPileAmount = (
 	rng: RngState,
+	floor: number,
 ): { readonly amount: number; readonly rng: RngState } => {
 	const step = stepUniform(rng);
 	return {
 		amount:
 			GOLD_AMOUNT_MIN +
-			Math.floor(step.value * (GOLD_AMOUNT_MAX - GOLD_AMOUNT_MIN + 1)),
+			Math.floor(
+				step.value * (calculateGoldAmountMax(floor) - GOLD_AMOUNT_MIN + 1),
+			),
 		rng: step.state,
 	};
 };
 
 /**
- * A thief (original Rogue's leprechaun) steals one gold pile's worth — or
+ * A thief (original Rogue's leprechaun) steals one gold pile's worth at
+ * this `floor`'s rate (deeper floors cost more) — or
  * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME piles' worth when the player fails a
  * magic save (calculateMagicSaveChancePercent, easier at higher
  * playerLevel) — capped at what the player carries; with no gold at all it
@@ -52,6 +56,7 @@ export const resolveFleeingTheft = (
 	goldCollected: number,
 	inventory: readonly HeldItem[],
 	playerLevel: number,
+	floor: number,
 ): FleeingTheftResult => {
 	if (kind === "thief") {
 		if (goldCollected === 0) {
@@ -69,7 +74,7 @@ export const resolveFleeingTheft = (
 		let wanted = 0;
 		let nextRng = saveRoll.state;
 		for (let i = 0; i < pileCount; i++) {
-			const pile = rollGoldPileAmount(nextRng);
+			const pile = rollGoldPileAmount(nextRng, floor);
 			wanted += pile.amount;
 			nextRng = pile.rng;
 		}

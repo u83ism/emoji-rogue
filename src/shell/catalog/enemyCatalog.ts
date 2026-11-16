@@ -1,5 +1,5 @@
 import {
-	GOLD_AMOUNT_MAX,
+	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	GRIFFIN_REGEN_AMOUNT,
 	MEDUSA_GAZE_CHANCE_PERCENT,
@@ -24,15 +24,18 @@ import type { EnemyKind } from "../../game/events.js";
 // union: adding a kind without a catalog entry is a compile error, which is
 // the whole point versus a hand-written list.
 
+/** 金貨の山1つ分 — the amount grows with the floor, so it is stated as the floor-1 range plus the per-floor step. */
+const GOLD_PILE_RANGE = `1階で${GOLD_AMOUNT_MIN}〜${calculateGoldAmountMax(1)}ゴールド、1階深くなるごとに上限が${calculateGoldAmountMax(2) - calculateGoldAmountMax(1)}増える`;
+
 /** 習性 — qualitative only; every number comes interpolated from balance.ts. */
 export const ENEMY_BEHAVIOR: Readonly<Record<EnemyKind, string>> = {
 	zombie: "特殊能力はない。視界に入ると追跡し、隣接すると攻撃してくる",
 	bat: "特殊能力はない",
-	thief: `攻撃はせず、接触すると所持金を盗んで姿を消す(${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールド、運が悪いとその${THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME}回分。レベルが高いほど少額で済みやすい)。盗まれる前に倒せば逆に金貨を落とす`,
+	thief: `攻撃はせず、接触すると所持金を盗んで姿を消す(${GOLD_PILE_RANGE}、運が悪いとその${THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME}回分。レベルが高いほど少額で済みやすい)。盗まれる前に倒せば逆に金貨を落とす(これまでに降りた最も深い階にいるときだけ)`,
 	nymph: "攻撃はせず、接触すると持ち物を1つ盗んで姿を消す",
 	aquator:
 		"攻撃が命中してもダメージは無いが、装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)",
-	orc: `特殊能力はない。倒すと${GOLD_AMOUNT_MIN}〜${GOLD_AMOUNT_MAX}ゴールドをその場で落とす`,
+	orc: `特殊能力はない。倒すと金貨の山1つ分(${GOLD_PILE_RANGE})をその場で落とす`,
 	dragon: "最深部にだけ出る最強格。1ターンに3回攻撃する",
 	yeti: "特殊能力はない。1ターンに2回攻撃する",
 	snake: "特殊能力はない",

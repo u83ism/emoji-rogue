@@ -62,7 +62,7 @@ export const INVENTORY_CAPACITY = 26;
 // is a kept arrangement — docs/tasks/game.md). It steals gold on contact
 // and flees instead of fighting (see enemies/enemyFlee.ts). Both the theft
 // and the gold it drops when killed first (combat.ts) are measured in gold
-// piles' worth (GOLD_AMOUNT_MIN..MAX rolls): one, or
+// piles' worth (the floor's own gold roll, see calculateGoldAmountMax): one, or
 // THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME when the magic save goes the thief's way
 // (failed → steals more) or the player's (passed → drops more).
 export const THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME = 5;
@@ -105,12 +105,13 @@ export const WANDERER_ROLL_INTERVAL_TURNS = 4;
 export const WANDERER_ROLL_DIE_SIDES = 6;
 
 /**
- * Chance (out of 100), rolled once per room at floor generation, that the
- * room holds one enemy — see floor/enemies.ts. Original Rogue rolls 80% for
- * a room with gold in it and 25% otherwise, with gold in half the rooms;
- * gold here is not placed per room, so the two are flattened into one rate.
+ * What a room holds at floor generation (original Rogue's do_rooms(), see
+ * floor/rooms.ts): a pile of gold in half the rooms, then one enemy — 80%
+ * of the time in a room that got gold, 25% in one that did not.
  */
-export const ROOM_ENEMY_SPAWN_CHANCE_PERCENT = 50;
+export const ROOM_GOLD_CHANCE_PERCENT = 50;
+export const ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD = 80;
+export const ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD = 25;
 
 /**
  * All enemies spawn asleep (see floor.ts) and take no action until they wake
@@ -249,9 +250,14 @@ export const FOOD_ROLLS_PER_FLOOR = 9;
 export const FOOD_ROLL_CHANCE_BASIS_POINTS = 576;
 export const FOOD_DROUGHT_FLOOR_LIMIT = 3;
 
-export const GOLD_PILES_PER_FLOOR = 3;
+/**
+ * One pile of gold is GOLD_AMOUNT_MIN..calculateGoldAmountMax(floor),
+ * uniformly — original Rogue's GOLDCALC, `rnd(50 + 10 * level) + 2`. The
+ * deeper the floor, the bigger the pile (and the bigger a thief's take).
+ */
 export const GOLD_AMOUNT_MIN = 2;
-export const GOLD_AMOUNT_MAX = 20;
+export const calculateGoldAmountMax = (floor: number): number =>
+	51 + 10 * floor;
 
 export const TRAP_COUNT_PER_FLOOR = 2;
 export const DART_TRAP_DAMAGE = 2;

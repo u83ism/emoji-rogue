@@ -473,6 +473,10 @@ export const validateGameState = (
 	if (!isPositiveInteger(floor)) {
 		return err("floor");
 	}
+	const deepestFloor = value.deepestFloor;
+	if (!isPositiveInteger(deepestFloor) || deepestFloor < floor) {
+		return err("deepestFloor");
+	}
 	const turnsOnCurrentFloor = value.turnsOnCurrentFloor;
 	if (!isNonNegativeInteger(turnsOnCurrentFloor)) {
 		return err("turnsOnCurrentFloor");
@@ -592,6 +596,7 @@ export const validateGameState = (
 		detectMonstersTurnsRemaining,
 		hallucinatingTurnsRemaining,
 		floor,
+		deepestFloor,
 		turnsOnCurrentFloor,
 		quietTurns,
 		floorsWithoutFood,

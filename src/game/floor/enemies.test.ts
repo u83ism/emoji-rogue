@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { Room } from "../../map/features.js";
 import { createRng, type Rng } from "../../rng.js";
 import {
 	ENEMY_DEPTH_ORDER,
@@ -7,12 +6,10 @@ import {
 	ENEMY_STATS,
 } from "../enemies/enemyStats.js";
 import { ENEMY_KIND_VALUES } from "../events.js";
-import type { Position } from "../state.js";
 import {
 	buildSpawnedEnemy,
 	calculateEnemyFloorRange,
 	drawEnemyKindForFloor,
-	drawFloorEnemies,
 } from "./enemies.js";
 
 // Same scripted-rng idiom as items.test.ts: no seed hunting, every roll
@@ -29,24 +26,6 @@ const createHighestRollRng = (): Rng => ({
 	...createRng(1),
 	getUniformInt: (_lowerBound, upperBound) => upperBound,
 });
-
-const buildRoom = (x1: number): Room => ({
-	kind: "room",
-	x1,
-	y1: 0,
-	x2: x1 + 2,
-	y2: 2,
-	doors: {},
-});
-
-/** Three 3x3 rooms side by side, and every one of their tiles pooled. */
-const ROOMS: readonly Room[] = [buildRoom(0), buildRoom(10), buildRoom(20)];
-const buildPool = (): Position[] =>
-	ROOMS.flatMap((room) =>
-		[0, 1, 2].flatMap((offsetX) =>
-			[0, 1, 2].map((y) => ({ x: room.x1 + offsetX, y })),
-		),
-	);
 
 describe("drawEnemyKindForFloor", () => {
 	it("on floor 1 only ever draws one of the five weakest kinds", () => {
@@ -132,53 +111,5 @@ describe("buildSpawnedEnemy", () => {
 		);
 		expect(sturdiest.maxHp).toBe(ENEMY_STATS.troll.level * ENEMY_HP_DICE_SIDES);
 		expect(sturdiest.hp).toBe(sturdiest.maxHp);
-	});
-});
-
-describe("drawFloorEnemies", () => {
-	it("with every room roll landing, puts one sleeping enemy inside each room", () => {
-		const enemies = drawFloorEnemies(
-			buildPool(),
-			createLowestRollRng(),
-			1,
-			ROOMS,
-		);
-		expect(enemies.length).toBe(ROOMS.length);
-		expect(enemies.every((enemy) => !enemy.awake)).toBe(true);
-		enemies.forEach((enemy, index) => {
-			const room = ROOMS[index];
-			expect(enemy.x).toBeGreaterThanOrEqual(room?.x1 ?? 0);
-			expect(enemy.x).toBeLessThanOrEqual(room?.x2 ?? 0);
-		});
-	});
-
-	it("removes each spawn tile from the pool", () => {
-		const pool = buildPool();
-		const before = pool.length;
-		const enemies = drawFloorEnemies(pool, createLowestRollRng(), 1, ROOMS);
-		expect(pool.length).toBe(before - enemies.length);
-		for (const enemy of enemies) {
-			expect(
-				pool.some((tile) => tile.x === enemy.x && tile.y === enemy.y),
-			).toBe(false);
-		}
-	});
-
-	it("with every room roll missing, spawns nothing", () => {
-		expect(
-			drawFloorEnemies(buildPool(), createHighestRollRng(), 1, ROOMS),
-		).toEqual([]);
-	});
-
-	it("skips a room none of whose tiles are pooled", () => {
-		const poolWithoutFirstRoom = buildPool().filter((tile) => tile.x >= 10);
-		const enemies = drawFloorEnemies(
-			poolWithoutFirstRoom,
-			createLowestRollRng(),
-			1,
-			ROOMS,
-		);
-		expect(enemies.length).toBe(ROOMS.length - 1);
-		expect(enemies.every((enemy) => enemy.x >= 10)).toBe(true);
 	});
 });

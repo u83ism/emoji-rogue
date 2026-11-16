@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../../pointkey.js";
 import {
+	calculateGoldAmountMax,
 	FOOD_ROLLS_PER_FLOOR,
 	GOAL_FLOOR,
+	GOLD_AMOUNT_MIN,
 	POTION_COUNT_PER_FLOOR,
 } from "../balance.js";
 import { buildDungeonGameState } from "../initialState.js";
@@ -31,6 +33,12 @@ describe("descendStairs", () => {
 			{ type: "floor-descended", payload: { floor: 2 } },
 		]);
 		expect(below.status).toBe("playing");
+	});
+
+	it("tracks the deepest floor reached", () => {
+		expect(start.deepestFloor).toBe(1);
+		expect(below.deepestFloor).toBe(2);
+		expect(descendStairs(below).deepestFloor).toBe(3);
 	});
 
 	it("resets turnsOnCurrentFloor to 0", () => {
@@ -83,10 +91,11 @@ describe("descendStairs", () => {
 			expect(
 				state.enemies.filter((enemy) => enemy.kind === "thief").length,
 			).toBeLessThanOrEqual(1);
-			expect(state.goldPiles.length).toBe(3);
 			for (const pile of state.goldPiles) {
-				expect(pile.amount).toBeGreaterThanOrEqual(2);
-				expect(pile.amount).toBeLessThanOrEqual(20);
+				expect(pile.amount).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
+				expect(pile.amount).toBeLessThanOrEqual(
+					calculateGoldAmountMax(state.floor),
+				);
 			}
 			expect(state.traps.filter((trap) => trap.kind === "dart").length).toBe(2);
 			expect(
@@ -199,6 +208,40 @@ describe("ascendStairs", () => {
 			expect(state.stairs.direction).toBe("up");
 			expect(state.status).toBe("playing");
 		}
+	});
+
+	it("climbing back keeps the deepest floor; with the amulet those floors hold no gold", () => {
+		let state = buildDungeonGameState(40, 20, 7);
+		for (let floor = 2; floor <= 6; floor++) {
+			state = descendStairs(state);
+		}
+		let emptyHanded = state;
+		let carrying = { ...state, hasAmulet: true };
+		let emptyHandedGold = 0;
+		for (let floor = 5; floor >= 1; floor--) {
+			emptyHanded = ascendStairs(emptyHanded);
+			carrying = ascendStairs(carrying);
+			expect(emptyHanded.deepestFloor).toBe(6);
+			expect(carrying.deepestFloor).toBe(6);
+			expect(carrying.goldPiles).toEqual([]);
+			emptyHandedGold += emptyHanded.goldPiles.length;
+		}
+		/* without the amulet the same climb still finds gold */
+		expect(emptyHandedGold).toBeGreaterThan(0);
+	});
+
+	it("a forced fall back to the deepest floor with the amulet does hold gold again", () => {
+		let piles = 0;
+		for (let seed = 1; seed <= 10; seed++) {
+			const carrying = {
+				...buildDungeonGameState(40, 20, seed),
+				floor: 5,
+				deepestFloor: 6,
+				hasAmulet: true,
+			};
+			piles += descendStairs(carrying).goldPiles.length;
+		}
+		expect(piles).toBeGreaterThan(0);
 	});
 
 	it("surfacing from floor 1 with the amulet wins the run without generating a floor 0", () => {

@@ -295,7 +295,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			? payload.variant === undefined
 			: isItemEventPayload(payload),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
-	"player-regenerated": (payload) => isPositiveInteger(payload.amount),
 	"enemy-regenerated": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.amount),
 	"player-drained": (payload) => isPositiveInteger(payload.amount),
@@ -467,6 +466,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(turnsOnCurrentFloor)) {
 		return err("turnsOnCurrentFloor");
 	}
+	const quietTurns = value.quietTurns;
+	if (!isNonNegativeInteger(quietTurns)) {
+		return err("quietTurns");
+	}
 	const stairs = value.stairs;
 	if (
 		!isRecord(stairs) ||
@@ -567,6 +570,7 @@ export const validateGameState = (
 		hallucinatingTurnsRemaining,
 		floor,
 		turnsOnCurrentFloor,
+		quietTurns,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,
 		hasAmulet,

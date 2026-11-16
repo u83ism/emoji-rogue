@@ -86,6 +86,7 @@ const applyEnemyHit = (
 		...state,
 		enemies,
 		hasAttacked: true,
+		quietTurns: 0,
 		events: buildEventLog(state.events, events),
 	};
 	if (remainingHp > 0) {
@@ -144,6 +145,7 @@ export const applyPlayerAttack = (
 			...state,
 			rng: hitRoll.rng,
 			hasAttacked: true,
+			quietTurns: 0,
 			events: buildEventLog(state.events, [
 				{ type: "player-attack-missed", payload: { target: target.kind } },
 			]),

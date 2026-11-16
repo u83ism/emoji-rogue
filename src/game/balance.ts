@@ -126,7 +126,8 @@ export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
 ];
 
 export const POTION_COUNT_PER_FLOOR = 1;
-export const POTION_HEAL_AMOUNT = 5;
+/** A heal potion restores one die of this many sides per player level (original Rogue's `roll(level, 4)`); healing past the cap raises max HP by 1 instead. */
+export const HEAL_POTION_DICE_SIDES = 4;
 
 /** Chance (out of 100), independently rolled per floor, that a weapon spawns — which of the five kinds is a weighted draw, see items/equipmentKinds.ts. */
 export const WEAPON_SPAWN_CHANCE_PERCENT = 15;
@@ -260,13 +261,18 @@ export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
 export const RING_SPAWN_CHANCE_PERCENT = 8;
+/** HP a worn ring of regeneration heals every turn, as in original Rogue — see turnEnd/regeneration.ts. */
+export const RING_REGEN_AMOUNT = 1;
 /**
- * Chance (out of 100), rolled independently every turn a ring of
- * regeneration is equipped and playerHp is below PLAYER_MAX_HP, that it
- * heals 1 HP this turn — same "roll every eligible turn, not guaranteed"
- * idiom as WAKE_CHANCE_PERCENT.
+ * Natural healing (original Rogue's doctor() daemon, see
+ * turnEnd/regeneration.ts). Below NATURAL_HEALING_FAST_LEVEL the player
+ * heals 1 HP whenever quietTurns + 2 x level exceeds
+ * NATURAL_HEALING_SLOW_THRESHOLD; from that level on, 1..(level - 7) HP
+ * every NATURAL_HEALING_FAST_INTERVAL quiet turns.
  */
-export const RING_REGEN_CHANCE_PERCENT = 20;
+export const NATURAL_HEALING_SLOW_THRESHOLD = 20;
+export const NATURAL_HEALING_FAST_LEVEL = 8;
+export const NATURAL_HEALING_FAST_INTERVAL = 3;
 
 /** Chance (out of 100), independently rolled per floor, that a ring of sustenance spawns. */
 export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
@@ -274,7 +280,7 @@ export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
  * Chance (out of 100), rolled independently every turn a ring of sustenance
  * is equipped, that the whole hunger tick (food loss, and any starvation
  * consequences) is skipped this turn — same "roll every eligible turn"
- * idiom as RING_REGEN_CHANCE_PERCENT.
+ * idiom as WAKE_CHANCE_PERCENT.
  */
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 

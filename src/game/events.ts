@@ -313,11 +313,6 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** Fired only when the roll succeeds — see applyRegenerationTick. */
-			readonly type: "player-regenerated";
-			readonly payload: { readonly amount: number };
-	  }
-	| {
 			/** kind is undefined when the inventory was empty — see advanceEnemies. */
 			readonly type: "item-stolen";
 			readonly payload: {

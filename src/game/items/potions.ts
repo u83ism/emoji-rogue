@@ -3,13 +3,14 @@ import {
 	CONFUSION_POTION_DURATION,
 	DETECT_MONSTER_POTION_DURATION,
 	HALLUCINATION_POTION_DURATION,
+	HEAL_POTION_DICE_SIDES,
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
 	POISON_DAMAGE,
-	POTION_HEAL_AMOUNT,
 	STRENGTH_POTION_ATTACK_BONUS,
 } from "../balance.js";
+import { rollDamageDice } from "../damage.js";
 import {
 	buildEventLog,
 	type GameEvent,
@@ -46,13 +47,24 @@ export const applyUsePotion = (
 
 	switch (kind) {
 		case "heal-potion": {
-			const amount = Math.min(
-				POTION_HEAL_AMOUNT,
-				state.playerMaxHp - state.playerHp,
+			/* original Rogue: level d4, and a potion that would overheal raises max HP by 1 instead */
+			const healRoll = rollDamageDice(
+				state.rng,
+				{ count: state.playerLevel, sides: HEAL_POTION_DICE_SIDES },
+				0,
+				0,
 			);
+			const overheals = state.playerHp + healRoll.damage > state.playerMaxHp;
+			const playerMaxHp = overheals ? state.playerMaxHp + 1 : state.playerMaxHp;
+			const playerHp = overheals
+				? playerMaxHp
+				: state.playerHp + healRoll.damage;
+			const amount = playerHp - state.playerHp;
 			return {
 				...state,
-				playerHp: state.playerHp + amount,
+				playerHp,
+				playerMaxHp,
+				rng: healRoll.rng,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{ type: "player-healed", payload: { by: kind, amount } },

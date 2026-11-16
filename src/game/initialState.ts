@@ -35,6 +35,7 @@ const INITIAL_RUN_STATE = {
 	goldCollected: 0,
 	floor: 1,
 	turnsOnCurrentFloor: 0,
+	quietTurns: 0,
 	hasAmulet: false,
 	hasAttacked: false,
 	hasEaten: false,

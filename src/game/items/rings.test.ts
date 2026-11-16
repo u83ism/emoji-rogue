@@ -254,11 +254,7 @@ describe("items/rings", () => {
 
 	it("a ring of regeneration heals HP over time via waiting turns while equipped (wired into every turn-consuming action)", () => {
 		const state = {
-			...buildArenaGameState(
-				9,
-				3,
-				1,
-			) /* this seed's first regen roll succeeds */,
+			...buildArenaGameState(9, 3, 1),
 			inventory: [
 				{
 					itemId: 1,
@@ -271,8 +267,9 @@ describe("items/rings", () => {
 		};
 		const next = advanceTurn(state, { type: "wait" });
 		expect(next.playerHp).toBe(state.playerHp + 1);
-		expect(
-			next.events.some((event) => event.type === "player-regenerated"),
-		).toBe(true);
+		/* every turn, not a roll */
+		expect(advanceTurn(next, { type: "wait" }).playerHp).toBe(
+			state.playerHp + 2,
+		);
 	});
 });

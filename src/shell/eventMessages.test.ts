@@ -216,10 +216,6 @@ describe("formatEvent", () => {
 				"指輪を身につけた。空腹の進みがゆるやかになった!",
 			],
 			[
-				{ type: "player-regenerated", payload: { amount: 1 } },
-				"指輪の力でHPが1回復した",
-			],
-			[
 				{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 1 } },
 				"武器強化の巻物を読んだ。指定した武器の命中が1上がった!",
 			],

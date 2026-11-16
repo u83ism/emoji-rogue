@@ -137,6 +137,13 @@ export const advanceEnemies = (state: GameState): GameState => {
 		...state,
 		playerHp: Math.max(0, progress.playerHp),
 		playerMaxHp: progress.playerMaxHp,
+		/* an attack on the player, landed or not, ends the quiet natural healing waits for */
+		quietTurns: progress.events.some(
+			(event) =>
+				event.type === "player-hit" || event.type === "enemy-attack-missed",
+		)
+			? 0
+			: state.quietTurns,
 		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
 		goldCollected: progress.goldCollected,
 		inventory: progress.inventory,

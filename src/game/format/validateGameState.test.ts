@@ -1044,7 +1044,7 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed ring-equipped and player-regenerated event and rejects broken ones", () => {
+	it("accepts a well-formed ring-equipped event and rejects broken ones — including the removed player-regenerated", () => {
 		const equipped = validateGameState({
 			...buildValidState(),
 			events: [
@@ -1052,12 +1052,6 @@ describe("validateGameState", () => {
 			],
 		});
 		expect(equipped.ok).toBe(true);
-
-		const regenerated = validateGameState({
-			...buildValidState(),
-			events: [{ type: "player-regenerated", payload: { amount: 1 } }],
-		});
-		expect(regenerated.ok).toBe(true);
 
 		expectRejected(
 			{
@@ -1069,7 +1063,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-regenerated", payload: { amount: 0 } }],
+				events: [{ type: "player-regenerated", payload: { amount: 1 } }],
 			},
 			"events",
 		);

@@ -68,7 +68,7 @@ const applyHungerConsequences = (state: GameState): GameState => {
  * While a ring of sustenance is currently equipped, the whole tick has a
  * SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT chance of being skipped outright
  * (rolled via the same temporary-stateful-Rng pattern as
- * applyRegenerationTick, consuming state.rng either way). Without the ring
+ * descendStairs, consuming state.rng either way). Without the ring
  * this function never touches state.rng, staying fully deterministic.
  */
 export const applyHungerTick = (state: GameState): GameState => {

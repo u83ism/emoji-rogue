@@ -79,6 +79,7 @@ describe("save file shape guard", () => {
 				traps: [{ x: "number", y: "number", kind: "string" }],
 				floor: "number",
 				turnsOnCurrentFloor: "number",
+				quietTurns: "number",
 				stairs: { x: "number", y: "number", direction: "string" },
 				amulet: undefined,
 				hasAmulet: "boolean",

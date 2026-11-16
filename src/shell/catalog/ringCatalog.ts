@@ -1,7 +1,7 @@
 import {
 	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
-	RING_REGEN_CHANCE_PERCENT,
+	RING_REGEN_AMOUNT,
 	RING_SPAWN_CHANCE_PERCENT,
 	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
@@ -28,7 +28,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		catalogName: "再生の指輪",
 		category: "指輪",
 		spawn: { type: "chance", percent: RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${RING_REGEN_CHANCE_PERCENT}%でHPが1回復する(外すと効果も消える)`,
+		effect: `装備している間、毎ターンHPが${RING_REGEN_AMOUNT}回復する(外すと効果も消える)`,
 	},
 	"sustenance-ring": {
 		catalogName: "満腹の指輪",

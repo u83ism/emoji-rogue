@@ -121,8 +121,6 @@ export const formatEvent = (
 			}
 			return `${ITEM_NAMES[event.payload.kind]}を身につけた。${effect}`;
 		}
-		case "player-regenerated":
-			return `指輪の力でHPが${event.payload.amount}回復した`;
 		case "weapon-enchanted":
 			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":

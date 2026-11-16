@@ -280,6 +280,8 @@ export interface GameState {
 	readonly traps: readonly Trap[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
+	/** Turns since the player last fought (swung at an enemy or was swung at) — original Rogue's `quiet`. Natural healing waits on it and resets it; see turnEnd/regeneration.ts. */
+	readonly quietTurns: number;
 	/** Turns spent on the current floor since arriving. Resets to 0 on every floor transition; drives the hallucination decoy glyph cycling in frame.ts. */
 	readonly turnsOnCurrentFloor: number;
 	/**

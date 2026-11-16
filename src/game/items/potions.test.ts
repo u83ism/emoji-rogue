@@ -25,11 +25,12 @@ const zombie = (x: number, y: number): Enemy => ({
 });
 
 describe("items/potions", () => {
-	it("using a held potion drinks it: capped heal, one consumed from inventory", () => {
+	it("using a held potion heals level d4, one consumed from inventory", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerHp:
-				PLAYER_MAX_HP - 3 /* missing 3, potion heals 5: the cap must win */,
+			playerLevel: 3,
+			playerHp: 10,
+			playerMaxHp: 100,
 			inventory: [
 				{ itemId: 1, kind: "heal-potion" as const },
 				{ itemId: 2, kind: "heal-potion" as const },
@@ -39,14 +40,36 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.playerHp).toBe(PLAYER_MAX_HP);
+		const amount = next.playerHp - state.playerHp;
+		/* 3d4 */
+		expect(amount).toBeGreaterThanOrEqual(3);
+		expect(amount).toBeLessThanOrEqual(12);
+		expect(next.playerMaxHp).toBe(state.playerMaxHp);
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "heal-potion" }]);
 		expect(next.events).toEqual([
-			{ type: "player-healed", payload: { by: "heal-potion", amount: 3 } },
+			{ type: "player-healed", payload: { by: "heal-potion", amount } },
 		]);
 	});
 
-	it("using the last potion at full health wastes it (amount 0) and empties the stack", () => {
+	it("a potion that would overheal fills HP and raises max HP by 1 instead, as in original Rogue", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerLevel: 20 /* 20d4 is at least 20 — always past the cap */,
+			playerHp: PLAYER_MAX_HP - 3,
+			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.playerMaxHp).toBe(PLAYER_MAX_HP + 1);
+		expect(next.playerHp).toBe(PLAYER_MAX_HP + 1);
+		expect(next.events).toEqual([
+			{ type: "player-healed", payload: { by: "heal-potion", amount: 4 } },
+		]);
+	});
+
+	it("using the last potion at full health still raises max HP by 1 and empties the stack", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
@@ -55,10 +78,11 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.playerHp).toBe(state.playerHp + 1);
+		expect(next.playerMaxHp).toBe(state.playerMaxHp + 1);
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
-			{ type: "player-healed", payload: { by: "heal-potion", amount: 0 } },
+			{ type: "player-healed", payload: { by: "heal-potion", amount: 1 } },
 		]);
 	});
 

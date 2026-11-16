@@ -901,6 +901,17 @@ describe("advanceEnemies", () => {
 		).toBe(false);
 	});
 
+	it("an enemy that just killed the player does not regenerate — player-died stays the last event", () => {
+		const state = {
+			...buildExposedState([troll(5, 1, TEST_ENEMY_HP - 3)]),
+			playerHp: 1,
+		};
+		const next = advanceEnemies(state);
+		expect(next.status).toBe("dead");
+		expect(next.events.at(-1)?.type).toBe("player-died");
+		expect(next.enemies).toEqual([troll(5, 1, TEST_ENEMY_HP - 3)]);
+	});
+
 	it("a griffin regenerates once per turn", () => {
 		const state = buildCorridorState([griffin(7, 1, TEST_ENEMY_HP - 3)]);
 		const next = advanceEnemies(state);

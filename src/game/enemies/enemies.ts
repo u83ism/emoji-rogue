@@ -113,7 +113,10 @@ export const advanceEnemies = (state: GameState): GameState => {
 		const actor = result.actor;
 		progress = result.progress;
 
-		const regen = resolveEnemyRegen(enemy.kind, actor.hp, enemy.maxHp);
+		/* nothing is logged after the blow that ended the run — player-died stays the last event */
+		const regen = progress.died
+			? { hp: actor.hp, event: undefined }
+			: resolveEnemyRegen(enemy.kind, actor.hp, enemy.maxHp);
 		if (regen.event !== undefined) {
 			progress = { ...progress, events: [...progress.events, regen.event] };
 		}

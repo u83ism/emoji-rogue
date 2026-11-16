@@ -3,8 +3,8 @@ import { createArenaMap } from "../map/arena.js";
 import { createRng, seedToState } from "../rng.js";
 import {
 	PLAYER_ATTACK_DAMAGE,
-	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,
+	PLAYER_START_FOOD,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildFloorLayout } from "./floor/layout.js";
@@ -22,7 +22,7 @@ const INITIAL_RUN_STATE = {
 	playerLevel: 1,
 	playerExperience: 0,
 	playerPower: PLAYER_ATTACK_DAMAGE,
-	playerFood: PLAYER_MAX_FOOD,
+	playerFood: PLAYER_START_FOOD,
 	confusedTurnsRemaining: 0,
 	levitationTurnsRemaining: 0,
 	blindTurnsRemaining: 0,
@@ -36,6 +36,7 @@ const INITIAL_RUN_STATE = {
 	floor: 1,
 	turnsOnCurrentFloor: 0,
 	quietTurns: 0,
+	floorsWithoutFood: 0,
 	hasAmulet: false,
 	hasAttacked: false,
 	hasEaten: false,
@@ -156,6 +157,7 @@ export const buildDungeonGameState = (
 		1,
 		"down",
 		INITIAL_RUN_STATE.nextItemId + STARTING_INVENTORY.length,
+		INITIAL_RUN_STATE.floorsWithoutFood,
 	);
 
 	return deriveExploredState({
@@ -174,5 +176,6 @@ export const buildDungeonGameState = (
 		inventory: STARTING_INVENTORY,
 		rng: rng.getState(),
 		nextItemId: layout.nextItemId,
+		floorsWithoutFood: layout.floorsWithoutFood,
 	});
 };

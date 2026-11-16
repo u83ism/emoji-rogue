@@ -1,7 +1,7 @@
 /* file-size-exception: 手書きセーブ検証 — 依存追加禁止(zod不採用)の受容コスト。型ナローイングの都合で逐次チェックが必要(2026-07-18裁可) */
 import { err, ok, type Result } from "../../result.js";
 import type { RngState } from "../../rng.js";
-import { PLAYER_MAX_FOOD } from "../balance.js";
+import { PLAYER_MAX_FOOD, STARVATION_TURNS } from "../balance.js";
 import {
 	ARMOR_KIND_VALUES,
 	type DeathCause,
@@ -271,7 +271,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isInteger(payload.armorClass),
 	"player-hungry": emptyPayload,
 	"player-weak": emptyPayload,
-	"player-starved": (payload) => isPositiveInteger(payload.damage),
+	"player-fainted": (payload) => isPositiveInteger(payload.turns),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
 	/* trapdoor, teleport, bear, rust and sleeping-gas are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE, SLEEPING_GAS_TRAP_DAMAGE */
@@ -431,7 +431,11 @@ export const validateGameState = (
 		return err("playerPower");
 	}
 	const playerFood = value.playerFood;
-	if (!isNonNegativeInteger(playerFood) || playerFood > PLAYER_MAX_FOOD) {
+	if (
+		!isInteger(playerFood) ||
+		playerFood > PLAYER_MAX_FOOD ||
+		playerFood < -STARVATION_TURNS - 1
+	) {
 		return err("playerFood");
 	}
 	const confusedTurnsRemaining = value.confusedTurnsRemaining;
@@ -465,6 +469,10 @@ export const validateGameState = (
 	const turnsOnCurrentFloor = value.turnsOnCurrentFloor;
 	if (!isNonNegativeInteger(turnsOnCurrentFloor)) {
 		return err("turnsOnCurrentFloor");
+	}
+	const floorsWithoutFood = value.floorsWithoutFood;
+	if (!isNonNegativeInteger(floorsWithoutFood)) {
+		return err("floorsWithoutFood");
 	}
 	const quietTurns = value.quietTurns;
 	if (!isNonNegativeInteger(quietTurns)) {
@@ -571,6 +579,7 @@ export const validateGameState = (
 		floor,
 		turnsOnCurrentFloor,
 		quietTurns,
+		floorsWithoutFood,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,
 		hasAmulet,

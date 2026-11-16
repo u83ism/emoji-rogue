@@ -28,6 +28,7 @@ const buildFloorTransition = (
 		nextFloor,
 		stairsDirection,
 		state.nextItemId,
+		state.floorsWithoutFood,
 	);
 	return deriveExploredState({
 		...state,
@@ -46,6 +47,7 @@ const buildFloorTransition = (
 		floor: nextFloor,
 		turnsOnCurrentFloor: 0,
 		nextItemId: layout.nextItemId,
+		floorsWithoutFood: layout.floorsWithoutFood,
 	});
 };
 

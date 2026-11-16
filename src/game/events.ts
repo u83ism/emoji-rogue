@@ -261,9 +261,9 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** Fired every turn spent at 0 food, alongside the HP loss it causes. */
-			readonly type: "player-starved";
-			readonly payload: { readonly damage: number };
+			/** Fainting from an empty stomach — `turns` of paralysis. See turnEnd/hunger.ts. */
+			readonly type: "player-fainted";
+			readonly payload: { readonly turns: number };
 	  }
 	| {
 			/** Fired once, the turn playerFood crosses PLAYER_WEAK_THRESHOLD going down — see calculatePlayerAttackDamage. */

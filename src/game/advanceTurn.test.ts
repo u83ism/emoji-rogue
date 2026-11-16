@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
-import { GOAL_FLOOR, PLAYER_MAX_FOOD, PLAYER_MAX_HP } from "./balance.js";
+import { GOAL_FLOOR, PLAYER_MAX_HP, PLAYER_START_FOOD } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy, GameState, HeldItem } from "./state.js";
@@ -354,10 +354,10 @@ describe("advanceTurn", () => {
 
 	it("every turn-consuming action ticks hunger down by one", () => {
 		const waited = advanceTurn(buildArenaGameState(9, 3, 1), { type: "wait" });
-		expect(waited.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+		expect(waited.playerFood).toBe(PLAYER_START_FOOD - 1);
 
 		const moved = advanceTurn(buildArenaGameState(9, 3, 1), move("east"));
-		expect(moved.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+		expect(moved.playerFood).toBe(PLAYER_START_FOOD - 1);
 
 		const usedItem = advanceTurn(
 			{
@@ -366,7 +366,7 @@ describe("advanceTurn", () => {
 			},
 			{ type: "use-item", payload: { itemId: 1 } },
 		);
-		expect(usedItem.playerFood).toBe(PLAYER_MAX_FOOD - 1);
+		expect(usedItem.playerFood).toBe(PLAYER_START_FOOD - 1);
 	});
 
 	it("moving onto the staircase descends to the next floor", () => {

@@ -24,7 +24,6 @@ import {
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
-	PLAYER_MAX_FOOD,
 	PLAYER_WEAK_THRESHOLD,
 	parseSaveFileContent,
 	resolveItemVerbPrompt,
@@ -209,7 +208,7 @@ const renderStatus = () => {
 		state.playerHp <= LOW_HP_THRESHOLD ? "#f66" : "#6f6",
 	);
 	appendStatusSegment(
-		` 🍖 ${state.playerFood}/${PLAYER_MAX_FOOD}`,
+		` 🍖 ${Math.max(0, state.playerFood)}`,
 		state.playerFood <= 0
 			? "#f66"
 			: state.playerFood <= PLAYER_WEAK_THRESHOLD

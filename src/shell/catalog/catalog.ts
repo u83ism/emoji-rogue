@@ -50,6 +50,8 @@ const formatSpawn = (spawn: SpawnInfo): string => {
 			return `確定${spawn.countPerFloor}個/フロア`;
 		case "chance":
 			return `${spawn.percent}%/フロア`;
+		case "described":
+			return spawn.description;
 	}
 };
 

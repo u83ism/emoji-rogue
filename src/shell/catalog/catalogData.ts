@@ -25,7 +25,9 @@ import type { TrapKind } from "../../game/events.js";
 /** How something appears on a floor — formatted by catalog.ts. */
 export type SpawnInfo =
 	| { readonly type: "guaranteed"; readonly countPerFloor: number }
-	| { readonly type: "chance"; readonly percent: number };
+	| { readonly type: "chance"; readonly percent: number }
+	/** Anything a count or a single percentage cannot say — the text is printed as is. */
+	| { readonly type: "described"; readonly description: string };
 
 export type ItemCategory = "薬" | "巻物" | "杖" | "指輪" | "装備" | "食料";
 

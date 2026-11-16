@@ -245,7 +245,7 @@ export interface GameState {
 	 * calculatePlayerAttackDamage in items/equipment.ts.
 	 */
 	readonly playerPower: number;
-	/** Decreases by 1 every turn; 0 causes starvation damage. See PLAYER_MAX_FOOD. */
+	/** Starts at PLAYER_START_FOOD and drops every turn; once empty it keeps counting below zero toward starvation at -STARVATION_TURNS. See turnEnd/hunger.ts. */
 	readonly playerFood: number;
 	/** Turns left of randomized movement — see applyStatusCountdownTicks and applyMove. 0 means not confused. */
 	readonly confusedTurnsRemaining: number;
@@ -282,6 +282,8 @@ export interface GameState {
 	readonly floor: number;
 	/** Turns since the player last fought (swung at an enemy or was swung at) — original Rogue's `quiet`. Natural healing waits on it and resets it; see turnEnd/regeneration.ts. */
 	readonly quietTurns: number;
+	/** Floors generated since one last held a food ration — original Rogue's `no_food`, which guarantees a ration after a drought. See floor/food.ts. */
+	readonly floorsWithoutFood: number;
 	/** Turns spent on the current floor since arriving. Resets to 0 on every floor transition; drives the hallucination decoy glyph cycling in frame.ts. */
 	readonly turnsOnCurrentFloor: number;
 	/**

@@ -146,8 +146,13 @@ describe("validateGameState", () => {
 		);
 		expectRejected({ ...buildValidState(), playerPower: 0 }, "playerPower");
 		expectRejected({ ...buildValidState(), playerPower: "1" }, "playerPower");
-		expectRejected({ ...buildValidState(), playerFood: -1 }, "playerFood");
-		expectRejected({ ...buildValidState(), playerFood: 101 }, "playerFood");
+		/* an empty stomach counts below zero, down to one past STARVATION_TURNS */
+		expect(
+			validateGameState({ ...buildValidState(), playerFood: -851 }).ok,
+		).toBe(true);
+		expectRejected({ ...buildValidState(), playerFood: -852 }, "playerFood");
+		expectRejected({ ...buildValidState(), playerFood: 2001 }, "playerFood");
+		expectRejected({ ...buildValidState(), playerFood: 0.5 }, "playerFood");
 		expectRejected({ ...buildValidState(), playerFood: "1" }, "playerFood");
 
 		const valid = buildValidState();
@@ -1172,7 +1177,7 @@ describe("validateGameState", () => {
 			events: [
 				{ type: "player-hungry", payload: {} },
 				{ type: "player-weak", payload: {} },
-				{ type: "player-starved", payload: { damage: 1 } },
+				{ type: "player-fainted", payload: { turns: 5 } },
 				{ type: "player-ate", payload: { amount: 50 } },
 				{ type: "player-died", payload: { by: "hunger" } },
 			],
@@ -1182,7 +1187,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-starved", payload: { damage: 0 } }],
+				events: [{ type: "player-fainted", payload: { turns: 0 } }],
 			},
 			"events",
 		);

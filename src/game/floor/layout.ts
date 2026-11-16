@@ -13,6 +13,7 @@ import type {
 	Trap,
 } from "../state.js";
 import { drawFloorEnemies } from "./enemies.js";
+import { drawFloorFood } from "./food.js";
 import { drawFloorItems } from "./items.js";
 import {
 	collectSpawnPool,
@@ -36,6 +37,8 @@ export interface FloorLayout {
 	readonly rooms: readonly Room[];
 	/** `nextItemId` after this floor's equipment spawns each consumed one — see drawFloorItems. */
 	readonly nextItemId: number;
+	/** The food drought counter to carry to the next floor — see food.ts's drawFloorFood. */
+	readonly floorsWithoutFood: number;
 }
 
 /**
@@ -63,6 +66,7 @@ export const buildFloorLayout = (
 	floor: number,
 	stairsDirection: "up" | "down",
 	nextItemId: number,
+	floorsWithoutFood: number,
 ): FloorLayout => {
 	const columns = buildEmptyColumns(width);
 	const dungeon = createRogueMap(width, height, rng).create((x, y, value) => {
@@ -94,12 +98,20 @@ export const buildFloorLayout = (
 	const amulet: Position | undefined =
 		floor === GOAL_FLOOR ? drawSpawnTile(remaining, rng) : undefined;
 
+	const food = drawFloorFood(rng, floorsWithoutFood);
 	const {
 		items,
 		goldPiles,
 		traps,
 		nextItemId: nextItemIdAfterFloor,
-	} = drawFloorItems(remaining, rng, floor, isWalkAroundTile, nextItemId);
+	} = drawFloorItems(
+		remaining,
+		rng,
+		floor,
+		isWalkAroundTile,
+		nextItemId,
+		food.foodCount,
+	);
 
 	return {
 		terrain: columns,
@@ -112,5 +124,6 @@ export const buildFloorLayout = (
 		amulet,
 		rooms,
 		nextItemId: nextItemIdAfterFloor,
+		floorsWithoutFood: food.floorsWithoutFood,
 	};
 };

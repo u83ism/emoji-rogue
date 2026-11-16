@@ -78,12 +78,12 @@ export const formatEvent = (
 			return "空腹を感じてきた";
 		case "player-weak":
 			return "空腹で力が入らなくなってきた";
-		case "player-starved":
-			return `空腹で${event.payload.damage}のダメージを受けた`;
+		case "player-fainted":
+			return "空腹で気を失った!";
 		case "player-ate":
 			return event.payload.amount > 0
-				? `${ITEM_NAMES.food}を食べた。空腹度が${event.payload.amount}回復した`
-				: `${ITEM_NAMES.food}を食べたが、空腹度は満タンだった`;
+				? `${ITEM_NAMES.food}を食べた。満腹度が${event.payload.amount}回復した`
+				: `${ITEM_NAMES.food}を食べたが、もう腹に入らなかった`;
 		case "gold-collected":
 			return `${event.payload.amount}ゴールドを手に入れた`;
 		case "trap-triggered":

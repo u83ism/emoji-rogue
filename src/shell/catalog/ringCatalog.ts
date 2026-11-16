@@ -1,8 +1,10 @@
 import {
 	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
+	REGENERATION_RING_FOOD_COST,
 	RING_REGEN_AMOUNT,
 	RING_SPAWN_CHANCE_PERCENT,
+	STEALTH_RING_FOOD_COST,
 	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
@@ -28,19 +30,19 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		catalogName: "再生の指輪",
 		category: "指輪",
 		spawn: { type: "chance", percent: RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターンHPが${RING_REGEN_AMOUNT}回復する(外すと効果も消える)`,
+		effect: `装備している間、毎ターンHPが${RING_REGEN_AMOUNT}回復する代わりに、満腹度の減りが毎ターン${REGENERATION_RING_FOOD_COST}増える(外すと効果も消える)`,
 	},
 	"sustenance-ring": {
 		catalogName: "満腹の指輪",
 		category: "指輪",
 		spawn: { type: "chance", percent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、毎ターン${SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT}%で空腹の進行が止まる(外すと効果も消える)`,
+		effect: `装備している間、毎ターン${SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT}%で満腹度が減らない(外すと効果も消える。空腹で倒れている間は効かない)`,
 	},
 	"stealth-ring": {
 		catalogName: "隠密の指輪",
 		category: "指輪",
 		spawn: { type: "chance", percent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる(外すと効果も消える)`,
+		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる代わりに、満腹度の減りが毎ターン${STEALTH_RING_FOOD_COST}増える(外すと効果も消える)`,
 	},
 	"awareness-ring": {
 		catalogName: "千里眼の指輪",

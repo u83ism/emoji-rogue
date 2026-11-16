@@ -1,7 +1,6 @@
 import { Box, Text } from "ink";
 import {
 	PLAYER_HUNGER_WARNING_THRESHOLD,
-	PLAYER_MAX_FOOD,
 	PLAYER_WEAK_THRESHOLD,
 } from "../game/balance.js";
 import {
@@ -120,7 +119,7 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 		</Text>
 		<Text> </Text>
 		<Text {...resolveFoodTextStyle(state.playerFood)}>
-			🍖 {state.playerFood}/{PLAYER_MAX_FOOD}
+			🍖 {Math.max(0, state.playerFood)}
 		</Text>
 		<Text> </Text>
 		<Text>

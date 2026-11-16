@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng, type Rng } from "../../rng.js";
 import {
-	FOOD_COUNT_PER_FLOOR,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
@@ -70,6 +69,9 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"sleep-wand",
 ];
 
+/** How many food rations the tests ask drawFloorItems for — floor/food.ts decides the real number. */
+const TEST_FOOD_COUNT = 2;
+
 describe("drawFloorItems", () => {
 	it("with every roll hitting, spawns each chance-rolled kind exactly once plus the guaranteed items", () => {
 		const drawn = drawFloorItems(
@@ -78,21 +80,20 @@ describe("drawFloorItems", () => {
 			1,
 			() => true,
 			1,
+			TEST_FOOD_COUNT,
 		);
 		expect(
 			drawn.items.filter((item) => item.kind === "heal-potion").length,
 		).toBe(POTION_COUNT_PER_FLOOR);
 		expect(drawn.items.filter((item) => item.kind === "food").length).toBe(
-			FOOD_COUNT_PER_FLOOR,
+			TEST_FOOD_COUNT,
 		);
 		for (const kind of CHANCE_ROLLED_KINDS) {
 			expect(drawn.items.filter((item) => item.kind === kind).length).toBe(1);
 		}
 		/* nothing beyond the guaranteed and the table — the list above is complete */
 		expect(drawn.items.length).toBe(
-			POTION_COUNT_PER_FLOOR +
-				FOOD_COUNT_PER_FLOOR +
-				CHANCE_ROLLED_KINDS.length,
+			POTION_COUNT_PER_FLOOR + TEST_FOOD_COUNT + CHANCE_ROLLED_KINDS.length,
 		);
 	});
 
@@ -103,10 +104,9 @@ describe("drawFloorItems", () => {
 			1,
 			() => true,
 			1,
+			TEST_FOOD_COUNT,
 		);
-		expect(drawn.items.length).toBe(
-			POTION_COUNT_PER_FLOOR + FOOD_COUNT_PER_FLOOR,
-		);
+		expect(drawn.items.length).toBe(POTION_COUNT_PER_FLOOR + TEST_FOOD_COUNT);
 		expect(
 			drawn.items.every(
 				(item) => item.kind === "heal-potion" || item.kind === "food",
@@ -121,6 +121,7 @@ describe("drawFloorItems", () => {
 			1,
 			() => true,
 			1,
+			TEST_FOOD_COUNT,
 		);
 		expect(generous.goldPiles.length).toBe(GOLD_PILES_PER_FLOOR);
 		for (const pile of generous.goldPiles) {
@@ -132,6 +133,7 @@ describe("drawFloorItems", () => {
 			1,
 			() => true,
 			1,
+			TEST_FOOD_COUNT,
 		);
 		for (const pile of stingy.goldPiles) {
 			expect(pile.amount).toBe(GOLD_AMOUNT_MAX); /* upper bound of the roll */
@@ -145,6 +147,7 @@ describe("drawFloorItems", () => {
 			1,
 			() => true,
 			1,
+			TEST_FOOD_COUNT,
 		);
 		expect(drawn.traps.length).toBeGreaterThanOrEqual(TRAP_COUNT_PER_FLOOR);
 	});
@@ -156,6 +159,7 @@ describe("drawFloorItems", () => {
 			1,
 			() => false,
 			1,
+			TEST_FOOD_COUNT,
 		);
 		expect(none.traps.length).toBe(0);
 		expect(none.items.length).toBeGreaterThan(0);

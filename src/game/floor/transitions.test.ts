@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../../pointkey.js";
 import {
-	FOOD_COUNT_PER_FLOOR,
+	FOOD_ROLLS_PER_FLOOR,
 	GOAL_FLOOR,
 	POTION_COUNT_PER_FLOOR,
 } from "../balance.js";
@@ -52,13 +52,13 @@ describe("descendStairs", () => {
 
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
-			/* potions and food rations are guaranteed; the weapon is a per-floor chance (0 or 1) */
+			/* potions are guaranteed; food is a handful of rolls; the weapon is a per-floor chance (0 or 1) */
 			expect(
 				state.items.filter((item) => item.kind === "heal-potion").length,
 			).toBe(POTION_COUNT_PER_FLOOR);
-			expect(state.items.filter((item) => item.kind === "food").length).toBe(
-				FOOD_COUNT_PER_FLOOR,
-			);
+			expect(
+				state.items.filter((item) => item.kind === "food").length,
+			).toBeLessThanOrEqual(FOOD_ROLLS_PER_FLOOR);
 			expect(
 				state.items.filter((item) => item.kind === "weapon").length,
 			).toBeLessThanOrEqual(1);

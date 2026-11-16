@@ -58,7 +58,7 @@ const isFoodTile = (state: GameState, x: number, y: number): boolean =>
  * find anything more — only burn turns and food for a cosmetic, not
  * mission-relevant, notion of "fully seen" (an initial-run measurement
  * found roughly a third of a floor's turns going to exactly this, which the
- * food economy across a full 10-floor clear cannot afford).
+ * food economy across a full clear could not afford at the time).
  *
  * `blacklist` excludes tiles a previous goal got stuck oscillating around
  * (see memory.ts's cycle detection) so the same bad target is not picked

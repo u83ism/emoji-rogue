@@ -181,14 +181,21 @@ export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
  */
 export const GOAL_FLOOR = 26;
 
-export const PLAYER_MAX_FOOD = 100;
+// Hunger follows original Rogue 5.4 (rogue.h's HUNGERTIME/STOMACHSIZE/
+// MORETIME/STARVETIME, daemons.c's stomach(), misc.c's eat()) since
+// milestone 112 — see turnEnd/hunger.ts.
+
+/** What playerFood starts a run at — original Rogue's HUNGERTIME. It drops by 1 a turn. */
+export const PLAYER_START_FOOD = 1300;
+/** The most playerFood can hold, however much is eaten — original Rogue's STOMACHSIZE. */
+export const PLAYER_MAX_FOOD = 2000;
 /**
  * playerFood at or below this triggers the one-time player-hungry warning
- * and turns the status-bar food readout yellow (red is reserved for 0 —
- * see statusBar.tsx). Raised 30→50 (2026-07-18 playtest): with only one
- * stage at 30, the drop from 100 was going unnoticed until it was critical.
+ * and turns the status-bar food readout yellow (red is reserved for an
+ * empty stomach — see statusBar.tsx). Original Rogue's "Hungry" stage
+ * begins below 2 x MORETIME = 300.
  */
-export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
+export const PLAYER_HUNGER_WARNING_THRESHOLD = 299;
 /**
  * playerFood at or below this triggers the one-time player-weak warning and
  * applies WEAK_ATTACK_PENALTY to the player's attack (see
@@ -196,14 +203,34 @@ export const PLAYER_HUNGER_WARNING_THRESHOLD = 50;
  * PLAYER_HUNGER_WARNING_THRESHOLD, matching original Rogue's
  * Hungry→Weak→Faint progression — the Weak-stage strength loss, modeled here
  * as an attack penalty since this game has no separate strength stat.
+ * Original Rogue's "Weak" stage begins below MORETIME = 150.
  */
-export const PLAYER_WEAK_THRESHOLD = 20;
+export const PLAYER_WEAK_THRESHOLD = 149;
 /** Flat reduction to calculatePlayerAttackDamage while playerFood <= PLAYER_WEAK_THRESHOLD. */
 export const WEAK_ATTACK_PENALTY = 1;
-/** HP lost per turn while playerFood is at 0. */
-export const STARVATION_DAMAGE_PER_TURN = 1;
-export const FOOD_RATION_RESTORE_AMOUNT = 50;
-export const FOOD_COUNT_PER_FLOOR = 2;
+/** How many turns an empty stomach lasts before the player starves to death — original Rogue's STARVETIME. */
+export const STARVATION_TURNS = 850;
+/** Chance (out of 100), rolled every turn spent with an empty stomach while not already out cold, of fainting. */
+export const FAINT_CHANCE_PERCENT = 20;
+/** How many turns a faint lasts — original Rogue's `rnd(8) + 4`. */
+export const FAINT_TURNS_MIN = 4;
+export const FAINT_TURNS_MAX = 11;
+/** What one food ration adds to playerFood — original Rogue's `HUNGERTIME - 200 + rnd(400)`. */
+export const FOOD_RATION_RESTORE_MIN = 1100;
+export const FOOD_RATION_RESTORE_MAX = 1499;
+/** Extra food a worn ring burns per turn on top of the usual 1 — original Rogue's ring_eat(). */
+export const REGENERATION_RING_FOOD_COST = 2;
+export const STEALTH_RING_FOOD_COST = 1;
+/**
+ * The food supply (see floor/food.ts): original Rogue makes MAXOBJ = 9 item
+ * rolls per floor, each producing an item 36% of the time, 16% of which are
+ * food — 576 in 10000 per roll, about one ration every two floors. After
+ * more than FOOD_DROUGHT_FLOOR_LIMIT floors without one, the next floor
+ * gets one for sure.
+ */
+export const FOOD_ROLLS_PER_FLOOR = 9;
+export const FOOD_ROLL_CHANCE_BASIS_POINTS = 576;
+export const FOOD_DROUGHT_FLOOR_LIMIT = 3;
 
 export const GOLD_PILES_PER_FLOOR = 3;
 export const GOLD_AMOUNT_MIN = 2;
@@ -278,9 +305,10 @@ export const NATURAL_HEALING_FAST_INTERVAL = 3;
 export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
 /**
  * Chance (out of 100), rolled independently every turn a ring of sustenance
- * is equipped, that the whole hunger tick (food loss, and any starvation
- * consequences) is skipped this turn — same "roll every eligible turn"
- * idiom as WAKE_CHANCE_PERCENT.
+ * is equipped, that the turn costs no food — original Rogue's slow
+ * digestion ring, same "roll every eligible turn" idiom as
+ * WAKE_CHANCE_PERCENT. It does not slow starvation once the stomach is
+ * empty.
  */
 export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 

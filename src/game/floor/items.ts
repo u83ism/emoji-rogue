@@ -9,7 +9,6 @@ import {
 	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
 	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
-	FOOD_COUNT_PER_FLOOR,
 	GOLD_AMOUNT_MAX,
 	GOLD_AMOUNT_MIN,
 	GOLD_PILES_PER_FLOOR,
@@ -145,7 +144,8 @@ export interface FloorItems {
 /**
  * Every item, gold pile and trap on a fresh floor, drawn from (and removed
  * from) `remaining` by consuming `rng`: POTION_COUNT_PER_FLOOR healing
- * potions and FOOD_COUNT_PER_FLOOR food rations guaranteed, then the
+ * potions guaranteed, `foodCount` food rations (floor/food.ts decides how
+ * many), then the
  * chance-rolled kinds of ITEM_SPAWN_TABLE, then GOLD_PILES_PER_FLOOR gold
  * piles (random amount each), then every trap (see traps.ts's
  * drawFloorTraps). A spawned weapon/armor/ring also gets its identity (curse,
@@ -158,13 +158,14 @@ export const drawFloorItems = (
 	floor: number,
 	isTrapTileEligible: (position: Position) => boolean,
 	nextItemId: number,
+	foodCount: number,
 ): FloorItems => {
 	let itemId = nextItemId;
 	const items: Item[] = [];
 	for (let i = 0; i < POTION_COUNT_PER_FLOOR && remaining.length > 0; i++) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "heal-potion" });
 	}
-	for (let i = 0; i < FOOD_COUNT_PER_FLOOR && remaining.length > 0; i++) {
+	for (let i = 0; i < foodCount && remaining.length > 0; i++) {
 		items.push({ ...drawSpawnTile(remaining, rng), kind: "food" });
 	}
 	for (const spawn of ITEM_SPAWN_TABLE) {

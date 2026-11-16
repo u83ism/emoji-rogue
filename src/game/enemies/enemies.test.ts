@@ -259,10 +259,57 @@ describe("advanceEnemies", () => {
 		expect(advanceEnemies(state)).toEqual(advanceEnemies(state));
 	});
 
-	it("a bat moves one tile per turn like every other kind — no kind is fast", () => {
-		const state = buildCorridorState([bat(7, 1)]);
+	it("a flying kind still away from the player moves twice in a turn", () => {
+		const state = buildCorridorState([enemyOf("kestrel", 7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([bat(6, 1)]);
+		expect(next.enemies).toEqual([enemyOf("kestrel", 5, 1)]);
+		expect(next.rng).toEqual(state.rng);
+	});
+
+	it("a flier whose first move brings it next to the player stops there, with no free attack", () => {
+		const state = buildExposedState([enemyOf("kestrel", 6, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([enemyOf("kestrel", 5, 1)]);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events).toEqual([]);
+	});
+
+	it("an adjacent flier attacks once a turn like anything else", () => {
+		const state = buildExposedState([enemyOf("kestrel", 5, 1)]);
+		const next = advanceEnemies(state);
+		expect(next.enemies).toEqual([enemyOf("kestrel", 5, 1)]);
+		expect(collectHitDamages(next.events).length).toBe(1);
+	});
+
+	it("a bat next to the player flutters off instead of biting about half the time", () => {
+		const outcomes = buildSpreadRngStates().map((rng) => {
+			const state = { ...buildExposedState([bat(5, 1)]), rng };
+			const next = advanceEnemies(state);
+			const bit = collectHitDamages(next.events).length > 0;
+			/* a bat that bit stayed put; one that fluttered took no bite */
+			expect(bit).toBe(next.playerHp < state.playerHp);
+			if (bit) {
+				expect(next.enemies).toEqual([bat(5, 1)]);
+			}
+			return bit;
+		});
+		const bites = outcomes.filter((bit) => bit).length;
+		expect(bites).toBeGreaterThan(outcomes.length / 4);
+		expect(bites).toBeLessThan((outcomes.length * 3) / 4);
+	});
+
+	it("a phantom lurches off too, but only now and then", () => {
+		const attacks = buildSpreadRngStates().filter((rng) => {
+			const state = { ...buildExposedState([enemyOf("phantom", 5, 1)]), rng };
+			return collectHitDamages(advanceEnemies(state).events).length > 0;
+		}).length;
+		expect(attacks).toBeGreaterThan(36); /* well over half of 60 */
+		expect(attacks).toBeLessThan(60); /* but not every time */
+	});
+
+	it("a kind that is neither erratic nor flying consumes no rng to chase", () => {
+		const state = buildCorridorState([zombie(7, 1)]);
+		expect(advanceEnemies(state).rng).toEqual(state.rng);
 	});
 
 	it("a kind with several attacks rolls each of them every turn", () => {

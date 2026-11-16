@@ -1,11 +1,12 @@
-import type { RngState } from "../../rng.js";
+import { type RngState, stepUniform } from "../../rng.js";
 import { isAdjacent } from "../combat.js";
 import type { GameEvent } from "../events.js";
 import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveEnemyAttack } from "./enemyAttack.js";
 import { resolveFleeingTheft } from "./enemyFlee.js";
-import { resolveEnemyMovement } from "./enemyMovement.js";
+import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
+import { resolveEnemyMovement, stepWandering } from "./enemyMovement.js";
 import { resolveFlytrapAttack } from "./flytrapHold.js";
 
 /**
@@ -46,7 +47,11 @@ const withEvents = (
 		: { ...progress, events: [...progress.events, ...events] };
 
 /**
- * One action of one awake, unfrozen enemy. Adjacent to the player it acts in
+ * One action of one awake, unfrozen enemy. A kind listed in
+ * ERRATIC_MOVE_CHANCE_PERCENT (bat, phantom) first rolls that chance to
+ * flutter one random step instead — even away from a player it stands next
+ * to, which is what makes a bat so hard to pin down.
+ * Adjacent to the player it acts in
  * place: thief/nymph steal and flee (enemyFlee.ts), a venus-flytrap
  * tightens its hold (flytrapHold.ts), every other kind attacks
  * (enemyAttack.ts — a to-hit and damage roll per attack die, the kind's own
@@ -56,6 +61,52 @@ const withEvents = (
  * `occupied` is the other enemies' tiles.
  */
 export const resolveEnemyAction = (
+	state: GameState,
+	enemy: Enemy,
+	actor: EnemyActor,
+	progress: EnemyTurnProgress,
+	confused: boolean,
+	visiblePoints: ReadonlySet<string>,
+	occupied: ReadonlySet<string>,
+): EnemyActionResult => {
+	const erraticChancePercent = ERRATIC_MOVE_CHANCE_PERCENT[enemy.kind];
+	if (erraticChancePercent === undefined) {
+		return resolveIntendedAction(
+			state,
+			enemy,
+			actor,
+			progress,
+			confused,
+			visiblePoints,
+			occupied,
+		);
+	}
+	const erraticRoll = stepUniform(progress.rng);
+	if (erraticRoll.value >= erraticChancePercent / 100) {
+		return resolveIntendedAction(
+			state,
+			enemy,
+			actor,
+			{ ...progress, rng: erraticRoll.state },
+			confused,
+			visiblePoints,
+			occupied,
+		);
+	}
+	const fluttered = stepWandering(
+		state,
+		actor.position,
+		occupied,
+		erraticRoll.state,
+	);
+	return {
+		actor: { ...actor, position: fluttered.position },
+		progress: { ...progress, rng: fluttered.rng },
+	};
+};
+
+/** What the enemy does when it is not lurching about at random — see resolveEnemyAction. */
+const resolveIntendedAction = (
 	state: GameState,
 	enemy: Enemy,
 	actor: EnemyActor,

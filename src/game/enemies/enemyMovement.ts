@@ -76,7 +76,8 @@ export interface WanderStep {
 }
 
 /**
- * One random step (or standing still when boxed in). Wandering never steps
+ * One random step (or standing still when boxed in) — an unseen enemy's
+ * wandering, and a bat's or phantom's erratic flutter (action.ts). It never steps
  * onto the player's tile — off-screen enemies do not kill.
  */
 export const stepWandering = (

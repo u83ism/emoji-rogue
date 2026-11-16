@@ -10,6 +10,7 @@ import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
 import { type EnemyTurnProgress, resolveEnemyAction } from "./action.js";
+import { canFlyAgain } from "./enemyFlight.js";
 import { resolveEnemyRegen } from "./enemyRegen.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
 
@@ -17,10 +18,12 @@ import { isHeldByFlytrap } from "./flytrapHold.js";
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
  * this turn only while adjacent/visible (icky-thing: adjacent only — it is
  * blind), via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
- * with a stealth ring worn). Once awake it takes one action per turn (as
- * in original Rogue 5.4, no kind is faster than another) — what that action
- * is (attack, steal and flee, chase, wander, a kind's own special case)
- * lives in action.ts's resolveEnemyAction. A
+ * with a stealth ring worn). Once awake it takes one action per turn —
+ * what that action is (attack, steal and flee, chase, wander, a kind's own
+ * special case) lives in action.ts's resolveEnemyAction. The flying kinds
+ * (bat, kestrel, griffin) take a second action while they are still away
+ * from the player after the first (enemyFlight.ts's canFlyAgain) — original
+ * Rogue's only speed difference. A
  * slowedTurnsRemaining > 0 enemy (slow wand) skips its whole turn, just
  * ticking down. Griffin and troll additionally regenerate HP every awake
  * turn regardless of action (enemyRegen.ts), independent of whether they
@@ -105,7 +108,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			nextEnemies.push({ ...enemy, awake, confusedTurnsRemaining });
 			continue;
 		}
-		const result = resolveEnemyAction(
+		const firstAction = resolveEnemyAction(
 			state,
 			enemy,
 			{ position: enemy, hp: enemy.hp, fled: false },
@@ -114,6 +117,21 @@ export const advanceEnemies = (state: GameState): GameState => {
 			visiblePoints,
 			occupied,
 		);
+		/* a flier still away from the player after acting acts once more */
+		const result =
+			!firstAction.actor.fled &&
+			!firstAction.progress.died &&
+			canFlyAgain(enemy.kind, firstAction.actor.position, state.player)
+				? resolveEnemyAction(
+						state,
+						enemy,
+						firstAction.actor,
+						firstAction.progress,
+						confused,
+						visiblePoints,
+						occupied,
+					)
+				: firstAction;
 		const actor = result.actor;
 		progress = result.progress;
 

@@ -21,11 +21,12 @@ const dice = (count: number, sides: number): DamageDice => ({ count, sides });
 /**
  * Four kinds are not Rogue 5.4's monster of the same letter (thief =
  * leprechaun, rat = rattlesnake, ur-vile = black unicorn, icky-thing = ice
- * monster — docs/tasks/game.md); each takes its letter's row anyway. Two
- * rows deviate because the original's attack is a mechanic this game does
+ * monster — docs/tasks/game.md); each takes its letter's row anyway. One
+ * row deviates because the original's attack is a mechanic this game does
  * not have: the ice monster's 0x0 (it freezes instead) becomes a token 1d2
- * for the icky-thing, and the venus flytrap's damage that grows by 1 with
- * every hit while holding is a flat 1d1.
+ * for the icky-thing. The venus flytrap's 0x0 is the original's starting
+ * value — its real damage is the hold that grows with every bite, see
+ * flytrapHold.ts.
  */
 export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 	aquator: {
@@ -51,7 +52,7 @@ export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 	"venus-flytrap": {
 		level: 8,
 		armorClass: 3,
-		attacks: [dice(1, 1)],
+		attacks: [dice(0, 0)],
 		experience: 80,
 	},
 	griffin: {

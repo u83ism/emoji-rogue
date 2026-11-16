@@ -29,8 +29,9 @@ export interface EnemyAttackResult {
  * dead. If at least one attack landed, the kind's own effect then triggers
  * once: aquator's armor rust, vampire's lifesteal on the turn's total
  * damage (vampireLifesteal.ts), wraith's permanent playerMaxHp drain
- * (wraithDrain.ts). Only thief/nymph skip this path entirely, fleeing
- * instead (see enemyFlee.ts).
+ * (wraithDrain.ts). Thief/nymph skip this path entirely, fleeing instead
+ * (see enemyFlee.ts), and so does the venus-flytrap, whose hold has its own
+ * rule (flytrapHold.ts).
  */
 export const resolveEnemyAttack = (
 	enemy: Enemy,

@@ -42,6 +42,7 @@ const INITIAL_RUN_STATE = {
 	deepestFloor: 1,
 	turnsOnCurrentFloor: 0,
 	quietTurns: 0,
+	flytrapHoldDamage: 0,
 	floorsWithoutFood: 0,
 	wandererDelayTurns: WANDERER_DELAY_TURNS,
 	wandererRollTurns: 0,

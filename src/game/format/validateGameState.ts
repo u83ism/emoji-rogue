@@ -497,6 +497,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(quietTurns)) {
 		return err("quietTurns");
 	}
+	const flytrapHoldDamage = value.flytrapHoldDamage;
+	if (!isNonNegativeInteger(flytrapHoldDamage)) {
+		return err("flytrapHoldDamage");
+	}
 	const stairs = value.stairs;
 	if (
 		!isRecord(stairs) ||
@@ -599,6 +603,7 @@ export const validateGameState = (
 		deepestFloor,
 		turnsOnCurrentFloor,
 		quietTurns,
+		flytrapHoldDamage,
 		floorsWithoutFood,
 		wandererDelayTurns,
 		wandererRollTurns,

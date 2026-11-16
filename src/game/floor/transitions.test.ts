@@ -41,6 +41,12 @@ describe("descendStairs", () => {
 		expect(descendStairs(below).deepestFloor).toBe(3);
 	});
 
+	it("leaves a venus-flytrap's hold behind", () => {
+		expect(
+			descendStairs({ ...start, flytrapHoldDamage: 5 }).flytrapHoldDamage,
+		).toBe(0);
+	});
+
 	it("resets turnsOnCurrentFloor to 0", () => {
 		const loitered = descendStairs({ ...start, turnsOnCurrentFloor: 150 });
 		expect(loitered.turnsOnCurrentFloor).toBe(0);

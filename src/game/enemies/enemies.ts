@@ -11,6 +11,7 @@ import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
 import { type EnemyTurnProgress, resolveEnemyAction } from "./action.js";
 import { resolveEnemyRegen } from "./enemyRegen.js";
+import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
@@ -29,7 +30,9 @@ import { resolveEnemyRegen } from "./enemyRegen.js";
  */
 export const advanceEnemies = (state: GameState): GameState => {
 	if (state.enemies.length === 0) {
-		return state;
+		return state.flytrapHoldDamage === 0
+			? state
+			: { ...state, flytrapHoldDamage: 0 };
 	}
 
 	const visiblePoints = computeVisiblePoints(
@@ -46,6 +49,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: state.playerHp,
 		playerMaxHp: state.playerMaxHp,
 		playerConfusedTurnsRemaining: state.confusedTurnsRemaining,
+		flytrapHoldDamage: state.flytrapHoldDamage,
 		goldCollected: state.goldCollected,
 		inventory: state.inventory,
 		events: [],
@@ -148,6 +152,10 @@ export const advanceEnemies = (state: GameState): GameState => {
 			? 0
 			: state.quietTurns,
 		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
+		/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
+		flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)
+			? progress.flytrapHoldDamage
+			: 0,
 		goldCollected: progress.goldCollected,
 		inventory: progress.inventory,
 		enemies: nextEnemies,

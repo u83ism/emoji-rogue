@@ -82,6 +82,7 @@ describe("save file shape guard", () => {
 				deepestFloor: "number",
 				turnsOnCurrentFloor: "number",
 				quietTurns: "number",
+				flytrapHoldDamage: "number",
 				floorsWithoutFood: "number",
 				wandererDelayTurns: "number",
 				wandererRollTurns: "number",

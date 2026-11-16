@@ -1534,6 +1534,10 @@ describe("validateGameState", () => {
 		expectRejected({ ...buildValidState(), floor: 2.5 }, "floor");
 		expectRejected({ ...buildValidState(), deepestFloor: 0 }, "deepestFloor");
 		expectRejected(
+			{ ...buildValidState(), flytrapHoldDamage: -1 },
+			"flytrapHoldDamage",
+		);
+		expectRejected(
 			{ ...buildValidState(), floor: 3, deepestFloor: 2 },
 			"deepestFloor",
 		);

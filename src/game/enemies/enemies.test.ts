@@ -235,6 +235,7 @@ describe("advanceEnemies", () => {
 			deepestFloor: 1,
 			turnsOnCurrentFloor: 0,
 			quietTurns: 0,
+			flytrapHoldDamage: 0,
 			floorsWithoutFood: 0,
 			wandererDelayTurns: 70,
 			wandererRollTurns: 0,
@@ -301,9 +302,14 @@ describe("advanceEnemies", () => {
 	});
 
 	it("a landed hit deals its dice in full, whatever the armor", () => {
-		/* a venus-flytrap's 1d1 is always exactly 1 */
-		const state = buildExposedState([venusFlytrap(5, 1)]);
-		expect(advanceEnemies(state).playerHp).toBe(state.playerHp - 1);
+		/* each of a quagga's two bites that lands is a full 1d5, never reduced by armor */
+		const state = buildExposedState([enemyOf("quagga", 5, 1)]);
+		const damages = collectHitDamages(advanceEnemies(state).events);
+		expect(damages.length).toBeGreaterThan(0);
+		for (const damage of damages) {
+			expect(damage).toBeGreaterThanOrEqual(1);
+			expect(damage).toBeLessThanOrEqual(5);
+		}
 	});
 
 	it("an adjacent thief steals gold and flees instead of dealing damage", () => {
@@ -725,6 +731,7 @@ describe("advanceEnemies", () => {
 			deepestFloor: 1,
 			turnsOnCurrentFloor: 0,
 			quietTurns: 0,
+			flytrapHoldDamage: 0,
 			floorsWithoutFood: 0,
 			wandererDelayTurns: 70,
 			wandererRollTurns: 0,
@@ -976,6 +983,35 @@ describe("advanceEnemies", () => {
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([venusFlytrap(5, 1)]);
 		expect(next.playerHp).toBeLessThan(state.playerHp);
+	});
+
+	it("a venus-flytrap's hold costs more every turn it lasts", () => {
+		/* exposed armor: every bite lands */
+		let state = buildExposedState([venusFlytrap(5, 1)]);
+		const losses: number[] = [];
+		for (let turn = 0; turn < 4; turn++) {
+			const next = advanceEnemies(state);
+			losses.push(state.playerHp - next.playerHp);
+			state = next;
+		}
+		expect(losses).toEqual([1, 2, 3, 4]);
+		expect(state.flytrapHoldDamage).toBe(4);
+	});
+
+	it("the hold starts over once no awake flytrap is adjacent", () => {
+		const held = {
+			...buildExposedState([venusFlytrap(5, 1)]),
+			flytrapHoldDamage: 6,
+		};
+		/* the flytrap was killed: nothing left on the floor */
+		expect(advanceEnemies({ ...held, enemies: [] }).flytrapHoldDamage).toBe(0);
+		/* the player was carried away from it */
+		expect(
+			advanceEnemies({ ...held, enemies: [venusFlytrap(1, 1)] })
+				.flytrapHoldDamage,
+		).toBe(0);
+		/* still held: it keeps growing from where it was */
+		expect(advanceEnemies(held).flytrapHoldDamage).toBe(7);
 	});
 
 	/*

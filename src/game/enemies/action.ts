@@ -1,10 +1,12 @@
 import type { RngState } from "../../rng.js";
 import { isAdjacent } from "../combat.js";
 import type { GameEvent } from "../events.js";
+import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveEnemyAttack } from "./enemyAttack.js";
 import { resolveFleeingTheft } from "./enemyFlee.js";
 import { resolveEnemyMovement } from "./enemyMovement.js";
+import { resolveFlytrapAttack } from "./flytrapHold.js";
 
 /**
  * Everything the enemies' turn has changed on the player's side so far,
@@ -16,6 +18,7 @@ export interface EnemyTurnProgress {
 	readonly playerHp: number;
 	readonly playerMaxHp: number;
 	readonly playerConfusedTurnsRemaining: number;
+	readonly flytrapHoldDamage: number;
 	readonly goldCollected: number;
 	readonly inventory: readonly HeldItem[];
 	readonly events: readonly GameEvent[];
@@ -44,7 +47,8 @@ const withEvents = (
 
 /**
  * One action of one awake, unfrozen enemy. Adjacent to the player it acts in
- * place: thief/nymph steal and flee (enemyFlee.ts), every other kind attacks
+ * place: thief/nymph steal and flee (enemyFlee.ts), a venus-flytrap
+ * tightens its hold (flytrapHold.ts), every other kind attacks
  * (enemyAttack.ts — a to-hit and damage roll per attack die, the kind's own
  * on-hit effect). Otherwise it moves or does its kind's ranged thing
  * (enemyMovement.ts's resolveEnemyMovement). `enemy` is the enemy as it
@@ -96,6 +100,21 @@ export const resolveEnemyAction = (
 		return {
 			actor: { ...actor, fled: true },
 			progress: withEvents({ ...progress, ...stolen }, [event]),
+		};
+	}
+	if (enemy.kind === "venus-flytrap") {
+		const { events, ...squeezed } = resolveFlytrapAttack(
+			progress.flytrapHoldDamage,
+			progress.playerHp,
+			calculateEnemyHitChancePercent(enemy.kind, progress.inventory),
+			progress.rng,
+		);
+		return {
+			actor,
+			progress: withEvents(
+				{ ...progress, ...squeezed, died: progress.died || squeezed.died },
+				events,
+			),
 		};
 	}
 	const hit = resolveEnemyAttack(

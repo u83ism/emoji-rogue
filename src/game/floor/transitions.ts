@@ -49,6 +49,7 @@ const buildFloorTransition = (
 		rng: rng.getState(),
 		floor: nextFloor,
 		deepestFloor,
+		flytrapHoldDamage: 0,
 		turnsOnCurrentFloor: 0,
 		nextItemId: layout.nextItemId,
 		floorsWithoutFood: layout.floorsWithoutFood,

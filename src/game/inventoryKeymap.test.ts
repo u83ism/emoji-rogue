@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INVENTORY_CAPACITY } from "./balance.js";
 import {
+	canThrowItem,
 	resolveTargetKind,
 	toInventoryLetter,
 	toItemVerbAction,
@@ -18,6 +19,7 @@ const weapon = (itemId: number): HeldItem => ({
 	weaponKind: "long-sword" as const,
 	hitBonus: 1,
 	damageBonus: 1,
+	quantity: 1,
 });
 
 describe("toInventoryLetter", () => {
@@ -116,5 +118,34 @@ describe("toTargetedUseAction", () => {
 			type: "use-item",
 			payload: { itemId: 10, targetItemId: 4 },
 		});
+	});
+});
+
+describe("throwing from the verb prompt", () => {
+	const dart: HeldItem = {
+		itemId: 3,
+		kind: "weapon",
+		weaponKind: "dart",
+		equipped: false,
+		cursed: false,
+		hitBonus: 0,
+		damageBonus: 0,
+		quantity: 9,
+	};
+
+	it("t throws an unwielded weapon", () => {
+		expect(canThrowItem(dart)).toBe(true);
+		expect(toItemVerbAction("t", dart)).toEqual({
+			type: "throw-item",
+			payload: { itemId: 3 },
+		});
+	});
+
+	it("t does nothing for the wielded weapon or for anything that is not a weapon", () => {
+		const wielded = { ...dart, equipped: true };
+		expect(canThrowItem(wielded)).toBe(false);
+		expect(toItemVerbAction("t", wielded)).toBeUndefined();
+		expect(canThrowItem(potion(1))).toBe(false);
+		expect(toItemVerbAction("t", potion(1))).toBeUndefined();
 	});
 });

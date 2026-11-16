@@ -21,6 +21,7 @@ const weapon = (
 	weaponKind: "long-sword" as const,
 	hitBonus: attackBonus,
 	damageBonus: attackBonus,
+	quantity: 1,
 });
 
 const armor = (

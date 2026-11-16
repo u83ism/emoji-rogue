@@ -29,6 +29,7 @@ describe("items/equipment", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 			],
 		};
@@ -49,12 +50,17 @@ describe("items/equipment", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 		]);
 		expect(next.events).toEqual([
 			{
 				type: "weapon-equipped",
-				payload: { weaponKind: "long-sword", hitBonus: 1, damageBonus: 1 },
+				payload: {
+					weaponKind: "long-sword",
+					hitBonus: 1,
+					damageBonus: 1,
+				},
 			},
 		]);
 	});
@@ -71,6 +77,7 @@ describe("items/equipment", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 2,
 					damageBonus: 2,
+					quantity: 1,
 				},
 				{
 					itemId: 2,
@@ -80,6 +87,7 @@ describe("items/equipment", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 3,
 					damageBonus: 3,
+					quantity: 1,
 				},
 			],
 		};
@@ -96,6 +104,7 @@ describe("items/equipment", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 2,
 				damageBonus: 2,
+				quantity: 1,
 			},
 			{
 				itemId: 2,
@@ -105,6 +114,7 @@ describe("items/equipment", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 3,
 				damageBonus: 3,
+				quantity: 1,
 			},
 		]);
 		expect(calculatePlayerAttackDamage(next)).toBe(state.playerPower + 3);
@@ -123,6 +133,7 @@ describe("items/equipment", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: -2,
 					damageBonus: -2,
+					quantity: 1,
 				},
 			],
 		};
@@ -140,12 +151,17 @@ describe("items/equipment", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: -2,
 				damageBonus: -2,
+				quantity: 1,
 			},
 		]);
 		expect(equipped.events).toEqual([
 			{
 				type: "weapon-equipped",
-				payload: { weaponKind: "long-sword", hitBonus: -2, damageBonus: -2 },
+				payload: {
+					weaponKind: "long-sword",
+					hitBonus: -2,
+					damageBonus: -2,
+				},
 			},
 			{ type: "curse-revealed", payload: { kind: "weapon" } },
 		]);

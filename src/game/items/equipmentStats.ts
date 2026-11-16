@@ -49,13 +49,15 @@ export const calculatePlayerDamageDice = (
  * instant food rises back above the threshold (eating a ration). Can be
  * zero or negative; the roll itself is floored at 0 in combat.ts.
  */
-export const calculatePlayerDamageBonus = (state: GameState): number => {
-	const baseDamage =
-		state.playerPower + (findEquippedWeapon(state.inventory)?.damageBonus ?? 0);
-	return state.playerFood > PLAYER_WEAK_THRESHOLD
-		? baseDamage
-		: baseDamage - WEAK_ATTACK_PENALTY;
-};
+export const calculatePlayerDamageBonus = (state: GameState): number =>
+	calculatePlayerStrengthBonus(state) +
+	(findEquippedWeapon(state.inventory)?.damageBonus ?? 0);
+
+/** The part of the damage bonus that comes from the player rather than the weapon — playerPower, less WEAK_ATTACK_PENALTY while starving. A thrown weapon adds this to its own bonus (items/throw.ts). */
+export const calculatePlayerStrengthBonus = (state: GameState): number =>
+	state.playerFood > PLAYER_WEAK_THRESHOLD
+		? state.playerPower
+		: state.playerPower - WEAK_ATTACK_PENALTY;
 
 /** The to-hit bonus of the equipped weapon — what a found weapon's curse lowers and its enchantment raises. 0 unarmed. */
 export const calculatePlayerHitBonus = (

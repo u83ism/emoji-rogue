@@ -31,6 +31,7 @@ describe("buildTurnLogEntry", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 			],
 			items: [armorAt(1, 1)],

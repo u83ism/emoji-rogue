@@ -3,7 +3,11 @@ import { buildEventLog, isEquipmentItemKind } from "../events.js";
 import type { GameState } from "../state.js";
 import { toItemEventPayload } from "./equipmentKinds.js";
 import { toHeldItem } from "./heldItemFactory.js";
-import { addToInventory } from "./inventory.js";
+import {
+	addToInventory,
+	findStackTarget,
+	replaceHeldItem,
+} from "./inventory.js";
 
 /**
  * Picks up the item under the player's feet into inventory, if any — no
@@ -25,6 +29,21 @@ export const applyItemPickup = (state: GameState): GameState => {
 		return state;
 	}
 	const heldItem = toHeldItem(item, state.nextItemId);
+	const stackTarget = findStackTarget(state.inventory, heldItem);
+	if (stackTarget !== undefined && heldItem.kind === "weapon") {
+		/* joins the stack already held: no new slot, so capacity never refuses it */
+		return {
+			...state,
+			inventory: replaceHeldItem(state.inventory, stackTarget.itemId, {
+				...stackTarget,
+				quantity: stackTarget.quantity + heldItem.quantity,
+			}),
+			items: state.items.filter((candidate) => candidate !== item),
+			events: buildEventLog(state.events, [
+				{ type: "item-picked-up", payload: toItemEventPayload(heldItem) },
+			]),
+		};
+	}
 	if (state.inventory.length >= INVENTORY_CAPACITY) {
 		return {
 			...state,

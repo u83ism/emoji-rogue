@@ -12,6 +12,7 @@ import {
 } from "./items/pickups.js";
 import { applyUseItem } from "./items/use.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
+import { applyThrowItem } from "./throw.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
 import { applyRegenerationTick } from "./turnEnd/regeneration.js";
@@ -139,7 +140,7 @@ const applyTurnEndTicks = (state: GameState): GameState =>
 	);
 
 /**
- * Shared "spend a turn on an item action" flow for use-item/drop-item:
+ * Shared "spend a turn on an item action" flow for use-item/drop-item/throw-item:
  * blocked while not playing, paralyzed acts like a wait, a no-op `apply`
  * spends no turn, and an `apply` ending the run (poison) skips enemies.
  */
@@ -211,6 +212,10 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 		case "drop-item":
 			return applyItemAction(state, (current) =>
 				applyItemDrop(current, action.payload.itemId),
+			);
+		case "throw-item":
+			return applyItemAction(state, (current) =>
+				applyThrowItem(current, action.payload.itemId),
 			);
 		case "save":
 			/* Only mark the intent — the shell performs the actual file write

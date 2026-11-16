@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { HeldItem } from "../state.js";
 import {
 	addToInventory,
+	findStackTarget,
 	removeHeldItem,
 	removeHeldItemAtIndex,
 	replaceHeldItem,
@@ -62,6 +64,7 @@ describe("replaceHeldItem", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		const equippedWeapon = { ...weapon, equipped: true };
 		expect(replaceHeldItem([food(1), weapon], 2, equippedWeapon)).toEqual([
@@ -83,5 +86,53 @@ describe("removeHeldItemAtIndex", () => {
 		expect(removeHeldItemAtIndex([food(1), healPotion(2)], 1)).toEqual([
 			food(1),
 		]);
+	});
+});
+
+describe("findStackTarget", () => {
+	const weaponOf = (
+		itemId: number,
+		overrides: Partial<Extract<HeldItem, { kind: "weapon" }>> = {},
+	): HeldItem => ({
+		itemId,
+		kind: "weapon",
+		weaponKind: "arrow",
+		equipped: false,
+		cursed: false,
+		hitBonus: 0,
+		damageBonus: 0,
+		quantity: 10,
+		...overrides,
+	});
+
+	it("finds the held stack of the same bundled kind with the same bonuses", () => {
+		const held = weaponOf(1);
+		expect(findStackTarget([held], weaponOf(2, { quantity: 1 }))).toBe(held);
+	});
+
+	it("does not stack across kinds, differing bonuses, or a curse on either side", () => {
+		const held = weaponOf(1);
+		expect(
+			findStackTarget([held], weaponOf(2, { weaponKind: "dart" })),
+		).toBeUndefined();
+		expect(
+			findStackTarget([held], weaponOf(2, { hitBonus: 1 })),
+		).toBeUndefined();
+		expect(
+			findStackTarget([held], weaponOf(2, { cursed: true })),
+		).toBeUndefined();
+		expect(
+			findStackTarget([weaponOf(1, { cursed: true })], weaponOf(2)),
+		).toBeUndefined();
+	});
+
+	it("never stacks a kind that comes one at a time, or a non-weapon", () => {
+		const mace = weaponOf(1, { weaponKind: "mace", quantity: 1 });
+		expect(
+			findStackTarget([mace], weaponOf(2, { weaponKind: "mace", quantity: 1 })),
+		).toBeUndefined();
+		expect(
+			findStackTarget([mace], { itemId: 3, kind: "food" }),
+		).toBeUndefined();
 	});
 });

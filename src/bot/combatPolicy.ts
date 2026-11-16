@@ -1,5 +1,46 @@
 import { PLAYER_WEAK_THRESHOLD } from "../game/balance.js";
+import type { WeaponKind } from "../game/events.js";
 import type { Direction, GameState } from "../game/state.js";
+import { findNearestVisibleEnemy } from "../game/vision.js";
+
+/** The weapons worth throwing: the ones that need no launcher and hit harder thrown than a punch — best first. */
+const THROW_PREFERENCE_ORDER: readonly WeaponKind[] = [
+	"shuriken",
+	"spear",
+	"dagger",
+	"dart",
+];
+
+/**
+ * The itemId of a weapon to throw this turn, if any: only when the nearest
+ * visible enemy (what a throw auto-aims at — items/throw.ts) is awake and
+ * not yet adjacent, so the bot softens up what is coming for it instead of
+ * waking something asleep (a melee sneak attack is worth more). Never the
+ * wielded weapon, which cannot be thrown.
+ */
+export const decideWeaponToThrow = (state: GameState): number | undefined => {
+	const target = findNearestVisibleEnemy(state);
+	if (target === undefined || !target.awake) {
+		return undefined;
+	}
+	const distance =
+		Math.abs(target.x - state.player.x) + Math.abs(target.y - state.player.y);
+	if (distance < 2) {
+		return undefined;
+	}
+	for (const weaponKind of THROW_PREFERENCE_ORDER) {
+		const held = state.inventory.find(
+			(item) =>
+				item.kind === "weapon" &&
+				item.weaponKind === weaponKind &&
+				!item.equipped,
+		);
+		if (held !== undefined) {
+			return held.itemId;
+		}
+	}
+	return undefined;
+};
 
 /** The bot stops to heal while its HP is below this share of max HP (numerator / denominator). */
 const REST_HP_NUMERATOR = 2;

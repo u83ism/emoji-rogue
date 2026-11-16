@@ -104,6 +104,8 @@ const buildItemSection = (): string => {
 	].join("\n");
 };
 
+const formatDice = (dice: DamageDice): string => `${dice.count}d${dice.sides}`;
+
 /** "出現比" as a percentage of the kinds' combined spawn weight. */
 const formatSpawnShare = (weight: number, totalWeight: number): string =>
 	`${Math.round((weight * 100) / totalWeight)}%`;
@@ -118,8 +120,14 @@ const buildEquipmentSection = (): string => {
 		0,
 	);
 	const weaponRows = WEAPON_KIND_VALUES.map((kind) => {
-		const { damageDice, spawnWeight } = WEAPON_STATS[kind];
-		return `| ${EQUIPMENT_NAMES[kind]} | ${damageDice.count}d${damageDice.sides} | ${formatSpawnShare(spawnWeight, weaponWeight)} |`;
+		const { damageDice, hurlDice, launcher, stackMin, stackMax, spawnWeight } =
+			WEAPON_STATS[kind];
+		const hurl =
+			launcher === undefined
+				? formatDice(hurlDice)
+				: `${formatDice(hurlDice)}(${EQUIPMENT_NAMES[launcher]}を装備中のみ。なければ${formatDice(damageDice)})`;
+		const stack = stackMax > 1 ? `${stackMin}〜${stackMax}本` : "1本";
+		return `| ${EQUIPMENT_NAMES[kind]} | ${formatDice(damageDice)} | ${hurl} | ${stack} | ${formatSpawnShare(spawnWeight, weaponWeight)} |`;
 	});
 	const armorRows = ARMOR_KIND_VALUES.map((kind) => {
 		const { armorClass, spawnWeight } = ARMOR_STATS[kind];
@@ -128,10 +136,10 @@ const buildEquipmentSection = (): string => {
 	return [
 		"## 武器の種類",
 		"",
-		"原作Rogue 5.4の近接武器5種。ダメージはその武器で殴ったときのダイス(素手は1d4)。「出現比」は拾った武器がその種類である割合。冒険は命中+1・ダメージ+1のメイスを装備して始まる。",
+		"原作Rogue 5.4の武器9種。「装備」はその武器で殴ったとき、「投擲」は持ち物から投げたとき(視界内の最も近い敵に自動で飛ぶ)のダイス(素手は1d4)。装備中の武器は投げられない。投げた武器は当たれば失われ、外れれば敵の近くに落ちる。「1回で拾える数」が複数のものは1枠に束ねて持てる。「出現比」は拾った武器がその種類である割合。冒険は命中+1・ダメージ+1のメイスを装備し、命中+1の弓と矢25〜39本を持って始まる。",
 		"",
-		"| 名前 | ダメージ | 出現比 |",
-		"|---|---|---|",
+		"| 名前 | 装備 | 投擲 | 1回で拾える数 | 出現比 |",
+		"|---|---|---|---|---|",
 		...weaponRows,
 		"",
 		"## 防具の種類",

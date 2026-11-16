@@ -167,6 +167,7 @@ describe("toHeldItem", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 3,
 				damageBonus: 3,
+				quantity: 1,
 			},
 		};
 		expect(toHeldItem(item, 999)).toEqual({
@@ -177,6 +178,7 @@ describe("toHeldItem", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 3,
 			damageBonus: 3,
+			quantity: 1,
 		});
 	});
 
@@ -198,5 +200,37 @@ describe("toHeldItem", () => {
 	it("gives a consumable the freshItemId — it has no identity to restore", () => {
 		const item = { x: 0, y: 0, kind: "heal-potion" as const };
 		expect(toHeldItem(item, 42)).toEqual({ itemId: 42, kind: "heal-potion" });
+	});
+});
+
+describe("bundled weapon kinds", () => {
+	it("come several at a time — arrows, darts and shuriken 8-15, daggers 2-5 — and everything else singly", () => {
+		const rng = createRng(3);
+		const seen = new Map<string, Set<number>>();
+		for (let draw = 0; draw < 3000; draw++) {
+			const item = buildFloorItem("weapon", 1, { x: 0, y: 0 }, rng);
+			if (item.kind !== "weapon") {
+				throw new Error("unreachable: requested a weapon");
+			}
+			const { weaponKind, quantity } = item.identity;
+			seen.set(weaponKind, (seen.get(weaponKind) ?? new Set()).add(quantity));
+		}
+		const rangeOf = (weaponKind: string): readonly [number, number] => {
+			const quantities = [...(seen.get(weaponKind) ?? [])];
+			return [Math.min(...quantities), Math.max(...quantities)];
+		};
+		expect(rangeOf("arrow")).toEqual([8, 15]);
+		expect(rangeOf("dart")).toEqual([8, 15]);
+		expect(rangeOf("shuriken")).toEqual([8, 15]);
+		expect(rangeOf("dagger")).toEqual([2, 5]);
+		for (const single of [
+			"mace",
+			"long-sword",
+			"short-bow",
+			"two-handed-sword",
+			"spear",
+		]) {
+			expect(rangeOf(single)).toEqual([1, 1]);
+		}
 	});
 });

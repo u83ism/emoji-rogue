@@ -52,7 +52,13 @@ describe("buildDungeonGameState", () => {
 		expect(state.terrain[state.player.x]?.[state.player.y]).toBe(0);
 	});
 
-	it("starts with original Rogue's kit: a +1,+1 mace wielded, +1 ring mail worn, one food ration", () => {
+	it("starts with original Rogue's kit: a +1,+1 mace wielded, +1 ring mail worn, one food ration, a +1 bow and 25-39 arrows", () => {
+		const arrows = state.inventory[4];
+		if (arrows?.kind !== "weapon") {
+			throw new Error("unreachable: the fifth starting item is the arrows");
+		}
+		expect(arrows.quantity).toBeGreaterThanOrEqual(25);
+		expect(arrows.quantity).toBeLessThanOrEqual(39);
 		expect(state.inventory).toEqual([
 			{
 				itemId: 1,
@@ -62,6 +68,7 @@ describe("buildDungeonGameState", () => {
 				cursed: false,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 			{
 				itemId: 2,
@@ -73,6 +80,26 @@ describe("buildDungeonGameState", () => {
 				rustProtected: false,
 			},
 			{ itemId: 3, kind: "food" },
+			{
+				itemId: 4,
+				kind: "weapon",
+				weaponKind: "short-bow",
+				equipped: false,
+				cursed: false,
+				hitBonus: 1,
+				damageBonus: 0,
+				quantity: 1,
+			},
+			{
+				itemId: 5,
+				kind: "weapon",
+				weaponKind: "arrow",
+				equipped: false,
+				cursed: false,
+				hitBonus: 0,
+				damageBonus: 0,
+				quantity: arrows.quantity,
+			},
 		]);
 	});
 

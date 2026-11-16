@@ -28,6 +28,7 @@ describe("formatHeldItemLabel", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 3,
 			damageBonus: 3,
+			quantity: 1,
 		};
 		expect(formatHeldItemLabel(weapon, [])).toBe("長剣");
 	});
@@ -41,6 +42,7 @@ describe("formatHeldItemLabel", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 2,
 			damageBonus: 2,
+			quantity: 1,
 		};
 		expect(formatHeldItemLabel(weapon, [])).toBe("✅ 長剣(命中+2・ダメージ+2)");
 	});
@@ -97,9 +99,14 @@ describe("resolveItemVerbPrompt", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
+		/* an unwielded weapon can also be thrown */
 		expect(resolveItemVerbPrompt(weapon)).toBe(
-			"u: 装備する  d: すてる (Escで戻る)",
+			"u: 装備する  d: すてる  t: なげる (Escで戻る)",
+		);
+		expect(resolveItemVerbPrompt({ ...weapon, equipped: true })).toBe(
+			"u: はずす  d: すてる (Escで戻る)",
 		);
 	});
 
@@ -112,9 +119,30 @@ describe("resolveItemVerbPrompt", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		expect(resolveItemVerbPrompt(weapon)).toBe(
 			"u: はずす  d: すてる (Escで戻る)",
 		);
+	});
+});
+
+describe("a stack of missiles", () => {
+	it("shows how many the slot holds", () => {
+		expect(
+			formatHeldItemLabel(
+				{
+					itemId: 1,
+					kind: "weapon",
+					weaponKind: "arrow",
+					equipped: false,
+					cursed: false,
+					hitBonus: 0,
+					damageBonus: 0,
+					quantity: 27,
+				},
+				[],
+			),
+		).toBe("矢×27");
 	});
 });

@@ -39,6 +39,18 @@ export const calculatePlayerHitChancePercent = (
 		calculatePlayerHitBonus(state.inventory),
 	);
 
+/** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus `hitBonus` (the missile's own, its launcher's, and the sleeping-target bonus — items/throw.ts adds them up). */
+export const calculateThrowHitChancePercent = (
+	state: GameState,
+	targetKind: EnemyKind,
+	hitBonus: number,
+): number =>
+	calculateHitChancePercent(
+		state.playerLevel,
+		ENEMY_STATS[targetKind].armorClass,
+		hitBonus,
+	);
+
 /** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level against the player's armor class. */
 export const calculateEnemyHitChancePercent = (
 	attackerKind: EnemyKind,

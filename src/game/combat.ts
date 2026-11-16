@@ -62,9 +62,9 @@ export const isAdjacent = (left: Position, right: Position): boolean =>
  * `target`, `hitEvent` logged, a kill removing the enemy (with enemy-defeated
  * and experience), a survivor waking up, and the "pacifist" conduct broken
  * either way. Only how the damage and the event are produced differs between
- * melee and wand — the callers below.
+ * melee, wand (the callers below) and a thrown weapon (items/throw.ts).
  */
-const applyEnemyHit = (
+export const applyEnemyHit = (
 	state: GameState,
 	target: Enemy,
 	damage: number,

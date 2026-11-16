@@ -48,6 +48,7 @@ describe("applyItemDrop", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 			],
 		};
@@ -104,6 +105,7 @@ describe("applyItemDrop", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 			],
 		};
@@ -123,6 +125,7 @@ describe("applyItemDrop", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 3,
 					damageBonus: 3,
+					quantity: 1,
 				},
 			],
 		};
@@ -138,6 +141,7 @@ describe("applyItemDrop", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 3,
 					damageBonus: 3,
+					quantity: 1,
 				},
 			},
 		]);

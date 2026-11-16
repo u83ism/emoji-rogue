@@ -33,6 +33,7 @@ const weapon = (itemId: number, equipped = false): HeldItem => ({
 	weaponKind: "long-sword" as const,
 	hitBonus: 1,
 	damageBonus: 1,
+	quantity: 1,
 });
 
 describe("decideItemToUse", () => {

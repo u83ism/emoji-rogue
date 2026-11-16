@@ -125,7 +125,8 @@ const hasEquipmentStats = (
 		return (
 			isOneOf(WEAPON_KIND_VALUES, value.weaponKind) &&
 			isInteger(value.hitBonus) &&
-			isInteger(value.damageBonus)
+			isInteger(value.damageBonus) &&
+			isPositiveInteger(value.quantity)
 		);
 	}
 	if (kind === "armor") {
@@ -305,6 +306,12 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
+	"missile-hit": (payload) =>
+		isEnemyKind(payload.target) &&
+		isOneOf(WEAPON_KIND_VALUES, payload.variant) &&
+		isNonNegativeInteger(payload.damage),
+	"missile-missed": (payload) =>
+		isEnemyKind(payload.target) && isOneOf(WEAPON_KIND_VALUES, payload.variant),
 	"wand-struck": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
 	"player-confused": (payload) => isPositiveInteger(payload.turns),

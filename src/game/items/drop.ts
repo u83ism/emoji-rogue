@@ -21,6 +21,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 					cursed: item.cursed,
 					hitBonus: item.hitBonus,
 					damageBonus: item.damageBonus,
+					quantity: item.quantity,
 				},
 			};
 		case "armor":

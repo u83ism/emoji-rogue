@@ -16,6 +16,7 @@ describe("items/equipmentScrolls", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 				{ itemId: 2, kind: "enchant-weapon" as const },
 			],
@@ -39,6 +40,7 @@ describe("items/equipmentScrolls", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1 + (stat === "hit" ? ENCHANT_WEAPON_BONUS : 0),
 				damageBonus: 1 + (stat === "damage" ? ENCHANT_WEAPON_BONUS : 0),
+				quantity: 1,
 			},
 		]);
 		expect(next.rng).not.toEqual(state.rng); /* the coin flip */
@@ -59,6 +61,7 @@ describe("items/equipmentScrolls", () => {
 			cursed: false,
 			hitBonus: 0,
 			damageBonus: 0,
+			quantity: 1,
 		};
 		const stats = new Set<string>();
 		let rng = buildArenaGameState(9, 3, 1).rng;
@@ -199,6 +202,7 @@ describe("items/equipmentScrolls", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				},
 				{
 					itemId: 2,
@@ -241,6 +245,7 @@ describe("items/equipmentScrolls", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 			{
 				itemId: 2,

@@ -76,7 +76,8 @@ const rollFoundBonus = (
  * (see rng.ts), matching floor generation's existing idiom (unlike the
  * RngState-wrapping pattern items/equipment.ts and turnEnd/ use for rolls
  * that happen mid-run). A weapon or armor first draws which kind it is
- * (weighted, see items/equipmentKinds.ts), then its found bonus — which for
+ * (weighted, see items/equipmentKinds.ts) — a bundled weapon kind also how
+ * many — then its found bonus — which for
  * a weapon moves the to-hit bonus only, as in original Rogue. A consumable
  * kind is returned as-is; it has no identity concept and never consumes
  * `rng` here (its itemId is assigned lazily, at pickup — see
@@ -100,6 +101,9 @@ export const buildFloorItem = (
 				WEAPON_KIND_VALUES,
 				WEAPON_STATS,
 			);
+			const { stackMin, stackMax } = WEAPON_STATS[weaponKind];
+			const quantity =
+				stackMax > stackMin ? rng.getUniformInt(stackMin, stackMax) : stackMin;
 			const found = rollFoundBonus(
 				rng,
 				WEAPON_CURSE_CHANCE_PERCENT,
@@ -114,6 +118,7 @@ export const buildFloorItem = (
 					cursed: found.cursed,
 					hitBonus: found.bonus,
 					damageBonus: 0,
+					quantity,
 				},
 			};
 		}

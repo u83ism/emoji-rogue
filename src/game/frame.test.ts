@@ -174,6 +174,7 @@ describe("buildFrameGrid", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 		}; /* distance 3 */
 		expect(buildFrameGrid({ ...wide, items: [weapon] })[2]?.[12]?.glyph).toBe(

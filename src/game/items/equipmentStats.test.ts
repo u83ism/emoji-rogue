@@ -28,6 +28,7 @@ const weaponOf = (
 	cursed: false,
 	hitBonus,
 	damageBonus,
+	quantity: 1,
 });
 
 const armorOf = (

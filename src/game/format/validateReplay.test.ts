@@ -11,6 +11,7 @@ const VALID_REPLAY = {
 		{ type: "use-item", payload: { itemId: 1 } },
 		{ type: "use-item", payload: { itemId: 2, targetItemId: 3 } },
 		{ type: "drop-item", payload: { itemId: 4 } },
+		{ type: "throw-item", payload: { itemId: 5 } },
 		{ type: "save" },
 		{ type: "quit" },
 	],

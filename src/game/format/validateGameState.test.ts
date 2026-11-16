@@ -232,6 +232,7 @@ describe("validateGameState", () => {
 						weaponKind: "long-sword" as const,
 						hitBonus: 3,
 						damageBonus: 3,
+						quantity: 1,
 					},
 				},
 			],
@@ -248,6 +249,7 @@ describe("validateGameState", () => {
 						weaponKind: "long-sword" as const,
 						hitBonus: 3,
 						damageBonus: 3,
+						quantity: 1,
 					},
 				},
 			]);
@@ -308,11 +310,19 @@ describe("validateGameState", () => {
 			events: [
 				{
 					type: "weapon-equipped",
-					payload: { weaponKind: "mace", hitBonus: 1, damageBonus: 0 },
+					payload: {
+						weaponKind: "mace",
+						hitBonus: 1,
+						damageBonus: 0,
+					},
 				},
 				{
 					type: "weapon-equipped",
-					payload: { weaponKind: "mace", hitBonus: -2, damageBonus: 0 },
+					payload: {
+						weaponKind: "mace",
+						hitBonus: -2,
+						damageBonus: 0,
+					},
 				},
 			],
 		});
@@ -329,6 +339,7 @@ describe("validateGameState", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: -2,
 					damageBonus: -2,
+					quantity: 1,
 				},
 				{
 					itemId: 2,
@@ -358,7 +369,11 @@ describe("validateGameState", () => {
 				events: [
 					{
 						type: "weapon-equipped",
-						payload: { weaponKind: "mace", hitBonus: 1.5, damageBonus: 0 },
+						payload: {
+							weaponKind: "mace",
+							hitBonus: 1.5,
+							damageBonus: 0,
+						},
 					},
 				],
 			},
@@ -1137,6 +1152,7 @@ describe("validateGameState", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 			{
 				itemId: 4,

@@ -7,26 +7,93 @@ import type {
 } from "../events.js";
 import type { HeldItem } from "../state.js";
 
-// Original Rogue 5.4's weapon and armor tables (extern.c's weap_info/
-// init_dam and arm_info/a_class), kept apart from balance.ts for the same
-// reason as enemies/enemyStats.ts: these are the original's numbers, not
-// tuning knobs. Only the five melee weapons are here — the bow, arrow, dart
-// and shuriken wait for a throw command (docs/tasks/game.md).
+// Original Rogue 5.4's weapon and armor tables (extern.c's weap_info,
+// weapons.c's init_dam and extern.c's arm_info/a_class), kept apart from
+// balance.ts for the same reason as enemies/enemyStats.ts: these are the
+// original's numbers, not tuning knobs.
 
 export interface WeaponStats {
 	/** What a hit with it rolls when wielded. */
 	readonly damageDice: DamageDice;
+	/** What it rolls when thrown — for a kind with a `launcher`, only while that launcher is wielded (otherwise damageDice). */
+	readonly hurlDice: DamageDice;
+	/** The weapon that must be wielded for a thrown one to use hurlDice (the bow, for arrows); it also lends its own bonuses to the shot. */
+	readonly launcher?: WeaponKind;
+	/** How many come in one find. A kind whose stackMax is above 1 is held as a stack in one inventory slot. */
+	readonly stackMin: number;
+	readonly stackMax: number;
 	/** Relative odds that a found weapon is this kind. */
 	readonly spawnWeight: number;
 }
 
+const dice = (count: number, sides: number): DamageDice => ({ count, sides });
+const single = { stackMin: 1, stackMax: 1 };
+/** Original Rogue's `rnd(8) + 8` for arrows, darts and shuriken. */
+const bundle = { stackMin: 8, stackMax: 15 };
+
 export const WEAPON_STATS: Readonly<Record<WeaponKind, WeaponStats>> = {
-	mace: { damageDice: { count: 2, sides: 4 }, spawnWeight: 11 },
-	"long-sword": { damageDice: { count: 3, sides: 4 }, spawnWeight: 11 },
-	dagger: { damageDice: { count: 1, sides: 6 }, spawnWeight: 8 },
-	"two-handed-sword": { damageDice: { count: 4, sides: 4 }, spawnWeight: 10 },
-	spear: { damageDice: { count: 2, sides: 3 }, spawnWeight: 12 },
+	mace: {
+		damageDice: dice(2, 4),
+		hurlDice: dice(1, 3),
+		...single,
+		spawnWeight: 11,
+	},
+	"long-sword": {
+		damageDice: dice(3, 4),
+		hurlDice: dice(1, 2),
+		...single,
+		spawnWeight: 11,
+	},
+	"short-bow": {
+		damageDice: dice(1, 1),
+		hurlDice: dice(1, 1),
+		...single,
+		spawnWeight: 12,
+	},
+	arrow: {
+		damageDice: dice(1, 1),
+		hurlDice: dice(2, 3),
+		launcher: "short-bow",
+		...bundle,
+		spawnWeight: 12,
+	},
+	/* original Rogue's `rnd(4) + 2` */
+	dagger: {
+		damageDice: dice(1, 6),
+		hurlDice: dice(1, 4),
+		stackMin: 2,
+		stackMax: 5,
+		spawnWeight: 8,
+	},
+	"two-handed-sword": {
+		damageDice: dice(4, 4),
+		hurlDice: dice(1, 2),
+		...single,
+		spawnWeight: 10,
+	},
+	dart: {
+		damageDice: dice(1, 1),
+		hurlDice: dice(1, 3),
+		...bundle,
+		spawnWeight: 12,
+	},
+	shuriken: {
+		damageDice: dice(1, 2),
+		hurlDice: dice(2, 4),
+		...bundle,
+		spawnWeight: 12,
+	},
+	spear: {
+		damageDice: dice(2, 3),
+		hurlDice: dice(1, 6),
+		...single,
+		spawnWeight: 12,
+	},
 };
+
+/** Whether finds of `weaponKind` come several at a time and share one inventory slot. */
+export const isStackableWeaponKind = (weaponKind: WeaponKind): boolean =>
+	WEAPON_STATS[weaponKind].stackMax > 1;
 
 export interface ArmorStats {
 	/** The armor class it gives before its own enchantment — lower is harder to hit. */

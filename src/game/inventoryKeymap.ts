@@ -50,9 +50,14 @@ export const resolveTargetKind = (
 	return undefined;
 };
 
+/** Whether the verb prompt offers "throw" for `item`: any weapon except the one currently wielded (original Rogue refuses to throw that one too). */
+export const canThrowItem = (item: HeldItem): boolean =>
+	item.kind === "weapon" && !item.equipped;
+
 /**
  * The action for a keypress inside the verb prompt shown after a row is
- * selected: `u` uses the held item, `d` drops it. For a kind resolveTargetKind
+ * selected: `u` uses the held item, `d` drops it, `t` throws it (weapons
+ * only — see canThrowItem). For a kind resolveTargetKind
  * flags, the shell must intercept `u` before calling this (see main.tsx) and
  * open the target row list instead — this function always builds a
  * targetless use-item. Any other key answers undefined so the shell can
@@ -67,6 +72,9 @@ export const toItemVerbAction = (
 	}
 	if (input === "d") {
 		return { type: "drop-item", payload: { itemId: item.itemId } };
+	}
+	if (input === "t" && canThrowItem(item)) {
+		return { type: "throw-item", payload: { itemId: item.itemId } };
 	}
 	return undefined;
 };

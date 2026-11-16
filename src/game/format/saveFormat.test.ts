@@ -70,6 +70,7 @@ describe("save file shape guard", () => {
 						cursed: "boolean",
 						hitBonus: "number",
 						damageBonus: "number",
+						quantity: "number",
 					},
 				],
 				nextItemId: "number",

@@ -96,12 +96,16 @@ export const isEquipmentItemKind = (
 	kind: ItemKind,
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
-/** The five melee weapons of original Rogue 5.4 — which one a held/floor "weapon" item is. Stats live in items/equipmentKinds.ts. */
+/** The nine weapons of original Rogue 5.4, in its own table order — which one a held/floor "weapon" item is. Stats live in items/equipmentKinds.ts. */
 export const WEAPON_KIND_VALUES = [
 	"mace",
 	"long-sword",
+	"short-bow",
+	"arrow",
 	"dagger",
 	"two-handed-sword",
+	"dart",
+	"shuriken",
 	"spear",
 ] as const;
 
@@ -337,6 +341,23 @@ export type GameEvent =
 			/** Fired alongside player-hit when an aquator's rust roll succeeds. */
 			readonly type: "armor-rusted";
 			readonly payload: { readonly amount: number };
+	  }
+	| {
+			/** A thrown weapon that connected — see items/throw.ts. The missile itself is used up. */
+			readonly type: "missile-hit";
+			readonly payload: {
+				readonly target: EnemyKind;
+				readonly variant: WeaponKind;
+				readonly damage: number;
+			};
+	  }
+	| {
+			/** A thrown weapon that missed — it lands near the target (or is lost if there is nowhere for it to fall). */
+			readonly type: "missile-missed";
+			readonly payload: {
+				readonly target: EnemyKind;
+				readonly variant: WeaponKind;
+			};
 	  }
 	| {
 			/** Same shape as enemy-hit, kept separate for its own flavor text — see applyWandStrike. */

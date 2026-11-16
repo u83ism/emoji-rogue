@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildArenaGameState } from "../game/initialState.js";
 import type { Enemy, GameState } from "../game/state.js";
 import {
+	decideWeaponToThrow,
 	findAdjacentEnemyDirection,
 	shouldRestToHeal,
 } from "./combatPolicy.js";
@@ -87,5 +88,72 @@ describe("shouldRestToHeal", () => {
 
 	it("does not rest once food has run down to the weak stage", () => {
 		expect(shouldRestToHeal({ ...wounded(), playerFood: 100 })).toBe(false);
+	});
+});
+
+describe("decideWeaponToThrow", () => {
+	const darts = {
+		itemId: 5,
+		kind: "weapon" as const,
+		weaponKind: "dart" as const,
+		equipped: false,
+		cursed: false,
+		hitBonus: 0,
+		damageBonus: 0,
+		quantity: 8,
+	};
+
+	it("throws a held missile at an awake enemy that is not yet adjacent", () => {
+		const state = {
+			...baseState(),
+			inventory: [darts],
+			enemies: [enemyAt(4, 1)],
+		};
+		expect(decideWeaponToThrow(state)).toBe(5);
+	});
+
+	it("prefers the harder-hitting missile", () => {
+		const shuriken = { ...darts, itemId: 6, weaponKind: "shuriken" as const };
+		const state = {
+			...baseState(),
+			inventory: [darts, shuriken],
+			enemies: [enemyAt(4, 1)],
+		};
+		expect(decideWeaponToThrow(state)).toBe(6);
+	});
+
+	it("does not throw at an adjacent enemy, a sleeping one, or with nothing in view", () => {
+		const state = { ...baseState(), inventory: [darts] };
+		expect(decideWeaponToThrow(state)).toBeUndefined();
+		expect(
+			decideWeaponToThrow({ ...state, enemies: [enemyAt(4, 3)] }),
+		).toBeUndefined();
+		expect(
+			decideWeaponToThrow({
+				...state,
+				enemies: [{ ...enemyAt(4, 1), awake: false }],
+			}),
+		).toBeUndefined();
+	});
+
+	it("never throws the wielded weapon, a launcher-only missile, or a plain melee weapon", () => {
+		const enemies = [enemyAt(4, 1)];
+		expect(
+			decideWeaponToThrow({
+				...baseState(),
+				enemies,
+				inventory: [{ ...darts, equipped: true }],
+			}),
+		).toBeUndefined();
+		expect(
+			decideWeaponToThrow({
+				...baseState(),
+				enemies,
+				inventory: [
+					{ ...darts, weaponKind: "arrow" as const },
+					{ ...darts, itemId: 7, weaponKind: "mace" as const, quantity: 1 },
+				],
+			}),
+		).toBeUndefined();
 	});
 });

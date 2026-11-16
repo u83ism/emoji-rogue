@@ -1,6 +1,7 @@
 import { INVENTORY_CAPACITY, UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { ItemKind } from "../game/events.js";
 import { EQUIPPED_GLYPH } from "../game/glyphs.js";
+import { canThrowItem } from "../game/inventoryKeymap.js";
 import {
 	calculateArmorClass,
 	calculatePlayerDamageBonus,
@@ -42,7 +43,7 @@ export const formatHeldItemLabel = (
 ): string => {
 	const name =
 		item.kind === "weapon"
-			? EQUIPMENT_NAMES[item.weaponKind]
+			? `${EQUIPMENT_NAMES[item.weaponKind]}${item.quantity > 1 ? `×${item.quantity}` : ""}`
 			: item.kind === "armor"
 				? EQUIPMENT_NAMES[item.armorKind]
 				: resolveItemDisplayName(item.kind, identifiedPotionKinds);
@@ -66,7 +67,8 @@ export const formatHeldItemLabel = (
  * The verb prompt shown after selecting a row: "use" reads as 装備する/はずす
  * for a weapon/armor/ring (matching what `u` actually does — toggle equip,
  * see items/equipment.ts and items/rings.ts) and つかう for everything else.
- * "drop" and the escape hint never change.
+ * "drop" and the escape hint never change; "throw" appears for a weapon
+ * that is not the one wielded (see inventoryKeymap.ts's canThrowItem).
  */
 export const resolveItemVerbPrompt = (item: HeldItem): string => {
 	const useLabel = !("equipped" in item)
@@ -74,5 +76,6 @@ export const resolveItemVerbPrompt = (item: HeldItem): string => {
 		: item.equipped
 			? "はずす"
 			: "装備する";
-	return `u: ${useLabel}  d: すてる (Escで戻る)`;
+	const throwLabel = canThrowItem(item) ? "  t: なげる" : "";
+	return `u: ${useLabel}  d: すてる${throwLabel} (Escで戻る)`;
 };

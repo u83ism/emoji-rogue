@@ -160,7 +160,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "武器",
 		category: "装備",
 		spawn: { type: "chance", percent: WEAPON_SPAWN_CHANCE_PERCENT },
-		effect: `5種類のどれか(下の「武器の種類」)。装備すると攻撃のダメージが素手の1d4からその武器のダイスに変わる。個体ごとに命中補正とダメージ補正を持つ。${WEAPON_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い。${WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
+		effect: `9種類のどれか(下の「武器の種類」)。装備すると攻撃のダメージが素手の1d4からその武器のダイスに変わる。装備していない武器は投げられる。個体ごとに命中補正とダメージ補正を持つ。${WEAPON_CURSE_CHANCE_PERCENT}%で呪われており、外せなくなるうえ命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}低い。${WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT}%で最初から強化されており命中補正が${FOUND_BONUS_ADJUSTMENT_MIN}〜${FOUND_BONUS_ADJUSTMENT_MAX}高い。どちらも装備するまで分からない`,
 	},
 	armor: {
 		catalogName: "防具",

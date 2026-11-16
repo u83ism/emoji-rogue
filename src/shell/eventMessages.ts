@@ -127,6 +127,10 @@ export const formatEvent = (
 			return `${ITEM_NAMES["enchant-armor"]}を読んだ。指定した防具の防御力が${event.payload.bonus}上がった!`;
 		case "armor-rusted":
 			return `装備中の防具が錆びついた!防御力が${event.payload.amount}下がった`;
+		case "missile-hit":
+			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げた。${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}ダメージ`;
+		case "missile-missed":
+			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、${ENEMY_NAMES[event.payload.target]}に当たらなかった`;
 		case "wand-struck":
 			return `杖から放たれた力が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
 		case "player-confused":

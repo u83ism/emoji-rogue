@@ -64,7 +64,11 @@ describe("formatEvent", () => {
 			[
 				{
 					type: "weapon-equipped",
-					payload: { weaponKind: "mace", hitBonus: 1, damageBonus: 1 },
+					payload: {
+						weaponKind: "mace",
+						hitBonus: 1,
+						damageBonus: 1,
+					},
 				},
 				"メイスを装備した。命中+1・ダメージ+1",
 			],
@@ -227,6 +231,20 @@ describe("formatEvent", () => {
 			[
 				{ type: "armor-rusted", payload: { amount: 1 } },
 				"装備中の防具が錆びついた!防御力が1下がった",
+			],
+			[
+				{
+					type: "missile-hit",
+					payload: { target: "zombie", variant: "arrow", damage: 4 },
+				},
+				"矢を投げた。ゾンビに4ダメージ",
+			],
+			[
+				{
+					type: "missile-missed",
+					payload: { target: "zombie", variant: "shuriken" },
+				},
+				"手裏剣を投げたが、ゾンビに当たらなかった",
 			],
 			[
 				{ type: "wand-struck", payload: { target: "zombie", damage: 3 } },

@@ -19,6 +19,7 @@ const weaponAt = (x: number, y: number): Item => ({
 		weaponKind: "long-sword" as const,
 		hitBonus: 1,
 		damageBonus: 1,
+		quantity: 1,
 	},
 });
 

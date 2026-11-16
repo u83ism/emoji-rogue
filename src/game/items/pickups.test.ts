@@ -31,6 +31,7 @@ const buildFullInventory = (): readonly HeldItem[] =>
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			};
 		}
 		if (kind === "armor") {
@@ -125,6 +126,7 @@ describe("pickups", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 3,
 				damageBonus: 3,
+				quantity: 1,
 			},
 		};
 		const state = {
@@ -142,6 +144,7 @@ describe("pickups", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 3,
 				damageBonus: 3,
+				quantity: 1,
 			},
 		]);
 		expect(next.nextItemId).toBe(99);
@@ -219,5 +222,76 @@ describe("pickups", () => {
 		expect(next.hasAmulet).toBe(true);
 		expect(next.amulet).toBeUndefined();
 		expect(next.events).toEqual([{ type: "amulet-obtained", payload: {} }]);
+	});
+});
+
+describe("picking up a bundled weapon", () => {
+	const arrowsHeld: HeldItem = {
+		itemId: 1,
+		kind: "weapon",
+		weaponKind: "arrow",
+		equipped: false,
+		cursed: false,
+		hitBonus: 0,
+		damageBonus: 0,
+		quantity: 10,
+	};
+	const arrowOnFloor = {
+		x: 3,
+		y: 2,
+		kind: "weapon" as const,
+		identity: {
+			itemId: 40,
+			weaponKind: "arrow" as const,
+			cursed: false,
+			hitBonus: 0,
+			damageBonus: 0,
+			quantity: 1,
+		},
+	};
+
+	it("joins the stack already held instead of taking a new slot", () => {
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			inventory: [arrowsHeld],
+			items: [arrowOnFloor],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory).toEqual([{ ...arrowsHeld, quantity: 11 }]);
+		expect(next.items).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "item-picked-up", payload: { kind: "weapon", variant: "arrow" } },
+		]);
+	});
+
+	it("joins the stack even with the inventory full — no slot is needed", () => {
+		const fillers: HeldItem[] = Array.from(
+			{ length: INVENTORY_CAPACITY - 1 },
+			(_, index) => ({ itemId: index + 2, kind: "food" as const }),
+		);
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			inventory: [arrowsHeld, ...fillers],
+			items: [arrowOnFloor],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory.length).toBe(INVENTORY_CAPACITY);
+		expect(next.inventory[0]).toEqual({ ...arrowsHeld, quantity: 11 });
+		expect(next.items).toEqual([]);
+	});
+
+	it("takes its own slot when its bonuses differ from the held stack's", () => {
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			inventory: [arrowsHeld],
+			items: [
+				{
+					...arrowOnFloor,
+					identity: { ...arrowOnFloor.identity, hitBonus: 2 },
+				},
+			],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.inventory.length).toBe(2);
 	});
 });

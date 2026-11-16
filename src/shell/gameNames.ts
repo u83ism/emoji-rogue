@@ -103,6 +103,10 @@ export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
 export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
 	mace: "メイス",
 	"long-sword": "長剣",
+	"short-bow": "弓",
+	arrow: "矢",
+	dart: "ダーツ",
+	shuriken: "手裏剣",
 	dagger: "短剣",
 	"two-handed-sword": "両手剣",
 	spear: "槍",

@@ -35,6 +35,11 @@ export const DAMAGE_VARIANCE_STDDEV = 0.5;
  * instead — docs/tasks/game.md).
  */
 export const HIT_CHANCE_PERCENT_PER_POINT = 5;
+/** Added to the to-hit roll of a thrown weapon against a target still asleep — original Rogue's +4 against anything not yet running. (Melee keeps its own sneak-attack rule, see SNEAK_ATTACK_MULTIPLIER.) */
+export const SLEEPING_TARGET_HIT_BONUS = 4;
+/** How many arrows a run starts with — original Rogue's `rnd(15) + 25`. */
+export const STARTING_ARROWS_MIN = 25;
+export const STARTING_ARROWS_MAX = 39;
 /** The player's armor class with nothing worn (original Rogue's INIT_STATS) — lower is harder to hit. */
 export const UNARMORED_ARMOR_CLASS = 10;
 /** What a bare-handed hit rolls — original Rogue's INIT_STATS damage "1x4". */

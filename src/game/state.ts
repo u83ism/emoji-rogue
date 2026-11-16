@@ -40,6 +40,11 @@ export type Action =
 			readonly type: "drop-item";
 			readonly payload: { readonly itemId: number };
 	  }
+	| {
+			/** Throws one of the held weapon `itemId` at the nearest visible enemy — see items/throw.ts. */
+			readonly type: "throw-item";
+			readonly payload: { readonly itemId: number };
+	  }
 	| { readonly type: "save" }
 	| { readonly type: "quit" };
 
@@ -158,6 +163,8 @@ export type HeldItem =
 			readonly hitBonus: number;
 			/** Added to the damage roll. */
 			readonly damageBonus: number;
+			/** How many this one slot holds — above 1 only for the kinds that come in bundles (arrows, darts, shuriken, daggers; see items/equipmentKinds.ts). Throwing takes one off. */
+			readonly quantity: number;
 	  }
 	| {
 			readonly itemId: number;

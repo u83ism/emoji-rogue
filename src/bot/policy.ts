@@ -2,6 +2,7 @@ import type { ItemKind } from "../game/events.js";
 import type { Action, Direction, GameState, Position } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
 import {
+	decideWeaponToThrow,
 	findAdjacentEnemyDirection,
 	shouldRestToHeal,
 } from "./combatPolicy.js";
@@ -14,8 +15,14 @@ import {
 } from "./memory.js";
 import { findNearestReachableTarget } from "./pathfinding.js";
 
-/** Consecutive no-progress turns (see memory.ts's signature) before the bot gives up on the whole run. */
-export const STAGNATION_QUIT_TURNS = 80;
+/**
+ * Consecutive no-progress turns (see memory.ts's signature) before the bot
+ * gives up on the whole run. The signature does not include the player's
+ * position, so a plain walk across an already-explored floor counts as
+ * "no progress": the limit has to exceed the longest such walk (80 was
+ * tripped by 80-step walks to the stairs after resting in a far corner).
+ */
+export const STAGNATION_QUIT_TURNS = 200;
 
 const resolveDirection = (
 	from: Position,
@@ -48,6 +55,8 @@ export interface BotDecision {
  *     the backstop for a policy bug or a genuine dead end.
  *  2. Paralyzed: wait, same as any action would resolve to.
  *  3. Use a beneficial held item if one is worth using this turn.
+ *  3b. Throw a held missile at an awake enemy that is still closing in
+ *     (see combatPolicy.ts's decideWeaponToThrow).
  *  4. Attack an adjacent enemy, if any — it attacks every turn regardless of
  *     what the player does, so finishing it off beats walking past it.
  *  5. Rest in place while wounded and nothing on the floor is awake (see
@@ -77,6 +86,14 @@ export const decideAction = (
 	if (itemToUse !== undefined) {
 		return {
 			action: { type: "use-item", payload: itemToUse },
+			memory,
+		};
+	}
+
+	const weaponToThrow = decideWeaponToThrow(state);
+	if (weaponToThrow !== undefined) {
+		return {
+			action: { type: "throw-item", payload: { itemId: weaponToThrow } },
 			memory,
 		};
 	}

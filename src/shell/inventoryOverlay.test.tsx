@@ -74,6 +74,7 @@ describe("InventoryOverlay", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -88,7 +89,7 @@ describe("InventoryOverlay", () => {
 		);
 		const frame = lastFrame() ?? "";
 		expect(frame).toContain("長剣");
-		expect(frame).toContain("u: 装備する  d: すてる (Escで戻る)");
+		expect(frame).toContain("u: 装備する  d: すてる  t: なげる (Escで戻る)");
 		expect(frame).not.toContain("a) ");
 	});
 
@@ -101,6 +102,7 @@ describe("InventoryOverlay", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
@@ -123,6 +125,7 @@ describe("InventoryOverlay", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		const state = { ...buildArenaGameState(9, 3, 1), inventory: [weapon] };
 		const { lastFrame } = render(
@@ -146,6 +149,7 @@ describe("InventoryOverlay", () => {
 			weaponKind: "long-sword" as const,
 			hitBonus: 1,
 			damageBonus: 1,
+			quantity: 1,
 		};
 		const armor: HeldItem = {
 			itemId: 3,

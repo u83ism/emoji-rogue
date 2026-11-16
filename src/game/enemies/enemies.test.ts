@@ -448,6 +448,7 @@ describe("advanceEnemies", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				} as const,
 			],
 		};
@@ -477,6 +478,7 @@ describe("advanceEnemies", () => {
 					weaponKind: "long-sword" as const,
 					hitBonus: 1,
 					damageBonus: 1,
+					quantity: 1,
 				} as const,
 				{ itemId: 2, kind: "heal-potion" } as const,
 			],
@@ -491,6 +493,7 @@ describe("advanceEnemies", () => {
 				weaponKind: "long-sword" as const,
 				hitBonus: 1,
 				damageBonus: 1,
+				quantity: 1,
 			},
 		]);
 		expect(next.events).toEqual([

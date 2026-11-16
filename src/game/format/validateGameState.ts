@@ -477,6 +477,14 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(turnsOnCurrentFloor)) {
 		return err("turnsOnCurrentFloor");
 	}
+	const wandererDelayTurns = value.wandererDelayTurns;
+	if (!isNonNegativeInteger(wandererDelayTurns)) {
+		return err("wandererDelayTurns");
+	}
+	const wandererRollTurns = value.wandererRollTurns;
+	if (!isNonNegativeInteger(wandererRollTurns)) {
+		return err("wandererRollTurns");
+	}
 	const floorsWithoutFood = value.floorsWithoutFood;
 	if (!isNonNegativeInteger(floorsWithoutFood)) {
 		return err("floorsWithoutFood");
@@ -587,6 +595,8 @@ export const validateGameState = (
 		turnsOnCurrentFloor,
 		quietTurns,
 		floorsWithoutFood,
+		wandererDelayTurns,
+		wandererRollTurns,
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,
 		hasAmulet,

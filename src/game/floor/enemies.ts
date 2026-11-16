@@ -6,6 +6,7 @@ import {
 	ENEMY_DEPTH_ORDER,
 	ENEMY_HP_DICE_SIDES,
 	ENEMY_STATS,
+	NON_WANDERING_ENEMY_KINDS,
 } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
@@ -24,7 +25,7 @@ const DEPTH_EDGE_SIZE = 5;
  * one. Off the front of the list it redraws among the first five kinds, off
  * the back among the last five. Consumes `rng` once, or twice on a redraw.
  */
-export const drawEnemyKindForFloor = (rng: Rng, floor: number): EnemyKind => {
+const drawEnemyKindOnce = (rng: Rng, floor: number): EnemyKind => {
 	const drawn =
 		floor + rng.getUniformInt(0, DEPTH_WINDOW_SIZE - 1) - DEPTH_WINDOW_OFFSET;
 	if (drawn < 0) {
@@ -39,6 +40,25 @@ export const drawEnemyKindForFloor = (rng: Rng, floor: number): EnemyKind => {
 		);
 	}
 	return at(ENEMY_DEPTH_ORDER, drawn);
+};
+
+/**
+ * The kind of one new enemy on `floor`. A "resident" (placed at floor
+ * generation) is whatever drawEnemyKindOnce draws; a "wanderer" (arriving
+ * later, see turnEnd/wanderer.ts) redraws until the kind is one that
+ * wanders, as original Rogue's randmonster(true) does.
+ */
+export const drawEnemyKindForFloor = (
+	rng: Rng,
+	floor: number,
+	origin: "resident" | "wanderer" = "resident",
+): EnemyKind => {
+	for (;;) {
+		const kind = drawEnemyKindOnce(rng, floor);
+		if (origin === "resident" || !NON_WANDERING_ENEMY_KINDS.includes(kind)) {
+			return kind;
+		}
+	}
 };
 
 /** The first and last floor `kind` can spawn on (before clamping to the dungeon's own depth) — the floors whose window in drawEnemyKindForFloor reaches its entry. */

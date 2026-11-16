@@ -49,7 +49,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結。全員1ターン1行動)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。攻撃は`enemyAttack.ts`(攻撃ダイス1個ごとの命中判定とダメージ。`vampireLifesteal.ts`の命中時自己回復・`wraithDrain.ts`の永続弱体化を内包)。能力値は`enemyStats.ts`(原作Rogue 5.4の`monsters[]`表と出現順)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・イッキーシングの追跡拒否・メデューサの視線攻撃)、毎ターン自己回復は`enemyRegen.ts`。出現(部屋ごとの抽選と、階に応じた種類の窓)は`floor/enemies.ts`、グリフは`enemyGlyphs.ts`で別物 |
 | `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`enemies.ts`/`items.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
-| `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(再生)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |
+| `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(自然回復と再生の指輪)・`wanderer.ts`(徘徊モンスターの追加出現)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
 | `vision.ts` / `frame.ts` / `glyphs.ts` | FOV導出(可視集合は保存せず毎回導出、既踏破のみ状態) / フレーム構築 / 絵文字辞書 |
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |

@@ -17,6 +17,7 @@ import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
 import { applyRegenerationTick } from "./turnEnd/regeneration.js";
 import { applyStatusCountdownTicks } from "./turnEnd/statusCountdowns.js";
+import { applyWandererTick } from "./turnEnd/wanderer.js";
 import { deriveExploredState } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
@@ -131,12 +132,15 @@ const applyFloorTurnCounterTick = (state: GameState): GameState =>
  * Everything that runs at the end of a turn-consuming action, in a fixed
  * order: hunger, regeneration, the status countdowns (confusion, levitation,
  * blindness, paralysis, detect monsters, hallucination — see
- * turnEnd/statusCountdowns.ts), then the floor turn counter. Each is
- * independently a no-op unless its own field/condition is active.
+ * turnEnd/statusCountdowns.ts), the wandering-monster clock
+ * (turnEnd/wanderer.ts), then the floor turn counter. Each is independently
+ * a no-op unless its own field/condition is active.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
 	applyFloorTurnCounterTick(
-		applyStatusCountdownTicks(applyRegenerationTick(applyHungerTick(state))),
+		applyWandererTick(
+			applyStatusCountdownTicks(applyRegenerationTick(applyHungerTick(state))),
+		),
 	);
 
 /**

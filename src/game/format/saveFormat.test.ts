@@ -82,6 +82,8 @@ describe("save file shape guard", () => {
 				turnsOnCurrentFloor: "number",
 				quietTurns: "number",
 				floorsWithoutFood: "number",
+				wandererDelayTurns: "number",
+				wandererRollTurns: "number",
 				stairs: { x: "number", y: "number", direction: "string" },
 				amulet: undefined,
 				hasAmulet: "boolean",

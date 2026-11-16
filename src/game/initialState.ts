@@ -7,11 +7,13 @@ import {
 	PLAYER_START_FOOD,
 	STARTING_ARROWS_MAX,
 	STARTING_ARROWS_MIN,
+	WANDERER_DELAY_TURNS,
 } from "./balance.js";
 import { buildEmptyColumns, buildUnexploredColumns } from "./columns.js";
 import { buildFloorLayout } from "./floor/layout.js";
 import { buildStartingInventory } from "./startingInventory.js";
 import type { GameState, Position, Stairs } from "./state.js";
+import { drawWandererDelay } from "./turnEnd/wanderer.js";
 import { deriveExploredState } from "./vision.js";
 
 /**
@@ -40,6 +42,8 @@ const INITIAL_RUN_STATE = {
 	turnsOnCurrentFloor: 0,
 	quietTurns: 0,
 	floorsWithoutFood: 0,
+	wandererDelayTurns: WANDERER_DELAY_TURNS,
+	wandererRollTurns: 0,
 	hasAmulet: false,
 	hasAttacked: false,
 	hasEaten: false,
@@ -127,6 +131,7 @@ export const buildDungeonGameState = (
 	const startingInventory = buildStartingInventory(
 		rng.getUniformInt(STARTING_ARROWS_MIN, STARTING_ARROWS_MAX),
 	);
+	const wandererDelayTurns = drawWandererDelay(rng);
 	const layout = buildFloorLayout(
 		width,
 		height,
@@ -154,5 +159,6 @@ export const buildDungeonGameState = (
 		rng: rng.getState(),
 		nextItemId: layout.nextItemId,
 		floorsWithoutFood: layout.floorsWithoutFood,
+		wandererDelayTurns,
 	});
 };

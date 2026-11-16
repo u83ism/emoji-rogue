@@ -93,6 +93,18 @@ export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
 export const WRAITH_DRAIN_AMOUNT = 1;
 
 /**
+ * Wandering monsters (original Rogue's WANDERTIME and rollwand(), see
+ * turnEnd/wanderer.ts): about WANDERER_DELAY_TURNS turns pass (67-73), then
+ * every WANDERER_ROLL_INTERVAL_TURNS-th turn one face of a
+ * WANDERER_ROLL_DIE_SIDES-sided die brings a new enemy hunting the player,
+ * after which the delay starts over. On average one arrives every 94 turns
+ * (70 of delay, then 6 rolls 4 turns apart).
+ */
+export const WANDERER_DELAY_TURNS = 70;
+export const WANDERER_ROLL_INTERVAL_TURNS = 4;
+export const WANDERER_ROLL_DIE_SIDES = 6;
+
+/**
  * Chance (out of 100), rolled once per room at floor generation, that the
  * room holds one enemy — see floor/enemies.ts. Original Rogue rolls 80% for
  * a room with gold in it and 25% otherwise, with gold in half the rooms;

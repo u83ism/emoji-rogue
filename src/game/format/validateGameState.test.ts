@@ -124,7 +124,7 @@ describe("validateGameState", () => {
 		}
 		const result = validateGameState({
 			...valid,
-			enemies: [{ ...enemies[0], kind: "aquator", hp: 3 }],
+			enemies: [{ ...enemies[0], kind: "aquator", hp: 3, maxHp: 3 }],
 		});
 		expect(result.ok).toBe(true);
 	});

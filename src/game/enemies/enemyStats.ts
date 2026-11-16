@@ -140,6 +140,20 @@ export const calculateEnemyExperienceReward = (
 };
 
 /**
+ * The kinds that never arrive as wandering monsters — the blanks in original
+ * Rogue's wand_mons[] (ice monster, leprechaun, nymph, venus flytrap, xeroc,
+ * dragon), under this game's names for them.
+ */
+export const NON_WANDERING_ENEMY_KINDS: readonly EnemyKind[] = [
+	"icky-thing",
+	"thief",
+	"nymph",
+	"venus-flytrap",
+	"xeroc",
+	"dragon",
+];
+
+/**
  * Original Rogue's lvl_mons[] — the 26 kinds "in rough order of
  * vorpalness". A floor draws from a 10-entry window of this list that
  * slides one entry deeper per floor (see floor/enemies.ts).

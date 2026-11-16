@@ -289,6 +289,10 @@ export interface GameState {
 	readonly floor: number;
 	/** Turns since the player last fought (swung at an enemy or was swung at) — original Rogue's `quiet`. Natural healing waits on it and resets it; see turnEnd/regeneration.ts. */
 	readonly quietTurns: number;
+	/** Turns left before the wandering-monster rolls begin (again) — see turnEnd/wanderer.ts. */
+	readonly wandererDelayTurns: number;
+	/** Turns since the last wandering-monster roll, while the rolls are running. */
+	readonly wandererRollTurns: number;
 	/** Floors generated since one last held a food ration — original Rogue's `no_food`, which guarantees a ration after a drought. See floor/food.ts. */
 	readonly floorsWithoutFood: number;
 	/** Turns spent on the current floor since arriving. Resets to 0 on every floor transition; drives the hallucination decoy glyph cycling in frame.ts. */

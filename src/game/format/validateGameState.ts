@@ -275,15 +275,9 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-fainted": (payload) => isPositiveInteger(payload.turns),
 	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
-	/* trapdoor, teleport, bear, rust and sleeping-gas are the zero-damage trap kinds — see TRAPDOOR_DAMAGE, TELEPORT_TRAP_DAMAGE, BEAR_TRAP_DAMAGE, RUST_TRAP_DAMAGE, SLEEPING_GAS_TRAP_DAMAGE */
+	/* any kind can deal 0: the zero-damage kinds always, a dart trap when its dart misses */
 	"trap-triggered": (payload) =>
-		payload.kind === "trapdoor" ||
-		payload.kind === "teleport" ||
-		payload.kind === "bear" ||
-		payload.kind === "rust" ||
-		payload.kind === "sleeping-gas"
-			? isNonNegativeInteger(payload.damage)
-			: isTrapKind(payload.kind) && isPositiveInteger(payload.damage),
+		isTrapKind(payload.kind) && isNonNegativeInteger(payload.damage),
 	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
 	"player-teleported": (payload) =>
 		isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y),

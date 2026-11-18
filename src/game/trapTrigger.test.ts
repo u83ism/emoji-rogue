@@ -7,6 +7,10 @@ import {
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy } from "./state.js";
 
+/** Levels at which a dart trap's to-hit chance clamps to 100% / 0% (see items/hitChance.ts). */
+const SURE_HIT_LEVEL = 30;
+const SURE_MISS_LEVEL = -30;
+
 const move = (direction: Direction): Action => ({
 	type: "move",
 	payload: { direction },
@@ -27,30 +31,49 @@ describe("applyTrapTrigger", () => {
 	it("stepping onto a hidden trap springs it: damage dealt, trap consumed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
+			playerLevel: SURE_HIT_LEVEL,
 			traps: [{ x: 5, y: 1, kind: "dart" as const }],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.player).toEqual({ x: 5, y: 1 });
 		expect(next.traps).toEqual([]);
-		expect(next.playerHp).toBe(state.playerHp - 2);
+		const damage = state.playerHp - next.playerHp;
+		/* a dart trap that hits rolls 1d4 */
+		expect(damage).toBeGreaterThanOrEqual(1);
+		expect(damage).toBeLessThanOrEqual(4);
 		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
+			{ type: "trap-triggered", payload: { kind: "dart", damage } },
+		]);
+	});
+
+	it("a dart trap's dart can miss: no damage, trap still consumed", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerLevel: SURE_MISS_LEVEL,
+			traps: [{ x: 5, y: 1, kind: "dart" as const }],
+		};
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.traps).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
 		]);
 	});
 
 	it("a fatal trap ends the run without a bonus enemy hit the same turn", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerHp: 2,
+			playerHp: 1,
+			playerLevel: SURE_HIT_LEVEL,
 			traps: [{ x: 5, y: 1, kind: "dart" as const }],
 			enemies: [zombie(6, 1)] /* would be adjacent after the move */,
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.playerHp).toBe(0);
 		expect(next.status).toBe("dead");
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
-			{ type: "player-died", payload: { by: "trap" } },
+		expect(next.events.map((event) => event.type)).toEqual([
+			"trap-triggered",
+			"player-died",
 		]);
 	});
 

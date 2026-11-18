@@ -1,11 +1,15 @@
+import type { RngState } from "../rng.js";
 import {
 	BEAR_TRAP_PARALYSIS_DURATION,
+	DART_TRAP_DAMAGE_DICE,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 	TRAP_DAMAGE,
 } from "./balance.js";
+import { rollDamageDice, rollToHit } from "./damage.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
 import { applyArmorRust, canRustEquippedArmor } from "./items/equipment.js";
+import { calculateDartTrapHitChancePercent } from "./items/hitChance.js";
 import type { GameState } from "./state.js";
 import { applyRandomTeleport } from "./teleport.js";
 
@@ -47,7 +51,29 @@ const TRAP_SIDE_EFFECTS: Readonly<
 };
 
 /**
- * Springs any hidden trap under the player's feet: TRAP_DAMAGE[kind] damage,
+ * The HP a sprung `kind` costs: a dart trap first rolls to hit
+ * (calculateDartTrapHitChancePercent — armor helps) and then
+ * DART_TRAP_DAMAGE_DICE, 0 on a miss; every other kind is its fixed
+ * TRAP_DAMAGE and consumes no rng.
+ */
+const rollTrapDamage = (
+	state: GameState,
+	kind: TrapKind,
+): { readonly damage: number; readonly rng: RngState } => {
+	if (kind !== "dart") {
+		return { damage: TRAP_DAMAGE[kind], rng: state.rng };
+	}
+	const hitRoll = rollToHit(
+		state.rng,
+		calculateDartTrapHitChancePercent(state.playerLevel, state.inventory),
+	);
+	return hitRoll.hit
+		? rollDamageDice(hitRoll.rng, DART_TRAP_DAMAGE_DICE, 0, 0)
+		: { damage: 0, rng: hitRoll.rng };
+};
+
+/**
+ * Springs any hidden trap under the player's feet: rollTrapDamage's damage,
  * the trap consumed (one-time — never re-triggers, never becomes visible).
  * A fatal hit ends the run with player-died(by: "trap"); advanceTurn's move
  * case checks status right after this runs, so enemies never get a same-turn
@@ -79,7 +105,7 @@ export const applyTrapTrigger = (state: GameState): GameState => {
 	if (trap === undefined) {
 		return state;
 	}
-	const damage = TRAP_DAMAGE[trap.kind];
+	const { damage, rng } = rollTrapDamage(state, trap.kind);
 	const playerHp = state.playerHp - damage;
 	const events: GameEvent[] = [
 		{ type: "trap-triggered", payload: { kind: trap.kind, damage } },
@@ -90,6 +116,7 @@ export const applyTrapTrigger = (state: GameState): GameState => {
 	const afterTrap: GameState = {
 		...state,
 		playerHp: Math.max(0, playerHp),
+		rng,
 		traps: state.traps.filter((candidate) => candidate !== trap),
 		status: playerHp <= 0 ? "dead" : state.status,
 		events: buildEventLog(state.events, events),

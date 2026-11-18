@@ -150,6 +150,10 @@ describe("formatEvent", () => {
 				"矢のわなを踏んでしまった。2のダメージを受けた",
 			],
 			[
+				{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
+				"矢のわなを踏んだが、矢は外れた",
+			],
+			[
 				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
 				"落とし穴を踏んでしまった!",
 			],

@@ -87,6 +87,9 @@ export const formatEvent = (
 		case "gold-collected":
 			return `${event.payload.amount}ゴールドを手に入れた`;
 		case "trap-triggered":
+			if (event.payload.kind === "dart" && event.payload.damage === 0) {
+				return `${TRAP_NAMES.dart}を踏んだが、矢は外れた`;
+			}
 			return event.payload.damage > 0
 				? `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`
 				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;

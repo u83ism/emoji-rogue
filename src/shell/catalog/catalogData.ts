@@ -1,7 +1,7 @@
 import {
 	BEAR_TRAP_PARALYSIS_DURATION,
 	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
-	DART_TRAP_DAMAGE,
+	DART_TRAP_DAMAGE_DICE,
 	GOAL_FLOOR,
 	RUST_TRAP_SPAWN_CHANCE_PERCENT,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
@@ -47,7 +47,7 @@ export interface TrapCatalogEntry {
 export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	dart: {
 		spawn: { type: "guaranteed", countPerFloor: TRAP_COUNT_PER_FLOOR },
-		effect: `${DART_TRAP_DAMAGE}ダメージを受ける`,
+		effect: `矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ`,
 	},
 	trapdoor: {
 		spawn: { type: "chance", percent: TRAPDOOR_SPAWN_CHANCE_PERCENT },

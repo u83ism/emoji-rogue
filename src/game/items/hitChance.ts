@@ -1,4 +1,8 @@
-import { HIT_CHANCE_PERCENT_PER_POINT } from "../balance.js";
+import {
+	DART_TRAP_HIT_BONUS,
+	DART_TRAP_LEVEL_BONUS,
+	HIT_CHANCE_PERCENT_PER_POINT,
+} from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
@@ -49,6 +53,17 @@ export const calculateThrowHitChancePercent = (
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
 		hitBonus,
+	);
+
+/** Percent chance a dart trap's dart connects with the player — see DART_TRAP_LEVEL_BONUS. */
+export const calculateDartTrapHitChancePercent = (
+	playerLevel: number,
+	inventory: readonly HeldItem[],
+): number =>
+	calculateHitChancePercent(
+		playerLevel + DART_TRAP_LEVEL_BONUS,
+		calculatePlayerArmorClass(inventory),
+		DART_TRAP_HIT_BONUS,
 	);
 
 /** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level against the player's armor class. */

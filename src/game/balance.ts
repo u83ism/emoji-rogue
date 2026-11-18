@@ -260,7 +260,14 @@ export const calculateGoldAmountMax = (floor: number): number =>
 	51 + 10 * floor;
 
 export const TRAP_COUNT_PER_FLOOR = 2;
-export const DART_TRAP_DAMAGE = 2;
+/**
+ * A dart trap shoots at the player like an attacker one level above it
+ * (original Rogue's T_DART: `swing(level + 1, armor, 1)`, then 1d4) — so
+ * armor makes it miss, and a miss does nothing at all.
+ */
+export const DART_TRAP_LEVEL_BONUS = 1;
+export const DART_TRAP_HIT_BONUS = 1;
+export const DART_TRAP_DAMAGE_DICE: DamageDice = { count: 1, sides: 4 };
 /** No damage — the penalty is the forced descent itself, see floor.ts's descendStairs. */
 export const TRAPDOOR_DAMAGE = 0;
 /** Chance (out of 100), independently rolled per floor (never on GOAL_FLOOR), that a trapdoor spawns. */
@@ -299,15 +306,15 @@ export const SLEEPING_GAS_TRAP_PARALYSIS_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a sleeping gas trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
 export const SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT = 15;
 
-/** Per-kind lookup table — a new kind is one entry. */
-export const TRAP_DAMAGE: Readonly<Record<TrapKind, number>> = {
-	dart: DART_TRAP_DAMAGE,
-	trapdoor: TRAPDOOR_DAMAGE,
-	teleport: TELEPORT_TRAP_DAMAGE,
-	bear: BEAR_TRAP_DAMAGE,
-	rust: RUST_TRAP_DAMAGE,
-	"sleeping-gas": SLEEPING_GAS_TRAP_DAMAGE,
-};
+/** Per-kind lookup table — a new kind is one entry. The dart trap rolls its damage instead (DART_TRAP_DAMAGE_DICE). */
+export const TRAP_DAMAGE: Readonly<Record<Exclude<TrapKind, "dart">, number>> =
+	{
+		trapdoor: TRAPDOOR_DAMAGE,
+		teleport: TELEPORT_TRAP_DAMAGE,
+		bear: BEAR_TRAP_DAMAGE,
+		rust: RUST_TRAP_DAMAGE,
+		"sleeping-gas": SLEEPING_GAS_TRAP_DAMAGE,
+	};
 
 /** Chance (out of 100), independently rolled per floor, that a ring spawns. */
 export const RING_SPAWN_CHANCE_PERCENT = 8;

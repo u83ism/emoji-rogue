@@ -1293,7 +1293,7 @@ describe("validateGameState", () => {
 			{
 				...buildValidState(),
 				events: [
-					{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
+					{ type: "trap-triggered", payload: { kind: "dart", damage: -1 } },
 				],
 			},
 			"events",

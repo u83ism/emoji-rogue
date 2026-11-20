@@ -75,8 +75,8 @@ const griffin = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
 	enemyOf("griffin", x, y, true, hp);
 const troll = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
 	enemyOf("troll", x, y, true, hp);
-const ickyThing = (x: number, y: number, awake = true): Enemy =>
-	enemyOf("icky-thing", x, y, awake);
+const iceMonster = (x: number, y: number, awake = true): Enemy =>
+	enemyOf("ice-monster", x, y, awake);
 const venusFlytrap = (x: number, y: number): Enemy =>
 	enemyOf("venus-flytrap", x, y);
 const medusa = (x: number, y: number): Enemy => enemyOf("medusa", x, y);
@@ -989,33 +989,51 @@ describe("advanceEnemies", () => {
 		expect(next.enemies[0]?.hp).toBe(TEST_ENEMY_HP - 3 + GRIFFIN_REGEN_AMOUNT);
 	});
 
-	it("a sleeping icky-thing does not wake merely from being seen, consuming no rng", () => {
-		/* seed 1 would wake a sighted zombie (see above) — icky-thing must not */
-		const state = buildCorridorState([ickyThing(7, 1, false)]);
+	it("an awake ice monster chases like any other kind", () => {
+		const state = buildCorridorState([iceMonster(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([ickyThing(7, 1, false)]);
-		expect(next.rng).toEqual(state.rng);
+		expect(next.enemies).toEqual([iceMonster(6, 1)]);
 	});
 
-	it("a sleeping icky-thing adjacent to the player can still wake", () => {
-		const state = buildCorridorState([ickyThing(5, 1, false)]);
+	it("an adjacent ice monster's hit freezes instead of hurting", () => {
+		/* exposed armor: every attack lands */
+		const state = buildExposedState([iceMonster(5, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([ickyThing(5, 1, true)]);
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.paralyzedTurnsRemaining).toBeGreaterThanOrEqual(2);
+		expect(next.paralyzedTurnsRemaining).toBeLessThanOrEqual(3);
+		expect(next.events).toEqual([
+			{
+				type: "player-frozen",
+				payload: { turns: next.paralyzedTurnsRemaining },
+			},
+		]);
 	});
 
-	it("an awake icky-thing never chases even when visible, only wanders", () => {
-		/* a zombie at the same spot would deterministically step to (6,1)
-		 * without touching rng — icky-thing wanders instead, consuming rng */
-		const state = buildCorridorState([ickyThing(7, 1)]);
+	it("an ice monster's attack ends the quiet even when it misses", () => {
+		const state = {
+			...buildCorridorState([iceMonster(5, 1)]),
+			playerLevel: 1,
+			quietTurns: 12,
+			/* armor so hard every attack misses */
+			inventory: [equippedArmor(200)],
+		};
 		const next = advanceEnemies(state);
-		expect(next.rng).not.toEqual(state.rng);
+		expect(next.paralyzedTurnsRemaining).toBe(0);
+		expect(next.events).toEqual([]);
+		expect(next.quietTurns).toBe(0);
 	});
 
-	it("an icky-thing still attacks when adjacent, despite being blind", () => {
-		const state = buildExposedState([ickyThing(5, 1)]);
+	it("frozen long enough, the player freezes to death", () => {
+		const state = {
+			...buildExposedState([iceMonster(5, 1)]),
+			paralyzedTurnsRemaining: 49,
+		};
 		const next = advanceEnemies(state);
-		expect(next.playerHp).toBeLessThan(state.playerHp);
-		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
+		expect(next.status).toBe("dead");
+		expect(next.events).toEqual([
+			{ type: "player-died", payload: { by: "hypothermia" } },
+		]);
 	});
 
 	it("a venus-flytrap never moves — neither chasing nor wandering — while visible but not adjacent", () => {

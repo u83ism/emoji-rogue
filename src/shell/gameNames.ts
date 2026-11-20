@@ -1,4 +1,5 @@
 import {
+	type DeathCause,
 	type EnemyKind,
 	type EquipmentVariant,
 	type ItemKind,
@@ -27,11 +28,11 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	hobgoblin: "ホブゴブリン",
 	centaur: "ケンタウロス",
 	quagga: "クアッガ",
-	"ur-vile": "アーヴァイル",
+	rhinoceros: "サイ",
 	jabberwock: "ジャバウォック",
 	griffin: "グリフィン",
 	troll: "トロル",
-	"icky-thing": "イッキーシング",
+	"ice-monster": "アイスモンスター",
 	"venus-flytrap": "ハエトリソウ",
 	medusa: "メデューサ",
 	phantom: "ファントム",
@@ -122,6 +123,27 @@ export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
 
 /** Shown for any potion-family item not yet identified this run. */
 const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
+
+/** How a death by something other than an enemy reads in the log. */
+const NON_ENEMY_DEATH_MESSAGES: Readonly<
+	Record<Exclude<DeathCause, EnemyKind>, string>
+> = {
+	hunger: "空腹のあまり倒れた……",
+	trap: "わなにやられた……",
+	poison: "毒薬を飲んで倒れた……",
+	hypothermia: "凍りついたまま凍え死んだ……",
+};
+
+const isNonEnemyDeathCause = (
+	by: DeathCause,
+): by is Exclude<DeathCause, EnemyKind> =>
+	Object.hasOwn(NON_ENEMY_DEATH_MESSAGES, by);
+
+/** The log line for the player's death — the enemy's name, or NON_ENEMY_DEATH_MESSAGES' line for every other cause. */
+export const formatDeathMessage = (by: DeathCause): string =>
+	isNonEnemyDeathCause(by)
+		? NON_ENEMY_DEATH_MESSAGES[by]
+		: `${ENEMY_NAMES[by]}にやられた……`;
 
 export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	dart: "矢のわな",

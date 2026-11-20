@@ -120,8 +120,7 @@ export interface EnemyMovementResult {
  * stationary and never moves; medusa gazes instead of chasing while visible
  * and not confused (MEDUSA_GAZE_CHANCE_PERCENT to confuse the player at
  * range — see player-gazed); any other kind chases via A* while visible and
- * not confused (icky-thing excluded — it is blind and never chases), or
- * wanders otherwise.
+ * not confused, or wanders otherwise.
  */
 export const resolveEnemyMovement = (
 	state: GameState,
@@ -154,11 +153,7 @@ export const resolveEnemyMovement = (
 		}
 		return { position: next, rng: gazeRoll.state };
 	}
-	if (
-		!confused &&
-		enemy.kind !== "icky-thing" &&
-		visiblePoints.has(encodePointKey(next.x, next.y))
-	) {
+	if (!confused && visiblePoints.has(encodePointKey(next.x, next.y))) {
 		const step = stepTowardPlayer(state, next, occupied);
 		return { position: step ?? next, rng };
 	}

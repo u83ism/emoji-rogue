@@ -22,11 +22,11 @@ export const ENEMY_KIND_VALUES = [
 	"hobgoblin",
 	"centaur",
 	"quagga",
-	"ur-vile",
+	"rhinoceros",
 	"jabberwock",
 	"griffin",
 	"troll",
-	"icky-thing",
+	"ice-monster",
 	"venus-flytrap",
 	"medusa",
 	"phantom",
@@ -171,8 +171,13 @@ export const TRAP_KIND_VALUES = [
 /** Hidden until stepped on — see trapTrigger.ts. */
 export type TrapKind = (typeof TRAP_KIND_VALUES)[number];
 
-/** What killed the player — an enemy kind, starvation, a trap, or a poison potion. */
-export type DeathCause = EnemyKind | "hunger" | "trap" | "poison";
+/** What killed the player — an enemy kind, starvation, a trap, a poison potion, or being frozen too long (an ice monster's freeze piled up). */
+export type DeathCause =
+	| EnemyKind
+	| "hunger"
+	| "trap"
+	| "poison"
+	| "hypothermia";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -507,6 +512,11 @@ export type GameEvent =
 	| {
 			/** A medusa's ranged gaze landing — sets confusedTurnsRemaining, same field as player-confused (the confusion potion) but its own event/flavor text, same "same field, different source" idiom as the sleeping gas trap reusing paralyzedTurnsRemaining. See advanceEnemies. */
 			readonly type: "player-gazed";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** An ice monster's hit freezing a player who was not frozen yet — sets paralyzedTurnsRemaining, the same field as the paralysis potion and the sleeping gas trap. See enemies/iceMonsterFreeze.ts. */
+			readonly type: "player-frozen";
 			readonly payload: { readonly turns: number };
 	  }
 	| {

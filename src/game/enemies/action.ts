@@ -1,13 +1,10 @@
 import { type RngState, stepUniform } from "../../rng.js";
 import { isAdjacent } from "../combat.js";
 import type { GameEvent } from "../events.js";
-import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
-import { resolveEnemyAttack } from "./enemyAttack.js";
-import { resolveFleeingTheft } from "./enemyFlee.js";
+import { resolveAdjacentAction, withEvents } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
 import { resolveEnemyMovement, stepWandering } from "./enemyMovement.js";
-import { resolveFlytrapAttack } from "./flytrapHold.js";
 
 /**
  * Everything the enemies' turn has changed on the player's side so far,
@@ -19,7 +16,10 @@ export interface EnemyTurnProgress {
 	readonly playerHp: number;
 	readonly playerMaxHp: number;
 	readonly playerConfusedTurnsRemaining: number;
+	readonly playerParalyzedTurnsRemaining: number;
 	readonly flytrapHoldDamage: number;
+	/** Some enemy acted against the player this turn (attacked, missed or stole) — ends the quiet natural healing waits for. */
+	readonly playerAttacked: boolean;
 	readonly goldCollected: number;
 	readonly inventory: readonly HeldItem[];
 	readonly events: readonly GameEvent[];
@@ -38,24 +38,14 @@ export interface EnemyActionResult {
 	readonly progress: EnemyTurnProgress;
 }
 
-const withEvents = (
-	progress: EnemyTurnProgress,
-	events: readonly GameEvent[],
-): EnemyTurnProgress =>
-	events.length === 0
-		? progress
-		: { ...progress, events: [...progress.events, ...events] };
-
 /**
  * One action of one awake, unfrozen enemy. A kind listed in
  * ERRATIC_MOVE_CHANCE_PERCENT (bat, phantom) first rolls that chance to
  * flutter one random step instead — even away from a player it stands next
  * to, which is what makes a bat so hard to pin down.
- * Adjacent to the player it acts in
- * place: thief/nymph steal and flee (enemyFlee.ts), a venus-flytrap
- * tightens its hold (flytrapHold.ts), every other kind attacks
- * (enemyAttack.ts — a to-hit and damage roll per attack die, the kind's own
- * on-hit effect). Otherwise it moves or does its kind's ranged thing
+ * Adjacent to the player it acts in place (adjacentAction.ts: an attack,
+ * or a kind's own special — stealing, the flytrap's hold, the ice monster's
+ * freeze). Otherwise it moves or does its kind's ranged thing
  * (enemyMovement.ts's resolveEnemyMovement). `enemy` is the enemy as it
  * started the turn; `actor` is where it stands and what HP it has now.
  * `occupied` is the other enemies' tiles.
@@ -139,55 +129,5 @@ const resolveIntendedAction = (
 			),
 		};
 	}
-	if (enemy.kind === "thief" || enemy.kind === "nymph") {
-		const { event, ...stolen } = resolveFleeingTheft(
-			enemy.kind,
-			progress.rng,
-			progress.goldCollected,
-			progress.inventory,
-			state.playerLevel,
-			state.floor,
-		);
-		return {
-			actor: { ...actor, fled: true },
-			progress: withEvents({ ...progress, ...stolen }, [event]),
-		};
-	}
-	if (enemy.kind === "venus-flytrap") {
-		const { events, ...squeezed } = resolveFlytrapAttack(
-			progress.flytrapHoldDamage,
-			progress.playerHp,
-			calculateEnemyHitChancePercent(enemy.kind, progress.inventory),
-			progress.rng,
-		);
-		return {
-			actor,
-			progress: withEvents(
-				{ ...progress, ...squeezed, died: progress.died || squeezed.died },
-				events,
-			),
-		};
-	}
-	const hit = resolveEnemyAttack(
-		enemy,
-		actor.hp,
-		progress.playerHp,
-		progress.playerMaxHp,
-		progress.inventory,
-		progress.rng,
-	);
-	return {
-		actor: { ...actor, hp: hit.enemyHp },
-		progress: withEvents(
-			{
-				...progress,
-				playerHp: hit.playerHp,
-				playerMaxHp: hit.playerMaxHp,
-				inventory: hit.inventory,
-				rng: hit.rng,
-				died: progress.died || hit.died,
-			},
-			hit.events,
-		),
-	};
+	return resolveAdjacentAction(state, enemy, actor, progress);
 };

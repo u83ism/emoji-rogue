@@ -16,8 +16,7 @@ import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
  * One turn for every enemy, in array order. A still-sleeping enemy wakes
- * this turn only while adjacent/visible (icky-thing: adjacent only — it is
- * blind), via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
+ * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
  * with a stealth ring worn). Once awake it takes one action per turn —
  * what that action is (attack, steal and flee, chase, wander, a kind's own
  * special case) lives in action.ts's resolveEnemyAction. The flying kinds
@@ -52,7 +51,9 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: state.playerHp,
 		playerMaxHp: state.playerMaxHp,
 		playerConfusedTurnsRemaining: state.confusedTurnsRemaining,
+		playerParalyzedTurnsRemaining: state.paralyzedTurnsRemaining,
 		flytrapHoldDamage: state.flytrapHoldDamage,
+		playerAttacked: false,
 		goldCollected: state.goldCollected,
 		inventory: state.inventory,
 		events: [],
@@ -63,9 +64,9 @@ export const advanceEnemies = (state: GameState): GameState => {
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let awake = enemy.awake;
-		const canWakeFromSight =
-			enemy.kind !== "icky-thing" &&
-			visiblePoints.has(encodePointKey(enemy.x, enemy.y));
+		const canWakeFromSight = visiblePoints.has(
+			encodePointKey(enemy.x, enemy.y),
+		);
 		if (!awake && (isAdjacent(enemy, state.player) || canWakeFromSight)) {
 			const wakeChancePercent = hasEquippedRing(
 				progress.inventory,
@@ -163,13 +164,9 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: Math.max(0, progress.playerHp),
 		playerMaxHp: progress.playerMaxHp,
 		/* an attack on the player, landed or not, ends the quiet natural healing waits for */
-		quietTurns: progress.events.some(
-			(event) =>
-				event.type === "player-hit" || event.type === "enemy-attack-missed",
-		)
-			? 0
-			: state.quietTurns,
+		quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
 		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
+		paralyzedTurnsRemaining: progress.playerParalyzedTurnsRemaining,
 		/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
 		flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)
 			? progress.flytrapHoldDamage

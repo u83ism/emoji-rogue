@@ -90,7 +90,8 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	isOneOf(ENEMY_KIND_VALUES, value);
 
 const isDeathCause = (value: unknown): value is DeathCause =>
-	isEnemyKind(value) || isOneOf(["hunger", "trap", "poison"] as const, value);
+	isEnemyKind(value) ||
+	isOneOf(["hunger", "trap", "poison", "hypothermia"] as const, value);
 
 const isEnemyArray = (
 	value: unknown,
@@ -295,6 +296,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-drained": (payload) => isPositiveInteger(payload.amount),
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),
+	"player-frozen": (payload) => isPositiveInteger(payload.turns),
 	"weapon-enchanted": (payload) =>
 		(payload.stat === "hit" || payload.stat === "damage") &&
 		isPositiveInteger(payload.bonus),

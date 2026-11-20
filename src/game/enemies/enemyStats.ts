@@ -19,14 +19,14 @@ export interface EnemyStats {
 const dice = (count: number, sides: number): DamageDice => ({ count, sides });
 
 /**
- * Four kinds are not Rogue 5.4's monster of the same letter (thief =
- * leprechaun, rat = rattlesnake, ur-vile = black unicorn, icky-thing = ice
- * monster — docs/tasks/game.md); each takes its letter's row anyway. One
- * row deviates because the original's attack is a mechanic this game does
- * not have: the ice monster's 0x0 (it freezes instead) becomes a token 1d2
- * for the icky-thing. The venus flytrap's 0x0 is the original's starting
- * value — its real damage is the hold that grows with every bite, see
- * flytrapHold.ts.
+ * Three kinds carry another name and emoji than their original Rogue 5.4
+ * monster, because no stable emoji shows the original (docs/design.md's
+ * "まず本家ありき"): rhinoceros = black unicorn, and — until they are
+ * replaced — thief = leprechaun (kept by the developer's choice) and rat =
+ * rattlesnake (to become a scorpion). Their numbers are the original's all
+ * the same. Two 0x0 rows are the original's too: the ice monster's real
+ * attack is its freeze (iceMonsterFreeze.ts), the venus flytrap's is the
+ * hold that grows with every bite (flytrapHold.ts).
  */
 export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 	aquator: {
@@ -62,10 +62,10 @@ export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 		experience: 2000,
 	},
 	hobgoblin: { level: 1, armorClass: 5, attacks: [dice(1, 8)], experience: 3 },
-	"icky-thing": {
+	"ice-monster": {
 		level: 1,
 		armorClass: 9,
-		attacks: [dice(1, 2)],
+		attacks: [dice(0, 0)],
 		experience: 5,
 	},
 	jabberwock: {
@@ -99,7 +99,7 @@ export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 		attacks: [dice(1, 8), dice(1, 8), dice(2, 6)],
 		experience: 120,
 	},
-	"ur-vile": {
+	rhinoceros: {
 		level: 7,
 		armorClass: -2,
 		attacks: [dice(1, 9), dice(1, 9), dice(2, 9)],
@@ -146,7 +146,7 @@ export const calculateEnemyExperienceReward = (
  * dragon), under this game's names for them.
  */
 export const NON_WANDERING_ENEMY_KINDS: readonly EnemyKind[] = [
-	"icky-thing",
+	"ice-monster",
 	"thief",
 	"nymph",
 	"venus-flytrap",
@@ -165,7 +165,7 @@ export const ENEMY_DEPTH_ORDER: readonly EnemyKind[] = [
 	"bat",
 	"snake",
 	"hobgoblin",
-	"icky-thing",
+	"ice-monster",
 	"rat",
 	"orc",
 	"zombie",
@@ -180,7 +180,7 @@ export const ENEMY_DEPTH_ORDER: readonly EnemyKind[] = [
 	"wraith",
 	"phantom",
 	"xeroc",
-	"ur-vile",
+	"rhinoceros",
 	"medusa",
 	"vampire",
 	"griffin",

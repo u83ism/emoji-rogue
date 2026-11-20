@@ -52,10 +52,11 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	/* Quagga is literally an extinct zebra subspecies — zebra (Unicode 10.0)
 	 * is a direct match, not a stand-in. */
 	quagga: { glyph: "🦓" },
-	/* Ur-vile has no real-world analog and no established visual design even
-	 * within Rogue itself — bust in silhouette (Unicode 6.0) stands in for
-	 * "shadowy figure", the weakest match in this batch. */
-	"ur-vile": { glyph: "👤" },
+	/* Original Rogue's black unicorn has no fitting stable emoji (🦄 reads
+	 * as cute, not as one of the toughest monsters) — rhinoceros (Unicode
+	 * 9.0) keeps the single horn and the armored bulk, and takes the name
+	 * (developer's choice, 2026-11-20). */
+	rhinoceros: { glyph: "🦏" },
 	/* Jabberwock is dragon-like but distinct from this game's own Dragon —
 	 * dragon face (Unicode 6.0) is a different codepoint from the dragon (🐉)
 	 * glyph above, avoiding a collision while keeping the family resemblance. */
@@ -67,10 +68,9 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	 * Unicode version to add one (the earlier yeti/vampire substitutions
 	 * predate this and had no such option). */
 	troll: { glyph: "🧌" },
-	/* No stable single-codepoint "icky thing" emoji exists — microbe
-	 * (Unicode 11.0) carries the same blind, amorphous, slightly repulsive
-	 * connotation. */
-	"icky-thing": { glyph: "🦠" },
+	/* Original Rogue's ice monster — ice (Unicode 12.0) shows it as is, so
+	 * it keeps the original's name (developer's choice, 2026-11-20). */
+	"ice-monster": { glyph: "🧊" },
 	/* No carnivorous-plant emoji exists — herb (Unicode 6.0) stands in as a
 	 * generic "dangerous plant", the weakest match in this batch. */
 	"venus-flytrap": { glyph: "🌿" },

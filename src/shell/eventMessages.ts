@@ -3,6 +3,7 @@ import type { GameEvent, ItemKind } from "../game/events.js";
 import {
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
+	formatDeathMessage,
 	ITEM_NAMES,
 	RING_EQUIPPED_EFFECT,
 	resolveItemDisplayName,
@@ -34,16 +35,7 @@ export const formatEvent = (
 		case "enemy-defeated":
 			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
 		case "player-died":
-			if (event.payload.by === "hunger") {
-				return "空腹のあまり倒れた……";
-			}
-			if (event.payload.by === "trap") {
-				return "わなにやられた……";
-			}
-			if (event.payload.by === "poison") {
-				return "毒薬を飲んで倒れた……";
-			}
-			return `${ENEMY_NAMES[event.payload.by]}にやられた……`;
+			return formatDeathMessage(event.payload.by);
 		case "floor-descended":
 			return `${event.payload.floor}階に降りた`;
 		case "floor-ascended":
@@ -186,6 +178,8 @@ export const formatEvent = (
 			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
 		case "player-gazed":
 			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
+		case "player-frozen":
+			return `${ENEMY_NAMES["ice-monster"]}に凍らされた!${event.payload.turns}ターン動けない`;
 		case "player-held":
 			return `${ENEMY_NAMES[event.payload.by]}に捕まっていて動けない!`;
 		case "player-attack-missed":

@@ -83,7 +83,7 @@ describe("calculatePlayerHitChancePercent", () => {
 			),
 		).toBe(100);
 		/* level 1 against a black-unicorn-grade armor class of -2 */
-		expect(calculatePlayerHitChancePercent(state, "ur-vile")).toBe(0);
+		expect(calculatePlayerHitChancePercent(state, "rhinoceros")).toBe(0);
 	});
 });
 

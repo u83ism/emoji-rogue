@@ -31,6 +31,14 @@ describe("formatEvent", () => {
 			],
 			[{ type: "player-died", payload: { by: "trap" } }, "わなにやられた……"],
 			[
+				{ type: "player-died", payload: { by: "hypothermia" } },
+				"凍りついたまま凍え死んだ……",
+			],
+			[
+				{ type: "player-frozen", payload: { turns: 3 } },
+				"アイスモンスターに凍らされた!3ターン動けない",
+			],
+			[
 				{ type: "player-hit", payload: { by: "bat", damage: 1 } },
 				"コウモリから1のダメージを受けた",
 			],

@@ -89,6 +89,16 @@ export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
 /** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */
 export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
 
+/**
+ * An ice monster's hit freezes the player for MIN..MAX turns (original
+ * Rogue's `rnd(2) + 2`), added onto any paralysis already left; once the
+ * total passes PARALYSIS_DEATH_TURNS (the original's BORE_LEVEL) the player
+ * freezes to death. See enemies/iceMonsterFreeze.ts.
+ */
+export const ICE_MONSTER_FREEZE_TURNS_MIN = 2;
+export const ICE_MONSTER_FREEZE_TURNS_MAX = 3;
+export const PARALYSIS_DEATH_TURNS = 50;
+
 /** Permanent playerMaxHp lost on a turn a wraith lands a hit — see wraithDrain.ts. Never drains playerMaxHp below 1. An arrangement: the original wraith drains a level instead. */
 export const WRAITH_DRAIN_AMOUNT = 1;
 

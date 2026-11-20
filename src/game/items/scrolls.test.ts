@@ -20,7 +20,11 @@ describe("items/scrolls", () => {
 		expect(next.events).toEqual([
 			{
 				type: "player-teleported",
-				payload: { x: next.player.x, y: next.player.y },
+				payload: {
+					x: next.player.x,
+					y: next.player.y,
+					source: "teleport-scroll",
+				},
 			},
 		]);
 	});

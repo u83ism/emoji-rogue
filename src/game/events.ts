@@ -210,6 +210,9 @@ export type DeathCause = EnemyKind | "hunger" | "trap" | "hypothermia";
  * (src/shell/eventMessages.ts) so a future locale swap touches a single file.
  * See the i18n discipline in docs/tasks/game.md.
  */
+/** What relocated the player in a player-teleported event. */
+export type TeleportSource = "teleport-scroll" | "teleport-trap";
+
 export type GameEvent =
 	| {
 			readonly type: "player-hit";
@@ -321,8 +324,13 @@ export type GameEvent =
 			readonly payload: { readonly strengthLost: number };
 	  }
 	| {
+			/** source tells the log which wording to use — the relocation itself is identical (teleport.ts). */
 			readonly type: "player-teleported";
-			readonly payload: { readonly x: number; readonly y: number };
+			readonly payload: {
+				readonly x: number;
+				readonly y: number;
+				readonly source: TeleportSource;
+			};
 	  }
 	| {
 			readonly type: "floor-mapped";

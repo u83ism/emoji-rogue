@@ -26,7 +26,7 @@ const TRAP_SIDE_EFFECTS: Readonly<
 	Partial<Record<TrapKind, (state: GameState) => GameState>>
 > = {
 	trapdoor: (state) => descendStairs(state),
-	teleport: (state) => applyRandomTeleport(state),
+	teleport: (state) => applyRandomTeleport(state, "teleport-trap"),
 	bear: (state) => ({
 		...state,
 		paralyzedTurnsRemaining: BEAR_TRAP_PARALYSIS_DURATION,

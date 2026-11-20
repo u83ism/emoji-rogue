@@ -282,7 +282,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isTrapKind(payload.kind) && isNonNegativeInteger(payload.damage),
 	"player-poisoned": (payload) => isNonNegativeInteger(payload.strengthLost),
 	"player-teleported": (payload) =>
-		isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y),
+		isNonNegativeInteger(payload.x) &&
+		isNonNegativeInteger(payload.y) &&
+		(payload.source === "teleport-scroll" ||
+			payload.source === "teleport-trap"),
 	"floor-mapped": emptyPayload,
 	"potion-identified": (payload) => isItemKind(payload.kind),
 	"player-strengthened": (payload) =>

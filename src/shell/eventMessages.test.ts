@@ -189,8 +189,18 @@ describe("formatEvent", () => {
 				"毒薬を飲んでしまった。ひどく気分が悪い",
 			],
 			[
-				{ type: "player-teleported", payload: { x: 5, y: 3 } },
+				{
+					type: "player-teleported",
+					payload: { x: 5, y: 3, source: "teleport-scroll" },
+				},
 				"巻物を読んだ。テレポートした!",
+			],
+			[
+				{
+					type: "player-teleported",
+					payload: { x: 5, y: 3, source: "teleport-trap" },
+				},
+				"テレポートした!",
 			],
 			[
 				{ type: "item-picked-up", payload: { kind: "teleport-scroll" } },

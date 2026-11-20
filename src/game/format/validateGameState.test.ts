@@ -1443,7 +1443,12 @@ describe("validateGameState", () => {
 			...buildValidState(),
 			items: [],
 			inventory: [{ itemId: 1, kind: "teleport-scroll" }],
-			events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
+			events: [
+				{
+					type: "player-teleported",
+					payload: { x: 3, y: 4, source: "teleport-trap" },
+				},
+			],
 		});
 		expect(accepted.ok).toBe(true);
 
@@ -1454,7 +1459,19 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-teleported", payload: { x: -1, y: 4 } }],
+				events: [
+					{
+						type: "player-teleported",
+						payload: { x: -1, y: 4, source: "teleport-trap" },
+					},
+				],
+			},
+			"events",
+		);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "player-teleported", payload: { x: 3, y: 4 } }],
 			},
 			"events",
 		);

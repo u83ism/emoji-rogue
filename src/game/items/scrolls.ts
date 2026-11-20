@@ -15,7 +15,7 @@ import { findNearestVisibleEnemy, findVisibleEnemies } from "../vision.js";
 
 /** A teleport scroll relocates the player exactly like a teleport trap does. */
 export const applyUseTeleportScroll = (state: GameState): GameState =>
-	applyRandomTeleport(state);
+	applyRandomTeleport(state, "teleport-scroll");
 
 /** A magic mapping scroll reveals the whole floor as explored. */
 export const applyUseMappingScroll = (state: GameState): GameState => ({

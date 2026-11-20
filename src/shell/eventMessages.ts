@@ -90,7 +90,10 @@ export const formatEvent = (
 				? `毒薬を飲んでしまった。力が${event.payload.strengthLost}下がった`
 				: "毒薬を飲んでしまった。ひどく気分が悪い";
 		case "player-teleported":
-			return "巻物を読んだ。テレポートした!";
+			/* The trap already logged "テレポートの罠を踏んでしまった!" just before. */
+			return event.payload.source === "teleport-scroll"
+				? "巻物を読んだ。テレポートした!"
+				: "テレポートした!";
 		case "floor-mapped":
 			return "地図の巻物を読んだ。フロア全体が明らかになった!";
 		case "potion-identified":

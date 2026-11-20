@@ -1,6 +1,6 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng } from "../rng.js";
-import { buildEventLog } from "./events.js";
+import { buildEventLog, type TeleportSource } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 
@@ -39,7 +39,10 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
  * refreshes the explored grid from the new position. Shared by the teleport
  * scroll (items/scrolls.ts) and the teleport trap (trapTrigger.ts).
  */
-export const applyRandomTeleport = (state: GameState): GameState => {
+export const applyRandomTeleport = (
+	state: GameState,
+	source: TeleportSource,
+): GameState => {
 	const targets = collectTeleportTargets(state);
 	const rng = createRng(1).setState(state.rng);
 	const target = targets[rng.getUniformInt(0, targets.length - 1)];
@@ -53,7 +56,10 @@ export const applyRandomTeleport = (state: GameState): GameState => {
 		player: target,
 		rng: rng.getState(),
 		events: buildEventLog(state.events, [
-			{ type: "player-teleported", payload: { x: target.x, y: target.y } },
+			{
+				type: "player-teleported",
+				payload: { x: target.x, y: target.y, source },
+			},
 		]),
 	});
 };

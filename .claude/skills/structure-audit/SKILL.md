@@ -24,7 +24,9 @@ never auto-triggered, since judging an existing structure as newly wrong is inhe
    (established) / AI造語 (coinage) provenance, plus "keep as-is" as a legitimate option. Wait for the
    human to ratify before touching any file.
 5. **Apply only what's ratified**: rename/merge/move, update imports, then confirm with `npm run lint`,
-   `npm run typecheck`, `npm test`.
+   `npm run typecheck`, `npm test` — run them from a cwd with an upper-case drive letter (see the
+   lower-case-drive Vitest note under `docs/architecture.md`'s test commands; 2026-11-21, this step
+   hit it because it didn't point there).
 6. **Close the audit**: commit the ratified changes first, then update `scripts/structure-audit-state.json`
    to that commit's hash and today's date, as a separate commit (recording HEAD before committing would
    leave the checkpoint one step behind the refactor it just audited — what happened on 2026-11-12) — even if the conclusion was "no change needed". An audit that finds nothing wrong still

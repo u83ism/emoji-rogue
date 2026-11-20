@@ -157,7 +157,6 @@ export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
 	200000, 400000, 800000, 2000000, 4000000, 8000000,
 ];
 
-export const POTION_COUNT_PER_FLOOR = 1;
 /** A heal potion restores one die of this many sides per player level (original Rogue's `roll(level, 4)`); healing past the cap raises max HP by 1 instead. */
 export const HEAL_POTION_DICE_SIDES = 4;
 /** An extra healing potion heals one die of this many sides per player level (original Rogue's `roll(level, 8)`). */
@@ -167,11 +166,7 @@ export const HASTE_POTION_TURNS_MIN = 4;
 export const HASTE_POTION_TURNS_MAX = 7;
 /** Drinking one while hasted faints the player for 0..this many turns (`rnd(8)`). */
 export const HASTE_EXHAUSTION_TURNS_MAX = 7;
-/** Chance (out of 100), independently rolled per floor, that each potion added in milestone 119 spawns — a stopgap until the original's per-category item draw. */
-export const OTHER_POTION_SPAWN_CHANCE_PERCENT = 10;
 
-/** Chance (out of 100), independently rolled per floor, that a weapon spawns — which of the five kinds is a weighted draw, see items/equipmentKinds.ts. */
-export const WEAPON_SPAWN_CHANCE_PERCENT = 15;
 /**
  * Original Rogue 5.4's new_thing() roll for a found weapon/armor, decided
  * once at floor generation (items/heldItemFactory.ts) and hidden until the
@@ -190,30 +185,15 @@ export const WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT = 5;
 export const FOUND_BONUS_ADJUSTMENT_MIN = 1;
 export const FOUND_BONUS_ADJUSTMENT_MAX = 3;
 
-/** Chance (out of 100), independently rolled per floor, that armor spawns — which of the eight kinds is a weighted draw, see items/equipmentKinds.ts. */
-export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
 /** Armor's share of the same roll as WEAPON_CURSE_CHANCE_PERCENT — Rogue curses armor twice as often as weapons. */
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 export const ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT = 8;
 
 /** Strength a poison potion takes: 1..POISON_POTION_STRENGTH_LOSS_MAX — original Rogue's `chg_str(-(rnd(3) + 1))`. */
 export const POISON_POTION_STRENGTH_LOSS_MAX = 3;
-/** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
-export const POISON_POTION_SPAWN_CHANCE_PERCENT = 15;
-
-/** Chance (out of 100), independently rolled per floor, that a teleport scroll spawns. */
-export const SCROLL_SPAWN_CHANCE_PERCENT = 15;
-
-/** Chance (out of 100), independently rolled per floor, that a magic mapping scroll spawns. */
-export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
-
-/** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
-export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
 /** Strength gained per gain strength potion drunk — original Rogue's `chg_str(1)`. */
 export const STRENGTH_POTION_STRENGTH_GAIN = 1;
-/** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
-export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /**
  * The first floor the Amulet of Yendor lies on (original Rogue's
@@ -273,14 +253,14 @@ export const FAINT_TURNS_MAX = 11;
 export const FOOD_RATION_RESTORE_MIN = 1100;
 export const FOOD_RATION_RESTORE_MAX = 1499;
 /**
- * The food supply (see floor/food.ts): original Rogue makes MAXOBJ = 9 item
- * rolls per floor, each producing an item 36% of the time, 16% of which are
- * food — 576 in 10000 per roll, about one ration every two floors. After
- * more than FOOD_DROUGHT_FLOOR_LIMIT floors without one, the next floor
- * gets one for sure.
+ * The items of a floor (floor/items.ts): original Rogue's put_things() makes
+ * MAXOBJ = 9 attempts, each producing an item 36% of the time — its kind
+ * drawn by floor/spawnTable.ts's weights. After more than
+ * FOOD_DROUGHT_FLOOR_LIMIT floors without food, the next item is food for
+ * sure (new_thing()'s no_food).
  */
-export const FOOD_ROLLS_PER_FLOOR = 9;
-export const FOOD_ROLL_CHANCE_BASIS_POINTS = 576;
+export const ITEM_DRAW_ATTEMPTS_PER_FLOOR = 9;
+export const ITEM_DRAW_CHANCE_PERCENT = 36;
 export const FOOD_DROUGHT_FLOOR_LIMIT = 3;
 
 /**
@@ -349,8 +329,6 @@ export const TRAP_DAMAGE: Readonly<Record<Exclude<TrapKind, "dart">, number>> =
 		"sleeping-gas": SLEEPING_GAS_TRAP_DAMAGE,
 	};
 
-/** Chance (out of 100), independently rolled per floor, that a ring spawns. */
-export const RING_SPAWN_CHANCE_PERCENT = 8;
 /** HP a worn ring of regeneration heals every turn, as in original Rogue — see turnEnd/regeneration.ts. */
 export const RING_REGEN_AMOUNT = 1;
 /**
@@ -364,21 +342,11 @@ export const NATURAL_HEALING_SLOW_THRESHOLD = 20;
 export const NATURAL_HEALING_FAST_LEVEL = 8;
 export const NATURAL_HEALING_FAST_INTERVAL = 3;
 
-/** Chance (out of 100), independently rolled per floor, that a ring of sustenance spawns. */
-export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
-
-/** Chance (out of 100), independently rolled per floor, that a ring of stealth spawns. */
-export const STEALTH_RING_SPAWN_CHANCE_PERCENT = 8;
 /**
  * Replaces WAKE_CHANCE_PERCENT (33) while a ring of stealth is equipped —
  * roughly half, see enemies.ts's advanceEnemies.
  */
 export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
-
-/** Chance (out of 100), independently rolled per floor, that a ring of aggravate monster spawns — the first ring with a downside rather than a benefit. */
-export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
-/** Chance (out of 100), independently rolled per floor, that each of the rings added in milestone 119 spawns — a stopgap until the original's per-category item draw replaces the per-kind rolls. */
-export const OTHER_RING_SPAWN_CHANCE_PERCENT = 8;
 
 /**
  * Food a worn ring uses each turn, original Rogue's ring_eat() table: a
@@ -410,75 +378,41 @@ export const TELEPORTATION_RING_CHANCE_DENOMINATOR = 50;
  * held weapon, equipped or not; no-op with no weapon held).
  */
 export const ENCHANT_WEAPON_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that an enchant weapon scroll spawns. */
-export const ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
  * Permanent boost to a targeted armor's own defenseBonus per scroll read,
  * also lifting its curse — same targeting rules as ENCHANT_WEAPON_BONUS.
  */
 export const ENCHANT_ARMOR_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
-export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
-
-/** Chance (out of 100), independently rolled per floor, that a teleport wand spawns — same rarity as the other wands. */
-export const TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** A magic missile's damage dice — original Rogue's bolt `o_hurldmg` "1x4" (see items/wands.ts's applyMagicMissileWandStrike). */
 export const MAGIC_MISSILE_DAMAGE_DICE = { count: 1, sides: 4 } as const;
 /** Added to every magic missile's roll — the bolt's own `o_dplus` of 1, before the player's strength and wielded-weapon bonuses. */
 export const MAGIC_MISSILE_DAMAGE_BONUS = 1;
-/** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns. */
-export const MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6;
 
 /** How many turns a confuse monster scroll makes an enemy wander instead of pathfinding toward the player (adjacent attacks still land). */
 export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
-/** Chance (out of 100), independently rolled per floor, that a confuse monster scroll spawns. */
-export const CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a hallucination potion swaps displayed enemy glyphs for decoys — purely cosmetic, see frame.ts. */
 export const HALLUCINATION_POTION_DURATION = 20;
-/** Chance (out of 100), independently rolled per floor, that a hallucination potion spawns. */
-export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
 /** How near (in tiles, either axis) a monster must be for a hold monster scroll to stop it — original Rogue's read_scroll(): hero.x - 2 .. hero.x + 2. */
 export const HOLD_MONSTER_SCROLL_RANGE = 2;
-/** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
-export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;
-/** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */
-export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /** A wand's charges when found — original Rogue's fix_stick(): `rnd(5) + 3` (the wand of light's 10-19 is not in this game). */
 export const WAND_CHARGES_MIN = 3;
 export const WAND_CHARGES_MAX = 7;
-/** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
-export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** How many turns a levitation potion floats the player over traps for. */
 export const LEVITATION_POTION_DURATION = 15;
-/** Chance (out of 100), independently rolled per floor, that a levitation potion spawns. */
-export const LEVITATION_POTION_SPAWN_CHANCE_PERCENT = 12;
-
-/** Chance (out of 100), independently rolled per floor, that a protect armor scroll spawns. Sets rustProtected on a targeted held armor (see items/scrolls.ts). */
-export const PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
-
-/** Chance (out of 100), independently rolled per floor, that a remove-curse scroll spawns. No-op (not consumed) if nothing currently equipped is cursed. */
-export const REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /** How many turns a blindness potion shrinks the player's field of view for. */
 export const BLIND_POTION_DURATION = 20;
-/** Chance (out of 100), independently rolled per floor, that a blindness potion spawns. */
-export const BLIND_POTION_SPAWN_CHANCE_PERCENT = 12;
 /** Field of view radius while blind — adjacent tiles only. */
 export const BLIND_VIEW_RADIUS = 1;
 
-/** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
-export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 8;
-
 /** How many turns a detect monster potion reveals every enemy through, regardless of FOV. */
 export const DETECT_MONSTER_POTION_DURATION = 20;
-/** Chance (out of 100), independently rolled per floor, that a detect monster potion spawns. */
-export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 12;

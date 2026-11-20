@@ -1,148 +1,124 @@
-import {
-	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
-	ARMOR_SPAWN_CHANCE_PERCENT,
-	BLIND_POTION_SPAWN_CHANCE_PERCENT,
-	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
-	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
-	DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
-	ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
-	ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
-	HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
-	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
-	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
-	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
-	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
-	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
-	OTHER_POTION_SPAWN_CHANCE_PERCENT,
-	OTHER_RING_SPAWN_CHANCE_PERCENT,
-	POISON_POTION_SPAWN_CHANCE_PERCENT,
-	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
-	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
-	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
-	RING_SPAWN_CHANCE_PERCENT,
-	SCROLL_SPAWN_CHANCE_PERCENT,
-	SLOW_WAND_SPAWN_CHANCE_PERCENT,
-	STEALTH_RING_SPAWN_CHANCE_PERCENT,
-	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
-	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
-	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
-	WEAPON_SPAWN_CHANCE_PERCENT,
-} from "../balance.js";
 import type { ItemKind } from "../events.js";
-import type { SpawnChance } from "./spawnPool.js";
 
 /**
- * Chance-rolled items, one independent roll per entry. Same rng-order caveat
- * as floorEnemies.ts's ENEMY_SPAWN_TABLE: the array order is the historical
- * roll order and new kinds go at the end, or every seeded dungeon changes.
- * Guaranteed spawns (healing potions, food, traps) stay outside this
- * table — see drawFloorItems below.
+ * Original Rogue's item tables (extern.c), as new_thing() draws from them:
+ * first the category by ITEM_CATEGORY_WEIGHTS (things[]), then the kind
+ * within it by its own weight (pot_info[], scr_info[], ring_info[],
+ * ws_info[]). The original's kinds not in this game yet are left out, so a
+ * category draws among the ones that exist — each still as likely,
+ * relative to the others, as in the original. **Entry order is rng
+ * order**: reordering changes every seeded dungeon.
  */
-export const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
-	{ kind: "weapon", chancePercent: WEAPON_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "enchant-weapon",
-		chancePercent: ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "armor", chancePercent: ARMOR_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "enchant-armor",
-		chancePercent: ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "poison", chancePercent: POISON_POTION_SPAWN_CHANCE_PERCENT },
-	{ kind: "strength", chancePercent: STRENGTH_POTION_SPAWN_CHANCE_PERCENT },
-	{ kind: "confusion", chancePercent: CONFUSION_POTION_SPAWN_CHANCE_PERCENT },
-	{ kind: "levitation", chancePercent: LEVITATION_POTION_SPAWN_CHANCE_PERCENT },
-	{ kind: "blindness", chancePercent: BLIND_POTION_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "raise-level",
-		chancePercent: RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "detect-monster",
-		chancePercent: DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "protect-armor",
-		chancePercent: PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "teleport-scroll", chancePercent: SCROLL_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "mapping-scroll",
-		chancePercent: MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "identify-scroll",
-		chancePercent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "regeneration-ring", chancePercent: RING_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "sustenance-ring",
-		chancePercent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "slow-wand", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
-	/* Added in milestone 81 — appended at the end so it doesn't shift the roll order of every earlier kind. */
-	{
-		kind: "remove-curse-scroll",
-		chancePercent: REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "teleport-wand",
-		chancePercent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "stealth-ring", chancePercent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "magic-missile-wand",
-		chancePercent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "confuse-monster-scroll",
-		chancePercent: CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "hallucination",
-		chancePercent: HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "hold-monster-scroll",
-		chancePercent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "aggravate-monster-ring",
-		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
-	},
-	/* The rings of milestone 119 — a stopgap per-kind roll until the original's per-category draw. */
-	{ kind: "protection-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
-	{ kind: "add-strength-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "sustain-strength-ring",
-		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
-	},
-	{ kind: "adornment-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
-	{ kind: "dexterity-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "increase-damage-ring",
-		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "teleportation-ring",
-		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "maintain-armor-ring",
-		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
-	},
-	/* The potions of milestone 119 — the same stopgap per-kind roll. */
-	{
-		kind: "restore-strength-potion",
-		chancePercent: OTHER_POTION_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "extra-healing-potion",
-		chancePercent: OTHER_POTION_SPAWN_CHANCE_PERCENT,
-	},
-	{
-		kind: "haste-self-potion",
-		chancePercent: OTHER_POTION_SPAWN_CHANCE_PERCENT,
-	},
-];
+export const ITEM_CATEGORY_WEIGHTS = [
+	{ category: "potion", weight: 26 },
+	{ category: "scroll", weight: 36 },
+	{ category: "food", weight: 16 },
+	{ category: "weapon", weight: 7 },
+	{ category: "armor", weight: 7 },
+	{ category: "ring", weight: 4 },
+	{ category: "wand", weight: 4 },
+] as const;
+
+export type ItemCategory = (typeof ITEM_CATEGORY_WEIGHTS)[number]["category"];
+
+/** A kind and its weight within its category. */
+export interface KindWeight {
+	readonly kind: ItemKind;
+	readonly weight: number;
+}
+
+export const ITEM_KIND_WEIGHTS: Readonly<
+	Record<ItemCategory, readonly KindWeight[]>
+> = {
+	potion: [
+		{ kind: "confusion", weight: 7 },
+		{ kind: "hallucination", weight: 8 },
+		{ kind: "poison", weight: 8 },
+		{ kind: "strength", weight: 13 },
+		{ kind: "heal-potion", weight: 13 },
+		{ kind: "detect-monster", weight: 6 },
+		{ kind: "raise-level", weight: 2 },
+		{ kind: "extra-healing-potion", weight: 5 },
+		{ kind: "haste-self-potion", weight: 5 },
+		{ kind: "restore-strength-potion", weight: 13 },
+		{ kind: "blindness", weight: 5 },
+		{ kind: "levitation", weight: 6 },
+	],
+	scroll: [
+		{ kind: "confuse-monster-scroll", weight: 7 },
+		{ kind: "mapping-scroll", weight: 4 },
+		{ kind: "hold-monster-scroll", weight: 2 },
+		{ kind: "enchant-armor", weight: 7 },
+		/* the original's identify potion scroll — see items/scrolls.ts */
+		{ kind: "identify-scroll", weight: 10 },
+		{ kind: "teleport-scroll", weight: 5 },
+		{ kind: "enchant-weapon", weight: 8 },
+		{ kind: "remove-curse-scroll", weight: 7 },
+		{ kind: "protect-armor", weight: 2 },
+	],
+	/* the original's slime mold (1 in 10) is not in this game: every food is a ration */
+	food: [{ kind: "food", weight: 1 }],
+	weapon: [{ kind: "weapon", weight: 1 }],
+	armor: [{ kind: "armor", weight: 1 }],
+	ring: [
+		{ kind: "protection-ring", weight: 9 },
+		{ kind: "add-strength-ring", weight: 9 },
+		{ kind: "sustain-strength-ring", weight: 5 },
+		{ kind: "adornment-ring", weight: 1 },
+		{ kind: "aggravate-monster-ring", weight: 10 },
+		{ kind: "dexterity-ring", weight: 8 },
+		{ kind: "increase-damage-ring", weight: 8 },
+		{ kind: "regeneration-ring", weight: 4 },
+		{ kind: "sustenance-ring", weight: 9 },
+		{ kind: "teleportation-ring", weight: 5 },
+		{ kind: "stealth-ring", weight: 7 },
+		{ kind: "maintain-armor-ring", weight: 5 },
+	],
+	wand: [
+		{ kind: "magic-missile-wand", weight: 10 },
+		{ kind: "slow-wand", weight: 11 },
+		{ kind: "teleport-wand", weight: 6 },
+	],
+};
+
+const sumWeights = (entries: readonly { readonly weight: number }[]): number =>
+	entries.reduce((total, entry) => total + entry.weight, 0);
+
+/**
+ * The share (in percent, of one item draw) that comes out as \`kind\` — what
+ * the catalog prints. 0 for a kind in no table.
+ */
+export const calculateItemDrawSharePercent = (kind: ItemKind): number => {
+	for (const { category, weight } of ITEM_CATEGORY_WEIGHTS) {
+		const kinds = ITEM_KIND_WEIGHTS[category];
+		const entry = kinds.find((candidate) => candidate.kind === kind);
+		if (entry !== undefined) {
+			return (
+				(100 * weight * entry.weight) /
+				(sumWeights(ITEM_CATEGORY_WEIGHTS) * sumWeights(kinds))
+			);
+		}
+	}
+	return 0;
+};
+
+/** One entry out of \`entries\`, each as likely as its weight. Consumes \`roll\` (0 ≤ roll < the total weight). */
+export const pickByWeight = <Entry extends { readonly weight: number }>(
+	entries: readonly Entry[],
+	roll: number,
+): Entry => {
+	let remaining = roll;
+	for (const entry of entries) {
+		remaining -= entry.weight;
+		if (remaining < 0) {
+			return entry;
+		}
+	}
+	throw new Error("unreachable: the roll is below the total weight");
+};
+
+export const ITEM_CATEGORY_TOTAL_WEIGHT = sumWeights(ITEM_CATEGORY_WEIGHTS);
+
+/** The total weight of a category's kinds — the bound for its pickByWeight roll. */
+export const calculateCategoryTotalWeight = (category: ItemCategory): number =>
+	sumWeights(ITEM_KIND_WEIGHTS[category]);

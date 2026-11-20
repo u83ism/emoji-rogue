@@ -9,7 +9,8 @@ import {
 	TRAP_COUNT_PER_FLOOR,
 	TRAPDOOR_SPAWN_CHANCE_PERCENT,
 } from "../../game/balance.js";
-import type { TrapKind } from "../../game/events.js";
+import type { ItemKind, TrapKind } from "../../game/events.js";
+import { calculateItemDrawSharePercent } from "../../game/floor/spawnTable.js";
 
 // The trap half of docs/catalog.md's prose data, plus the shared SpawnInfo/
 // ItemCategory types every catalog file builds on (items live in
@@ -25,8 +26,16 @@ import type { TrapKind } from "../../game/events.js";
 export type SpawnInfo =
 	| { readonly type: "guaranteed"; readonly countPerFloor: number }
 	| { readonly type: "chance"; readonly percent: number }
+	/** An item's share of one item draw (floor/spawnTable.ts) — see itemDrawShare. */
+	| { readonly type: "share"; readonly percent: number }
 	/** Anything a count or a single percentage cannot say — the text is printed as is. */
 	| { readonly type: "described"; readonly description: string };
+
+/** How often a found item is `kind`, original Rogue's way (floor/spawnTable.ts). */
+export const itemDrawShare = (kind: ItemKind): SpawnInfo => ({
+	type: "share",
+	percent: calculateItemDrawSharePercent(kind),
+});
 
 export type ItemCategory = "薬" | "巻物" | "杖" | "指輪" | "装備" | "食料";
 

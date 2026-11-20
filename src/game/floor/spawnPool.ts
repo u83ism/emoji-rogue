@@ -5,14 +5,6 @@ import type { Rng } from "../../rng.js";
 import type { GameState, Position } from "../state.js";
 import { computeVisiblePoints, VIEW_RADIUS } from "../vision.js";
 
-/** One independent per-floor percent roll: `kind` spawns when the roll lands. */
-export interface SpawnChance<Kind> {
-	readonly kind: Kind;
-	readonly chancePercent: number;
-	/** Rolled only on floors >= this value; omitted rolls on every floor (the default before this field existed). */
-	readonly minFloor?: number;
-}
-
 /** One random tile out of the pool, removed from it (no tile spawns twice). */
 export const drawSpawnTile = (pool: Position[], rng: Rng): Position => {
 	const index = rng.getUniformInt(0, pool.length - 1);

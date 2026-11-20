@@ -3,9 +3,8 @@ import { encodePointKey } from "../../pointkey.js";
 import {
 	AMULET_FLOOR,
 	calculateGoldAmountMax,
-	FOOD_ROLLS_PER_FLOOR,
 	GOLD_AMOUNT_MIN,
-	POTION_COUNT_PER_FLOOR,
+	ITEM_DRAW_ATTEMPTS_PER_FLOOR,
 } from "../balance.js";
 import { buildDungeonGameState } from "../initialState.js";
 import { calculateEnemyFloorRange } from "./enemies.js";
@@ -66,34 +65,10 @@ describe("descendStairs", () => {
 
 	it("places everything on distinct floor tiles", () => {
 		for (const state of [start, below]) {
-			/* potions are guaranteed; food is a handful of rolls; the weapon is a per-floor chance (0 or 1) */
-			expect(
-				state.items.filter((item) => item.kind === "heal-potion").length,
-			).toBe(POTION_COUNT_PER_FLOOR);
-			expect(
-				state.items.filter((item) => item.kind === "food").length,
-			).toBeLessThanOrEqual(FOOD_ROLLS_PER_FLOOR);
-			expect(
-				state.items.filter((item) => item.kind === "weapon").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "armor").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "poison").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "teleport-scroll").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "mapping-scroll").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "identify-scroll").length,
-			).toBeLessThanOrEqual(1);
-			expect(
-				state.items.filter((item) => item.kind === "strength").length,
-			).toBeLessThanOrEqual(1);
+			/* original Rogue's put_things(): at most one item per attempt */
+			expect(state.items.length).toBeLessThanOrEqual(
+				ITEM_DRAW_ATTEMPTS_PER_FLOOR,
+			);
 			expect(
 				state.enemies.filter((enemy) => enemy.kind === "thief").length,
 			).toBeLessThanOrEqual(1);

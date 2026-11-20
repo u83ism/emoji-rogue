@@ -135,7 +135,7 @@ export type Item = Position &
  * / applyItemPickup) and never changes or gets reused — Actions address a
  * held item by this id, never by its position in the inventory array, so
  * replays stay correct even if the array's order or contents shift (see
- * docs/tasks/game.md's cursor-selection backlog note on index fragility).
+ * docs/tasks/game-notes.md's cursor-selection note on index fragility).
  *
  * Consumables (potions/scrolls/wands/food) carry only their kind. A
  * weapon/armor/ring carries real equip state instead: `cursed` is decided once

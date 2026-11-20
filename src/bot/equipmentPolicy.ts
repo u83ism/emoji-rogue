@@ -30,7 +30,7 @@ const isRingItem = (item: HeldItem): item is RingItem =>
 
 /**
  * Best-first ring preference: sustenance first (the food economy is the
- * dominant killer — see docs/tasks/game.md's balance backlog), then
+ * dominant killer — see docs/tasks/game-notes.md's balance notes), then
  * regeneration (passive combat sustain), then the awareness/stealth utility
  * pair. `aggravate-monster-ring` is deliberately absent — equipping it wakes
  * every enemy on the floor at once, a trap the bot should never opt into.

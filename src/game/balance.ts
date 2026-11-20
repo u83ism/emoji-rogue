@@ -27,7 +27,7 @@ export const DAMAGE_VARIANCE_STDDEV = 0.5;
  * percent per point of (level + armor class + bonus) — see
  * items/hitChance.ts. Sneak attacks (target still asleep) skip the roll
  * entirely, an arrangement kept from before (the original gives +4 to hit
- * instead — docs/tasks/game.md).
+ * instead; to be aligned — docs/tasks/game.md).
  */
 export const HIT_CHANCE_PERCENT_PER_POINT = 5;
 /** Added to the to-hit roll of a thrown weapon against a target still asleep — original Rogue's +4 against anything not yet running. (Melee keeps its own sneak-attack rule, see SNEAK_ATTACK_MULTIPLIER.) */
@@ -54,7 +54,7 @@ export const INVENTORY_CAPACITY = 26;
 // knobs of this game's own per-kind mechanics.
 
 // The thief is original Rogue's leprechaun under another name (the rename
-// is a kept arrangement — docs/tasks/game.md). It steals gold on contact
+// is the developer's choice — docs/design.md). It steals gold on contact
 // and flees instead of fighting (see enemies/enemyFlee.ts). Both the theft
 // and the gold it drops when killed first (combat.ts) are measured in gold
 // piles' worth (the floor's own gold roll, see calculateGoldAmountMax): one, or

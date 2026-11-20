@@ -153,11 +153,39 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
 
 /**
  * Kinds with a potion effect — visually identical (same glyph, same generic
- * name) until identified. See GameState.identifiedPotionKinds. Typed as the
+ * name) until identified. See GameState.identifiedItemKinds. Typed as the
  * wider ItemKind[] so `POTION_KINDS.includes(anyItemKind)` stays a plain
  * membership test at call sites.
  */
 export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
+
+/** The ring subset of ItemKind — only one is worn at a time (see items/rings.ts). */
+export const RING_KINDS = [
+	"regeneration-ring",
+	"sustenance-ring",
+	"stealth-ring",
+	"awareness-ring",
+	"aggravate-monster-ring",
+] as const satisfies readonly ItemKind[];
+
+const WAND_KIND_VALUES = [
+	"striking-wand",
+	"slow-wand",
+	"teleport-wand",
+	"magic-missile-wand",
+	"sleep-wand",
+] as const satisfies readonly ItemKind[];
+
+/**
+ * Kinds whose real name stays hidden behind a shared generic one (未鑑定の薬,
+ * 指輪, 杖) until identified — see GameState.identifiedItemKinds. Scrolls,
+ * food, weapons and armor are always known by name.
+ */
+export const IDENTIFIABLE_ITEM_KINDS: readonly ItemKind[] = [
+	...POTION_KIND_VALUES,
+	...RING_KINDS,
+	...WAND_KIND_VALUES,
+];
 
 export const TRAP_KIND_VALUES = [
 	"dart",

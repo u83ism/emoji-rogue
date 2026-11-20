@@ -32,14 +32,14 @@ export const formatPlayerStrength = (state: GameState): string =>
  */
 export const formatHeldItemLabel = (
 	item: HeldItem,
-	identifiedPotionKinds: readonly ItemKind[],
+	identifiedItemKinds: readonly ItemKind[],
 ): string => {
 	const name =
 		item.kind === "weapon"
 			? `${EQUIPMENT_NAMES[item.weaponKind]}${item.quantity > 1 ? `×${item.quantity}` : ""}`
 			: item.kind === "armor"
 				? EQUIPMENT_NAMES[item.armorKind]
-				: resolveItemDisplayName(item.kind, identifiedPotionKinds);
+				: resolveItemDisplayName(item.kind, identifiedItemKinds);
 	if (!("equipped" in item) || !item.equipped) {
 		return name;
 	}

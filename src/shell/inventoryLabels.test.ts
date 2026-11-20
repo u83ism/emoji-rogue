@@ -80,6 +80,29 @@ describe("formatHeldItemLabel", () => {
 		};
 		expect(formatHeldItemLabel(ring, [])).toBe("✅ 指輪(呪い)");
 	});
+
+	it("names a ring or wand by its real name once its kind is identified, generically before", () => {
+		const ring: HeldItem = {
+			itemId: 1,
+			kind: "regeneration-ring",
+			equipped: true,
+			cursed: false,
+		};
+		const wand: HeldItem = { itemId: 2, kind: "sleep-wand" };
+		expect(formatHeldItemLabel(ring, [])).toBe("✅ 指輪");
+		expect(formatHeldItemLabel(wand, [])).toBe("杖");
+		expect(formatHeldItemLabel(ring, ["regeneration-ring"])).toBe(
+			"✅ 再生の指輪",
+		);
+		expect(formatHeldItemLabel(wand, ["sleep-wand"])).toBe("眠りの杖");
+		/* identifying one ring kind leaves the others generic */
+		expect(formatHeldItemLabel(ring, ["stealth-ring"])).toBe("✅ 指輪");
+	});
+
+	it("always shows a scroll by its real name", () => {
+		const scroll: HeldItem = { itemId: 1, kind: "mapping-scroll" };
+		expect(formatHeldItemLabel(scroll, [])).toBe("地図の巻物");
+	});
 });
 
 describe("resolveItemVerbPrompt", () => {

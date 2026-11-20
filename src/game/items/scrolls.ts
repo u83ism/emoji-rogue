@@ -32,14 +32,14 @@ export const applyUseMappingScroll = (state: GameState): GameState => ({
  */
 export const applyUseIdentifyScroll = (state: GameState): GameState => {
 	const target = POTION_KINDS.find(
-		(potionKind) => !state.identifiedPotionKinds.includes(potionKind),
+		(potionKind) => !state.identifiedItemKinds.includes(potionKind),
 	);
 	if (target === undefined) {
 		return state;
 	}
 	return {
 		...state,
-		identifiedPotionKinds: [...state.identifiedPotionKinds, target],
+		identifiedItemKinds: [...state.identifiedItemKinds, target],
 		events: buildEventLog(state.events, [
 			{ type: "potion-identified", payload: { kind: target } },
 		]),

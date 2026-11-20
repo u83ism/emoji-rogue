@@ -276,8 +276,8 @@ export interface GameState {
 	readonly inventory: readonly HeldItem[];
 	/** The itemId the next picked-up item will be assigned — incremented by applyItemPickup, never reused. */
 	readonly nextItemId: number;
-	/** Potion kinds identified this run (by drinking one) — see POTION_KINDS. */
-	readonly identifiedPotionKinds: readonly ItemKind[];
+	/** Item kinds identified this run — by using one (drinking a potion, wearing a ring, zapping a wand; see items/use.ts) or by an identify scroll. The shell shows a potion/ring/wand by its real name only once its kind is here. */
+	readonly identifiedItemKinds: readonly ItemKind[];
 	readonly goldPiles: readonly GoldPile[];
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;

@@ -18,15 +18,14 @@ import {
 const HeldItemRow = ({
 	index,
 	item,
-	identifiedPotionKinds,
+	identifiedItemKinds,
 }: {
 	readonly index: number;
 	readonly item: HeldItem;
-	readonly identifiedPotionKinds: GameState["identifiedPotionKinds"];
+	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
 }) => (
 	<Text>
-		{toInventoryLetter(index)}){" "}
-		{formatHeldItemLabel(item, identifiedPotionKinds)}
+		{toInventoryLetter(index)}) {formatHeldItemLabel(item, identifiedItemKinds)}
 	</Text>
 );
 
@@ -40,10 +39,10 @@ const ROWS_PER_COLUMN = 13;
  */
 const HeldItemRowList = ({
 	items,
-	identifiedPotionKinds,
+	identifiedItemKinds,
 }: {
 	readonly items: readonly HeldItem[];
-	readonly identifiedPotionKinds: GameState["identifiedPotionKinds"];
+	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
 }) => (
 	<Box flexDirection="row">
 		{[0, ROWS_PER_COLUMN].map((columnStart) => (
@@ -55,7 +54,7 @@ const HeldItemRowList = ({
 							key={item.itemId}
 							index={columnStart + rowIndex}
 							item={item}
-							identifiedPotionKinds={identifiedPotionKinds}
+							identifiedItemKinds={identifiedItemKinds}
 						/>
 					))}
 			</Box>
@@ -91,7 +90,7 @@ export const InventoryOverlay = ({
 				<Text>{ITEM_TARGET_PROMPT}</Text>
 				<HeldItemRowList
 					items={candidates}
-					identifiedPotionKinds={state.identifiedPotionKinds}
+					identifiedItemKinds={state.identifiedItemKinds}
 				/>
 			</Box>
 		);
@@ -103,7 +102,7 @@ export const InventoryOverlay = ({
 			{selectedItem !== undefined ? (
 				<>
 					<Text>
-						{formatHeldItemLabel(selectedItem, state.identifiedPotionKinds)}
+						{formatHeldItemLabel(selectedItem, state.identifiedItemKinds)}
 					</Text>
 					<Text>{resolveItemVerbPrompt(selectedItem)}</Text>
 				</>
@@ -112,7 +111,7 @@ export const InventoryOverlay = ({
 			) : (
 				<HeldItemRowList
 					items={state.inventory}
-					identifiedPotionKinds={state.identifiedPotionKinds}
+					identifiedItemKinds={state.identifiedItemKinds}
 				/>
 			)}
 		</Box>

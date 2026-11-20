@@ -11,24 +11,15 @@ import {
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
 import { rollDamageDice } from "../damage.js";
-import { buildEventLog, type ItemKind, type PotionKind } from "../events.js";
+import { buildEventLog, type PotionKind } from "../events.js";
 import { applyLevelUp } from "../experience.js";
 import type { GameState } from "../state.js";
 import { applyStrengthChange } from "../strength.js";
 
-/** `identifiedPotionKinds` with `kind` added, if it was not already there. */
-const identifyPotionKind = (
-	identifiedPotionKinds: readonly ItemKind[],
-	kind: PotionKind,
-): readonly ItemKind[] =>
-	identifiedPotionKinds.includes(kind)
-		? identifiedPotionKinds
-		: [...identifiedPotionKinds, kind];
-
 /**
- * Drinking one potion of `kind`. Every branch also identifies that kind for
- * the rest of the run (see GameState.identifiedPotionKinds) — drinking is
- * what reveals an unidentified potion's true name. The healing potion heals
+ * Drinking one potion of `kind`. Drinking also identifies the kind for the
+ * rest of the run, but that happens in the dispatcher (items/use.ts), like
+ * every other item kind's identification on use. The healing potion heals
  * up to the cap (drinking at full health wastes it); poison can end the run.
  * Consumption from inventory happens in the dispatcher (items/use.ts).
  */
@@ -36,11 +27,6 @@ export const applyUsePotion = (
 	state: GameState,
 	kind: PotionKind,
 ): GameState => {
-	const identifiedPotionKinds = identifyPotionKind(
-		state.identifiedPotionKinds,
-		kind,
-	);
-
 	switch (kind) {
 		case "heal-potion": {
 			/* original Rogue: level d4, and a potion that would overheal raises max HP by 1 instead */
@@ -61,7 +47,6 @@ export const applyUsePotion = (
 				playerHp,
 				playerMaxHp,
 				rng: healRoll.rng,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{ type: "player-healed", payload: { by: kind, amount } },
 				]),
@@ -80,7 +65,6 @@ export const applyUsePotion = (
 				...weakened,
 				hallucinatingTurnsRemaining: 0,
 				rng: lossRoll.rng,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-poisoned",
@@ -98,7 +82,6 @@ export const applyUsePotion = (
 			);
 			return {
 				...stronger,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-strengthened",
@@ -111,7 +94,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				confusedTurnsRemaining: CONFUSION_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-confused",
@@ -123,7 +105,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				levitationTurnsRemaining: LEVITATION_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-levitated",
@@ -135,7 +116,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				blindTurnsRemaining: BLIND_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{ type: "player-blinded", payload: { turns: BLIND_POTION_DURATION } },
 				]),
@@ -144,7 +124,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				paralyzedTurnsRemaining: PARALYSIS_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-paralyzed",
@@ -153,12 +132,11 @@ export const applyUsePotion = (
 				]),
 			};
 		case "raise-level":
-			return { ...applyLevelUp(state), identifiedPotionKinds };
+			return applyLevelUp(state);
 		case "detect-monster":
 			return {
 				...state,
 				detectMonstersTurnsRemaining: DETECT_MONSTER_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-detected-monsters",
@@ -170,7 +148,6 @@ export const applyUsePotion = (
 			return {
 				...state,
 				hallucinatingTurnsRemaining: HALLUCINATION_POTION_DURATION,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-hallucinated",
@@ -184,7 +161,6 @@ export const applyUsePotion = (
 				...state,
 				playerMaxHp,
 				playerHp: playerMaxHp,
-				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-revitalized",

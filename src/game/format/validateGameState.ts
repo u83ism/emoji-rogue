@@ -567,9 +567,9 @@ export const validateGameState = (
 	if (!isPositiveInteger(nextItemId)) {
 		return err("nextItemId");
 	}
-	const identifiedPotionKinds = value.identifiedPotionKinds;
-	if (!isItemKindArray(identifiedPotionKinds)) {
-		return err("identifiedPotionKinds");
+	const identifiedItemKinds = value.identifiedItemKinds;
+	if (!isItemKindArray(identifiedItemKinds)) {
+		return err("identifiedItemKinds");
 	}
 	const goldPiles = value.goldPiles;
 	if (!isGoldPileArray(goldPiles, terrain)) {
@@ -660,7 +660,7 @@ export const validateGameState = (
 		}),
 		inventory: [...inventory],
 		nextItemId,
-		identifiedPotionKinds: [...identifiedPotionKinds],
+		identifiedItemKinds: [...identifiedItemKinds],
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,
 			y: pile.y,

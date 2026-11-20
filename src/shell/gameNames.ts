@@ -2,8 +2,10 @@ import {
 	type DeathCause,
 	type EnemyKind,
 	type EquipmentVariant,
+	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
 	POTION_KINDS,
+	RING_KINDS,
 	type TrapKind,
 } from "../game/events.js";
 
@@ -51,15 +53,14 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"mapping-scroll": "地図の巻物",
 	"identify-scroll": "識別の巻物",
 	strength: "怪力の薬",
-	"regeneration-ring": "指輪",
-	/* Same generic display name as regeneration-ring — which effect it grants only shows once worn. */
-	"sustenance-ring": "指輪",
+	/* Rings and wands are real names too — resolveItemDisplayName hides them behind 指輪/杖 until worn or zapped. */
+	"regeneration-ring": "再生の指輪",
+	"sustenance-ring": "満腹の指輪",
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
-	/* Generic display name, like the rings — which effect it grants only shows once used. */
-	"striking-wand": "杖",
+	"striking-wand": "攻撃の杖",
 	confusion: "混乱の薬",
-	"slow-wand": "杖",
+	"slow-wand": "鈍足の杖",
 	levitation: "浮遊の薬",
 	"protect-armor": "防具保護の巻物",
 	blindness: "盲目の薬",
@@ -68,19 +69,16 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"detect-monster": "索敵の薬",
 	life: "生命の薬",
 	"remove-curse-scroll": "解呪の巻物",
-	/* Same generic display name as the other wands — which effect it grants only shows once used. */
-	"teleport-wand": "杖",
-	/* Same generic display name as the other rings — which effect it grants only shows once worn. */
-	"stealth-ring": "指輪",
-	"awareness-ring": "指輪",
-	/* Same generic display name as the other wands — which effect it grants only shows once used. */
-	"magic-missile-wand": "杖",
-	/* Scrolls show their real name immediately, unlike wands/rings — no generic placeholder. */
+	"teleport-wand": "テレポートの杖",
+	"stealth-ring": "隠密の指輪",
+	"awareness-ring": "千里眼の指輪",
+	"magic-missile-wand": "魔法の矢の杖",
+	/* Scrolls show their real name immediately, unlike potions/rings/wands — no generic placeholder. */
 	"confuse-monster-scroll": "混乱の巻物",
 	hallucination: "幻覚の薬",
 	"hold-monster-scroll": "束縛の巻物",
-	"aggravate-monster-ring": "指輪",
-	"sleep-wand": "杖",
+	"aggravate-monster-ring": "警報の指輪",
+	"sleep-wand": "眠りの杖",
 };
 
 /**
@@ -121,8 +119,20 @@ export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
 	"plate-mail": "プレートメイル",
 };
 
-/** Shown for any potion-family item not yet identified this run. */
-const UNIDENTIFIED_POTION_NAME = "未鑑定の薬";
+const UNIDENTIFIED_RING_NAME = "指輪";
+const UNIDENTIFIED_WAND_NAME = "杖";
+
+/**
+ * The shared generic name each IDENTIFIABLE_ITEM_KINDS kind hides behind
+ * until identified this run (see GameState.identifiedItemKinds) — every other
+ * kind (scrolls, food, weapon, armor) always shows its real name.
+ */
+const resolveUnidentifiedName = (kind: ItemKind): string =>
+	POTION_KINDS.includes(kind)
+		? "未鑑定の薬"
+		: RING_KINDS.some((ringKind) => ringKind === kind)
+			? UNIDENTIFIED_RING_NAME
+			: UNIDENTIFIED_WAND_NAME;
 
 /** How a death by something other than an enemy reads in the log. */
 const NON_ENEMY_DEATH_MESSAGES: Readonly<
@@ -154,21 +164,22 @@ export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 };
 
 /**
- * The name to show for `kind`: the real name once identified (or for any
- * non-potion kind), the shared generic name otherwise — this is what makes
- * a potion and a poison potion indistinguishable until drunk or identified.
+ * The name to show for `kind`: the real name once identified (or for a kind
+ * with no generic name), the shared generic name otherwise — this is what
+ * makes a potion and a poison potion indistinguishable until drunk or
+ * identified, and two rings until one is worn.
  * A weapon or armor is named by `variant` (which one it is) when given.
  */
 export const resolveItemDisplayName = (
 	kind: ItemKind,
-	identifiedPotionKinds: readonly ItemKind[],
+	identifiedItemKinds: readonly ItemKind[],
 	variant?: EquipmentVariant,
 ): string => {
 	if (variant !== undefined) {
 		return EQUIPMENT_NAMES[variant];
 	}
-	if (POTION_KINDS.includes(kind) && !identifiedPotionKinds.includes(kind)) {
-		return UNIDENTIFIED_POTION_NAME;
-	}
-	return ITEM_NAMES[kind];
+	return IDENTIFIABLE_ITEM_KINDS.includes(kind) &&
+		!identifiedItemKinds.includes(kind)
+		? resolveUnidentifiedName(kind)
+		: ITEM_NAMES[kind];
 };

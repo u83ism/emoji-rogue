@@ -75,7 +75,7 @@ describe("save file shape guard", () => {
 					},
 				],
 				nextItemId: "number",
-				identifiedPotionKinds: [],
+				identifiedItemKinds: [],
 				goldPiles: [{ x: "number", y: "number", amount: "number" }],
 				goldCollected: "number",
 				traps: [{ x: "number", y: "number", kind: "string" }],

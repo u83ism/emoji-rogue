@@ -136,7 +136,7 @@ describe("formatEvent", () => {
 					type: "curse-revealed",
 					payload: { kind: "regeneration-ring" },
 				},
-				"指輪は呪われていた……外せなくなってしまった!",
+				"再生の指輪は呪われていた……外せなくなってしまった!",
 			],
 			[
 				{ type: "items-decursed", payload: { count: 2 } },
@@ -226,11 +226,11 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
-				"指輪を身につけた。じわじわとHPが回復するようになった!",
+				"再生の指輪を身につけた。じわじわとHPが回復するようになった!",
 			],
 			[
 				{ type: "ring-equipped", payload: { kind: "sustenance-ring" } },
-				"指輪を身につけた。空腹の進みがゆるやかになった!",
+				"満腹の指輪を身につけた。空腹の進みがゆるやかになった!",
 			],
 			[
 				{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 1 } },
@@ -320,11 +320,11 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "ring-equipped", payload: { kind: "stealth-ring" } },
-				"指輪を身につけた。足音が忍びやかになった!",
+				"隠密の指輪を身につけた。足音が忍びやかになった!",
 			],
 			[
 				{ type: "ring-equipped", payload: { kind: "awareness-ring" } },
-				"指輪を身につけた。敵の気配を常に感じ取れるようになった!",
+				"千里眼の指輪を身につけた。敵の気配を常に感じ取れるようになった!",
 			],
 			[
 				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
@@ -344,7 +344,7 @@ describe("formatEvent", () => {
 					type: "ring-equipped",
 					payload: { kind: "aggravate-monster-ring" },
 				},
-				"指輪を身につけた。敵の気配に気づかれてしまった!",
+				"警報の指輪を身につけた。敵の気配に気づかれてしまった!",
 			],
 			[
 				{ type: "enemy-slept", payload: { target: "zombie" } },

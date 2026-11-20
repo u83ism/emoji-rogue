@@ -233,7 +233,7 @@ const renderLog = () => {
 	logElement.textContent = "";
 	for (const event of state.events.slice(-LOG_LINE_COUNT)) {
 		const line = document.createElement("div");
-		line.textContent = formatEvent(event, state.identifiedPotionKinds);
+		line.textContent = formatEvent(event, state.identifiedItemKinds);
 		if (event.type === "player-died") {
 			line.className = "log-died";
 		} else if (event.type === "game-won") {
@@ -245,7 +245,7 @@ const renderLog = () => {
 
 const appendHeldItemRow = (item, index) => {
 	const row = document.createElement("div");
-	row.textContent = `${toInventoryLetter(index)}) ${formatHeldItemLabel(item, state.identifiedPotionKinds)}`;
+	row.textContent = `${toInventoryLetter(index)}) ${formatHeldItemLabel(item, state.identifiedItemKinds)}`;
 	inventoryElement.appendChild(row);
 };
 
@@ -272,7 +272,7 @@ const renderInventory = () => {
 		const selected = document.createElement("div");
 		selected.textContent = formatHeldItemLabel(
 			selectedItem,
-			state.identifiedPotionKinds,
+			state.identifiedItemKinds,
 		);
 		inventoryElement.appendChild(selected);
 		const prompt = document.createElement("div");

@@ -15,7 +15,7 @@ import { formatSignedBonus } from "./inventoryLabels.js";
  * The single place where game events become human-readable text (Japanese
  * for now). The core (src/game/) never produces strings, so swapping locale
  * means swapping this module only — the i18n discipline in docs/tasks/game.md.
- * `identifiedPotionKinds` is needed only to decide whether item-picked-up
+ * `identifiedItemKinds` is needed only to decide whether item-picked-up
  * should reveal a potion-family kind's real name. Split out of messages.ts
  * (milestone 98 follow-up) once that file passed the 200-line
  * structure-lint limit — formatEvent's switch was the overwhelming share of
@@ -23,7 +23,7 @@ import { formatSignedBonus } from "./inventoryLabels.js";
  */
 export const formatEvent = (
 	event: GameEvent,
-	identifiedPotionKinds: readonly ItemKind[],
+	identifiedItemKinds: readonly ItemKind[],
 ): string => {
 	switch (event.type) {
 		case "player-hit":
@@ -47,11 +47,11 @@ export const formatEvent = (
 				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 		case "item-picked-up":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を拾った`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を拾った`;
 		case "inventory-full":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を持てなかった。持ち物がいっぱいだ`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を持てなかった。持ち物がいっぱいだ`;
 		case "item-dropped":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を足元に置いた`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を足元に置いた`;
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
 		case "weapon-equipped":
@@ -107,7 +107,7 @@ export const formatEvent = (
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 		case "item-stolen":
 			return event.payload.kind !== undefined
-				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedPotionKinds, event.payload.variant)}を盗まれた!`
+				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を盗まれた!`
 				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
 		case "ring-equipped": {
 			const effect = RING_EQUIPPED_EFFECT[event.payload.kind];

@@ -57,7 +57,7 @@ describe("items/scrolls", () => {
 			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["heal-potion"]);
+		expect(next.identifiedItemKinds).toEqual(["heal-potion"]);
 		expect(next.events).toEqual([
 			{ type: "potion-identified", payload: { kind: "heal-potion" } },
 		]);
@@ -76,22 +76,19 @@ describe("items/scrolls", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(afterFirst.identifiedPotionKinds).toEqual(["heal-potion"]);
+		expect(afterFirst.identifiedItemKinds).toEqual(["heal-potion"]);
 
 		const afterSecond = advanceTurn(afterFirst, {
 			type: "use-item",
 			payload: { itemId: 2 },
 		});
-		expect(afterSecond.identifiedPotionKinds).toEqual([
-			"heal-potion",
-			"poison",
-		]);
+		expect(afterSecond.identifiedItemKinds).toEqual(["heal-potion", "poison"]);
 
 		const afterThird = advanceTurn(afterSecond, {
 			type: "use-item",
 			payload: { itemId: 3 },
 		});
-		expect(afterThird.identifiedPotionKinds).toEqual([
+		expect(afterThird.identifiedItemKinds).toEqual([
 			"heal-potion",
 			"poison",
 			"strength",
@@ -101,7 +98,7 @@ describe("items/scrolls", () => {
 	it("is a no-op (same reference, no turn spent) once everything is already identified", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			identifiedPotionKinds: [
+			identifiedItemKinds: [
 				"heal-potion",
 				"poison",
 				"strength",

@@ -122,7 +122,7 @@ const App = () => {
 			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>
-					{formatEvent(event, state.identifiedPotionKinds)}
+					{formatEvent(event, state.identifiedItemKinds)}
 				</Text>
 			))}
 			{(state.status === "dead" || state.status === "won") && (

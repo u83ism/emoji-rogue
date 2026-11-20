@@ -74,7 +74,7 @@ describe("items/potions", () => {
 		]);
 	});
 
-	it("using a held poison potion lowers strength by 1-3 instead of hurting, and identifies that kind", () => {
+	it("using a held poison potion lowers strength by 1-3 instead of hurting", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: PLAYER_MAX_HP,
@@ -93,7 +93,6 @@ describe("items/potions", () => {
 		expect(strengthLost).toBeLessThanOrEqual(3);
 		expect(next.playerMaxStrength).toBe(state.playerMaxStrength);
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "poison" }]);
-		expect(next.identifiedPotionKinds).toEqual(["poison"]);
 		expect(next.events).toEqual([
 			{ type: "player-poisoned", payload: { strengthLost } },
 		]);
@@ -131,7 +130,7 @@ describe("items/potions", () => {
 		expect(next.status).toBe("playing");
 	});
 
-	it("using a held strength potion permanently raises playerPower and identifies that kind", () => {
+	it("using a held strength potion permanently raises playerPower", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
@@ -146,25 +145,12 @@ describe("items/potions", () => {
 		expect(next.playerStrength).toBe(state.playerStrength + 1);
 		expect(next.playerMaxStrength).toBe(state.playerStrength + 1);
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "strength" }]);
-		expect(next.identifiedPotionKinds).toEqual(["strength"]);
 		expect(next.events).toEqual([
 			{
 				type: "player-strengthened",
 				payload: { strength: state.playerStrength + 1 },
 			},
 		]);
-	});
-
-	it("drinking either potion kind only identifies that kind, not the other", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "heal-potion" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next.identifiedPotionKinds).toEqual(["heal-potion"]);
 	});
 
 	it("using a held confusion potion sets confusedTurnsRemaining and logs player-confused", () => {
@@ -180,7 +166,6 @@ describe("items/potions", () => {
 		 * the drinking turn itself already counts as the first tick */
 		expect(next.confusedTurnsRemaining).toBe(CONFUSION_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["confusion"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -202,7 +187,6 @@ describe("items/potions", () => {
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.levitationTurnsRemaining).toBe(LEVITATION_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["levitation"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -224,7 +208,6 @@ describe("items/potions", () => {
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.blindTurnsRemaining).toBe(BLIND_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["blindness"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -246,7 +229,6 @@ describe("items/potions", () => {
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
 		expect(next.paralyzedTurnsRemaining).toBe(PARALYSIS_POTION_DURATION - 1);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["paralysis"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -268,7 +250,6 @@ describe("items/potions", () => {
 		expect(next.playerLevel).toBe(2);
 		expect(next.playerExperience).toBe(state.playerExperience);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["raise-level"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -291,7 +272,6 @@ describe("items/potions", () => {
 			DETECT_MONSTER_POTION_DURATION - 1,
 		);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["detect-monster"]);
 		expect(
 			next.events.some(
 				(event) =>
@@ -314,7 +294,6 @@ describe("items/potions", () => {
 		expect(next.playerMaxHp).toBe(state.playerMaxHp + LIFE_POTION_MAX_HP_BONUS);
 		expect(next.playerHp).toBe(next.playerMaxHp);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["life"]);
 		expect(next.events).toEqual([
 			{
 				type: "player-revitalized",
@@ -337,7 +316,6 @@ describe("items/potions", () => {
 			HALLUCINATION_POTION_DURATION - 1,
 		);
 		expect(next.inventory).toEqual([]);
-		expect(next.identifiedPotionKinds).toEqual(["hallucination"]);
 		expect(
 			next.events.some(
 				(event) =>

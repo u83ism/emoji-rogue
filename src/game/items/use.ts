@@ -1,4 +1,8 @@
-import { EQUIPMENT_ITEM_KINDS } from "../events.js";
+import {
+	EQUIPMENT_ITEM_KINDS,
+	IDENTIFIABLE_ITEM_KINDS,
+	type ItemKind,
+} from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
 import {
@@ -99,6 +103,15 @@ const applyItemEffect = (
 	}
 };
 
+/** `identifiedItemKinds` with `kind` added, if it is a kind with a hidden name (IDENTIFIABLE_ITEM_KINDS) not already there. */
+const identifyItemKind = (
+	identifiedItemKinds: readonly ItemKind[],
+	kind: ItemKind,
+): readonly ItemKind[] =>
+	IDENTIFIABLE_ITEM_KINDS.includes(kind) && !identifiedItemKinds.includes(kind)
+		? [...identifiedItemKinds, kind]
+		: identifiedItemKinds;
+
 /**
  * Uses the held item matching `itemId`: the effect from applyItemEffect,
  * then — for consumable kinds only — one item removed from inventory, in
@@ -106,7 +119,10 @@ const applyItemEffect = (
  * are never removed here; toggling their `equipped` flag in place is the
  * whole effect (see items/equipment.ts, items/rings.ts). Using an itemId not
  * held, or a kind whose handler declared a no-op, returns the input state
- * (same reference, no turn spent, nothing consumed).
+ * (same reference, no turn spent, nothing consumed). Any use that does take
+ * effect identifies the item's kind for the rest of the run (see
+ * GameState.identifiedItemKinds) — drinking a potion, putting on a ring and
+ * zapping a wand all reveal what it was.
  */
 export const applyUseItem = (
 	state: GameState,
@@ -118,14 +134,21 @@ export const applyUseItem = (
 		return state;
 	}
 	const afterEffect = applyItemEffect(state, item, targetItemId);
-	if (EQUIPMENT_ITEM_KINDS.includes(item.kind)) {
-		return afterEffect;
-	}
 	if (afterEffect === state) {
 		return state;
 	}
-	return {
+	const identified = {
 		...afterEffect,
-		inventory: removeHeldItem(afterEffect.inventory, itemId),
+		identifiedItemKinds: identifyItemKind(
+			afterEffect.identifiedItemKinds,
+			item.kind,
+		),
+	};
+	if (EQUIPMENT_ITEM_KINDS.includes(item.kind)) {
+		return identified;
+	}
+	return {
+		...identified,
+		inventory: removeHeldItem(identified.inventory, itemId),
 	};
 };

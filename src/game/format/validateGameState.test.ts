@@ -1409,12 +1409,12 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a poison item kind, identifiedPotionKinds and a player-poisoned event, rejects broken ones", () => {
+	it("accepts a poison item kind, identifiedItemKinds and a player-poisoned event, rejects broken ones", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
 			inventory: [{ itemId: 1, kind: "poison" }],
-			identifiedPotionKinds: ["poison"],
+			identifiedItemKinds: ["poison"],
 			events: [
 				{ type: "player-poisoned", payload: { strengthLost: 2 } },
 				{ type: "player-poisoned", payload: { strengthLost: 0 } },
@@ -1422,12 +1422,12 @@ describe("validateGameState", () => {
 		});
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
-			expect(accepted.value.identifiedPotionKinds).toEqual(["poison"]);
+			expect(accepted.value.identifiedItemKinds).toEqual(["poison"]);
 		}
 
 		expectRejected(
-			{ ...buildValidState(), identifiedPotionKinds: ["dragon"] },
-			"identifiedPotionKinds",
+			{ ...buildValidState(), identifiedItemKinds: ["dragon"] },
+			"identifiedItemKinds",
 		);
 		expectRejected(
 			{

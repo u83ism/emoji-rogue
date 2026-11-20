@@ -37,7 +37,7 @@ const INITIAL_RUN_STATE = {
 	hallucinatingTurnsRemaining: 0,
 	inventory: [],
 	nextItemId: 1,
-	identifiedPotionKinds: [],
+	identifiedItemKinds: [],
 	goldCollected: 0,
 	floor: 1,
 	deepestFloor: 1,

@@ -1,4 +1,4 @@
-import { buildEventLog, type GameEvent } from "../events.js";
+import { buildEventLog, type GameEvent, RING_KINDS } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { unequipOthers } from "./equipment.js";
 import { replaceHeldItem } from "./inventory.js";
@@ -14,14 +14,6 @@ type RingItem = Extract<
 			| "aggravate-monster-ring";
 	}
 >;
-
-const RING_KINDS = [
-	"regeneration-ring",
-	"sustenance-ring",
-	"stealth-ring",
-	"awareness-ring",
-	"aggravate-monster-ring",
-] as const;
 
 /** Whether a ring of `kind` is currently equipped — regeneration.ts/hunger.ts's turn-end ticks, enemies.ts's wake check, and frame.ts's detection check read this instead of a permanent flag. */
 export const hasEquippedRing = (

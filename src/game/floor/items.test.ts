@@ -47,7 +47,6 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"identify-scroll",
 	"regeneration-ring",
 	"sustenance-ring",
-	"striking-wand",
 	"slow-wand",
 	"remove-curse-scroll",
 	"teleport-wand",
@@ -58,7 +57,6 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"hallucination",
 	"hold-monster-scroll",
 	"aggravate-monster-ring",
-	"sleep-wand",
 ];
 
 /** How many food rations the tests ask drawFloorItems for — floor/food.ts decides the real number. */

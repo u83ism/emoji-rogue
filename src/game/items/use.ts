@@ -24,9 +24,7 @@ import {
 } from "./scrolls.js";
 import {
 	applyUseMagicMissileWand,
-	applyUseSleepWand,
 	applyUseSlowWand,
-	applyUseStrikingWand,
 	applyUseTeleportWand,
 } from "./wands.js";
 
@@ -78,16 +76,12 @@ const applyItemEffect = (
 			return applyUseHoldMonsterScroll(state);
 		case "food":
 			return applyUseFood(state);
-		case "striking-wand":
-			return applyUseStrikingWand(state);
 		case "slow-wand":
 			return applyUseSlowWand(state);
 		case "teleport-wand":
 			return applyUseTeleportWand(state);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state);
-		case "sleep-wand":
-			return applyUseSleepWand(state);
 		case "heal-potion":
 		case "poison":
 		case "strength":

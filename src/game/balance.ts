@@ -71,9 +71,9 @@ const calculateSaveChancePercent = (
 ): number =>
 	Math.min(100, Math.max(0, (7 - which + Math.floor(playerLevel / 2)) * 5));
 
-/** Percent chance the player passes a save against magic (`save(VS_MAGIC)`, 17 - level/2): 20% at level 1. Decides the thief's theft/drop size. */
-export const calculateMagicSaveChancePercent = (playerLevel: number): number =>
-	calculateSaveChancePercent(3, playerLevel);
+/** Percent chance a creature of `level` passes a save against magic (`save(VS_MAGIC)` / `save_throw(VS_MAGIC, tp)`, 17 - level/2): 20% at level 1. The player's decides the thief's theft/drop size; an enemy's lets it dodge a magic missile. */
+export const calculateMagicSaveChancePercent = (level: number): number =>
+	calculateSaveChancePercent(3, level);
 
 /** Percent chance the player passes a save against poison (`save(VS_POISON)`, 14 - level/2): 35% at level 1. A dart trap's dart and a scorpion's sting drain strength only when it fails. */
 export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
@@ -373,20 +373,14 @@ export const ENCHANT_ARMOR_BONUS = 1;
 /** Chance (out of 100), independently rolled per floor, that an enchant armor scroll spawns. */
 export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
-/**
- * Fixed ranged damage a wand of striking deals (see combat.ts's
- * applyWandStrike).
- */
-export const WAND_STRIKE_DAMAGE = 3;
-/** Chance (out of 100), independently rolled per floor, that a wand spawns. */
-export const WAND_SPAWN_CHANCE_PERCENT = 8;
-
 /** Chance (out of 100), independently rolled per floor, that a teleport wand spawns — same rarity as the other wands. */
 export const TELEPORT_WAND_SPAWN_CHANCE_PERCENT = 8;
 
-/** Fixed ranged damage a wand of magic missile deals — higher than WAND_STRIKE_DAMAGE, offset by a lower spawn chance. */
-export const MAGIC_MISSILE_WAND_DAMAGE = 5;
-/** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns — lower than WAND_SPAWN_CHANCE_PERCENT. */
+/** A magic missile's damage dice — original Rogue's bolt `o_hurldmg` "1x4" (see items/wands.ts's applyMagicMissileWandStrike). */
+export const MAGIC_MISSILE_DAMAGE_DICE = { count: 1, sides: 4 } as const;
+/** Added to every magic missile's roll — the bolt's own `o_dplus` of 1, before the player's strength and wielded-weapon bonuses. */
+export const MAGIC_MISSILE_DAMAGE_BONUS = 1;
+/** Chance (out of 100), independently rolled per floor, that a magic missile wand spawns. */
 export const MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT = 6;
 
 /** How many turns a confuse monster scroll makes an enemy wander instead of pathfinding toward the player (adjacent attacks still land). */
@@ -403,9 +397,6 @@ export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 export const HOLD_MONSTER_SCROLL_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
 export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
-
-/** Chance (out of 100), independently rolled per floor, that a sleep wand spawns — same rarity as the other wands. */
-export const SLEEP_WAND_SPAWN_CHANCE_PERCENT = 8;
 
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 10;

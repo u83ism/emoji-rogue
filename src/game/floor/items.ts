@@ -22,13 +22,11 @@ import {
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	RING_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
-	SLEEP_WAND_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	STEALTH_RING_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
 	SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
-	WAND_SPAWN_CHANCE_PERCENT,
 	WEAPON_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
 import { type ItemKind, isEquipmentItemKind } from "../events.js";
@@ -86,7 +84,6 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "sustenance-ring",
 		chancePercent: SUSTENANCE_RING_SPAWN_CHANCE_PERCENT,
 	},
-	{ kind: "striking-wand", chancePercent: WAND_SPAWN_CHANCE_PERCENT },
 	{ kind: "slow-wand", chancePercent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
 	/* Added in milestone 81 — appended at the end so it doesn't shift the roll order of every earlier kind. */
 	{
@@ -122,7 +119,6 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		kind: "aggravate-monster-ring",
 		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	},
-	{ kind: "sleep-wand", chancePercent: SLEEP_WAND_SPAWN_CHANCE_PERCENT },
 ];
 
 /** Everything drawFloorItems scatters on a floor — gold and enemies are placed per room instead (rooms.ts). */

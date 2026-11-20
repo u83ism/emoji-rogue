@@ -2,10 +2,8 @@ import type { RngState } from "../rng.js";
 import { createRng } from "../rng.js";
 import {
 	calculateMagicSaveChancePercent,
-	MAGIC_MISSILE_WAND_DAMAGE,
 	SLEEPING_TARGET_HIT_BONUS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
 import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
 import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
@@ -160,30 +158,3 @@ export const applyPlayerAttack = (
 		},
 	);
 };
-
-/**
- * A wand of striking's fixed-damage ranged hit against `target`:
- * WAND_STRIKE_DAMAGE is flat regardless of the player's own attack damage or
- * whether `target` was asleep. The
- * player does not move; only the caller decides whether the target was even
- * reachable (visible) to aim at.
- */
-export const applyWandStrike = (state: GameState, target: Enemy): GameState =>
-	applyEnemyHit(state, target, WAND_STRIKE_DAMAGE, {
-		type: "wand-struck",
-		payload: { target: target.kind, damage: WAND_STRIKE_DAMAGE },
-	});
-
-/**
- * A wand of magic missile's fixed-damage ranged hit — same shape as
- * applyWandStrike (shared applyEnemyHit core),
- * just a higher flat MAGIC_MISSILE_WAND_DAMAGE.
- */
-export const applyMagicMissileWandStrike = (
-	state: GameState,
-	target: Enemy,
-): GameState =>
-	applyEnemyHit(state, target, MAGIC_MISSILE_WAND_DAMAGE, {
-		type: "wand-struck",
-		payload: { target: target.kind, damage: MAGIC_MISSILE_WAND_DAMAGE },
-	});

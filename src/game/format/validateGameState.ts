@@ -316,6 +316,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isOneOf(WEAPON_KIND_VALUES, payload.variant),
 	"wand-struck": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
+	"magic-missile-vanished": (payload) => isEnemyKind(payload.target),
 	"player-confused": (payload) => isPositiveInteger(payload.turns),
 	"confusion-faded": emptyPayload,
 	"enemy-slowed": (payload) =>
@@ -342,7 +343,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
-	"enemy-slept": (payload) => isEnemyKind(payload.target),
 	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
 	"player-attack-missed": (payload) => isEnemyKind(payload.target),
 	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),

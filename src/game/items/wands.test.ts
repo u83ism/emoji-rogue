@@ -1,78 +1,47 @@
 import { describe, expect, it } from "vitest";
+import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import { advanceTurn } from "../advanceTurn.js";
 import {
-	MAGIC_MISSILE_WAND_DAMAGE,
+	calculateMagicSaveChancePercent,
+	MAGIC_MISSILE_DAMAGE_BONUS,
+	PLAYER_START_STRENGTH,
 	SLOW_WAND_DURATION,
-	WAND_STRIKE_DAMAGE,
 } from "../balance.js";
+import { ENEMY_STATS } from "../enemies/enemyStats.js";
+import type { EnemyKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { Enemy } from "../state.js";
-import { applyUseSleepWand } from "./wands.js";
+import { calculateStrengthDamageBonus } from "../strength.js";
+import { applyMagicMissileWandStrike } from "./wands.js";
 
-const zombie = (x: number, y: number): Enemy => ({
+/** add_dam[] for the starting strength of 16. */
+const START_STRENGTH_DAMAGE = calculateStrengthDamageBonus(
+	PLAYER_START_STRENGTH,
+);
+
+const zombie = (x: number, y: number, hp = 2, awake = true): Enemy => ({
 	x,
 	y,
 	kind: "zombie",
-	hp: 2,
-	maxHp: 2,
-	awake: true,
+	hp,
+	maxHp: hp,
+	awake,
 	slowedTurnsRemaining: 0,
 	confusedTurnsRemaining: 0,
 });
 
+/** 60 consecutive rng states — enough spread to see both outcomes of a percent roll. */
+const buildSpreadRngStates = (): readonly RngState[] => {
+	const states: RngState[] = [];
+	let current = seedToState(1);
+	for (let i = 0; i < 60; i++) {
+		states.push(current);
+		current = stepUniform(current).state;
+	}
+	return states;
+};
+
 describe("items/wands", () => {
-	it("using a held wand strikes the nearest visible (non-adjacent) enemy", () => {
-		/* WAND_STRIKE_DAMAGE exceeds the fixture zombie's 2 HP, so a single hit kills it */
-		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			enemies: [target],
-			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next.player).toEqual(state.player); /* the player does not move */
-		expect(next.enemies).toEqual([]);
-		expect(next.inventory).toEqual([]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
-			},
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
-		]);
-	});
-
-	it("using a held wand targets whichever visible enemy is closest", () => {
-		const near = zombie(6, 1);
-		const far = zombie(8, 1);
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			enemies: [far, near],
-			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		/* the near zombie is the one killed; the far one is untouched */
-		expect(next.enemies).toEqual([far]);
-	});
-
-	it("using a held wand with no visible enemy is a no-op (same reference, not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "striking-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next).toBe(state);
-	});
-
 	it("using a held slow wand freezes the nearest visible (non-adjacent) enemy", () => {
 		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
 		const state = {
@@ -99,6 +68,29 @@ describe("items/wands", () => {
 		]);
 	});
 
+	it("using a held slow wand targets whichever visible enemy is closest", () => {
+		const near = zombie(6, 1);
+		const far = zombie(8, 1);
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [far, near],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.events).toEqual([
+			{
+				type: "enemy-slowed",
+				payload: { target: "zombie", turns: SLOW_WAND_DURATION },
+			},
+		]);
+		expect(next.enemies.find((enemy) => enemy.x === 6)).toMatchObject({
+			slowedTurnsRemaining: SLOW_WAND_DURATION - 1,
+		});
+	});
+
 	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -111,27 +103,24 @@ describe("items/wands", () => {
 		expect(next).toBe(state);
 	});
 
-	it("using a held magic missile wand deals MAGIC_MISSILE_WAND_DAMAGE to the nearest visible (non-adjacent) enemy", () => {
-		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			enemies: [target],
-			inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
+	it("a held magic missile wand is used up on the nearest visible enemy, which either takes the bolt or saves against it", () => {
+		const outcomes = buildSpreadRngStates().map((rng) => {
+			const state = {
+				...buildArenaGameState(9, 3, 1),
+				rng,
+				enemies: [zombie(7, 1, 100)],
+				inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
+			};
+			const next = advanceTurn(state, {
+				type: "use-item",
+				payload: { itemId: 1 },
+			});
+			expect(next.player).toEqual(state.player);
+			expect(next.inventory).toEqual([]);
+			return next.events[0]?.type;
 		});
-		expect(next.player).toEqual(state.player); /* the player does not move */
-		expect(next.enemies).toEqual([]);
-		expect(next.inventory).toEqual([]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
-			},
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
-		]);
+		expect(outcomes).toContain("wand-struck");
+		expect(outcomes).toContain("magic-missile-vanished");
 	});
 
 	it("using a held magic missile wand with no visible enemy is a no-op (same reference, not consumed)", () => {
@@ -145,52 +134,58 @@ describe("items/wands", () => {
 		});
 		expect(next).toBe(state);
 	});
+});
 
-	it("applyUseSleepWand forces the nearest visible enemy back to awake: false and logs enemy-slept", () => {
-		/* Calls applyUseSleepWand directly rather than via advanceTurn: the
-		 * same turn's advanceEnemies would immediately re-roll a wake chance
-		 * for a still-visible enemy, so the final `awake` after a full turn
-		 * isn't a reliable assertion (same pitfall the enemy-confused/
-		 * enemy-slowed tests avoid by checking events, not final position). */
-		const target = zombie(7, 1);
-		const state = { ...buildArenaGameState(9, 3, 1), enemies: [target] };
-		const next = applyUseSleepWand(state);
-		expect(next.enemies).toEqual([{ ...target, awake: false }]);
-		expect(next.events).toEqual([
-			{ type: "enemy-slept", payload: { target: "zombie" } },
+describe("applyMagicMissileWandStrike", () => {
+	const state = buildArenaGameState(9, 9, 1);
+	const outcomesFor = (target: Enemy) =>
+		buildSpreadRngStates().map((rng) =>
+			applyMagicMissileWandStrike({ ...state, rng, enemies: [target] }, target),
+		);
+
+	it("a landed bolt deals 1d4 + 1 + the player's damage bonus and logs wand-struck; a saved one vanishes harmlessly", () => {
+		const target = zombie(5, 4, 100, false);
+		const minimum = 1 + MAGIC_MISSILE_DAMAGE_BONUS + START_STRENGTH_DAMAGE;
+		const maximum = 4 + MAGIC_MISSILE_DAMAGE_BONUS + START_STRENGTH_DAMAGE;
+		for (const next of outcomesFor(target)) {
+			const event = next.events[0];
+			if (event?.type === "wand-struck") {
+				expect(event.payload.damage).toBeGreaterThanOrEqual(minimum);
+				expect(event.payload.damage).toBeLessThanOrEqual(maximum);
+				expect(next.enemies).toEqual([
+					{ ...target, hp: 100 - event.payload.damage, awake: true },
+				]);
+			} else {
+				expect(next.events).toEqual([
+					{ type: "magic-missile-vanished", payload: { target: "zombie" } },
+				]);
+				/* a vanished missile leaves the target as it was — still asleep */
+				expect(next.enemies).toEqual([target]);
+			}
+		}
+	});
+
+	it("the target saves against magic about as often as its level says", () => {
+		const saved = (kind: EnemyKind): number =>
+			outcomesFor({ ...zombie(5, 4, 100), kind }).filter(
+				(next) => next.events[0]?.type === "magic-missile-vanished",
+			).length;
+		/* zombie (level 2): 25%; dragon (level 10): 45% */
+		expect(calculateMagicSaveChancePercent(ENEMY_STATS.zombie.level)).toBe(25);
+		expect(calculateMagicSaveChancePercent(ENEMY_STATS.dragon.level)).toBe(45);
+		expect(saved("zombie")).toBeGreaterThan(0);
+		expect(saved("dragon")).toBeGreaterThan(saved("zombie"));
+	});
+
+	it("a landed bolt that brings the target to zero removes it and logs the defeat", () => {
+		const target = zombie(5, 4, 1);
+		const next = outcomesFor(target).find(
+			(outcome) => outcome.events[0]?.type === "wand-struck",
+		);
+		expect(next?.enemies).toEqual([]);
+		expect(next?.events.map((event) => event.type)).toEqual([
+			"wand-struck",
+			"enemy-defeated",
 		]);
-	});
-
-	it("using a held sleep wand consumes it and logs enemy-slept", () => {
-		const target = zombie(7, 1);
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			enemies: [target],
-			inventory: [{ itemId: 1, kind: "sleep-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next.player).toEqual(state.player);
-		expect(next.inventory).toEqual([]);
-		expect(
-			next.events.some(
-				(event) =>
-					event.type === "enemy-slept" && event.payload.target === "zombie",
-			),
-		).toBe(true);
-	});
-
-	it("using a held sleep wand with no visible enemy is a no-op (same reference, not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "sleep-wand" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next).toBe(state);
 	});
 });

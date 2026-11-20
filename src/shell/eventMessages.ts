@@ -132,7 +132,9 @@ export const formatEvent = (
 		case "missile-missed":
 			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、${ENEMY_NAMES[event.payload.target]}に当たらなかった`;
 		case "wand-struck":
-			return `杖から放たれた力が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
+			return `杖から放たれた魔法の矢が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
+		case "magic-missile-vanished":
+			return `魔法の矢は${ENEMY_NAMES[event.payload.target]}に届く前に煙となって消えた`;
 		case "player-confused":
 			return `${ITEM_NAMES.confusion}を飲んだ。頭がくらくらする!`;
 		case "confusion-faded":
@@ -169,8 +171,6 @@ export const formatEvent = (
 			return "幻覚がおさまった";
 		case "enemy-held":
 			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
-		case "enemy-slept":
-			return `杖の力で${ENEMY_NAMES[event.payload.target]}を眠らせた!`;
 		case "vampire-healed":
 			return `${ENEMY_NAMES.vampire}が血を吸い、HPを${event.payload.amount}回復した`;
 		case "player-drained":

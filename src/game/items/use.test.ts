@@ -83,7 +83,7 @@ describe("applyUseItem dispatch", () => {
 	it("zapping a wand at a visible enemy identifies its kind; with no target it stays unidentified", () => {
 		const held = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "sleep-wand" as const }],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
 		};
 		const noTarget = advanceTurn(held, {
 			type: "use-item",
@@ -94,7 +94,7 @@ describe("applyUseItem dispatch", () => {
 			{ ...held, enemies: [zombie(6, 1)] },
 			{ type: "use-item", payload: { itemId: 1 } },
 		);
-		expect(zapped.identifiedItemKinds).toEqual(["sleep-wand"]);
+		expect(zapped.identifiedItemKinds).toEqual(["slow-wand"]);
 	});
 
 	it("reading a scroll does not add it to identifiedItemKinds (scrolls are always known by name)", () => {

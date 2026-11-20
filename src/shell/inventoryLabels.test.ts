@@ -88,13 +88,13 @@ describe("formatHeldItemLabel", () => {
 			equipped: true,
 			cursed: false,
 		};
-		const wand: HeldItem = { itemId: 2, kind: "sleep-wand" };
+		const wand: HeldItem = { itemId: 2, kind: "slow-wand" };
 		expect(formatHeldItemLabel(ring, [])).toBe("✅ 指輪");
 		expect(formatHeldItemLabel(wand, [])).toBe("杖");
 		expect(formatHeldItemLabel(ring, ["regeneration-ring"])).toBe(
 			"✅ 再生の指輪",
 		);
-		expect(formatHeldItemLabel(wand, ["sleep-wand"])).toBe("眠りの杖");
+		expect(formatHeldItemLabel(wand, ["slow-wand"])).toBe("鈍足の杖");
 		/* identifying one ring kind leaves the others generic */
 		expect(formatHeldItemLabel(ring, ["stealth-ring"])).toBe("✅ 指輪");
 	});

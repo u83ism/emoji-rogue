@@ -51,7 +51,6 @@ export const ITEM_KIND_VALUES = [
 	"sustenance-ring",
 	"enchant-weapon",
 	"enchant-armor",
-	"striking-wand",
 	"confusion",
 	"slow-wand",
 	"levitation",
@@ -68,7 +67,6 @@ export const ITEM_KIND_VALUES = [
 	"hallucination",
 	"hold-monster-scroll",
 	"aggravate-monster-ring",
-	"sleep-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -165,11 +163,9 @@ export const RING_KINDS = [
 ] as const satisfies readonly ItemKind[];
 
 const WAND_KIND_VALUES = [
-	"striking-wand",
 	"slow-wand",
 	"teleport-wand",
 	"magic-missile-wand",
-	"sleep-wand",
 ] as const satisfies readonly ItemKind[];
 
 /**
@@ -395,9 +391,14 @@ export type GameEvent =
 			};
 	  }
 	| {
-			/** Same shape as enemy-hit, kept separate for its own flavor text — see applyWandStrike. */
+			/** A magic missile that landed — same shape as enemy-hit, kept separate for its own flavor text. See items/wands.ts's applyMagicMissileWandStrike. */
 			readonly type: "wand-struck";
 			readonly payload: { readonly target: EnemyKind; readonly damage: number };
+	  }
+	| {
+			/** A magic missile the target saved against — it vanishes, no damage. See items/wands.ts's applyMagicMissileWandStrike. */
+			readonly type: "magic-missile-vanished";
+			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
 			/** Drinking a confusion potion — see applyStatusCountdownTicks and applyMove. */
@@ -508,11 +509,6 @@ export type GameEvent =
 			/** A hold monster scroll freezing one visible enemy — same shape as enemy-slowed, independent flavor text (it's the scroll, not a wand). */
 			readonly type: "enemy-held";
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
-	  }
-	| {
-			/** A sleep wand forcing its target back to sleep — see items/wands.ts's applyUseSleepWand. */
-			readonly type: "enemy-slept";
-			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
 			/** A vampire healing itself off a landed hit — see vampireLifesteal.ts. Fired only when the heal is nonzero (already at max HP is silent). */

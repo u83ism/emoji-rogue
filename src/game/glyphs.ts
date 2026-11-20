@@ -77,8 +77,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	 * Emoji-15.1 ceiling (docs/emoji-policy.md ADR 2026-07-19). Replaces the
 	 * earlier crystal-ball glyph, which was semantically a mismatch for
 	 * "wand" but was the best fit under the old (Unicode-6.0) ceiling. */
-	"striking-wand": { glyph: "🪄" },
-	/* Same glyph as the wand of striking — both are just "a wand" on the ground. */
+	/* Every wand is just "a wand" on the ground — the same glyph for all of them. */
 	"slow-wand": { glyph: "🪄" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"teleport-wand": { glyph: "🪄" },
@@ -88,7 +87,6 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"aggravate-monster-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
-	"sleep-wand": { glyph: "🪄" },
 	/* Same scroll glyph as every other scroll kind — see the comment above. */
 	"confuse-monster-scroll": { glyph: "📜" },
 	"hold-monster-scroll": { glyph: "📜" },

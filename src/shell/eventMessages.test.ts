@@ -278,7 +278,11 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "wand-struck", payload: { target: "zombie", damage: 3 } },
-				"杖から放たれた力がゾンビを貫いた!3のダメージを与えた!",
+				"杖から放たれた魔法の矢がゾンビを貫いた!3のダメージを与えた!",
+			],
+			[
+				{ type: "magic-missile-vanished", payload: { target: "zombie" } },
+				"魔法の矢はゾンビに届く前に煙となって消えた",
 			],
 			[
 				{ type: "player-confused", payload: { turns: 10 } },
@@ -351,10 +355,6 @@ describe("formatEvent", () => {
 					payload: { kind: "aggravate-monster-ring" },
 				},
 				"警報の指輪を身につけた。敵の気配に気づかれてしまった!",
-			],
-			[
-				{ type: "enemy-slept", payload: { target: "zombie" } },
-				"杖の力でゾンビを眠らせた!",
 			],
 			[
 				{ type: "vampire-healed", payload: { amount: 1 } },

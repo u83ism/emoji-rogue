@@ -865,17 +865,34 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed enemy-slept event and rejects broken ones", () => {
+	it("rejects the removed enemy-slept event", () => {
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "enemy-slept", payload: { target: "zombie" } }],
+			},
+			"events",
+		);
+	});
+
+	it("accepts a well-formed magic-missile-vanished event and rejects a broken one", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "enemy-slept", payload: { target: "zombie" } }],
+			events: [
+				{ type: "magic-missile-vanished", payload: { target: "zombie" } },
+			],
 		});
 		expect(result.ok).toBe(true);
 
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "enemy-slept", payload: { target: "unknown-kind" } }],
+				events: [
+					{
+						type: "magic-missile-vanished",
+						payload: { target: "unknown-kind" },
+					},
+				],
 			},
 			"events",
 		);

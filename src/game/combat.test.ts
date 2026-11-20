@@ -3,17 +3,10 @@ import { type RngState, seedToState, stepUniform } from "../rng.js";
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
-	MAGIC_MISSILE_WAND_DAMAGE,
 	PLAYER_START_STRENGTH,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
-import {
-	applyMagicMissileWandStrike,
-	applyPlayerAttack,
-	applyWandStrike,
-	isAdjacent,
-} from "./combat.js";
+import { applyEnemyHit, applyPlayerAttack, isAdjacent } from "./combat.js";
 import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
 import type { EnemyKind } from "./events.js";
 import { buildArenaGameState } from "./initialState.js";
@@ -234,73 +227,6 @@ describe("applyPlayerAttack", () => {
 	});
 });
 
-describe("applyWandStrike", () => {
-	const state = buildArenaGameState(9, 9, 1);
-
-	it("deals a fixed WAND_STRIKE_DAMAGE regardless of playerAttackDamage and logs wand-struck", () => {
-		const target = zombie(5, 4, 10);
-		const boosted = { ...state, playerAttackDamage: 99, enemies: [target] };
-		const next = applyWandStrike(boosted, target);
-		expect(next.enemies).toEqual([zombie(5, 4, 10 - WAND_STRIKE_DAMAGE)]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
-			},
-		]);
-	});
-
-	it("removes a target whose hp reaches zero and logs the defeat", () => {
-		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
-		const bystander = zombie(7, 7);
-		const next = applyWandStrike(
-			{ ...state, enemies: [target, bystander] },
-			target,
-		);
-		expect(next.enemies).toEqual([bystander]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
-			},
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
-		]);
-	});
-
-	it("wakes a sleeping target and deals the same fixed damage", () => {
-		const target = zombie(5, 4, 10, false);
-		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.enemies).toEqual([zombie(5, 4, 10 - WAND_STRIKE_DAMAGE, true)]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: WAND_STRIKE_DAMAGE },
-			},
-		]);
-	});
-
-	it("does not move the player or touch the terrain", () => {
-		const target = zombie(5, 4);
-		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.player).toEqual(state.player);
-		expect(next.terrain).toBe(state.terrain);
-	});
-
-	it("a kill awards experience for the target's kind", () => {
-		const target = zombie(5, 4, WAND_STRIKE_DAMAGE);
-		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.playerExperience).toBe(
-			calculateEnemyExperienceReward("zombie", TEST_ENEMY_HP),
-		);
-	});
-
-	it("sets hasAttacked — the pacifist conduct is broken by a wand strike too", () => {
-		const target = zombie(5, 4);
-		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.hasAttacked).toBe(true);
-	});
-});
-
 describe("enemy gold drop", () => {
 	const state = {
 		...buildArenaGameState(9, 9, 1),
@@ -309,6 +235,13 @@ describe("enemy gold drop", () => {
 
 	/* the arena fixture is floor 1 */
 	const GOLD_AMOUNT_MAX = calculateGoldAmountMax(1);
+
+	/** A kill that consumes no rng of its own — so every seed of a spread is one. */
+	const killOutright = (from: typeof state, target: Enemy): typeof state =>
+		applyEnemyHit(from, target, target.hp, {
+			type: "enemy-hit",
+			payload: { target: target.kind, damage: target.hp },
+		});
 
 	it("drops one pile of gold's worth for the floor into goldCollected on a melee kill", () => {
 		const target = orc(5, 4, 1);
@@ -332,8 +265,7 @@ describe("enemy gold drop", () => {
 					playerLevel,
 					enemies: [target],
 				};
-				/* a wand strike never misses, so every seed is a kill */
-				const next = applyMagicMissileWandStrike(seeded, target);
+				const next = killOutright(seeded, target);
 				const dropped = next.goldCollected - seeded.goldCollected;
 				expect(next.events).toContainEqual({
 					type: "enemy-gold-drop",
@@ -360,7 +292,7 @@ describe("enemy gold drop", () => {
 	it("a thief killed above the deepest floor reached drops nothing", () => {
 		const target = thief(5, 4);
 		const climbing = { ...state, floor: 3, deepestFloor: 5, enemies: [target] };
-		const next = applyMagicMissileWandStrike(climbing, target);
+		const next = killOutright(climbing, target);
 		expect(next.enemies).toEqual([]);
 		expect(next.goldCollected).toBe(climbing.goldCollected);
 		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
@@ -373,15 +305,6 @@ describe("enemy gold drop", () => {
 		const climbing = { ...state, floor: 3, deepestFloor: 5, enemies: [target] };
 		const next = applyPlayerAttack(climbing, target);
 		expect(next.goldCollected).toBeGreaterThan(climbing.goldCollected);
-	});
-
-	it("also drops gold on a wand kill", () => {
-		const target = orc(5, 4, WAND_STRIKE_DAMAGE);
-		const next = applyWandStrike({ ...state, enemies: [target] }, target);
-		expect(next.goldCollected).toBeGreaterThan(state.goldCollected);
-		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
-			true,
-		);
 	});
 
 	it("is deterministic for a given rng state", () => {
@@ -404,44 +327,6 @@ describe("enemy gold drop", () => {
 		const target = orc(5, 4);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.goldCollected).toBe(state.goldCollected);
-	});
-});
-
-describe("applyMagicMissileWandStrike", () => {
-	const state = buildArenaGameState(9, 9, 1);
-
-	it("deals a fixed MAGIC_MISSILE_WAND_DAMAGE, higher than WAND_STRIKE_DAMAGE, and logs wand-struck", () => {
-		expect(MAGIC_MISSILE_WAND_DAMAGE).toBeGreaterThan(WAND_STRIKE_DAMAGE);
-		const target = zombie(5, 4, 10);
-		const next = applyMagicMissileWandStrike(
-			{ ...state, enemies: [target] },
-			target,
-		);
-		expect(next.enemies).toEqual([
-			zombie(5, 4, 10 - MAGIC_MISSILE_WAND_DAMAGE),
-		]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
-			},
-		]);
-	});
-
-	it("removes a target whose hp reaches zero and logs the defeat", () => {
-		const target = zombie(5, 4, MAGIC_MISSILE_WAND_DAMAGE);
-		const next = applyMagicMissileWandStrike(
-			{ ...state, enemies: [target] },
-			target,
-		);
-		expect(next.enemies).toEqual([]);
-		expect(next.events).toEqual([
-			{
-				type: "wand-struck",
-				payload: { target: "zombie", damage: MAGIC_MISSILE_WAND_DAMAGE },
-			},
-			{ type: "enemy-defeated", payload: { target: "zombie" } },
-		]);
 	});
 });
 

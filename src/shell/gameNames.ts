@@ -58,7 +58,6 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"sustenance-ring": "満腹の指輪",
 	"enchant-weapon": "武器強化の巻物",
 	"enchant-armor": "防具強化の巻物",
-	"striking-wand": "攻撃の杖",
 	confusion: "混乱の薬",
 	"slow-wand": "鈍足の杖",
 	levitation: "浮遊の薬",
@@ -76,7 +75,6 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	hallucination: "幻覚の薬",
 	"hold-monster-scroll": "束縛の巻物",
 	"aggravate-monster-ring": "警報の指輪",
-	"sleep-wand": "眠りの杖",
 };
 
 /**

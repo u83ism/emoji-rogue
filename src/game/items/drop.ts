@@ -40,10 +40,27 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 		case "sustenance-ring":
 		case "stealth-ring":
 		case "aggravate-monster-ring":
+		case "sustain-strength-ring":
+		case "adornment-ring":
+		case "teleportation-ring":
+		case "maintain-armor-ring":
 			return {
 				...position,
 				kind: item.kind,
 				identity: { itemId: item.itemId, cursed: item.cursed },
+			};
+		case "protection-ring":
+		case "add-strength-ring":
+		case "dexterity-ring":
+		case "increase-damage-ring":
+			return {
+				...position,
+				kind: item.kind,
+				identity: {
+					itemId: item.itemId,
+					cursed: item.cursed,
+					bonus: item.bonus,
+				},
 			};
 		case "slow-wand":
 		case "teleport-wand":

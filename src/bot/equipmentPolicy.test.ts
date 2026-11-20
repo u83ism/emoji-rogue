@@ -126,7 +126,7 @@ describe("decideRingToEquip", () => {
 		expect(decideRingToEquip(state, noDisabled)).toBe(2);
 	});
 
-	it("does not downgrade from sustenance to regeneration", () => {
+	it("puts a second ring on the free hand", () => {
 		const state = {
 			...baseState(),
 			inventory: [
@@ -134,15 +134,18 @@ describe("decideRingToEquip", () => {
 				ring(2, "regeneration-ring"),
 			],
 		};
-		expect(decideRingToEquip(state, noDisabled)).toBeUndefined();
+		expect(decideRingToEquip(state, noDisabled)).toBe(2);
 	});
 
-	it("only ever wears one ring at a time regardless of kind", () => {
+	it("stops at two rings, one per hand", () => {
 		const state = {
 			...baseState(),
-			inventory: [ring(1, "regeneration-ring", true), ring(2, "stealth-ring")],
+			inventory: [
+				ring(1, "regeneration-ring", true),
+				ring(2, "sustenance-ring", true),
+				ring(3, "stealth-ring"),
+			],
 		};
-		/* regeneration outranks stealth in RING_PREFERENCE_ORDER, so the already-worn one stays */
 		expect(decideRingToEquip(state, noDisabled)).toBeUndefined();
 	});
 });

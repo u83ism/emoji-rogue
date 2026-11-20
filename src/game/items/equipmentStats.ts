@@ -49,23 +49,58 @@ export const calculatePlayerDamageBonus = (state: GameState): number =>
 export const calculatePlayerStrengthBonus = (state: GameState): number =>
 	calculateStrengthDamageBonus(state.playerStrength);
 
-/** The to-hit bonus of the equipped weapon — what a found weapon's curse lowers and its enchantment raises. 0 unarmed. */
+/**
+ * The worn rings' values of `kind` — read here directly rather than
+ * through items/rings.ts, which builds on combat/strength.ts and so cannot
+ * be imported from this module.
+ */
+const sumRingBonus = (
+	inventory: readonly HeldItem[],
+	kind: "protection-ring" | "dexterity-ring" | "increase-damage-ring",
+): number =>
+	inventory.reduce(
+		(total, item) =>
+			item.kind === kind && item.equipped ? total + item.bonus : total,
+		0,
+	);
+
+/**
+ * The to-hit bonus of a melee swing: the equipped weapon's own — what a
+ * found weapon's curse lowers and its enchantment raises — plus worn
+ * dexterity rings, which original Rogue's roll_em() only adds to the
+ * wielded weapon (so 0 unarmed).
+ */
 export const calculatePlayerHitBonus = (
 	inventory: readonly HeldItem[],
-): number => findEquippedWeapon(inventory)?.hitBonus ?? 0;
+): number => {
+	const weapon = findEquippedWeapon(inventory);
+	return weapon === undefined
+		? 0
+		: weapon.hitBonus + sumRingBonus(inventory, "dexterity-ring");
+};
+
+/** What worn increase damage rings add to a melee hit — only with a weapon wielded, as roll_em(). */
+export const calculateRingMeleeDamageBonus = (
+	inventory: readonly HeldItem[],
+): number =>
+	findEquippedWeapon(inventory) === undefined
+		? 0
+		: sumRingBonus(inventory, "increase-damage-ring");
 
 /** One armor's own armor class: its kind's, lowered by its defenseBonus (raised by a cursed one's negative bonus or by rust). */
 export const calculateArmorClass = (armor: ArmorItem): number =>
 	ARMOR_STATS[armor.armorKind].armorClass - armor.defenseBonus;
 
-/** The player's armor class — the equipped armor's, or UNARMORED_ARMOR_CLASS with nothing worn. Lower is harder to hit (see combat/hitChance.ts). */
+/** The player's armor class — the equipped armor's, or UNARMORED_ARMOR_CLASS with nothing worn, lowered by worn protection rings. Lower is harder to hit (see combat/hitChance.ts). */
 export const calculatePlayerArmorClass = (
 	inventory: readonly HeldItem[],
 ): number => {
 	const equippedArmor = findEquippedArmor(inventory);
-	return equippedArmor === undefined
-		? UNARMORED_ARMOR_CLASS
-		: calculateArmorClass(equippedArmor);
+	const armorClass =
+		equippedArmor === undefined
+			? UNARMORED_ARMOR_CLASS
+			: calculateArmorClass(equippedArmor);
+	return armorClass - sumRingBonus(inventory, "protection-ring");
 };
 
 /** The player's defense as shown to the player: how far the armor class sits below UNARMORED_ARMOR_CLASS (0 with nothing worn, negative for armor cursed past useless). */

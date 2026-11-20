@@ -20,6 +20,7 @@ import { applyThrowItem } from "./throw.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
 import { applyRegenerationTick } from "./turnEnd/regeneration.js";
+import { applyTeleportationRingTick } from "./turnEnd/ringTeleport.js";
 import { applyStatusCountdownTicks } from "./turnEnd/statusCountdowns.js";
 import { applyWandererTick } from "./turnEnd/wanderer.js";
 import { deriveExploredState } from "./vision.js";
@@ -135,9 +136,13 @@ const applyFloorTurnCounterTick = (state: GameState): GameState =>
  * a no-op unless its own field/condition is active.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
-	applyFloorTurnCounterTick(
-		applyWandererTick(
-			applyStatusCountdownTicks(applyRegenerationTick(applyHungerTick(state))),
+	applyTeleportationRingTick(
+		applyFloorTurnCounterTick(
+			applyWandererTick(
+				applyStatusCountdownTicks(
+					applyRegenerationTick(applyHungerTick(state)),
+				),
+			),
 		),
 	);
 

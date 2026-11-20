@@ -58,9 +58,34 @@ const FLAT_WORTH: Readonly<
 	"sustenance-ring": 240,
 	"stealth-ring": 470,
 	"aggravate-monster-ring": 10,
+	"protection-ring": 400,
+	"add-strength-ring": 400,
+	"sustain-strength-ring": 280,
+	"adornment-ring": 10,
+	"dexterity-ring": 440,
+	"increase-damage-ring": 400,
+	"teleportation-ring": 30,
+	"maintain-armor-ring": 380,
 	"slow-wand": 350,
 	"teleport-wand": 340,
 	"magic-missile-wand": 170,
+};
+
+/**
+ * A non-weapon, non-armor item's worth before the unidentified halving:
+ * its kind's, plus 20 per charge left on a wand; a ring with a value adds
+ * 100 per point, or is worth just 10 at a value of 0 or less (rip.c).
+ */
+const calculateFlatWorth = (
+	item: Exclude<HeldItem, { kind: "weapon" | "armor" }>,
+): number => {
+	if ("charges" in item) {
+		return FLAT_WORTH[item.kind] + 20 * item.charges;
+	}
+	if ("bonus" in item) {
+		return item.bonus > 0 ? FLAT_WORTH[item.kind] + item.bonus * 100 : 10;
+	}
+	return FLAT_WORTH[item.kind];
 };
 
 /** What the Amulet of Yendor sells for at the end of a won run. */
@@ -92,8 +117,7 @@ export const calculateItemWorth = (
 					10 * item.defenseBonus,
 			);
 		default: {
-			const worth =
-				FLAT_WORTH[item.kind] + ("charges" in item ? 20 * item.charges : 0);
+			const worth = calculateFlatWorth(item);
 			const unidentified =
 				IDENTIFIABLE_ITEM_KINDS.includes(item.kind) &&
 				!identifiedItemKinds.includes(item.kind);

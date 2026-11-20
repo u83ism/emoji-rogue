@@ -66,17 +66,62 @@ export const ITEM_KIND_VALUES = [
 	"hallucination",
 	"hold-monster-scroll",
 	"aggravate-monster-ring",
+	"protection-ring",
+	"add-strength-ring",
+	"sustain-strength-ring",
+	"adornment-ring",
+	"dexterity-ring",
+	"increase-damage-ring",
+	"teleportation-ring",
+	"maintain-armor-ring",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
 
-const EQUIPMENT_ITEM_KIND_VALUES = [
-	"weapon",
-	"armor",
+/** The rings — any two can be worn at once, one per hand (see items/rings.ts). */
+export const RING_KINDS = [
 	"regeneration-ring",
 	"sustenance-ring",
 	"stealth-ring",
 	"aggravate-monster-ring",
+	"protection-ring",
+	"add-strength-ring",
+	"sustain-strength-ring",
+	"adornment-ring",
+	"dexterity-ring",
+	"increase-damage-ring",
+	"teleportation-ring",
+	"maintain-armor-ring",
+] as const satisfies readonly ItemKind[];
+
+export type RingKind = (typeof RING_KINDS)[number];
+
+const RING_KIND_LIST: readonly ItemKind[] = RING_KINDS;
+
+/** Type guard: narrows an ItemKind to RingKind. */
+export const isRingKind = (kind: ItemKind): kind is RingKind =>
+	RING_KIND_LIST.includes(kind);
+
+/** The rings that carry a value (original Rogue's o_arm on R_PROTECT/R_ADDSTR/R_ADDHIT/R_ADDDAM): +1 or +2, or -1 and cursed. */
+export const VALUED_RING_KINDS = [
+	"protection-ring",
+	"add-strength-ring",
+	"dexterity-ring",
+	"increase-damage-ring",
+] as const satisfies readonly RingKind[];
+
+export type ValuedRingKind = (typeof VALUED_RING_KINDS)[number];
+
+const VALUED_RING_KIND_LIST: readonly ItemKind[] = VALUED_RING_KINDS;
+
+/** Type guard: narrows an ItemKind to ValuedRingKind. */
+export const isValuedRingKind = (kind: ItemKind): kind is ValuedRingKind =>
+	VALUED_RING_KIND_LIST.includes(kind);
+
+const EQUIPMENT_ITEM_KIND_VALUES = [
+	"weapon",
+	"armor",
+	...RING_KINDS,
 ] as const satisfies readonly ItemKind[];
 
 /** The equippable subset of ItemKind — held as a HeldItem with equip/curse state (see GameState.inventory). */
@@ -176,14 +221,6 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
  */
 export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
 
-/** The ring subset of ItemKind — only one is worn at a time (see items/rings.ts). */
-export const RING_KINDS = [
-	"regeneration-ring",
-	"sustenance-ring",
-	"stealth-ring",
-	"aggravate-monster-ring",
-] as const satisfies readonly ItemKind[];
-
 /**
  * Kinds whose real name stays hidden behind a shared generic one (未鑑定の薬,
  * 指輪, 杖) until identified — see GameState.identifiedItemKinds. Scrolls,
@@ -219,7 +256,10 @@ export type DeathCause = EnemyKind | "hunger" | "trap" | "hypothermia";
  * See the i18n discipline in docs/tasks/game.md.
  */
 /** What relocated the player in a player-teleported event. */
-export type TeleportSource = "teleport-scroll" | "teleport-trap";
+export type TeleportSource =
+	| "teleport-scroll"
+	| "teleport-trap"
+	| "teleportation-ring";
 
 export type GameEvent =
 	| {
@@ -351,6 +391,11 @@ export type GameEvent =
 	| {
 			readonly type: "potion-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** Putting on a ring with one already on each hand — refused (original Rogue's ring_on()). */
+			readonly type: "ring-hands-full";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** A wand zapped with no charges left — nothing happens, the turn passes (original Rogue's do_zap()). */

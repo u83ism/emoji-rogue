@@ -11,6 +11,7 @@ import { drawGoldAmount } from "../floor/rooms.js";
 import {
 	calculatePlayerDamageBonus,
 	calculatePlayerDamageDice,
+	calculateRingMeleeDamageBonus,
 } from "../items/equipmentStats.js";
 import type { Enemy, GameState, Position } from "../state.js";
 import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
@@ -111,13 +112,15 @@ export const applyEnemyHit = (
 /**
  * Rolls the player's damage as original Rogue does: the weapon's dice (bare
  * hands otherwise) plus calculatePlayerDamageBonus (the strength bonus and
- * the equipped weapon's own damageBonus), never below 0.
+ * the equipped weapon's own damageBonus) and worn increase damage rings
+ * (with a weapon only), never below 0.
  */
 const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
 	rollDamageDice(
 		rng,
 		calculatePlayerDamageDice(state.inventory),
-		calculatePlayerDamageBonus(state),
+		calculatePlayerDamageBonus(state) +
+			calculateRingMeleeDamageBonus(state.inventory),
 		0,
 	);
 

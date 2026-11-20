@@ -4,9 +4,8 @@ import {
 	FAINT_TURNS_MIN,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_WEAK_THRESHOLD,
-	REGENERATION_RING_FOOD_COST,
+	RING_FOOD_USE,
 	STARVATION_TURNS,
-	STEALTH_RING_FOOD_COST,
 } from "../balance.js";
 import type { ItemKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
@@ -63,6 +62,27 @@ describe("applyHungerTick", () => {
 		expect(applyHungerTick(steady).playerRunFlag).toBe(true);
 	});
 
+	it("carrying the amulet takes the base 1 food away (original Rogue's `+ 1 - amulet`)", () => {
+		const carrying = { ...buildState(1000), hasAmulet: true };
+		expect(applyHungerTick(carrying).playerFood).toBe(1000);
+		const ringed = {
+			...carrying,
+			inventory: [equippedRing("regeneration-ring")],
+		};
+		expect(applyHungerTick(ringed).playerFood).toBe(1000 - 2);
+	});
+
+	it("two worn rings each use their own food", () => {
+		const state = {
+			...buildState(1000),
+			inventory: [
+				equippedRing("regeneration-ring"),
+				{ ...equippedRing("stealth-ring"), itemId: 2 },
+			],
+		};
+		expect(applyHungerTick(state).playerFood).toBe(1000 - 1 - 2 - 1);
+	});
+
 	it("fires player-hungry exactly once, the turn food crosses the warning threshold", () => {
 		const state = buildState(PLAYER_HUNGER_WARNING_THRESHOLD + 1);
 		const next = applyHungerTick(state);
@@ -83,14 +103,14 @@ describe("applyHungerTick", () => {
 			inventory: [equippedRing("regeneration-ring")],
 		};
 		expect(applyHungerTick(regenerating).playerFood).toBe(
-			1000 - 1 - REGENERATION_RING_FOOD_COST,
+			1000 - 1 - RING_FOOD_USE["regeneration-ring"],
 		);
 		const sneaking = {
 			...buildState(1000),
 			inventory: [equippedRing("stealth-ring")],
 		};
 		expect(applyHungerTick(sneaking).playerFood).toBe(
-			1000 - 1 - STEALTH_RING_FOOD_COST,
+			1000 - 1 - RING_FOOD_USE["stealth-ring"],
 		);
 	});
 

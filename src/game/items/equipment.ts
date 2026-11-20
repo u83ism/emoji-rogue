@@ -28,8 +28,8 @@ export interface ArmorRust {
 /**
  * One rust attempt (an aquator's landed hit, a rust trap), as original
  * Rogue's rust_armor(): no armor, leather, or armor already rusted down to
- * RUST_ARMOR_CLASS_LIMIT is silently unaffected; protected armor blocks the
- * rust and logs armor-rust-blocked ("the rust vanishes instantly");
+ * RUST_ARMOR_CLASS_LIMIT is silently unaffected; protected armor or a worn
+ * ring of maintain armor blocks the rust and logs armor-rust-blocked ("the rust vanishes instantly");
  * otherwise the armor loses a point (defenseBonus - 1) and armor-rusted is
  * logged.
  */
@@ -42,7 +42,12 @@ export const resolveArmorRust = (inventory: readonly HeldItem[]): ArmorRust => {
 	) {
 		return { inventory, event: undefined };
 	}
-	if (equippedArmor.rustProtected) {
+	if (
+		equippedArmor.rustProtected ||
+		inventory.some(
+			(item) => item.kind === "maintain-armor-ring" && item.equipped,
+		)
+	) {
 		return { inventory, event: { type: "armor-rust-blocked", payload: {} } };
 	}
 	return {

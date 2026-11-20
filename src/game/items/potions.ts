@@ -10,7 +10,10 @@ import {
 } from "../balance.js";
 import { rollDamageDice } from "../combat/damage.js";
 import { applyLevelUp } from "../combat/experience.js";
-import { applyStrengthChange } from "../combat/strength.js";
+import {
+	applyStrengthChange,
+	isStrengthSustained,
+} from "../combat/strength.js";
 import { buildEventLog, type PotionKind } from "../events.js";
 import type { GameState } from "../state.js";
 
@@ -58,7 +61,11 @@ export const applyUsePotion = (
 				0,
 				0,
 			);
-			const weakened = applyStrengthChange(state, -lossRoll.damage);
+			/* a ring of sustain strength keeps it all ("you feel momentarily sick") */
+			const sustained = isStrengthSustained(state.inventory);
+			const weakened = sustained
+				? state
+				: applyStrengthChange(state, -lossRoll.damage);
 			return {
 				...weakened,
 				hallucinatingTurnsRemaining: 0,

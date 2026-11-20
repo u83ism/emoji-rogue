@@ -1,7 +1,7 @@
 import type { RngState } from "../../rng.js";
 import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
-import { resolvePoisonDrain } from "../combat/strength.js";
+import { isStrengthSustained, resolvePoisonDrain } from "../combat/strength.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import { resolveArmorRust } from "../items/equipment.js";
 import type { Enemy, HeldItem } from "../state.js";
@@ -83,6 +83,7 @@ const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
 			hit.target.playerStrength,
 			hit.target.playerLevel,
 			hit.target.rng,
+			isStrengthSustained(hit.target.inventory),
 		);
 		return withEvent(
 			{

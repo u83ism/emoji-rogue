@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { PLAYER_MAX_HP } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
+import { calculatePlayerArmorClass } from "./equipmentStats.js";
 import { applyToggleRingEquip, hasEquippedRing } from "./rings.js";
 
 describe("items/rings", () => {
@@ -95,7 +96,7 @@ describe("items/rings", () => {
 		]);
 	});
 
-	it("equipping a ring unequips whichever other ring (any kind) was equipped before — only one ring slot total", () => {
+	it("a second ring goes on the other hand, keeping the first on", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
@@ -121,7 +122,7 @@ describe("items/rings", () => {
 			{
 				itemId: 1,
 				kind: "regeneration-ring",
-				equipped: false,
+				equipped: true,
 				cursed: false,
 			},
 			{
@@ -131,6 +132,63 @@ describe("items/rings", () => {
 				cursed: false,
 			},
 		]);
+	});
+
+	it("a third ring is refused while both hands are taken", () => {
+		const ringOf = (
+			itemId: number,
+			kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring",
+			equipped: boolean,
+		) => ({ itemId, kind, equipped, cursed: false });
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				ringOf(1, "regeneration-ring", true),
+				ringOf(2, "sustenance-ring", true),
+				ringOf(3, "stealth-ring", false),
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 3 },
+		});
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.events[0]).toEqual({ type: "ring-hands-full", payload: {} });
+	});
+
+	it("an add strength ring adds its value on and takes it back off, leaving the maximum on the base strength", () => {
+		const ring = {
+			itemId: 1,
+			kind: "add-strength-ring" as const,
+			equipped: false,
+			cursed: false,
+			bonus: 2,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerStrength: 14,
+			playerMaxStrength: 16,
+			inventory: [ring],
+		};
+		const on = advanceTurn(state, { type: "use-item", payload: { itemId: 1 } });
+		expect(on.playerStrength).toBe(16);
+		expect(on.playerMaxStrength).toBe(16);
+		const off = advanceTurn(on, { type: "use-item", payload: { itemId: 1 } });
+		expect(off.playerStrength).toBe(14);
+	});
+
+	it("a protection ring lowers the armor class, and two add up", () => {
+		const protection = (itemId: number, bonus: number) => ({
+			itemId,
+			kind: "protection-ring" as const,
+			equipped: true,
+			cursed: false,
+			bonus,
+		});
+		expect(calculatePlayerArmorClass([protection(1, 2)])).toBe(8);
+		expect(
+			calculatePlayerArmorClass([protection(1, 2), protection(2, 1)]),
+		).toBe(7);
 	});
 
 	it("equipping a held stealth ring flips its equipped flag and logs ring-equipped", () => {

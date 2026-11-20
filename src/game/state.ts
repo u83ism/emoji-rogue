@@ -6,7 +6,9 @@ import type {
 	EquipmentItemKind,
 	GameEvent,
 	ItemKind,
+	RingKind,
 	TrapKind,
+	ValuedRingKind,
 	WandKind,
 	WeaponKind,
 } from "./events.js";
@@ -108,17 +110,12 @@ type ArmorIdentity = Omit<
 	Extract<HeldItem, { kind: "armor" }>,
 	"kind" | "equipped"
 >;
-type RingIdentity = Omit<
-	Extract<
-		HeldItem,
-		{
-			kind:
-				| "regeneration-ring"
-				| "sustenance-ring"
-				| "stealth-ring"
-				| "aggravate-monster-ring";
-		}
-	>,
+type PlainRingIdentity = Omit<
+	Extract<HeldItem, { kind: Exclude<RingKind, ValuedRingKind> }>,
+	"kind" | "equipped"
+>;
+type ValuedRingIdentity = Omit<
+	Extract<HeldItem, { kind: ValuedRingKind }>,
 	"kind" | "equipped"
 >;
 
@@ -145,13 +142,10 @@ export type Item = Position &
 		| { readonly kind: "weapon"; readonly identity: WeaponIdentity }
 		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
 		| {
-				readonly kind:
-					| "regeneration-ring"
-					| "sustenance-ring"
-					| "stealth-ring"
-					| "aggravate-monster-ring";
-				readonly identity: RingIdentity;
+				readonly kind: Exclude<RingKind, ValuedRingKind>;
+				readonly identity: PlainRingIdentity;
 		  }
+		| { readonly kind: ValuedRingKind; readonly identity: ValuedRingIdentity }
 	);
 
 /**
@@ -208,13 +202,17 @@ export type HeldItem =
 	  }
 	| {
 			readonly itemId: number;
-			readonly kind:
-				| "regeneration-ring"
-				| "sustenance-ring"
-				| "stealth-ring"
-				| "aggravate-monster-ring";
+			readonly kind: Exclude<RingKind, ValuedRingKind>;
 			readonly equipped: boolean;
 			readonly cursed: boolean;
+	  }
+	| {
+			readonly itemId: number;
+			readonly kind: ValuedRingKind;
+			readonly equipped: boolean;
+			readonly cursed: boolean;
+			/** The ring's value (original Rogue's o_arm): +1 or +2, or -1 on a cursed one — what it adds to armor class, strength, to-hit or damage. */
+			readonly bonus: number;
 	  };
 
 /**

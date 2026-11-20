@@ -7,7 +7,7 @@ import {
 } from "./balance.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateDartTrapHitChancePercent } from "./combat/hitChance.js";
-import { resolvePoisonDrain } from "./combat/strength.js";
+import { isStrengthSustained, resolvePoisonDrain } from "./combat/strength.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
 import { resolveArmorRust } from "./items/equipment.js";
@@ -79,6 +79,7 @@ const applyDartPoison = (state: GameState): GameState => {
 		state.playerStrength,
 		state.playerLevel,
 		state.rng,
+		isStrengthSustained(state.inventory),
 	);
 	return {
 		...state,

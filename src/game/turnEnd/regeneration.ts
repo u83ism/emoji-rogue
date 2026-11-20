@@ -5,7 +5,7 @@ import {
 	NATURAL_HEALING_SLOW_THRESHOLD,
 	RING_REGEN_AMOUNT,
 } from "../balance.js";
-import { hasEquippedRing } from "../items/rings.js";
+import { findWornRings } from "../items/rings.js";
 import type { GameState } from "../state.js";
 
 /**
@@ -16,8 +16,8 @@ import type { GameState } from "../state.js";
  * quietTurns + 2 x level exceeds NATURAL_HEALING_SLOW_THRESHOLD (every 19
  * turns at level 1, every 7 at level 7); from that level on, every
  * NATURAL_HEALING_FAST_INTERVAL quiet turns heal 1..(level - 7) HP, rolled
- * on state.rng. A ring of regeneration adds RING_REGEN_AMOUNT every turn on
- * top. Any healing resets quietTurns — so with the ring on, a low-level
+ * on state.rng. Each worn ring of regeneration adds RING_REGEN_AMOUNT every
+ * turn on top. Any healing resets quietTurns — so with the ring on, a low-level
  * player heals by the ring alone, exactly as in the original. Silent: no
  * event, the HP readout is the feedback. A no-op once the run is no longer
  * playing, for the same reason applyHungerTick is.
@@ -27,9 +27,10 @@ export const applyRegenerationTick = (state: GameState): GameState => {
 		return state;
 	}
 	const quietTurns = state.quietTurns + 1;
-	const ringHealing = hasEquippedRing(state.inventory, "regeneration-ring")
-		? RING_REGEN_AMOUNT
-		: 0;
+	const ringHealing =
+		findWornRings(state.inventory).filter(
+			(ring) => ring.kind === "regeneration-ring",
+		).length * RING_REGEN_AMOUNT;
 
 	if (state.playerLevel < NATURAL_HEALING_FAST_LEVEL) {
 		const naturalHealing =

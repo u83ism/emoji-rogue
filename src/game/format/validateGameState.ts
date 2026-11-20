@@ -12,6 +12,7 @@ import {
 	ITEM_KIND_VALUES,
 	type ItemKind,
 	isEquipmentItemKind,
+	isValuedRingKind,
 	isWandKind,
 	TRAP_KIND_VALUES,
 	type TrapKind,
@@ -143,6 +144,9 @@ const hasEquipmentStats = (
 			isInteger(value.defenseBonus) &&
 			isBooleanValue(value.rustProtected)
 		);
+	}
+	if (isValuedRingKind(kind)) {
+		return isInteger(value.bonus);
 	}
 	return true;
 };
@@ -299,7 +303,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isNonNegativeInteger(payload.x) &&
 		isNonNegativeInteger(payload.y) &&
 		(payload.source === "teleport-scroll" ||
-			payload.source === "teleport-trap"),
+			payload.source === "teleport-trap" ||
+			payload.source === "teleportation-ring"),
 	"floor-mapped": emptyPayload,
 	"potion-identified": (payload) => isItemKind(payload.kind),
 	"player-strengthened": (payload) =>
@@ -315,6 +320,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			payload.reason === "magically-blocked"),
 	"scroll-wasted": (payload) => isItemKind(payload.kind),
 	"wand-empty": (payload) => isItemKind(payload.kind),
+	"ring-hands-full": emptyPayload,
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&
@@ -662,6 +668,19 @@ export const validateGameState = (
 				case "sustenance-ring":
 				case "stealth-ring":
 				case "aggravate-monster-ring":
+				case "sustain-strength-ring":
+				case "adornment-ring":
+				case "teleportation-ring":
+				case "maintain-armor-ring":
+					return {
+						...position,
+						kind: item.kind,
+						identity: item.identity,
+					};
+				case "protection-ring":
+				case "add-strength-ring":
+				case "dexterity-ring":
+				case "increase-damage-ring":
 					return {
 						...position,
 						kind: item.kind,

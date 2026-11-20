@@ -7,7 +7,7 @@
 // milestone 15) stays dormant, unrelated to the dice below.
 
 import type { DamageDice } from "./combat/damage.js";
-import type { TrapKind } from "./events.js";
+import type { RingKind, TrapKind } from "./events.js";
 
 /** Original Rogue's starting hit points (INIT_STATS). */
 export const PLAYER_MAX_HP = 12;
@@ -263,9 +263,6 @@ export const FAINT_TURNS_MAX = 11;
 /** What one food ration adds to playerFood — original Rogue's `HUNGERTIME - 200 + rnd(400)`. */
 export const FOOD_RATION_RESTORE_MIN = 1100;
 export const FOOD_RATION_RESTORE_MAX = 1499;
-/** Extra food a worn ring burns per turn on top of the usual 1 — original Rogue's ring_eat(). */
-export const REGENERATION_RING_FOOD_COST = 2;
-export const STEALTH_RING_FOOD_COST = 1;
 /**
  * The food supply (see floor/food.ts): original Rogue makes MAXOBJ = 9 item
  * rolls per floor, each producing an item 36% of the time, 16% of which are
@@ -360,14 +357,6 @@ export const NATURAL_HEALING_FAST_INTERVAL = 3;
 
 /** Chance (out of 100), independently rolled per floor, that a ring of sustenance spawns. */
 export const SUSTENANCE_RING_SPAWN_CHANCE_PERCENT = 8;
-/**
- * Chance (out of 100), rolled independently every turn a ring of sustenance
- * is equipped, that the turn costs no food — original Rogue's slow
- * digestion ring, same "roll every eligible turn" idiom as
- * WAKE_CHANCE_PERCENT. It does not slow starvation once the stomach is
- * empty.
- */
-export const SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT = 50;
 
 /** Chance (out of 100), independently rolled per floor, that a ring of stealth spawns. */
 export const STEALTH_RING_SPAWN_CHANCE_PERCENT = 8;
@@ -379,6 +368,31 @@ export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
 
 /** Chance (out of 100), independently rolled per floor, that a ring of aggravate monster spawns — the first ring with a downside rather than a benefit. */
 export const AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT = 8;
+/** Chance (out of 100), independently rolled per floor, that each of the rings added in milestone 119 spawns — a stopgap until the original's per-category item draw replaces the per-kind rolls. */
+export const OTHER_RING_SPAWN_CHANCE_PERCENT = 8;
+
+/**
+ * Food a worn ring uses each turn, original Rogue's ring_eat() table: a
+ * positive number is that much every turn, a negative -N is one food with a
+ * 1-in-N chance. Slow digestion (the sustenance ring) instead saves the
+ * turn's food half the time — see turnEnd/hunger.ts.
+ */
+export const RING_FOOD_USE: Readonly<Record<RingKind, number>> = {
+	"protection-ring": 1,
+	"add-strength-ring": 1,
+	"sustain-strength-ring": 1,
+	"adornment-ring": 0,
+	"aggravate-monster-ring": 0,
+	"dexterity-ring": -3,
+	"increase-damage-ring": -3,
+	"regeneration-ring": 2,
+	"sustenance-ring": -2,
+	"teleportation-ring": 0,
+	"stealth-ring": 1,
+	"maintain-armor-ring": 1,
+};
+/** A worn teleportation ring jumps the player somewhere at random with a 1-in-this chance each turn (original Rogue's command(): `rnd(50) == 0`). */
+export const TELEPORTATION_RING_CHANCE_DENOMINATOR = 50;
 
 /**
  * Permanent boost per scroll read to a targeted weapon's hitBonus or

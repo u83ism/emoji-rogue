@@ -14,6 +14,7 @@ import {
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 	MAPPING_SCROLL_SPAWN_CHANCE_PERCENT,
+	OTHER_RING_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
@@ -113,6 +114,27 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 	{
 		kind: "aggravate-monster-ring",
 		chancePercent: AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
+	},
+	/* The rings of milestone 119 — a stopgap per-kind roll until the original's per-category draw. */
+	{ kind: "protection-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
+	{ kind: "add-strength-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "sustain-strength-ring",
+		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{ kind: "adornment-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
+	{ kind: "dexterity-ring", chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT },
+	{
+		kind: "increase-damage-ring",
+		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "teleportation-ring",
+		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
+	},
+	{
+		kind: "maintain-armor-ring",
+		chancePercent: OTHER_RING_SPAWN_CHANCE_PERCENT,
 	},
 ];
 

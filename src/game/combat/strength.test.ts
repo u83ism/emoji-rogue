@@ -64,19 +64,26 @@ describe("resolvePoisonDrain", () => {
 	const rng = seedToState(1);
 
 	it("a passed save (level high enough to always pass) takes nothing", () => {
-		const drain = resolvePoisonDrain(16, 30, rng);
+		const drain = resolvePoisonDrain(16, 30, rng, false);
 		expect(drain.playerStrength).toBe(16);
 		expect(drain.strengthLost).toBe(0);
 		expect(drain.rng).not.toEqual(rng);
 	});
 
 	it("a failed save (level so low it never passes) takes one point, never below 3", () => {
-		expect(resolvePoisonDrain(16, -30, rng)).toMatchObject({
+		expect(resolvePoisonDrain(16, -30, rng, false)).toMatchObject({
 			playerStrength: 15,
 			strengthLost: 1,
 		});
-		expect(resolvePoisonDrain(3, -30, rng)).toMatchObject({
+		expect(resolvePoisonDrain(3, -30, rng, false)).toMatchObject({
 			playerStrength: 3,
+			strengthLost: 0,
+		});
+	});
+
+	it("a ring of sustain strength keeps it even through a failed save", () => {
+		expect(resolvePoisonDrain(16, -30, rng, true)).toMatchObject({
+			playerStrength: 16,
 			strengthLost: 0,
 		});
 	});

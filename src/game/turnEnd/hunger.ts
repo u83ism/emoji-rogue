@@ -5,13 +5,11 @@ import {
 	FAINT_TURNS_MIN,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_WEAK_THRESHOLD,
-	REGENERATION_RING_FOOD_COST,
+	RING_FOOD_USE,
 	STARVATION_TURNS,
-	STEALTH_RING_FOOD_COST,
-	SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT,
 } from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
-import { hasEquippedRing } from "../items/rings.js";
+import { findWornRings } from "../items/rings.js";
 import type { GameState } from "../state.js";
 
 /**
@@ -57,9 +55,9 @@ const applyStarvationTurn = (state: GameState): GameState => {
 
 /**
  * One hunger tick, original Rogue's stomach() daemon: playerFood drops by 1
- * plus whatever the worn ring burns (a ring of regeneration
- * REGENERATION_RING_FOOD_COST more, a ring of stealth
- * STEALTH_RING_FOOD_COST more), with a one-time player-hungry warning the
+ * (0 while carrying the amulet) plus what each worn ring uses
+ * (RING_FOOD_USE — a slow digestion ring saves the 1 half the time), with
+ * a one-time player-hungry warning the
  * turn it crosses PLAYER_HUNGER_WARNING_THRESHOLD going down and a one-time
  * player-weak warning at PLAYER_WEAK_THRESHOLD (which also weakens the
  * player's damage for as long as playerFood stays at or below it — no
@@ -69,10 +67,8 @@ const applyStarvationTurn = (state: GameState): GameState => {
  * action, so a death from an enemy this same turn must not also take a
  * hunger tick.
  *
- * A ring of sustenance has a SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT chance,
- * rolled on state.rng every turn it is worn, of saving the turn's 1 food.
- * Without that ring an ordinary (not starving) tick never touches
- * state.rng.
+ * Only a ring with a chance in RING_FOOD_USE rolls state.rng; without one
+ * an ordinary (not starving) tick never touches it.
  */
 export const applyHungerTick = (state: GameState): GameState => {
 	if (state.status !== "playing") {
@@ -82,19 +78,20 @@ export const applyHungerTick = (state: GameState): GameState => {
 		return applyStarvationTurn(state);
 	}
 
-	let rngState = state.rng;
-	let cost = 1;
-	if (hasEquippedRing(state.inventory, "sustenance-ring")) {
-		const rng = createRng(1).setState(state.rng);
-		if (rng.getUniformInt(0, 99) < SUSTENANCE_HUNGER_SKIP_CHANCE_PERCENT) {
-			cost = 0;
+	const rng = createRng(1).setState(state.rng);
+	let rolled = false;
+	/* original Rogue's stomach(): ring_eat(LEFT) + ring_eat(RIGHT) + 1 - amulet */
+	let cost = state.hasAmulet ? 0 : 1;
+	for (const ring of findWornRings(state.inventory)) {
+		const use = RING_FOOD_USE[ring.kind];
+		let eat = use;
+		if (use < 0) {
+			eat = rng.getUniformInt(0, -use - 1) === 0 ? 1 : 0;
+			rolled = true;
 		}
-		rngState = rng.getState();
-	} else if (hasEquippedRing(state.inventory, "regeneration-ring")) {
-		cost += REGENERATION_RING_FOOD_COST;
-	} else if (hasEquippedRing(state.inventory, "stealth-ring")) {
-		cost += STEALTH_RING_FOOD_COST;
+		cost += ring.kind === "sustenance-ring" ? -eat : eat;
 	}
+	const rngState = rolled ? rng.getState() : state.rng;
 
 	const playerFood = state.playerFood - cost;
 	const events: GameEvent[] = [];

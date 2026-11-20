@@ -315,6 +315,29 @@ describe("items/equipment", () => {
 		).toBe(true);
 	});
 
+	it("a worn ring of maintain armor blocks rust like protected armor does", () => {
+		const inventory = [
+			{
+				itemId: 1,
+				kind: "armor" as const,
+				equipped: true,
+				cursed: false,
+				armorKind: "ring-mail" as const,
+				defenseBonus: 2,
+				rustProtected: false,
+			},
+			{
+				itemId: 9,
+				kind: "maintain-armor-ring" as const,
+				equipped: true,
+				cursed: false,
+			},
+		];
+		const rust = resolveArmorRust(inventory);
+		expect(rust.inventory).toBe(inventory);
+		expect(rust.event).toEqual({ type: "armor-rust-blocked", payload: {} });
+	});
+
 	it("rust worsens the armor by 1 per hit, as in original Rogue: never past armor class 9, and never leather", () => {
 		const armorWith = (defenseBonus: number) => [
 			{

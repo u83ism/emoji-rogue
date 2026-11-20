@@ -3,7 +3,7 @@ import { at } from "../../indexing.js";
 import { createRng } from "../../rng.js";
 import { advanceTurn } from "../advanceTurn.js";
 import { INVENTORY_CAPACITY } from "../balance.js";
-import { ITEM_KIND_VALUES } from "../events.js";
+import { ITEM_KIND_VALUES, isRingKind, isValuedRingKind } from "../events.js";
 import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
 import type { Action, Direction, HeldItem } from "../state.js";
 import { buildFloorItem } from "./heldItemFactory.js";
@@ -45,12 +45,10 @@ const buildFullInventory = (): readonly HeldItem[] =>
 				rustProtected: false,
 			};
 		}
-		if (
-			kind === "regeneration-ring" ||
-			kind === "sustenance-ring" ||
-			kind === "stealth-ring" ||
-			kind === "aggravate-monster-ring"
-		) {
+		if (isValuedRingKind(kind)) {
+			return { itemId, kind, equipped: false, cursed: false, bonus: 1 };
+		}
+		if (isRingKind(kind)) {
 			return { itemId, kind, equipped: false, cursed: false };
 		}
 		if (

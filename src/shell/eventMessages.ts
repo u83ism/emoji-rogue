@@ -4,10 +4,27 @@ import {
 	EQUIPMENT_NAMES,
 	formatDeathMessage,
 	resolveItemDisplayName,
-	STAIRS_REFUSAL_MESSAGES,
 	TRAP_NAMES,
 } from "./gameNames.js";
 import { formatItemUseEvent } from "./itemEventMessages.js";
+
+/** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
+const STAIRS_REFUSAL_MESSAGES: Readonly<
+	Record<
+		"no-stairs" | "levitating" | "magically-blocked",
+		Readonly<Record<"down" | "up", string>>
+	>
+> = {
+	"no-stairs": { down: "ここに下りる階段はない", up: "ここに上る階段はない" },
+	levitating: {
+		down: "浮いているので階段を使えない",
+		up: "浮いているので階段を使えない",
+	},
+	"magically-blocked": {
+		down: "魔法の力で行く手をはばまれている",
+		up: "魔法の力で行く手をはばまれている(アミュレットが無いと上れない)",
+	},
+};
 
 /**
  * The single place where game events become human-readable text (Japanese
@@ -40,6 +57,7 @@ export const formatEvent = (
 		case "item-unequipped":
 		case "equip-blocked-cursed":
 		case "curse-revealed":
+		case "ring-hands-full":
 		case "wand-empty":
 		case "scroll-wasted":
 		case "items-decursed":
@@ -91,7 +109,7 @@ export const formatEvent = (
 			/* The trap already logged "テレポートの罠を踏んでしまった!" just before. */
 			return event.payload.source === "teleport-scroll"
 				? "巻物を読んだ。テレポートした!"
-				: "テレポートした!";
+				: "テレポートした!"; /* a trap logs itself first; the ring's jump is just this */
 		case "gold-stolen":
 			return event.payload.amount > 0
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`

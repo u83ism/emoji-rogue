@@ -74,23 +74,15 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	hallucination: "幻覚の薬",
 	"hold-monster-scroll": "束縛の巻物",
 	"aggravate-monster-ring": "警報の指輪",
+	"protection-ring": "守りの指輪",
+	"add-strength-ring": "怪力の指輪",
+	"sustain-strength-ring": "持続の指輪",
+	"adornment-ring": "飾りの指輪",
+	"dexterity-ring": "器用さの指輪",
+	"increase-damage-ring": "ダメージの指輪",
+	"teleportation-ring": "テレポートの指輪",
+	"maintain-armor-ring": "鎧の維持の指輪",
 };
-
-/**
- * The flavor text for messages.ts's ring-equipped case, one entry per ring
- * kind. A lookup table rather than an if-chain (converted here at the 4th
- * ring — functional-style.md's if-chain limit is 3 branches): the payload's
- * `kind` is the wider ItemKind, so this is a Partial map, not a total one —
- * messages.ts treats a missing entry as unreachable (ring-equipped never
- * fires for a non-ring kind).
- */
-export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
-	{
-		"regeneration-ring": "じわじわとHPが回復するようになった!",
-		"sustenance-ring": "空腹の進みがゆるやかになった!",
-		"stealth-ring": "足音が忍びやかになった!",
-		"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
-	};
 
 /** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */
 export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
@@ -176,22 +168,4 @@ export const resolveItemDisplayName = (
 		!identifiedItemKinds.includes(kind)
 		? resolveUnidentifiedName(kind)
 		: ITEM_NAMES[kind];
-};
-
-/** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
-export const STAIRS_REFUSAL_MESSAGES: Readonly<
-	Record<
-		"no-stairs" | "levitating" | "magically-blocked",
-		Readonly<Record<"down" | "up", string>>
-	>
-> = {
-	"no-stairs": { down: "ここに下りる階段はない", up: "ここに上る階段はない" },
-	levitating: {
-		down: "浮いているので階段を使えない",
-		up: "浮いているので階段を使えない",
-	},
-	"magically-blocked": {
-		down: "魔法の力で行く手をはばまれている",
-		up: "魔法の力で行く手をはばまれている(アミュレットが無いと上れない)",
-	},
 };

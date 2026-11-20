@@ -1,41 +1,35 @@
-import type { ItemKind } from "../game/events.js";
+import { type ItemKind, isRingKind, type RingKind } from "../game/events.js";
 import { WEAPON_STATS } from "../game/items/equipmentKinds.js";
 import { calculateArmorClass } from "../game/items/equipmentStats.js";
 import type { GameState, HeldItem } from "../game/state.js";
 
 type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
-type RingItem = Extract<
-	HeldItem,
-	{
-		kind:
-			| "regeneration-ring"
-			| "sustenance-ring"
-			| "stealth-ring"
-			| "aggravate-monster-ring";
-	}
->;
+type RingItem = Extract<HeldItem, { kind: RingKind }>;
 
 const isWeaponItem = (item: HeldItem): item is WeaponItem =>
 	item.kind === "weapon";
 const isArmorItem = (item: HeldItem): item is ArmorItem =>
 	item.kind === "armor";
-const isRingItem = (item: HeldItem): item is RingItem =>
-	item.kind === "regeneration-ring" ||
-	item.kind === "sustenance-ring" ||
-	item.kind === "stealth-ring" ||
-	item.kind === "aggravate-monster-ring";
+const isRingItem = (item: HeldItem): item is RingItem => isRingKind(item.kind);
 
 /**
  * Best-first ring preference: sustenance first (the food economy is the
  * dominant killer — see docs/tasks/game-notes.md's balance notes), then
- * regeneration (passive combat sustain), then the stealth
- * utility ring. `aggravate-monster-ring` is deliberately absent — equipping it wakes
- * every enemy on the floor at once, a trap the bot should never opt into.
+ * regeneration (passive combat sustain), then the rings that help a fight,
+ * then the stealth utility ring. Aggravate monster and teleportation are
+ * deliberately absent (always cursed, and harmful), as is adornment (does
+ * nothing).
  */
 const RING_PREFERENCE_ORDER: readonly ItemKind[] = [
 	"sustenance-ring",
 	"regeneration-ring",
+	"protection-ring",
+	"maintain-armor-ring",
+	"sustain-strength-ring",
+	"add-strength-ring",
+	"increase-damage-ring",
+	"dexterity-ring",
 	"stealth-ring",
 ];
 
@@ -109,42 +103,34 @@ export const decideArmorToEquip = (
 };
 
 /**
- * The itemId of a ring worth equipping this turn, if any. Only one ring can
- * be worn at all (regardless of kind — see items/rings.ts), so this picks
- * the best held-but-unequipped kind by RING_PREFERENCE_ORDER and only swaps
- * in when it outranks whatever is currently worn.
+ * The itemId of a ring worth putting on this turn, if any: while a hand is
+ * free, the best-ranked held-but-unworn ring by RING_PREFERENCE_ORDER —
+ * never one already cursed with a negative value, and never a second of a
+ * kind already worn. The bot reads the real kind and curse off the state,
+ * so it never risks an unknown ring.
  */
 export const decideRingToEquip = (
 	state: GameState,
 	disabledKinds: ReadonlySet<ItemKind>,
 ): number | undefined => {
-	const availableKinds = RING_PREFERENCE_ORDER.filter(
-		(kind) => !disabledKinds.has(kind),
-	);
 	const rings = state.inventory.filter(isRingItem);
-	const equipped = rings.find((ring) => ring.equipped);
-	const equippedRank = equipped ? availableKinds.indexOf(equipped.kind) : -1;
-
-	let bestCandidate: RingItem | undefined;
-	let bestRank = Number.POSITIVE_INFINITY;
-	for (const ring of rings) {
-		if (ring.equipped) {
-			continue;
-		}
-		const rank = availableKinds.indexOf(ring.kind);
-		if (rank === -1) {
-			continue; /* disabled, or aggravate-monster-ring — never a candidate */
-		}
-		if (rank < bestRank) {
-			bestRank = rank;
-			bestCandidate = ring;
-		}
-	}
-	if (bestCandidate === undefined) {
+	const worn = rings.filter((ring) => ring.equipped);
+	if (worn.length >= 2) {
 		return undefined;
 	}
-	if (equippedRank !== -1 && equippedRank <= bestRank) {
-		return undefined; /* already wearing something at least as good */
-	}
-	return bestCandidate.itemId;
+	const candidates = rings
+		.filter(
+			(ring) =>
+				!ring.equipped &&
+				!ring.cursed &&
+				!disabledKinds.has(ring.kind) &&
+				RING_PREFERENCE_ORDER.includes(ring.kind) &&
+				!worn.some((other) => other.kind === ring.kind),
+		)
+		.sort(
+			(left, right) =>
+				RING_PREFERENCE_ORDER.indexOf(left.kind) -
+				RING_PREFERENCE_ORDER.indexOf(right.kind),
+		);
+	return candidates.at(0)?.itemId;
 };

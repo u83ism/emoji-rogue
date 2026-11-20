@@ -3,10 +3,32 @@ import type { GameEvent, ItemKind } from "../game/events.js";
 import {
 	EQUIPMENT_NAMES,
 	ITEM_NAMES,
-	RING_EQUIPPED_EFFECT,
 	resolveItemDisplayName,
 } from "./gameNames.js";
 import { formatSignedBonus } from "./inventoryLabels.js";
+
+/**
+ * The flavor text for ring-equipped log line, one entry per ring
+ * kind. A lookup table rather than an if-chain (converted here at the 4th
+ * ring — functional-style.md's if-chain limit is 3 branches): the payload's
+ * `kind` is the wider ItemKind, so this is a Partial map, not a total one —
+ * messages.ts treats a missing entry as unreachable (ring-equipped never
+ * fires for a non-ring kind).
+ */
+const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> = {
+	"regeneration-ring": "じわじわとHPが回復するようになった!",
+	"sustenance-ring": "空腹の進みがゆるやかになった!",
+	"stealth-ring": "足音が忍びやかになった!",
+	"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
+	"protection-ring": "身を守る力に包まれた",
+	"add-strength-ring": "力がみなぎる",
+	"sustain-strength-ring": "力が抜けにくくなった",
+	"adornment-ring": "きらきらと輝いている",
+	"dexterity-ring": "手先が器用になった",
+	"increase-damage-ring": "一撃に重みが乗った",
+	"teleportation-ring": "体がそわそわと落ち着かない",
+	"maintain-armor-ring": "鎧が錆びにくくなった",
+};
 
 /** The events about the player's own items — picking up, wearing, drinking, reading, zapping. */
 export type ItemUseEvent = Extract<
@@ -23,6 +45,7 @@ export type ItemUseEvent = Extract<
 			| "equip-blocked-cursed"
 			| "curse-revealed"
 			| "wand-empty"
+			| "ring-hands-full"
 			| "scroll-wasted"
 			| "items-decursed"
 			| "player-ate"
@@ -72,6 +95,8 @@ export const formatItemUseEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていて外せない!`;
 		case "curse-revealed":
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていた……外せなくなってしまった!`;
+		case "ring-hands-full":
+			return "もう両手に指輪をはめている";
 		case "wand-empty":
 			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds)}を振ったが、何も起きなかった`;
 		case "scroll-wasted":

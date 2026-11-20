@@ -1,6 +1,7 @@
 import type { RngState } from "../../rng.js";
 import { createRng } from "../../rng.js";
 import {
+	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
 	SLEEPING_TARGET_HIT_BONUS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
@@ -95,7 +96,11 @@ export const applyEnemyHit = (
 	}
 	const withExperience = applyExperienceGain(
 		next,
-		calculateEnemyExperienceReward(target.kind, target.maxHp),
+		calculateEnemyExperienceReward(
+			target.kind,
+			target.maxHp,
+			calculateEnemyLevelBonus(state.floor),
+		),
 	);
 	return target.kind === "orc" || target.kind === "thief"
 		? applyEnemyGoldDrop(withExperience, target.kind)

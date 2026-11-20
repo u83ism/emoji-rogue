@@ -210,6 +210,20 @@ export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
  */
 export const AMULET_FLOOR = 26;
 
+/**
+ * How much stronger a monster is on `floor` (original Rogue's new_monster()
+ * lev_add): one level per floor below AMULET_FLOOR — that much higher a
+ * level (to-hit, HP dice, saves), that much better an armor class, and 10
+ * experience per level on top. A monster never leaves the floor it was
+ * born on (every floor is generated fresh), so this is derived from the
+ * current floor rather than kept on each enemy.
+ */
+export const calculateEnemyLevelBonus = (floor: number): number =>
+	Math.max(0, floor - AMULET_FLOOR);
+
+/** Below this floor every monster is hasted — two actions a turn (original Rogue's new_monster(): `level > 29`). */
+export const HASTED_ENEMY_FLOOR = 30;
+
 // Hunger follows original Rogue 5.4 (rogue.h's HUNGERTIME/STOMACHSIZE/
 // MORETIME/STARVETIME, daemons.c's stomach(), misc.c's eat()) since
 // milestone 112 — see turnEnd/hunger.ts.

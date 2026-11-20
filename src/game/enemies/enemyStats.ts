@@ -125,18 +125,21 @@ export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 export const ENEMY_HP_DICE_SIDES = 8;
 
 /**
- * Experience for defeating one enemy: the table's base value plus original
- * Rogue's exp_add() — a share of that individual's rolled max HP (1/8 at
- * level 1, 1/6 above), multiplied x4 above level 6 and x20 above level 9.
+ * Experience for defeating one enemy: the table's base value, 10 per
+ * `levelBonus` (balance.ts's calculateEnemyLevelBonus — deep floors), plus
+ * original Rogue's exp_add() — a share of that individual's rolled max HP
+ * (1/8 at level 1, 1/6 above), multiplied x4 above level 6 and x20 above
+ * level 9, all by the boosted level.
  */
 export const calculateEnemyExperienceReward = (
 	kind: EnemyKind,
 	maxHp: number,
+	levelBonus = 0,
 ): number => {
-	const { level, experience } = ENEMY_STATS[kind];
+	const level = ENEMY_STATS[kind].level + levelBonus;
 	const share = Math.floor(maxHp / (level === 1 ? 8 : 6));
 	const multiplier = level > 9 ? 20 : level > 6 ? 4 : 1;
-	return experience + share * multiplier;
+	return ENEMY_STATS[kind].experience + levelBonus * 10 + share * multiplier;
 };
 
 /**

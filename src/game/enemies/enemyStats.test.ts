@@ -68,4 +68,13 @@ describe("calculateEnemyExperienceReward", () => {
 		/* dragon: level 10, base 5000 */
 		expect(calculateEnemyExperienceReward("dragon", 48)).toBe(5000 + 8 * 20);
 	});
+
+	it("a deep-floor level bonus adds 10 a level and raises the level the share is taken at", () => {
+		/* hobgoblin boosted to level 2: base 3 + 10, a sixth of 8 */
+		expect(calculateEnemyExperienceReward("hobgoblin", 8, 1)).toBe(3 + 10 + 1);
+		/* zombie boosted from 2 to 7: x4 multiplier, 40 for the bonus */
+		expect(calculateEnemyExperienceReward("zombie", 12, 5)).toBe(
+			6 + 50 + 2 * 4,
+		);
+	});
 });

@@ -80,14 +80,16 @@ export const calculateEnemyFloorRange = (
 	};
 };
 
-/** A fresh, sleeping `kind` at `position`, its HP rolled as level d8 (original Rogue's new_monster). */
+/** A fresh, sleeping `kind` at `position`, its HP rolled as level d8 (original Rogue's new_monster) — the level boosted by `levelBonus` on deep floors (calculateEnemyLevelBonus). */
 export const buildSpawnedEnemy = (
 	kind: EnemyKind,
 	position: Position,
 	rng: Rng,
+	levelBonus = 0,
 ): Enemy => {
 	let maxHp = 0;
-	for (let dieIndex = 0; dieIndex < ENEMY_STATS[kind].level; dieIndex++) {
+	const level = ENEMY_STATS[kind].level + levelBonus;
+	for (let dieIndex = 0; dieIndex < level; dieIndex++) {
 		maxHp += rng.getUniformInt(1, ENEMY_HP_DICE_SIDES);
 	}
 	return {

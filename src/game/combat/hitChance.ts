@@ -1,4 +1,5 @@
 import {
+	calculateEnemyLevelBonus,
 	DART_TRAP_HIT_BONUS,
 	DART_TRAP_LEVEL_BONUS,
 	HIT_CHANCE_PERCENT_PER_POINT,
@@ -41,7 +42,7 @@ export const calculatePlayerHitChancePercent = (
 ): number =>
 	calculateHitChancePercent(
 		state.playerLevel,
-		ENEMY_STATS[targetKind].armorClass,
+		ENEMY_STATS[targetKind].armorClass - calculateEnemyLevelBonus(state.floor),
 		calculatePlayerHitBonus(state.inventory) +
 			calculateStrengthHitBonus(state.playerStrength) +
 			situationalHitBonus,
@@ -55,7 +56,7 @@ export const calculateThrowHitChancePercent = (
 ): number =>
 	calculateHitChancePercent(
 		state.playerLevel,
-		ENEMY_STATS[targetKind].armorClass,
+		ENEMY_STATS[targetKind].armorClass - calculateEnemyLevelBonus(state.floor),
 		hitBonus + calculateStrengthHitBonus(state.playerStrength),
 	);
 
@@ -70,13 +71,14 @@ export const calculateDartTrapHitChancePercent = (
 		DART_TRAP_HIT_BONUS,
 	);
 
-/** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level against the player's armor class. */
+/** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level (plus `levelBonus` on deep floors — calculateEnemyLevelBonus) against the player's armor class. */
 export const calculateEnemyHitChancePercent = (
 	attackerKind: EnemyKind,
 	inventory: readonly HeldItem[],
+	levelBonus = 0,
 ): number =>
 	calculateHitChancePercent(
-		ENEMY_STATS[attackerKind].level,
+		ENEMY_STATS[attackerKind].level + levelBonus,
 		calculatePlayerArmorClass(inventory),
 		0,
 	);

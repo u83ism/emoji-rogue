@@ -1,6 +1,7 @@
 import { encodePointKey } from "../../pointkey.js";
 import { createRng, type Rng } from "../../rng.js";
 import {
+	calculateEnemyLevelBonus,
 	WANDERER_DELAY_TURNS,
 	WANDERER_ROLL_DIE_SIDES,
 	WANDERER_ROLL_INTERVAL_TURNS,
@@ -77,7 +78,15 @@ export const applyWandererTick = (state: GameState): GameState => {
 		throw new Error("unreachable: the index is within the tile list");
 	}
 	const kind = drawEnemyKindForFloor(rng, state.floor, "wanderer");
-	const wanderer = { ...buildSpawnedEnemy(kind, position, rng), awake: true };
+	const wanderer = {
+		...buildSpawnedEnemy(
+			kind,
+			position,
+			rng,
+			calculateEnemyLevelBonus(state.floor),
+		),
+		awake: true,
+	};
 	return {
 		...state,
 		enemies: [...state.enemies, wanderer],

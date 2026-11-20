@@ -1,6 +1,7 @@
 import { encodePointKey } from "../../pointkey.js";
 import { stepUniform } from "../../rng.js";
 import {
+	HASTED_ENEMY_FLOOR,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "../balance.js";
@@ -9,8 +10,8 @@ import { buildEventLog } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
-import { type EnemyTurnProgress, resolveEnemyAction } from "./action.js";
-import { canFlyAgain } from "./enemyFlight.js";
+import type { EnemyTurnProgress } from "./action.js";
+import { resolveEnemyTurnActions } from "./enemySpeed.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
@@ -20,8 +21,8 @@ import { isHeldByFlytrap } from "./flytrapHold.js";
  * what that action is (attack, steal and flee, chase, wander, a kind's own
  * special case) lives in action.ts's resolveEnemyAction. The flying kinds
  * (bat, kestrel, griffin) take a second action while they are still away
- * from the player after the first (enemyFlight.ts's canFlyAgain) — original
- * Rogue's only speed difference. A
+ * from the player after the first, and from HASTED_ENEMY_FLOOR down every
+ * monster acts twice per move (enemySpeed.ts). A
  * slowedTurnsRemaining > 0 enemy (slow wand) skips its whole turn, just
  * ticking down. No kind heals itself between hits: original Rogue's
  * ISREGEN flag (griffin, troll, vampire) only feeds the player-side status
@@ -111,30 +112,15 @@ export const advanceEnemies = (state: GameState): GameState => {
 			nextEnemies.push({ ...enemy, awake, confusedTurnsRemaining });
 			continue;
 		}
-		const firstAction = resolveEnemyAction(
+		const result = resolveEnemyTurnActions(
 			state,
 			enemy,
-			{ position: enemy, hp: enemy.hp, fled: false },
 			progress,
+			state.floor >= HASTED_ENEMY_FLOOR,
 			confused,
 			visiblePoints,
 			occupied,
 		);
-		/* a flier still away from the player after acting acts once more */
-		const result =
-			!firstAction.actor.fled &&
-			!firstAction.progress.died &&
-			canFlyAgain(enemy.kind, firstAction.actor.position, state.player)
-				? resolveEnemyAction(
-						state,
-						enemy,
-						firstAction.actor,
-						firstAction.progress,
-						confused,
-						visiblePoints,
-						occupied,
-					)
-				: firstAction;
 		const actor = result.actor;
 		progress = result.progress;
 

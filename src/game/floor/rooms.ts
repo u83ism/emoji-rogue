@@ -1,6 +1,7 @@
 import type { Room } from "../../map/features.js";
 import type { Rng } from "../../rng.js";
 import {
+	calculateEnemyLevelBonus,
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD,
@@ -67,7 +68,12 @@ export const drawRoomContents = (
 			continue;
 		}
 		enemies.push(
-			buildSpawnedEnemy(drawEnemyKindForFloor(rng, floor), enemyTile, rng),
+			buildSpawnedEnemy(
+				drawEnemyKindForFloor(rng, floor),
+				enemyTile,
+				rng,
+				calculateEnemyLevelBonus(floor),
+			),
 		);
 	}
 	return { enemies, goldPiles };

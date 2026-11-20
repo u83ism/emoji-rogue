@@ -1,3 +1,4 @@
+import { calculateEnemyLevelBonus } from "../balance.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
@@ -69,11 +70,15 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 	thief: stealAndFlee,
 	nymph: stealAndFlee,
 	/* tightens its hold instead of rolling dice — flytrapHold.ts */
-	"venus-flytrap": (_state, enemy, actor, progress) => {
+	"venus-flytrap": (state, enemy, actor, progress) => {
 		const { events, ...squeezed } = resolveFlytrapAttack(
 			progress.flytrapHoldDamage,
 			progress.playerHp,
-			calculateEnemyHitChancePercent(enemy.kind, progress.inventory),
+			calculateEnemyHitChancePercent(
+				enemy.kind,
+				progress.inventory,
+				calculateEnemyLevelBonus(state.floor),
+			),
 			progress.rng,
 		);
 		return {
@@ -85,10 +90,14 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 		};
 	},
 	/* freezes instead of dealing damage — iceMonsterFreeze.ts */
-	"ice-monster": (_state, enemy, actor, progress) => {
+	"ice-monster": (state, enemy, actor, progress) => {
 		const { events, ...frozen } = resolveIceMonsterAttack(
 			progress.playerParalyzedTurnsRemaining,
-			calculateEnemyHitChancePercent(enemy.kind, progress.inventory),
+			calculateEnemyHitChancePercent(
+				enemy.kind,
+				progress.inventory,
+				calculateEnemyLevelBonus(state.floor),
+			),
 			progress.rng,
 		);
 		return {
@@ -108,7 +117,7 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 
 /** Every other kind: one to-hit and damage roll per attack die, plus its own on-hit effect (enemyAttack.ts). */
 const attackWithDice = (
-	_state: GameState,
+	state: GameState,
 	enemy: Enemy,
 	actor: EnemyActor,
 	progress: EnemyTurnProgress,
@@ -121,6 +130,7 @@ const attackWithDice = (
 		playerExperience: progress.playerExperience,
 		inventory: progress.inventory,
 		rng: progress.rng,
+		levelBonus: calculateEnemyLevelBonus(state.floor),
 	});
 	return {
 		actor: { ...actor, hp: hit.enemyHp },

@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+	AMULET_FLOOR,
+	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
 	LEVEL_EXPERIENCE_THRESHOLDS,
 } from "./balance.js";
+
+describe("calculateEnemyLevelBonus", () => {
+	it("is original Rogue's lev_add: nothing down to AMULET_FLOOR, then one per floor", () => {
+		expect(calculateEnemyLevelBonus(1)).toBe(0);
+		expect(calculateEnemyLevelBonus(AMULET_FLOOR)).toBe(0);
+		expect(calculateEnemyLevelBonus(AMULET_FLOOR + 1)).toBe(1);
+		expect(calculateEnemyLevelBonus(AMULET_FLOOR + 4)).toBe(4);
+	});
+});
 
 describe("calculateMagicSaveChancePercent", () => {
 	it("is original Rogue's save(VS_MAGIC): 20% at level 1, +5 points per two levels", () => {

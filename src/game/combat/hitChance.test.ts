@@ -45,6 +45,12 @@ describe("calculatePlayerHitChancePercent", () => {
 		);
 	});
 
+	it("a monster below AMULET_FLOOR is 5% harder to hit per floor (its armor class improves)", () => {
+		expect(
+			calculatePlayerHitChancePercent({ ...state, floor: 28 }, "zombie"),
+		).toBe(45 - 2 * HIT_CHANCE_PERCENT_PER_POINT);
+	});
+
 	it("a sleeping target's bonus (original Rogue's +4) adds its points on top", () => {
 		expect(
 			calculatePlayerHitChancePercent(
@@ -106,6 +112,10 @@ describe("calculateEnemyHitChancePercent", () => {
 			(ENEMY_STATS.hobgoblin.level + UNARMORED_ARMOR_CLASS) *
 				HIT_CHANCE_PERCENT_PER_POINT,
 		);
+	});
+
+	it("a deep-floor level bonus raises it 5% a level", () => {
+		expect(calculateEnemyHitChancePercent("hobgoblin", [], 2)).toBe(65);
 	});
 
 	it("falls 5 points per point of defense: the armor kind's own class plus its defenseBonus", () => {

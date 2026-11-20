@@ -20,6 +20,8 @@ export interface AttackTarget {
 	readonly playerExperience: number;
 	readonly inventory: readonly HeldItem[];
 	readonly rng: RngState;
+	/** The attacker's deep-floor level bonus (balance.ts's calculateEnemyLevelBonus) — it hits more often. Absent counts as 0. */
+	readonly levelBonus?: number;
 }
 
 /** Everything one enemy's attacks on the player change in a turn — see adjacentAction.ts. */
@@ -120,6 +122,7 @@ export const resolveEnemyAttack = (
 	const hitChancePercent = calculateEnemyHitChancePercent(
 		enemy.kind,
 		target.inventory,
+		target.levelBonus ?? 0,
 	);
 	let rng = target.rng;
 	let playerHp = target.playerHp;

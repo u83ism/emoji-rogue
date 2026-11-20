@@ -112,4 +112,14 @@ describe("buildSpawnedEnemy", () => {
 		expect(sturdiest.maxHp).toBe(ENEMY_STATS.troll.level * ENEMY_HP_DICE_SIDES);
 		expect(sturdiest.hp).toBe(sturdiest.maxHp);
 	});
+
+	it("rolls one more HP die per level of a deep-floor level bonus", () => {
+		const boosted = buildSpawnedEnemy(
+			"troll",
+			{ x: 1, y: 2 },
+			createLowestRollRng(),
+			3,
+		);
+		expect(boosted.maxHp).toBe(ENEMY_STATS.troll.level + 3);
+	});
 });

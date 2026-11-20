@@ -1,4 +1,5 @@
 import {
+	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	MAGIC_MISSILE_DAMAGE_DICE,
@@ -70,7 +71,9 @@ export const applyMagicMissileWandStrike = (
 ): GameState => {
 	const save = rollToHit(
 		state.rng,
-		calculateMagicSaveChancePercent(ENEMY_STATS[target.kind].level),
+		calculateMagicSaveChancePercent(
+			ENEMY_STATS[target.kind].level + calculateEnemyLevelBonus(state.floor),
+		),
 	);
 	if (save.hit) {
 		return {

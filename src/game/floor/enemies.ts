@@ -58,17 +58,25 @@ export const drawEnemyKindForFloor = (
 	}
 };
 
-/** The first and last floor `kind` can spawn on (before clamping to the dungeon's own depth) — the floors whose window in drawEnemyKindForFloor reaches its entry. */
+/**
+ * The first and last floor `kind` can spawn on — the floors whose window in
+ * drawEnemyKindForFloor reaches its entry. `lastFloor` is undefined for the
+ * last DEPTH_EDGE_SIZE kinds: a window past the end of ENEMY_DEPTH_ORDER
+ * redraws among them, so they keep coming on every floor below.
+ */
 export const calculateEnemyFloorRange = (
 	kind: EnemyKind,
-): { readonly firstFloor: number; readonly lastFloor: number } => {
+): { readonly firstFloor: number; readonly lastFloor: number | undefined } => {
 	const index = ENEMY_DEPTH_ORDER.indexOf(kind);
 	return {
 		firstFloor: Math.max(
 			1,
 			index - (DEPTH_WINDOW_SIZE - 1 - DEPTH_WINDOW_OFFSET),
 		),
-		lastFloor: index + DEPTH_WINDOW_OFFSET,
+		lastFloor:
+			index >= ENEMY_DEPTH_ORDER.length - DEPTH_EDGE_SIZE
+				? undefined
+				: index + DEPTH_WINDOW_OFFSET,
 	};
 };
 

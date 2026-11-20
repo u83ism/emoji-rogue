@@ -2,7 +2,6 @@ import { at } from "../../indexing.js";
 import { getRoomCenter, type Room } from "../../map/features.js";
 import { createRogueMap } from "../../map/rogue.js";
 import type { Rng } from "../../rng.js";
-import { GOAL_FLOOR } from "../balance.js";
 import { buildEmptyColumns } from "../columns.js";
 import type {
 	Enemy,
@@ -31,7 +30,7 @@ export interface FloorLayout {
 	readonly goldPiles: readonly GoldPile[];
 	readonly traps: readonly Trap[];
 	readonly stairs: Stairs;
-	/** Only set when this layout is GOAL_FLOOR — see buildFloorLayout. */
+	/** Only set when `placesAmulet` — see buildFloorLayout. */
 	readonly amulet: Position | undefined;
 	/** The digger's room rectangles — kept for placement checks and tests; never part of GameState. */
 	readonly rooms: readonly Room[];
@@ -54,17 +53,16 @@ export interface FloorLayout {
  * doorways (see isRoomTileAwayFromDoors) — stepping on stairs descends
  * immediately, so a staircase in a corridor would physically block passage.
  * The staircase falls back to any tile if no such tile is pooled (degenerate
- * maps); traps are simply skipped then. `stairsDirection` sets the generated
- * staircase's direction, except on GOAL_FLOOR, where it is always forced to
- * "up" (there is nothing lower) and the Amulet of Yendor spawns instead of
- * nothing — guaranteed, not a percent-chance draw like the other items.
+ * maps); traps are simply skipped then. `placesAmulet` (floors from
+ * AMULET_FLOOR down while the amulet is not carried) adds the Amulet of
+ * Yendor — guaranteed, not a percent-chance draw like the other items.
  */
 export const buildFloorLayout = (
 	width: number,
 	height: number,
 	rng: Rng,
 	floor: number,
-	stairsDirection: "up" | "down",
+	placesAmulet: boolean,
 	nextItemId: number,
 	floorsWithoutFood: number,
 	placesGold: boolean,
@@ -96,14 +94,12 @@ export const buildFloorLayout = (
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);
 	const isWalkAroundTile = (position: Position): boolean =>
 		isRoomTileAwayFromDoors(rooms, position);
-	const direction = floor === GOAL_FLOOR ? "up" : stairsDirection;
-	const stairs: Stairs = {
-		...(drawSpawnTileWhere(remaining, rng, isWalkAroundTile) ??
-			drawSpawnTile(remaining, rng)),
-		direction,
-	};
-	const amulet: Position | undefined =
-		floor === GOAL_FLOOR ? drawSpawnTile(remaining, rng) : undefined;
+	const stairs: Stairs =
+		drawSpawnTileWhere(remaining, rng, isWalkAroundTile) ??
+		drawSpawnTile(remaining, rng);
+	const amulet: Position | undefined = placesAmulet
+		? drawSpawnTile(remaining, rng)
+		: undefined;
 
 	const food = drawFloorFood(rng, floorsWithoutFood);
 	const {
@@ -113,7 +109,6 @@ export const buildFloorLayout = (
 	} = drawFloorItems(
 		remaining,
 		rng,
-		floor,
 		isWalkAroundTile,
 		nextItemId,
 		food.foodCount,

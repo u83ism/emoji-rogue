@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../../pointkey.js";
 import {
+	AMULET_FLOOR,
 	calculateGoldAmountMax,
 	FOOD_ROLLS_PER_FLOOR,
-	GOAL_FLOOR,
 	GOLD_AMOUNT_MIN,
 	POTION_COUNT_PER_FLOOR,
 } from "../balance.js";
@@ -127,7 +127,6 @@ describe("descendStairs", () => {
 	});
 
 	it("keeps descending: several floors without breaking invariants", () => {
-		/* stays comfortably below GOAL_FLOOR — reaching it is covered separately */
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let i = 0; i < 5; i++) {
 			state = descendStairs(state);
@@ -137,32 +136,26 @@ describe("descendStairs", () => {
 		}
 	});
 
-	it("GOAL_FLOOR is a real floor: an up staircase and the amulet, not an instant win", () => {
+	it("AMULET_FLOOR is a real floor with the amulet, and the dungeon goes on below it", () => {
 		let state = buildDungeonGameState(40, 20, 7);
-		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+		for (let floor = 2; floor <= AMULET_FLOOR; floor++) {
 			state = descendStairs(state);
 		}
-		expect(state.floor).toBe(GOAL_FLOOR);
+		expect(state.floor).toBe(AMULET_FLOOR);
 		expect(state.status).toBe("playing");
-		expect(state.stairs.direction).toBe("up");
 		expect(state.amulet).not.toBeUndefined();
 		expect(state.hasAmulet).toBe(false);
 		expect(state.terrain[state.stairs.x]?.[state.stairs.y]).toBe(0);
+		const below = descendStairs(state);
+		expect(below.floor).toBe(AMULET_FLOOR + 1);
+		expect(below.amulet).not.toBeUndefined(); /* still not carried */
 	});
 
-	it("a forced fall while carrying the amulet still lands on a floor with an up staircase", () => {
-		const carrying = { ...start, floor: 5, hasAmulet: true };
+	it("descending while carrying the amulet spawns no second one", () => {
+		const carrying = { ...start, floor: AMULET_FLOOR - 1, hasAmulet: true };
 		const fallen = descendStairs(carrying);
-		expect(fallen.floor).toBe(6);
-		expect(fallen.stairs.direction).toBe("up");
-	});
-
-	it("falling back onto GOAL_FLOOR while carrying the amulet spawns no second amulet", () => {
-		const carrying = { ...start, floor: GOAL_FLOOR - 1, hasAmulet: true };
-		const fallen = descendStairs(carrying);
-		expect(fallen.floor).toBe(GOAL_FLOOR);
+		expect(fallen.floor).toBe(AMULET_FLOOR);
 		expect(fallen.amulet).toBeUndefined();
-		expect(fallen.stairs.direction).toBe("up");
 	});
 
 	it("only spawns kinds whose floor range covers the new floor", () => {
@@ -172,19 +165,18 @@ describe("descendStairs", () => {
 			for (const enemy of state.enemies) {
 				const range = calculateEnemyFloorRange(enemy.kind);
 				expect(floor).toBeGreaterThanOrEqual(range.firstFloor);
-				expect(floor).toBeLessThanOrEqual(range.lastFloor);
+				expect(floor).toBeLessThanOrEqual(range.lastFloor ?? floor);
 				expect(enemy.hp).toBe(enemy.maxHp);
 			}
 		}
 	});
 });
 describe("ascendStairs", () => {
-	it("ascending from floor 2 regenerates floor 1 as a real floor with an up staircase", () => {
+	it("ascending from floor 2 regenerates floor 1 as a real floor", () => {
 		const deep = descendStairs(buildDungeonGameState(40, 20, 7));
 		const back = ascendStairs({ ...deep, playerHp: 5 });
 		expect(back.floor).toBe(1);
 		expect(back.status).toBe("playing"); /* not a finish line anymore */
-		expect(back.stairs.direction).toBe("up");
 		expect(back.playerHp).toBe(5);
 		expect(back.events.at(-1)).toEqual({
 			type: "floor-ascended",
@@ -199,21 +191,6 @@ describe("ascendStairs", () => {
 		const back = ascendStairs({ ...deep, turnsOnCurrentFloor: 80 });
 		expect(back.floor).toBe(2);
 		expect(back.turnsOnCurrentFloor).toBe(0);
-	});
-
-	it("generating a floor mid-retrace always gets an up staircase, floor 1 included", () => {
-		let state = buildDungeonGameState(40, 20, 7);
-		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
-			state = descendStairs(state);
-		}
-		/* now at GOAL_FLOOR carrying nothing; simulate having taken the amulet */
-		state = { ...state, hasAmulet: true };
-		for (let floor = GOAL_FLOOR - 1; floor >= 1; floor--) {
-			state = ascendStairs(state);
-			expect(state.floor).toBe(floor);
-			expect(state.stairs.direction).toBe("up");
-			expect(state.status).toBe("playing");
-		}
 	});
 
 	it("climbing back keeps the deepest floor; with the amulet those floors hold no gold", () => {
@@ -252,11 +229,11 @@ describe("ascendStairs", () => {
 
 	it("surfacing from floor 1 with the amulet wins the run without generating a floor 0", () => {
 		let state = buildDungeonGameState(40, 20, 7);
-		for (let floor = 2; floor <= GOAL_FLOOR; floor++) {
+		for (let floor = 2; floor <= AMULET_FLOOR; floor++) {
 			state = descendStairs(state);
 		}
 		state = { ...state, hasAmulet: true };
-		for (let floor = GOAL_FLOOR - 1; floor >= 1; floor--) {
+		for (let floor = AMULET_FLOOR - 1; floor >= 1; floor--) {
 			state = ascendStairs(state);
 		}
 		expect(state.floor).toBe(1);

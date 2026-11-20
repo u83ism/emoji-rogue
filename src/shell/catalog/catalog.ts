@@ -1,5 +1,4 @@
 import {
-	GOAL_FLOOR,
 	ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD,
 	ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD,
 	ROOM_GOLD_CHANCE_PERCENT,
@@ -70,7 +69,9 @@ const formatAttacks = (attacks: readonly DamageDice[]): string =>
 
 const formatFloorRange = (kind: (typeof ENEMY_KIND_VALUES)[number]): string => {
 	const { firstFloor, lastFloor } = calculateEnemyFloorRange(kind);
-	return `${firstFloor}〜${Math.min(GOAL_FLOOR, lastFloor)}階`;
+	return lastFloor === undefined
+		? `${firstFloor}階以降`
+		: `${firstFloor}〜${lastFloor}階`;
 };
 
 const buildEnemySection = (): string => {

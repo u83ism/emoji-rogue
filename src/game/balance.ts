@@ -201,12 +201,14 @@ export const STRENGTH_POTION_STRENGTH_GAIN = 1;
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 
 /**
- * The deepest floor — where the Amulet of Yendor lies (original Rogue's
- * AMULETLEVEL). It has no down staircase (nothing lower); reaching it and
- * climbing all the way back to the surface with the amulet is what actually
- * wins the run. See floor.ts's descendStairs/ascendStairs.
+ * The first floor the Amulet of Yendor lies on (original Rogue's
+ * AMULETLEVEL): every floor from here down gets one until the player
+ * carries it. The dungeon has no bottom; climbing all the way back to the
+ * surface with the amulet is what wins the run. Monsters below this floor
+ * grow stronger by one level per floor (floor/enemies.ts). See
+ * floor/transitions.ts's descendStairs/ascendStairs.
  */
-export const GOAL_FLOOR = 26;
+export const AMULET_FLOOR = 26;
 
 // Hunger follows original Rogue 5.4 (rogue.h's HUNGERTIME/STOMACHSIZE/
 // MORETIME/STARVETIME, daemons.c's stomach(), misc.c's eat()) since

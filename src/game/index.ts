@@ -21,7 +21,7 @@ export {
 } from "../shell/systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
 export {
-	GOAL_FLOOR,
+	AMULET_FLOOR,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 	PLAYER_MAX_FOOD,
 	PLAYER_MAX_HP,

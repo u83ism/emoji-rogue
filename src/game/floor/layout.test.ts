@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "../../rng.js";
-import {
-	calculateGoldAmountMax,
-	GOAL_FLOOR,
-	GOLD_AMOUNT_MIN,
-} from "../balance.js";
+import { calculateGoldAmountMax, GOLD_AMOUNT_MIN } from "../balance.js";
 import { buildFloorLayout } from "./layout.js";
 import { isInsideRoom, isRoomTileAwayFromDoors } from "./spawnPool.js";
 
@@ -15,78 +11,40 @@ import { isInsideRoom, isRoomTileAwayFromDoors } from "./spawnPool.js";
 
 describe("buildFloorLayout", () => {
 	it("is deterministic: the same rng state produces the same layout", () => {
-		const first = buildFloorLayout(40, 20, createRng(7), 1, "down", 1, 0, true);
-		const second = buildFloorLayout(
-			40,
-			20,
-			createRng(7),
-			1,
-			"down",
-			1,
-			0,
-			true,
-		);
+		const first = buildFloorLayout(40, 20, createRng(7), 1, false, 1, 0, true);
+		const second = buildFloorLayout(40, 20, createRng(7), 1, false, 1, 0, true);
 		expect(second).toEqual(first);
 	});
 
 	it("places the player and the staircase on floor tiles", () => {
-		const layout = buildFloorLayout(
-			40,
-			20,
-			createRng(7),
-			1,
-			"down",
-			1,
-			0,
-			true,
-		);
+		const layout = buildFloorLayout(40, 20, createRng(7), 1, false, 1, 0, true);
 		expect(layout.terrain[layout.player.x]?.[layout.player.y]).toBe(0);
 		expect(layout.terrain[layout.stairs.x]?.[layout.stairs.y]).toBe(0);
 	});
 
-	it("uses the requested staircase direction on a regular floor, with no amulet", () => {
-		const descending = buildFloorLayout(
-			40,
-			20,
-			createRng(7),
-			2,
-			"down",
-			1,
-			0,
-			true,
-		);
-		expect(descending.stairs.direction).toBe("down");
-		expect(descending.amulet).toBeUndefined();
+	it("places the amulet on a floor tile only when told to, with a staircase either way", () => {
+		const plain = buildFloorLayout(40, 20, createRng(7), 2, false, 1, 0, true);
+		expect(plain.amulet).toBeUndefined();
 
-		const ascending = buildFloorLayout(
+		const withAmulet = buildFloorLayout(
 			40,
 			20,
 			createRng(7),
-			2,
-			"up",
+			30,
+			true,
 			1,
 			0,
 			true,
 		);
-		expect(ascending.stairs.direction).toBe("up");
-	});
-
-	it("forces an up staircase and spawns the amulet on GOAL_FLOOR", () => {
-		const goal = buildFloorLayout(
-			40,
-			20,
-			createRng(7),
-			GOAL_FLOOR,
-			"down",
-			1,
-			0,
-			true,
-		);
-		expect(goal.stairs.direction).toBe("up");
-		expect(goal.amulet).not.toBeUndefined();
-		if (goal.amulet !== undefined) {
-			expect(goal.terrain[goal.amulet.x]?.[goal.amulet.y]).toBe(0);
+		expect(withAmulet.amulet).not.toBeUndefined();
+		if (withAmulet.amulet !== undefined) {
+			expect(
+				withAmulet.terrain[withAmulet.amulet.x]?.[withAmulet.amulet.y],
+			).toBe(0);
 		}
+		expect(withAmulet.terrain[withAmulet.stairs.x]?.[withAmulet.stairs.y]).toBe(
+			0,
+		);
 	});
 
 	it("places the staircase inside a room, away from doorways", () => {
@@ -96,7 +54,7 @@ describe("buildFloorLayout", () => {
 				20,
 				createRng(seed),
 				2,
-				"down",
+				false,
 				1,
 				0,
 				true,
@@ -113,7 +71,7 @@ describe("buildFloorLayout", () => {
 				20,
 				createRng(seed),
 				4,
-				"down",
+				false,
 				1,
 				0,
 				true,
@@ -133,7 +91,7 @@ describe("buildFloorLayout", () => {
 				20,
 				createRng(seed),
 				4,
-				"up",
+				false,
 				1,
 				0,
 				false,
@@ -150,7 +108,7 @@ describe("buildFloorLayout", () => {
 				20,
 				createRng(seed),
 				2,
-				"down",
+				false,
 				1,
 				0,
 				true,

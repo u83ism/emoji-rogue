@@ -7,6 +7,7 @@ import {
 	ITEM_NAMES,
 	RING_EQUIPPED_EFFECT,
 	resolveItemDisplayName,
+	STAIRS_REFUSAL_MESSAGES,
 	TRAP_NAMES,
 } from "./gameNames.js";
 import { formatSignedBonus } from "./inventoryLabels.js";
@@ -62,6 +63,10 @@ export const formatEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていて外せない!`;
 		case "curse-revealed":
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていた……外せなくなってしまった!`;
+		case "stairs-refused":
+			return STAIRS_REFUSAL_MESSAGES[event.payload.reason][
+				event.payload.direction
+			];
 		case "scroll-wasted":
 			return `${ITEM_NAMES[event.payload.kind]}を読んだが、何も起きなかった`;
 		case "items-decursed":

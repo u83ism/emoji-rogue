@@ -18,12 +18,11 @@ export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
  * rationale comments for the full 26-kind roster pushed this file past the
  * 200-line structure-lint limit) — re-export kept out on purpose so
  * importers reach for the dedicated module directly. */
-/* Staircase, by direction (both single-codepoint, Unicode 6.0). */
-export const STAIRS_GLYPHS: Readonly<Record<"up" | "down", Cell>> = {
-	down: { glyph: "🔽" },
-	up: { glyph: "🔼" },
-};
-/* Amulet of Yendor: single-codepoint, Unicode 6.0 — GOAL_FLOOR only. */
+/* Staircase (single-codepoint, Unicode 6.0). One staircase leads both ways,
+ * as in original Rogue — the down arrow it showed before the up/down split
+ * went away, since going down is what it is mostly for. */
+export const STAIRS_CELL: Cell = { glyph: "🔽" };
+/* Amulet of Yendor: single-codepoint, Unicode 6.0 — floors from AMULET_FLOOR down only. */
 export const AMULET_CELL: Cell = { glyph: "💎" };
 /* Weapon uses a kitchen knife glyph (single-codepoint, no variation selector
  * needed) rather than the crossed-swords/dagger emoji, which both require

@@ -23,7 +23,6 @@ import type {
 	HeldItem,
 	Item,
 	Position,
-	Stairs,
 	Trap,
 } from "../state.js";
 
@@ -77,9 +76,6 @@ const standsOnFloor = (
 	}
 	return terrain[x]?.[y] === 0;
 };
-
-const isStairsDirection = (value: unknown): value is Stairs["direction"] =>
-	value === "up" || value === "down";
 
 /** Membership test against a literal-value catalog, doubling as a type guard. */
 const isOneOf = <Member>(
@@ -292,6 +288,11 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		payload.strength <= STRENGTH_MAX,
 	"gold-stolen": (payload) => isNonNegativeInteger(payload.amount),
 	"item-stolen": (payload) => isItemEventPayload(payload),
+	"stairs-refused": (payload) =>
+		(payload.direction === "down" || payload.direction === "up") &&
+		(payload.reason === "no-stairs" ||
+			payload.reason === "levitating" ||
+			payload.reason === "magically-blocked"),
 	"scroll-wasted": (payload) => isItemKind(payload.kind),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
@@ -518,8 +519,7 @@ export const validateGameState = (
 		!isRecord(stairs) ||
 		!standsOnFloor(stairs, terrain) ||
 		!isFiniteNumber(stairs.x) ||
-		!isFiniteNumber(stairs.y) ||
-		!isStairsDirection(stairs.direction)
+		!isFiniteNumber(stairs.y)
 	) {
 		return err("stairs");
 	}
@@ -612,7 +612,7 @@ export const validateGameState = (
 		floorsWithoutFood,
 		wandererDelayTurns,
 		wandererRollTurns,
-		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
+		stairs: { x: stairs.x, y: stairs.y },
 		amulet,
 		hasAmulet,
 		enemies: enemies.map((enemy) => ({

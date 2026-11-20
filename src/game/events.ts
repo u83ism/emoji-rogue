@@ -249,12 +249,20 @@ export type GameEvent =
 			readonly payload: ItemEventPayload;
 	  }
 	| {
+			/** `>`/`<` that could not be taken — see floor/transitions.ts's resolveStairsRefusal. No turn passes. */
+			readonly type: "stairs-refused";
+			readonly payload: {
+				readonly direction: "down" | "up";
+				readonly reason: "no-stairs" | "levitating" | "magically-blocked";
+			};
+	  }
+	| {
 			/** Winning always means the same thing now: surfacing with the amulet. */
 			readonly type: "game-won";
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** Auto-pickup on GOAL_FLOOR, same shape as floor-mapped — see applyAmuletPickup. */
+			/** Auto-pickup on a floor from AMULET_FLOOR down, same shape as floor-mapped — see applyAmuletPickup. */
 			readonly type: "amulet-obtained";
 			readonly payload: Record<string, never>;
 	  }

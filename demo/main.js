@@ -5,6 +5,7 @@
 // instead of on an explicit key — a browser tab can be closed at any moment
 // with no equivalent of the CLI's "press s before you quit" (milestone 79).
 import {
+	AMULET_FLOOR,
 	advanceTurn,
 	BLINDNESS_GLYPH,
 	buildDungeonGameState,
@@ -18,7 +19,6 @@ import {
 	formatHeldItemLabel,
 	formatInventoryTitle,
 	formatPlayerStrength,
-	GOAL_FLOOR,
 	HALLUCINATION_GLYPH,
 	INVENTORY_EMPTY_MESSAGE,
 	ITEM_TARGET_PROMPT,
@@ -58,6 +58,12 @@ const toAction = (key) => {
 	}
 	if (key === "." || key === " ") {
 		return { type: "wait" };
+	}
+	if (key === ">") {
+		return { type: "descend" };
+	}
+	if (key === "<") {
+		return { type: "ascend" };
 	}
 	return undefined;
 };
@@ -201,7 +207,7 @@ const appendStatusSegment = (text, color) => {
 // and defense, gold, then one chip per active temporary status.
 const renderStatus = () => {
 	statusElement.textContent = "";
-	appendStatusSegment(`${state.floor}F (目標 ${GOAL_FLOOR}F) `);
+	appendStatusSegment(`${state.floor}F (アミュレット ${AMULET_FLOOR}F〜) `);
 	appendStatusSegment(`Lv.${state.playerLevel} `, "#69f");
 	appendStatusSegment(
 		`💓 ${state.playerHp}/${state.playerMaxHp}`,

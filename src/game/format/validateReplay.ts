@@ -21,6 +21,8 @@ const isAction = (value: unknown): value is Action => {
 		case "move":
 			return isRecord(value.payload) && isDirection(value.payload.direction);
 		case "wait":
+		case "descend":
+		case "ascend":
 		case "save":
 		case "quit":
 			return true;

@@ -62,7 +62,9 @@ export interface BotDecision {
  *  5. Rest in place while wounded and nothing on the floor is awake (see
  *     combatPolicy.ts's shouldRestToHeal).
  *  6. Otherwise walk toward the current goal, recomputing it when reached,
- *     invalidated, or stuck oscillating in place (see isCyclingInPlace).
+ *     invalidated, or stuck oscillating in place (see isCyclingInPlace) —
+ *     standing on the stairs goal, take them (descend, or ascend with the
+ *     amulet).
  *
  * `disabledItemKinds` is a balance-experiment knob (see itemUsePolicy.ts's
  * decideItemToUse) — empty by default, so normal play is unaffected.
@@ -126,6 +128,20 @@ export const decideAction = (
 			? memory.goal
 			: undefined;
 	const goal = reusableGoal ?? chooseGoal(state, blacklistedGoals);
+
+	if (
+		goal.kind === "stairs" &&
+		state.player.x === goal.x &&
+		state.player.y === goal.y
+	) {
+		/* the stairs need `>`/`<` to take — going up once the amulet is
+		 * carried; levitating, they can't be taken, so wait it out */
+		const stairsAction: Action =
+			state.levitationTurnsRemaining > 0
+				? { type: "wait" }
+				: { type: state.hasAmulet ? "ascend" : "descend" };
+		return { action: stairsAction, memory: { ...memory, goal } };
+	}
 
 	const step = findNearestReachableTarget(
 		state.terrain,

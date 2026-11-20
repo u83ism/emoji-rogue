@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
 import { createRng } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
-import { GOAL_FLOOR, PLAYER_MAX_HP, PLAYER_START_FOOD } from "./balance.js";
+import { AMULET_FLOOR, PLAYER_MAX_HP, PLAYER_START_FOOD } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy, GameState, HeldItem } from "./state.js";
@@ -369,20 +369,23 @@ describe("advanceTurn", () => {
 		expect(usedItem.playerFood).toBe(PLAYER_START_FOOD - 1);
 	});
 
-	it("moving onto the staircase descends to the next floor", () => {
+	it("moving onto the staircase only moves — the stairs need > to take", () => {
 		/* teleport the stairs right next to the player (room centers always
 		 * have floor neighbors), then step east onto them */
 		const start = buildDungeonGameState(40, 20, 12345);
 		const state = {
 			...start,
-			playerHp: 4,
-			stairs: {
-				x: start.player.x + 1,
-				y: start.player.y,
-				direction: "down" as const,
-			},
+			stairs: { x: start.player.x + 1, y: start.player.y },
 		};
 		const next = advanceTurn(state, move("east"));
+		expect(next.floor).toBe(1);
+		expect(next.player).toEqual(state.stairs);
+	});
+
+	it("> on the staircase descends to the next floor", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = { ...start, playerHp: 4, stairs: start.player };
+		const next = advanceTurn(state, { type: "descend" });
 		expect(next.floor).toBe(2);
 		expect(next.playerHp).toBe(4); /* the new floor's enemies wait a turn */
 		expect(next.events).toEqual([
@@ -391,77 +394,115 @@ describe("advanceTurn", () => {
 		expect(next.terrain).not.toEqual(state.terrain);
 	});
 
-	it("reaching GOAL_FLOOR through the stairs generates it with an up staircase and the amulet, no victory yet", () => {
+	it("> or < off the staircase, or while levitating, only logs why and spends no turn", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
-		const state = {
+		const offStairs = {
 			...start,
-			floor: GOAL_FLOOR - 1,
-			stairs: {
-				x: start.player.x + 1,
-				y: start.player.y,
-				direction: "down" as const,
-			},
+			stairs: { x: start.player.x + 1, y: start.player.y },
 		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.status).toBe("playing");
-		expect(next.floor).toBe(GOAL_FLOOR);
-		expect(next.stairs.direction).toBe("up");
-		expect(next.amulet).not.toBeUndefined();
-		expect(next.hasAmulet).toBe(false);
+		const down = advanceTurn(offStairs, { type: "descend" });
+		expect(down.floor).toBe(1);
+		expect(down.playerFood).toBe(offStairs.playerFood);
+		expect(down.events).toEqual([
+			{
+				type: "stairs-refused",
+				payload: { direction: "down", reason: "no-stairs" },
+			},
+		]);
+		const floating = advanceTurn(
+			{ ...start, stairs: start.player, levitationTurnsRemaining: 5 },
+			{ type: "descend" },
+		);
+		expect(floating.floor).toBe(1);
+		expect(floating.events.at(-1)).toEqual({
+			type: "stairs-refused",
+			payload: { direction: "down", reason: "levitating" },
+		});
+	});
+
+	it("< on the staircase without the amulet is magically blocked", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = { ...start, floor: 5, stairs: start.player };
+		const next = advanceTurn(state, { type: "ascend" });
+		expect(next.floor).toBe(5);
 		expect(next.events).toEqual([
-			{ type: "floor-descended", payload: { floor: GOAL_FLOOR } },
+			{
+				type: "stairs-refused",
+				payload: { direction: "up", reason: "magically-blocked" },
+			},
 		]);
 	});
 
-	it("falling through a trapdoor into GOAL_FLOOR also gets the amulet and an up staircase", () => {
+	it("< on the staircase with the amulet climbs one floor", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
 		const state = {
 			...start,
-			floor: GOAL_FLOOR - 1,
+			floor: 5,
+			deepestFloor: 26,
+			hasAmulet: true,
+			stairs: start.player,
+		};
+		const next = advanceTurn(state, { type: "ascend" });
+		expect(next.floor).toBe(4);
+		expect(next.events).toEqual([
+			{ type: "floor-ascended", payload: { floor: 4 } },
+		]);
+	});
+
+	it("descending onto AMULET_FLOOR or below puts the amulet there until it is carried", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		for (const floor of [AMULET_FLOOR - 1, AMULET_FLOOR + 3]) {
+			const next = advanceTurn(
+				{ ...start, floor, stairs: start.player },
+				{ type: "descend" },
+			);
+			expect(next.status).toBe("playing");
+			expect(next.floor).toBe(floor + 1);
+			expect(next.amulet).not.toBeUndefined();
+		}
+		const carrying = advanceTurn(
+			{
+				...start,
+				floor: AMULET_FLOOR + 3,
+				hasAmulet: true,
+				stairs: start.player,
+			},
+			{ type: "descend" },
+		);
+		expect(carrying.floor).toBe(
+			AMULET_FLOOR + 4,
+		); /* no bottom, amulet or not */
+		expect(carrying.amulet).toBeUndefined();
+	});
+
+	it("falling through a trapdoor onto AMULET_FLOOR also gets the amulet", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const state = {
+			...start,
+			floor: AMULET_FLOOR - 1,
 			traps: [
 				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
 			],
 		};
 		const next = advanceTurn(state, move("east"));
 		expect(next.status).toBe("playing");
-		expect(next.floor).toBe(GOAL_FLOOR);
-		expect(next.stairs.direction).toBe("up");
+		expect(next.floor).toBe(AMULET_FLOOR);
 		expect(next.amulet).not.toBeUndefined();
 		expect(next.events).toEqual([
 			{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
-			{ type: "floor-descended", payload: { floor: GOAL_FLOOR } },
+			{ type: "floor-descended", payload: { floor: AMULET_FLOOR } },
 		]);
 	});
 
-	it("surfacing without the amulet ends the run as exited, not won", () => {
-		const start = buildDungeonGameState(40, 20, 12345);
-		const state = {
-			...start,
-			floor: 1,
-			hasAmulet: false,
-			stairs: {
-				x: start.player.x + 1,
-				y: start.player.y,
-				direction: "up" as const,
-			},
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.status).toBe("exited");
-	});
-
-	it("surfacing with the amulet wins the run", () => {
+	it("climbing out of floor 1 with the amulet wins the run", () => {
 		const start = buildDungeonGameState(40, 20, 12345);
 		const state = {
 			...start,
 			floor: 1,
 			hasAmulet: true,
-			stairs: {
-				x: start.player.x + 1,
-				y: start.player.y,
-				direction: "up" as const,
-			},
+			stairs: start.player,
 		};
-		const next = advanceTurn(state, move("east"));
+		const next = advanceTurn(state, { type: "ascend" });
 		expect(next.status).toBe("won");
 		expect(next.events).toEqual([{ type: "game-won", payload: {} }]);
 	});
@@ -469,6 +510,7 @@ describe("advanceTurn", () => {
 	it("ignores moves once the run has been won", () => {
 		const state = { ...buildArenaGameState(5, 5, 1), status: "won" as const };
 		expect(advanceTurn(state, move("east"))).toBe(state);
+		expect(advanceTurn(state, { type: "descend" })).toBe(state);
 	});
 
 	it("an enemy standing on the staircase gets bump-attacked, not skipped past", () => {
@@ -476,7 +518,7 @@ describe("advanceTurn", () => {
 		const stairsPosition = { x: start.player.x + 1, y: start.player.y };
 		const state = {
 			...start,
-			stairs: { ...stairsPosition, direction: "down" as const },
+			stairs: stairsPosition,
 			enemies: [
 				{
 					...stairsPosition,
@@ -595,11 +637,7 @@ describe("advanceTurn", () => {
 		};
 		const state = {
 			...start,
-			stairs: {
-				x: start.player.x + 1,
-				y: start.player.y,
-				direction: "down" as const,
-			},
+			stairs: { x: start.player.x + 1, y: start.player.y },
 			enemies: [{ ...flytrap, x: start.player.x, y: start.player.y + 1 }],
 		};
 		/* the flytrap sits south of the player, the stairs sit east — stepping

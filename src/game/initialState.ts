@@ -55,9 +55,7 @@ const INITIAL_RUN_STATE = {
 /**
  * The bottom-right-most floor tile that is not the player's own — a fixed,
  * deterministic staircase spot for the arena fixture. Falls back to the
- * player's tile on a one-tile arena (standing on stairs triggers nothing;
- * only moving onto them does). Always a "down" staircase — the arena is a
- * test fixture, not a real dungeon run with an amulet to retrieve.
+ * player's tile on a one-tile arena.
  */
 const pickArenaStairs = (
 	terrain: readonly (readonly number[])[],
@@ -67,11 +65,11 @@ const pickArenaStairs = (
 		const column = terrain[x] ?? [];
 		for (let y = column.length - 1; y >= 0; y--) {
 			if (column[y] === 0 && !(x === player.x && y === player.y)) {
-				return { x, y, direction: "down" };
+				return { x, y };
 			}
 		}
 	}
-	return { ...player, direction: "down" };
+	return { ...player };
 };
 
 /**
@@ -138,7 +136,7 @@ export const buildDungeonGameState = (
 		height,
 		rng,
 		1,
-		"down",
+		false,
 		INITIAL_RUN_STATE.nextItemId + startingInventory.length,
 		INITIAL_RUN_STATE.floorsWithoutFood,
 		true,

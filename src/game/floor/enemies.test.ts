@@ -74,7 +74,7 @@ describe("calculateEnemyFloorRange", () => {
 			const floors = [...(seenFloors.get(kind) ?? [])];
 			const range = calculateEnemyFloorRange(kind);
 			expect(Math.min(...floors)).toBe(range.firstFloor);
-			expect(Math.max(...floors)).toBe(Math.min(26, range.lastFloor));
+			expect(Math.max(...floors)).toBe(Math.min(26, range.lastFloor ?? 26));
 		}
 	});
 

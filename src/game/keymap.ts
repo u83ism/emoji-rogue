@@ -9,7 +9,8 @@ const moveAction = (direction: Direction): Action => ({
 /**
  * Maps one keypress (as Ink's `useInput` reports it) to an `Action`.
  * Arrow keys and vi keys (hjkl) both move; `.` or space waits one turn;
- * `s` suspend-saves; `q` quits. Unbound keys map to `undefined` so the
+ * `>`/`<` take the stairs (original Rogue's keys); `s` suspend-saves;
+ * `q` quits. Unbound keys map to `undefined` so the
  * shell can ignore them without consuming a turn.
  */
 export const toAction = (input: string, key: Key): Action | undefined => {
@@ -27,6 +28,12 @@ export const toAction = (input: string, key: Key): Action | undefined => {
 	}
 	if (input === "." || input === " ") {
 		return { type: "wait" };
+	}
+	if (input === ">") {
+		return { type: "descend" };
+	}
+	if (input === "<") {
+		return { type: "ascend" };
 	}
 	if (input === "s") {
 		return { type: "save" };

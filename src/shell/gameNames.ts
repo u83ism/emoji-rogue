@@ -177,3 +177,21 @@ export const resolveItemDisplayName = (
 		? resolveUnidentifiedName(kind)
 		: ITEM_NAMES[kind];
 };
+
+/** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
+export const STAIRS_REFUSAL_MESSAGES: Readonly<
+	Record<
+		"no-stairs" | "levitating" | "magically-blocked",
+		Readonly<Record<"down" | "up", string>>
+	>
+> = {
+	"no-stairs": { down: "ここに下りる階段はない", up: "ここに上る階段はない" },
+	levitating: {
+		down: "浮いているので階段を使えない",
+		up: "浮いているので階段を使えない",
+	},
+	"magically-blocked": {
+		down: "魔法の力で行く手をはばまれている",
+		up: "魔法の力で行く手をはばまれている(アミュレットが無いと上れない)",
+	},
+};

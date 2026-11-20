@@ -12,7 +12,7 @@ import {
 	REMEMBERED_FLOOR_CELL,
 	REMEMBERED_STAIRS_CELL,
 	REMEMBERED_WALL_CELL,
-	STAIRS_GLYPHS,
+	STAIRS_CELL,
 	TERRAIN_GLYPHS,
 	UNEXPLORED_CELL,
 	WON_PLAYER_CELL,
@@ -150,7 +150,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	if (visiblePoints.has(encodePointKey(state.stairs.x, state.stairs.y))) {
 		const stairsRow = grid[state.stairs.y];
 		if (stairsRow !== undefined) {
-			stairsRow[state.stairs.x] = STAIRS_GLYPHS[state.stairs.direction];
+			stairsRow[state.stairs.x] = STAIRS_CELL;
 		}
 	}
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng, type Rng } from "../../rng.js";
-import { GOAL_FLOOR, TRAP_COUNT_PER_FLOOR } from "../balance.js";
+import { TRAP_COUNT_PER_FLOOR } from "../balance.js";
 import type { Position } from "../state.js";
 import { drawFloorTraps } from "./traps.js";
 
@@ -27,7 +27,6 @@ describe("drawFloorTraps", () => {
 		const traps = drawFloorTraps(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			() => true,
 		);
 		expect(traps.filter((trap) => trap.kind === "dart").length).toBe(
@@ -44,30 +43,16 @@ describe("drawFloorTraps", () => {
 		const traps = drawFloorTraps(
 			buildPool(100),
 			createAlwaysMissRng(),
-			1,
 			() => true,
 		);
 		expect(traps.length).toBe(TRAP_COUNT_PER_FLOOR);
 		expect(traps.every((trap) => trap.kind === "dart")).toBe(true);
 	});
 
-	it("never spawns a trapdoor on GOAL_FLOOR, even when its roll would hit", () => {
-		const traps = drawFloorTraps(
-			buildPool(100),
-			createAlwaysHitRng(),
-			GOAL_FLOOR,
-			() => true,
-		);
-		expect(traps.some((trap) => trap.kind === "trapdoor")).toBe(false);
-		/* the teleport trap is still allowed there — it stays within the floor */
-		expect(traps.some((trap) => trap.kind === "teleport")).toBe(true);
-	});
-
 	it("lands traps only on eligible tiles and skips them when none qualify", () => {
 		const restricted = drawFloorTraps(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			(position) => position.x >= 50,
 		);
 		expect(restricted.length).toBeGreaterThan(0);
@@ -78,7 +63,6 @@ describe("drawFloorTraps", () => {
 		const none = drawFloorTraps(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			() => false,
 		);
 		expect(none.length).toBe(0);

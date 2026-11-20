@@ -66,7 +66,6 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			() => true,
 			1,
 			TEST_FOOD_COUNT,
@@ -90,7 +89,6 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysMissRng(),
-			1,
 			() => true,
 			1,
 			TEST_FOOD_COUNT,
@@ -107,7 +105,6 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			() => true,
 			1,
 			TEST_FOOD_COUNT,
@@ -119,7 +116,6 @@ describe("drawFloorItems", () => {
 		const none = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
-			1,
 			() => false,
 			1,
 			TEST_FOOD_COUNT,

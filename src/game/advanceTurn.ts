@@ -3,7 +3,11 @@ import { stepUniform } from "../rng.js";
 import { applyPlayerAttack, isAdjacent } from "./combat/combat.js";
 import { advanceEnemies } from "./enemies/enemies.js";
 import { buildEventLog } from "./events.js";
-import { ascendStairs, descendStairs } from "./floor/transitions.js";
+import {
+	ascendStairs,
+	descendStairs,
+	resolveStairsRefusal,
+} from "./floor/transitions.js";
 import { applyItemDrop } from "./items/drop.js";
 import {
 	applyAmuletPickup,
@@ -105,12 +109,6 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 			]),
 		};
 	}
-	if (x === stateWithRng.stairs.x && y === stateWithRng.stairs.y) {
-		/* the whole floor is replaced, so this floor's enemies never act */
-		return stateWithRng.stairs.direction === "up"
-			? ascendStairs(stateWithRng)
-			: descendStairs(stateWithRng);
-	}
 	return applyTrapTrigger(
 		applyGoldPickup(
 			applyAmuletPickup(
@@ -169,6 +167,34 @@ const applyItemAction = (
 };
 
 /**
+ * Taking the staircase under the player (original Rogue's `>`/`<`): down
+ * always, up only with the amulet. A refusal (resolveStairsRefusal) only
+ * logs why, spending no turn — as the original's "I see no way down". The
+ * whole floor is replaced, so the old floor's enemies never act; ascending
+ * out of floor 1 ends the run.
+ */
+const applyStairs = (state: GameState, direction: "down" | "up"): GameState => {
+	if (state.status !== "playing") {
+		return state;
+	}
+	if (state.paralyzedTurnsRemaining > 0) {
+		return applyTurnEndTicks(advanceEnemies(state));
+	}
+	const reason = resolveStairsRefusal(state, direction);
+	if (reason !== undefined) {
+		return {
+			...state,
+			events: buildEventLog(state.events, [
+				{ type: "stairs-refused", payload: { direction, reason } },
+			]),
+		};
+	}
+	const after =
+		direction === "down" ? descendStairs(state) : ascendStairs(state);
+	return after.status === "playing" ? applyTurnEndTicks(after) : after;
+};
+
+/**
  * The pure game reducer: one action in, the next state out. Same state and
  * action always produce the same result; a blocked move returns the input
  * state unchanged (same reference).
@@ -194,10 +220,14 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (afterPlayer.floor !== state.floor) {
 				return applyTurnEndTicks(
 					afterPlayer,
-				); /* descended — the new floor's enemies wait */
+				); /* fell through a trapdoor — the new floor's enemies wait */
 			}
 			return applyTurnEndTicks(advanceEnemies(afterPlayer));
 		}
+		case "descend":
+			return applyStairs(state, "down");
+		case "ascend":
+			return applyStairs(state, "up");
 		case "wait":
 			/* Stand still for one turn; enemies still act. Without this a
 			 * cornered player would soft-lock: bumps consume no turn, so the

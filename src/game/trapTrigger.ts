@@ -102,7 +102,7 @@ const applyDartPoison = (state: GameState): GameState => {
  * bonus hit on an already-trap-killed player. A trapdoor that the player
  * survives additionally hands the (already trap-triggered) state straight to
  * descendStairs — the whole floor gets replaced exactly as if the player had
- * taken the stairs, GOAL_FLOOR's amulet/up-staircase forcing included. A
+ * taken the stairs, the amulet placement from AMULET_FLOOR down included. A
  * teleport trap that the player survives (it deals no damage, so always)
  * instead hands off to applyRandomTeleport — same relocation as the teleport
  * scroll, just triggered by a footstep instead of an inventory item. A bear

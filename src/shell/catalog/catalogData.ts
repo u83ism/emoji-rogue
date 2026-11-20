@@ -2,7 +2,6 @@ import {
 	BEAR_TRAP_PARALYSIS_DURATION,
 	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
 	DART_TRAP_DAMAGE_DICE,
-	GOAL_FLOOR,
 	RUST_TRAP_SPAWN_CHANCE_PERCENT,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 	SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT,
@@ -51,7 +50,7 @@ export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	},
 	trapdoor: {
 		spawn: { type: "chance", percent: TRAPDOOR_SPAWN_CHANCE_PERCENT },
-		effect: `次のフロアへ強制落下する(${GOAL_FLOOR}階には出現しない)`,
+		effect: "次のフロアへ強制落下する",
 	},
 	teleport: {
 		spawn: { type: "chance", percent: TELEPORT_TRAP_SPAWN_CHANCE_PERCENT },

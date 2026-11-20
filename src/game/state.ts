@@ -22,6 +22,10 @@ export type Action =
 			readonly payload: { readonly direction: Direction };
 	  }
 	| { readonly type: "wait" }
+	/** Take the staircase under the player down (original Rogue's `>`) — see advanceTurn's applyStairs. */
+	| { readonly type: "descend" }
+	/** Take the staircase under the player up, which needs the amulet (`<`). */
+	| { readonly type: "ascend" }
 	| {
 			readonly type: "use-item";
 			readonly payload: {
@@ -195,15 +199,12 @@ export type GoldPile = Position & {
 };
 
 /**
- * The floor's single staircase. Its direction decides what stepping on it
- * does (see advanceTurn's applyMove): "down" descends deeper, "up" climbs
- * back toward the surface. Every floor but GOAL_FLOOR starts with a "down"
- * staircase; GOAL_FLOOR always has an "up" one (there is nothing deeper),
- * and every floor generated while retracing with the amulet also gets "up".
+ * The floor's single staircase, as in original Rogue: it leads both ways.
+ * Standing on it, "descend" (`>`) always goes one floor deeper and "ascend"
+ * (`<`) climbs one floor — but only while carrying the amulet (see
+ * advanceTurn's applyStairs). Stepping onto it does nothing by itself.
  */
-export type Stairs = Position & {
-	readonly direction: "up" | "down";
-};
+export type Stairs = Position;
 
 /**
  * A hidden trap, sprung once stepped on and then removed — never drawn, even
@@ -301,7 +302,7 @@ export interface GameState {
 	 * through every passability/visibility/rendering `=== 0` check.
 	 */
 	readonly stairs: Stairs;
-	/** The Amulet of Yendor, present only on GOAL_FLOOR until picked up. */
+	/** The Amulet of Yendor, lying on every floor from AMULET_FLOOR down until picked up. */
 	readonly amulet: Position | undefined;
 	/** Set for good once the amulet is picked up — see applyAmuletPickup. */
 	readonly hasAmulet: boolean;

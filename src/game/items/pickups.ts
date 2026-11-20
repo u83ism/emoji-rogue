@@ -66,7 +66,7 @@ export const applyItemPickup = (state: GameState): GameState => {
 
 /**
  * Picks up the Amulet of Yendor if it is lying under the player's feet
- * (only possible on GOAL_FLOOR, before it has been taken). Unconditional and
+ * (only possible on a floor from AMULET_FLOOR down, before it has been taken). Unconditional and
  * immediate, like gold — there is no "use" step, and hasAmulet never turns
  * back off once set.
  */

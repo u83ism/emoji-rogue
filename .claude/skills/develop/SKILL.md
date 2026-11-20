@@ -16,8 +16,10 @@ description: Spec check → implement → test (if logic involved) → update pr
    `advanceTurn.ts` to 805 lines before anyone checked.)
 5. **Update progress docs**: update `docs/tasks/game.md` to check off the completed item(s) and note any
    new follow-up tasks discovered along the way. Once a milestone is complete, move its whole section
-   verbatim to the end of `docs/tasks/game-history.md`, leaving `game.md` with only the design policy and
-   the backlog. (This sentence exists because 39 completed milestones piled up in `game.md` until the
+   verbatim to the end of `docs/tasks/game-history.md`, leaving `game.md` with only the design policy,
+   the to-do list (やること) and the items awaiting the human's decision (判断待ち). Background, rationale
+   and conditional deferrals go to `docs/tasks/game-notes.md`, not into `game.md` (split 2026-11-20 after
+   the backlog had become a mix of tasks, finished records and notes). (This sentence exists because 39 completed milestones piled up in `game.md` until the
    tracker no longer fit in a single read — 2026-11-12.)
 6. **Keep documentation truthful**: if the change makes any project documentation wrong — player-facing
    behavior, codebase structure, commands, whatever document describes the thing you just changed — update

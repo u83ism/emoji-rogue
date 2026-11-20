@@ -16,7 +16,9 @@ export const formatScoreSummary = (
 
 /**
  * Conducts upheld for the whole run (NetHack-style self-imposed challenge
- * record) — "・"-joined, or "" if none were upheld. See calculateScore.
+ * record) — "・"-joined, or "" if none were upheld. A title only: unlike
+ * before, they add nothing to calculateScore (original Rogue's score is the
+ * purse alone).
  */
 export const formatConducts = (
 	hasAttacked: boolean,

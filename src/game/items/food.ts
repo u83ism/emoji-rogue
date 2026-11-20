@@ -11,8 +11,8 @@ import type { GameState } from "../state.js";
  * Eating a food ration, as in original Rogue's eat(): a starving stomach
  * (playerFood below 0) first comes back to 0, then gains
  * FOOD_RATION_RESTORE_MIN..MAX (rolled on state.rng), capped at
- * PLAYER_MAX_FOOD. Also breaks the "foodless" conduct for good (see
- * calculateScore). Consumption from inventory happens in the dispatcher
+ * PLAYER_MAX_FOOD. Also breaks the "foodless" conduct for good (shown
+ * as a title at the end of the run, shell/messages.ts's formatConducts). Consumption from inventory happens in the dispatcher
  * (items/use.ts).
  */
 export const applyUseFood = (state: GameState): GameState => {

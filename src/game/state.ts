@@ -305,9 +305,9 @@ export interface GameState {
 	readonly amulet: Position | undefined;
 	/** Set for good once the amulet is picked up — see applyAmuletPickup. */
 	readonly hasAmulet: boolean;
-	/** Set for good on the first landed attack — a "pacifist" conduct flag, see calculateScore. */
+	/** Set for good on the first landed attack — a "pacifist" conduct flag, shown as a title at the end of the run (shell/messages.ts's formatConducts) — it earns no score. */
 	readonly hasAttacked: boolean;
-	/** Set for good on the first food ration eaten — a "foodless" conduct flag, see calculateScore. */
+	/** Set for good on the first food ration eaten — a "foodless" conduct flag, shown like hasAttacked — it earns no score. */
 	readonly hasEaten: boolean;
 	/**
 	 * Recent combat events, newest last, capped at EVENT_LOG_LIMIT. Pure data

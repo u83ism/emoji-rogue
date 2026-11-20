@@ -426,17 +426,7 @@ export const BLIND_VIEW_RADIUS = 1;
 /** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
 export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 8;
 
-/** Final-score weights — see calculateScore in score.ts. */
-export const SCORE_PER_FLOOR = 100;
-export const SCORE_PER_LEVEL = 50;
-export const SCORE_AMULET_BONUS = 500;
-
 /** How many turns a detect monster potion reveals every enemy through, regardless of FOV. */
 export const DETECT_MONSTER_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a detect monster potion spawns. */
 export const DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT = 12;
-
-/** Score bonus for finishing a run having never landed an attack — see calculateScore. */
-export const SCORE_PACIFIST_BONUS = 300;
-/** Score bonus for finishing a run having never eaten — see calculateScore. */
-export const SCORE_FOODLESS_BONUS = 300;

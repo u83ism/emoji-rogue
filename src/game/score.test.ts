@@ -11,7 +11,7 @@ const buildState = (overrides: Partial<GameState>): GameState => ({
 });
 
 describe("calculateScore", () => {
-	it("is the gold collected alone while playing or after quitting — no depth, level or conduct bonus", () => {
+	it("is the gold collected alone while playing or after quitting — no depth or level bonus", () => {
 		for (const status of ["playing", "exited", "suspended"] as const) {
 			expect(
 				calculateScore(
@@ -19,8 +19,6 @@ describe("calculateScore", () => {
 						status,
 						floor: 20,
 						playerLevel: 9,
-						hasAttacked: false,
-						hasEaten: false,
 					}),
 				),
 			).toBe(1234);

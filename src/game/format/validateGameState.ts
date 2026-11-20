@@ -541,14 +541,6 @@ export const validateGameState = (
 	if (!isBooleanValue(hasAmulet)) {
 		return err("hasAmulet");
 	}
-	const hasAttacked = value.hasAttacked;
-	if (!isBooleanValue(hasAttacked)) {
-		return err("hasAttacked");
-	}
-	const hasEaten = value.hasEaten;
-	if (!isBooleanValue(hasEaten)) {
-		return err("hasEaten");
-	}
 	const enemies = value.enemies;
 	if (!isEnemyArray(enemies, terrain)) {
 		return err("enemies");
@@ -623,8 +615,6 @@ export const validateGameState = (
 		stairs: { x: stairs.x, y: stairs.y, direction: stairs.direction },
 		amulet,
 		hasAmulet,
-		hasAttacked,
-		hasEaten,
 		enemies: enemies.map((enemy) => ({
 			x: enemy.x,
 			y: enemy.y,

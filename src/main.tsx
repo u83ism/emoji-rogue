@@ -8,7 +8,7 @@ import { GameScreen, parseTerminalProfile } from "./renderer/index.js";
 import { formatEvent } from "./shell/eventMessages.js";
 import { useInventoryInteraction } from "./shell/inventoryInteraction.js";
 import { InventoryOverlay } from "./shell/inventoryOverlay.js";
-import { formatConducts, formatScoreSummary } from "./shell/messages.js";
+import { formatScoreSummary } from "./shell/messages.js";
 import { saveReplay } from "./shell/replayFile.js";
 import { saveGameState } from "./shell/saveFile.js";
 import { createSession, recordAction } from "./shell/session.js";
@@ -141,11 +141,6 @@ const App = () => {
 							state.hasAmulet,
 						)}
 					</Text>
-					{formatConducts(state.hasAttacked, state.hasEaten) !== "" && (
-						<Text color="cyan">
-							称号: {formatConducts(state.hasAttacked, state.hasEaten)}
-						</Text>
-					)}
 				</>
 			)}
 			{/* System notices (app/session concerns — never game events, never

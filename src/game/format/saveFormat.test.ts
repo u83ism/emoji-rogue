@@ -90,8 +90,6 @@ describe("save file shape guard", () => {
 				stairs: { x: "number", y: "number", direction: "string" },
 				amulet: undefined,
 				hasAmulet: "boolean",
-				hasAttacked: "boolean",
-				hasEaten: "boolean",
 				events: [],
 				rng: { s0: "number", s1: "number", s2: "number", c: "number" },
 				status: "string",

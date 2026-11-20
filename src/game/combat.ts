@@ -62,8 +62,8 @@ export const isAdjacent = (left: Position, right: Position): boolean =>
 /**
  * The shared back half of every player-sourced hit: `damage` applied to
  * `target`, `hitEvent` logged, a kill removing the enemy (with enemy-defeated
- * and experience), a survivor waking up, and the "pacifist" conduct broken
- * either way. Only how the damage and the event are produced differs between
+ * and experience) or a survivor waking up, and the quiet turns natural
+ * healing waits on reset either way. Only how the damage and the event are produced differs between
  * melee, wand (the callers below) and a thrown weapon (items/throw.ts).
  */
 export const applyEnemyHit = (
@@ -87,7 +87,6 @@ export const applyEnemyHit = (
 	const next: GameState = {
 		...state,
 		enemies,
-		hasAttacked: true,
 		quietTurns: 0,
 		events: buildEventLog(state.events, events),
 	};
@@ -120,8 +119,8 @@ const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
  * The player's bump attack resolved against one enemy: it first rolls
  * calculatePlayerHitChancePercent (SLEEPING_TARGET_HIT_BONUS added against
  * a target still asleep — original Rogue's only edge for that), and a
- * miss ends the turn with no damage (player-attack-missed) but still marks
- * hasAttacked (swinging, even missing, breaks the pacifist conduct). The
+ * miss ends the turn with no damage (player-attack-missed) but still resets
+ * quietTurns (swinging, even missing, is fighting). The
  * player does not move — attacking is what the movement turn was spent on.
  */
 export const applyPlayerAttack = (
@@ -140,7 +139,6 @@ export const applyPlayerAttack = (
 		return {
 			...state,
 			rng: hitRoll.rng,
-			hasAttacked: true,
 			quietTurns: 0,
 			events: buildEventLog(state.events, [
 				{ type: "player-attack-missed", payload: { target: target.kind } },

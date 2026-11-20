@@ -42,10 +42,6 @@ describe("applyUseFood", () => {
 		expect(next.playerFood).toBeLessThanOrEqual(FOOD_RATION_RESTORE_MAX);
 	});
 
-	it("breaks the foodless conduct", () => {
-		expect(applyUseFood(buildState(100)).hasEaten).toBe(true);
-	});
-
 	it("eating through advanceTurn consumes the ration and spends the turn", () => {
 		const state = {
 			...buildState(100),

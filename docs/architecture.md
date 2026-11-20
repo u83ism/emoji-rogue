@@ -55,7 +55,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `experience.ts` / `initialState.ts` / `columns.ts` / `damage.ts` | キー変換 / スコア / 経験値 / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 / 休眠中のダイスロール |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコア・コンダクトの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコアの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関数。ドライバは`scripts/run-bot.ts`でJSONLログを`~/.emoji-rogue/bot-logs/`へ出す。出荷するゲームの一部ではない)。
 
@@ -120,4 +120,4 @@ CI(`.github/workflows/ci.yml`)はPRと`main`へのpushでだけ同じ5つを走�
 - **Dijkstraのキャッシュ廃止**(2026-07-13): 原本由来の呼び出し間キャッシュは地形変化時に古い経路を返すため除去。性能が問題になったら距離場のターンごと純粋導出で対応
 - **敵チェイスの距離場化を試して撤回**(2026-07-23): 上記の対応方針を実際に試作(プレイヤー起点のBFS距離場をターン毎に1回だけ展開し、追跡中の敵はそこから隣接4マスを参照するだけにして`stepTowardPlayer`のA*呼び出しを削減)。しかしベンチマーク(`advanceEnemies`単体・実際のBOT周回の両方)の結果、**明確な高速化は一度も再現できず、密集シナリオ(同時に多数の敵が追跡)ではむしろ2倍以上遅化**した。原因はA*がヒューリスティック付きで目標まわりの局所領域しか探索しないのに対し、全域展開のBFS距離場は敵の位置に関係なく到達可能な全マスを毎回走査するため、この物量(最大でも同時待機16体程度、多くの局面は数体以下)ではA*の枝刈りの方が優る。**結論: 現状の敵数・マップ規模では per-enemy A* のままで良い**。将来ボトルネックが実測されたら、全域展開ではなく「その時点で追跡中の敵の位置だけを目標集合にした早期終了付き多点探索」のような、対象を絞った形で再検討する
 - **スケジューラ未接続**: クロージャベースの`Scheduler`はシリアライズ可能な`GameState`と相性が悪い。敵の速度差は`ENEMY_ACTIONS_PER_TURN`のプレーンデータで表現(docs/tasks/game-history.md マイルストーン9)
-- **イベントログはローリングウィンドウ**(直近20件)。ラン全体の履歴は持たない — ラン通算の事実が必要なら`hasAttacked`のような恒久フィールドを直接持つ(docs/tasks/game-history.md マイルストーン54の教訓)
+- **イベントログはローリングウィンドウ**(直近20件)。ラン全体の履歴は持たない — ラン通算の事実が必要なら`deepestFloor`のような恒久フィールドを直接持つ(docs/tasks/game-history.md マイルストーン54の教訓)

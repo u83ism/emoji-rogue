@@ -101,7 +101,6 @@ describe("applyThrowItem", () => {
 				payload: { target: "zombie", variant: "spear", damage },
 			},
 		]);
-		expect(next.hasAttacked).toBe(true);
 		expect(next.quietTurns).toBe(0);
 	});
 

@@ -56,8 +56,7 @@ const drawLandingTile = (
  * hurlDice and adds the bow's bonuses; an arrow thrown by hand rolls its
  * plain damageDice; every other weapon rolls its hurlDice. A hit consumes
  * the missile; a miss drops it near the target (drawLandingTile), where it
- * can be picked up again. Either way the target wakes and the pacifist
- * conduct is broken.
+ * can be picked up again. Either way the target wakes.
  */
 export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 	const item = state.inventory.find(
@@ -99,7 +98,6 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 	const thrown: GameState = {
 		...state,
 		inventory,
-		hasAttacked: true,
 		quietTurns: 0,
 	};
 

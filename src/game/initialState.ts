@@ -48,8 +48,6 @@ const INITIAL_RUN_STATE = {
 	wandererDelayTurns: WANDERER_DELAY_TURNS,
 	wandererRollTurns: 0,
 	hasAmulet: false,
-	hasAttacked: false,
-	hasEaten: false,
 	events: [],
 	status: "playing",
 } as const satisfies Partial<GameState>;

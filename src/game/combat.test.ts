@@ -198,13 +198,7 @@ describe("applyPlayerAttack", () => {
 		expect(next.playerExperience).toBe(state.playerExperience);
 	});
 
-	it("sets hasAttacked — the pacifist conduct is broken by any landed attack", () => {
-		const target = zombie(5, 4);
-		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.hasAttacked).toBe(true);
-	});
-
-	it("a failed to-hit roll deals no damage, logs player-attack-missed, but still sets hasAttacked and consumes rng", () => {
+	it("a failed to-hit roll deals no damage, logs player-attack-missed, but still resets quietTurns and consumes rng", () => {
 		/* a -100 to hit puts the chance at 0% */
 		const missState = { ...state, inventory: [weaponWith(-100)] };
 		const target = zombie(5, 4);
@@ -213,7 +207,7 @@ describe("applyPlayerAttack", () => {
 		expect(next.events).toEqual([
 			{ type: "player-attack-missed", payload: { target: "zombie" } },
 		]);
-		expect(next.hasAttacked).toBe(true);
+		expect(next.quietTurns).toBe(0);
 		expect(next.rng).not.toEqual(missState.rng);
 	});
 

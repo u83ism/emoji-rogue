@@ -7,6 +7,7 @@ import type {
 	GameEvent,
 	ItemKind,
 	TrapKind,
+	WandKind,
 	WeaponKind,
 } from "./events.js";
 
@@ -133,7 +134,14 @@ type RingIdentity = Omit<
  */
 export type Item = Position &
 	(
-		| { readonly kind: Exclude<ItemKind, EquipmentItemKind> }
+		| { readonly kind: Exclude<ItemKind, EquipmentItemKind | WandKind> }
+		| {
+				readonly kind: WandKind;
+				readonly identity: {
+					readonly itemId: number;
+					readonly charges: number;
+				};
+		  }
 		| { readonly kind: "weapon"; readonly identity: WeaponIdentity }
 		| { readonly kind: "armor"; readonly identity: ArmorIdentity }
 		| {
@@ -167,7 +175,13 @@ export type Item = Position &
 export type HeldItem =
 	| {
 			readonly itemId: number;
-			readonly kind: Exclude<ItemKind, EquipmentItemKind>;
+			readonly kind: Exclude<ItemKind, EquipmentItemKind | WandKind>;
+	  }
+	| {
+			readonly itemId: number;
+			readonly kind: WandKind;
+			/** Zaps left (original Rogue's o_charges, fix_stick()). At 0 the wand stays in the pack and nothing happens when zapped. */
+			readonly charges: number;
 	  }
 	| {
 			readonly itemId: number;

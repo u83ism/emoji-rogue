@@ -75,6 +75,12 @@ describe("calculateItemWorth", () => {
 		expect(calculateItemWorth(ringMail, [])).toBe(25 + 3 * 100 + 10);
 	});
 
+	it("adds 20 per charge left to a wand — before halving an unidentified one", () => {
+		const wand = { itemId: 1, kind: "slow-wand" as const, charges: 3 };
+		expect(calculateItemWorth(wand, ["slow-wand"])).toBe(350 + 60);
+		expect(calculateItemWorth(wand, [])).toBe(Math.floor((350 + 60) / 2));
+	});
+
 	it("halves an identifiable kind while it is still unidentified", () => {
 		const ring: HeldItem = {
 			itemId: 1,

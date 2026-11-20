@@ -1,7 +1,9 @@
 import {
+	buildEventLog,
 	EQUIPMENT_ITEM_KINDS,
 	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
+	isWandKind,
 } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
@@ -12,7 +14,7 @@ import {
 	applyUseRemoveCurseScroll,
 } from "./equipmentScrolls.js";
 import { applyUseFood } from "./food.js";
-import { removeHeldItem } from "./inventory.js";
+import { removeHeldItem, replaceHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
 import { applyToggleRingEquip } from "./rings.js";
 import {
@@ -106,7 +108,9 @@ const identifyItemKind = (
 /**
  * Uses the held item matching `itemId`: the effect from applyItemEffect,
  * then — for consumable kinds only — one item removed from inventory, in
- * this one place so a handler can never forget to consume. Weapon/armor/ring
+ * this one place so a handler can never forget to consume. A wand instead
+ * spends one charge, and with none left only logs wand-empty (the turn
+ * still passes, as original Rogue's do_zap()). Weapon/armor/ring
  * are never removed here; toggling their `equipped` flag in place is the
  * whole effect (see items/equipment.ts, items/rings.ts). Using an itemId not
  * held, or a kind whose handler declared a no-op, returns the input state
@@ -124,6 +128,15 @@ export const applyUseItem = (
 	if (item === undefined) {
 		return state;
 	}
+	if (isWandKind(item.kind) && "charges" in item && item.charges === 0) {
+		/* original Rogue's do_zap(): "nothing happens" — the turn still passes */
+		return {
+			...state,
+			events: buildEventLog(state.events, [
+				{ type: "wand-empty", payload: { kind: item.kind } },
+			]),
+		};
+	}
 	const afterEffect = applyItemEffect(state, item, targetItemId);
 	if (afterEffect === state) {
 		return state;
@@ -137,6 +150,16 @@ export const applyUseItem = (
 	};
 	if (EQUIPMENT_ITEM_KINDS.includes(item.kind)) {
 		return identified;
+	}
+	if ("charges" in item) {
+		/* a zap spends a charge; the wand itself stays */
+		return {
+			...identified,
+			inventory: replaceHeldItem(identified.inventory, itemId, {
+				...item,
+				charges: item.charges - 1,
+			}),
+		};
 	}
 	return {
 		...identified,

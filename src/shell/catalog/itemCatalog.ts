@@ -29,6 +29,8 @@ import {
 	SCROLL_SPAWN_CHANCE_PERCENT,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
+	WAND_CHARGES_MAX,
+	WAND_CHARGES_MIN,
 	WEAPON_CURSE_CHANCE_PERCENT,
 	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 	WEAPON_SPAWN_CHANCE_PERCENT,
@@ -37,6 +39,9 @@ import type { ItemKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
 import { POTION_CATALOG } from "./potionCatalog.js";
 import { RING_CATALOG } from "./ringCatalog.js";
+
+/** How many zaps a found wand holds — appended to every wand's effect. */
+const WAND_CHARGES_TEXT = `使える回数は${WAND_CHARGES_MIN}〜${WAND_CHARGES_MAX}回で、尽きると振っても何も起きない(杖は残る)`;
 
 // The scroll/wand/weapon/armor/food rows of the item catalog, composed with
 // POTION_CATALOG and RING_CATALOG into the full Record<ItemKind, ...> — the
@@ -124,15 +129,13 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "鈍足の杖",
 		category: "杖",
 		spawn: { type: "chance", percent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
-		effect:
-			"視界内の最も近い敵を恒久的に鈍足にする(2回に1回しか動けない)。加速している敵なら加速を解くだけ",
+		effect: `視界内の最も近い敵を恒久的に鈍足にする(2回に1回しか動けない)。加速している敵なら加速を解くだけ。${WAND_CHARGES_TEXT}`,
 	},
 	"teleport-wand": {
 		catalogName: "テレポートの杖",
 		category: "杖",
 		spawn: { type: "chance", percent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT },
-		effect:
-			"視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。1回使い切り",
+		effect: `視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。${WAND_CHARGES_TEXT}`,
 	},
 	"magic-missile-wand": {
 		catalogName: "魔法の矢の杖",
@@ -141,7 +144,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `視界内の最も近い敵に${MAGIC_MISSILE_DAMAGE_DICE.count}d${MAGIC_MISSILE_DAMAGE_DICE.sides}+${MAGIC_MISSILE_DAMAGE_BONUS}(+力と装備中の武器のダメージ補正)の必中ダメージ。敵が魔法へのセーブに成功すると消える。1回使い切り`,
+		effect: `視界内の最も近い敵に${MAGIC_MISSILE_DAMAGE_DICE.count}d${MAGIC_MISSILE_DAMAGE_DICE.sides}+${MAGIC_MISSILE_DAMAGE_BONUS}(+力と装備中の武器のダメージ補正)の必中ダメージ。敵が魔法へのセーブに成功すると消える。${WAND_CHARGES_TEXT}`,
 	},
 	weapon: {
 		catalogName: "武器",

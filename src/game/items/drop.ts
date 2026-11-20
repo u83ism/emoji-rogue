@@ -45,6 +45,14 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 				kind: item.kind,
 				identity: { itemId: item.itemId, cursed: item.cursed },
 			};
+		case "slow-wand":
+		case "teleport-wand":
+		case "magic-missile-wand":
+			return {
+				...position,
+				kind: item.kind,
+				identity: { itemId: item.itemId, charges: item.charges },
+			};
 		default:
 			return { ...position, kind: item.kind };
 	}

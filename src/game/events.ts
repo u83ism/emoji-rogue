@@ -90,6 +90,31 @@ export const isEquipmentItemKind = (
 	kind: ItemKind,
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
+const WAND_KIND_VALUES = [
+	"slow-wand",
+	"teleport-wand",
+	"magic-missile-wand",
+] as const satisfies readonly ItemKind[];
+
+/** The wands — held with a count of charges left (original Rogue's o_charges), used up by zapping, never by the item itself. */
+export type WandKind = (typeof WAND_KIND_VALUES)[number];
+
+const WAND_KINDS: readonly ItemKind[] = WAND_KIND_VALUES;
+
+/** Type guard: narrows an ItemKind to WandKind. */
+export const isWandKind = (kind: ItemKind): kind is WandKind =>
+	WAND_KINDS.includes(kind);
+
+/**
+ * Whether a `kind` carries per-item state rolled at floor generation (an
+ * itemId and an identity on the floor Item): equipment, and wands with
+ * their charges. Every other kind is a plain consumable.
+ */
+export const hasItemIdentity = (
+	kind: ItemKind,
+): kind is EquipmentItemKind | WandKind =>
+	isEquipmentItemKind(kind) || isWandKind(kind);
+
 /** The nine weapons of original Rogue 5.4, in its own table order — which one a held/floor "weapon" item is. Stats live in items/equipmentKinds.ts. */
 export const WEAPON_KIND_VALUES = [
 	"mace",
@@ -157,12 +182,6 @@ export const RING_KINDS = [
 	"sustenance-ring",
 	"stealth-ring",
 	"aggravate-monster-ring",
-] as const satisfies readonly ItemKind[];
-
-const WAND_KIND_VALUES = [
-	"slow-wand",
-	"teleport-wand",
-	"magic-missile-wand",
 ] as const satisfies readonly ItemKind[];
 
 /**
@@ -331,6 +350,11 @@ export type GameEvent =
 	  }
 	| {
 			readonly type: "potion-identified";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A wand zapped with no charges left — nothing happens, the turn passes (original Rogue's do_zap()). */
+			readonly type: "wand-empty";
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {

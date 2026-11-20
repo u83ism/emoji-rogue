@@ -31,7 +31,7 @@ const ARMOR_WORTH: Readonly<Record<ArmorKind, number>> = {
 	"plate-mail": 150,
 };
 
-/** Every non-weapon, non-armor kind. Food is total_winner()'s flat 2 apiece; the identify scroll (one kind here, five in the original) takes identify potion's 80. Wands carry no charges in this game, so the original's +20 per charge never applies. */
+/** Every non-weapon, non-armor kind. Food is total_winner()'s flat 2 apiece; the identify scroll (one kind here, five in the original) takes identify potion's 80. A wand adds 20 per charge left (calculateItemWorth). */
 const FLAT_WORTH: Readonly<
 	Record<Exclude<ItemKind, "weapon" | "armor">, number>
 > = {
@@ -69,8 +69,8 @@ const AMULET_WORTH = 1000;
 /**
  * What one held item sells for at the end of a won run, as total_winner():
  * a weapon by 3 × its pluses plus its count, an armor by how far its armor
- * class sits below 9 and below its kind's own, everything else by its
- * kind's worth — halved (rounded down) while the kind is still
+ * class sits below 9 and below its kind's own, a wand by its kind's worth
+ * plus 20 per charge left, everything else by its kind's worth — halved (rounded down) while the kind is still
  * unidentified. Never negative.
  */
 export const calculateItemWorth = (
@@ -92,7 +92,8 @@ export const calculateItemWorth = (
 					10 * item.defenseBonus,
 			);
 		default: {
-			const worth = FLAT_WORTH[item.kind];
+			const worth =
+				FLAT_WORTH[item.kind] + ("charges" in item ? 20 * item.charges : 0);
 			const unidentified =
 				IDENTIFIABLE_ITEM_KINDS.includes(item.kind) &&
 				!identifiedItemKinds.includes(item.kind);

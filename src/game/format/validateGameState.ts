@@ -12,6 +12,7 @@ import {
 	ITEM_KIND_VALUES,
 	type ItemKind,
 	isEquipmentItemKind,
+	isWandKind,
 	TRAP_KIND_VALUES,
 	type TrapKind,
 	WEAPON_KIND_VALUES,
@@ -166,6 +167,9 @@ const isHeldItem = (value: unknown): value is HeldItem => {
 	) {
 		return false;
 	}
+	if (isWandKind(value.kind)) {
+		return isNonNegativeInteger(value.charges);
+	}
 	if (!isEquipmentItemKind(value.kind)) {
 		return true;
 	}
@@ -207,6 +211,13 @@ const isItemArray = (
 			!isItemKind(item.kind)
 		) {
 			return false;
+		}
+		if (isWandKind(item.kind)) {
+			return (
+				isRecord(item.identity) &&
+				isPositiveInteger(item.identity.itemId) &&
+				isNonNegativeInteger(item.identity.charges)
+			);
 		}
 		if (!isEquipmentItemKind(item.kind)) {
 			return true;
@@ -303,6 +314,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			payload.reason === "levitating" ||
 			payload.reason === "magically-blocked"),
 	"scroll-wasted": (payload) => isItemKind(payload.kind),
+	"wand-empty": (payload) => isItemKind(payload.kind),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&
@@ -650,6 +662,14 @@ export const validateGameState = (
 				case "sustenance-ring":
 				case "stealth-ring":
 				case "aggravate-monster-ring":
+					return {
+						...position,
+						kind: item.kind,
+						identity: item.identity,
+					};
+				case "slow-wand":
+				case "teleport-wand":
+				case "magic-missile-wand":
 					return {
 						...position,
 						kind: item.kind,

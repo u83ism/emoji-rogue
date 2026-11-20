@@ -53,14 +53,17 @@ describe("teleport wand", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: [{ itemId: 1, kind: "teleport-wand" as const }],
+			inventory: [{ itemId: 1, kind: "teleport-wand" as const, charges: 5 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
 		expect(next.player).toEqual(state.player);
-		expect(next.inventory).toEqual([]);
+		/* the zap spends a charge; the wand stays */
+		expect(next.inventory).toEqual([
+			{ itemId: 1, kind: "teleport-wand", charges: 4 },
+		]);
 		const moved = next.enemies[0];
 		expect(moved).toBeDefined();
 		expect(moved?.awake).toBe(true);
@@ -78,7 +81,7 @@ describe("teleport wand", () => {
 		let state = buildDungeonGameState(40, 20, 42);
 		state = {
 			...state,
-			inventory: [{ itemId: 1, kind: "teleport-wand" as const }],
+			inventory: [{ itemId: 1, kind: "teleport-wand" as const, charges: 5 }],
 		};
 		for (let attempt = 0; attempt < 20; attempt++) {
 			const next = advanceTurn(state, {
@@ -94,7 +97,7 @@ describe("teleport wand", () => {
 	it("using a held teleport wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "teleport-wand" as const }],
+			inventory: [{ itemId: 1, kind: "teleport-wand" as const, charges: 5 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

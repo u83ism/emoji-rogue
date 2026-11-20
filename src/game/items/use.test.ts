@@ -84,7 +84,7 @@ describe("applyUseItem dispatch", () => {
 	it("zapping a wand at a visible enemy identifies its kind; with no target it stays unidentified", () => {
 		const held = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 		};
 		const noTarget = advanceTurn(held, {
 			type: "use-item",

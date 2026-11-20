@@ -3,6 +3,8 @@ import { createRng } from "../../rng.js";
 import {
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
+	WAND_CHARGES_MAX,
+	WAND_CHARGES_MIN,
 } from "../balance.js";
 import { ARMOR_KIND_VALUES, WEAPON_KIND_VALUES } from "../events.js";
 import { buildFloorItem, toHeldItem } from "./heldItemFactory.js";
@@ -231,5 +233,26 @@ describe("bundled weapon kinds", () => {
 		]) {
 			expect(rangeOf(single)).toEqual([1, 1]);
 		}
+	});
+});
+
+describe("a wand's charges", () => {
+	it("are rolled at generation within original Rogue's 3..7, and carried into the pack as they are", () => {
+		const rng = createRng(1);
+		const seen = new Set<number>();
+		for (let attempt = 0; attempt < 200; attempt++) {
+			const item = buildFloorItem("slow-wand", 4, { x: 0, y: 0 }, rng);
+			if (item.kind !== "slow-wand") {
+				throw new Error("unreachable: requested a slow wand");
+			}
+			seen.add(item.identity.charges);
+			expect(toHeldItem(item, 99)).toEqual({
+				itemId: 4,
+				kind: "slow-wand",
+				charges: item.identity.charges,
+			});
+		}
+		expect(Math.min(...seen)).toBe(WAND_CHARGES_MIN);
+		expect(Math.max(...seen)).toBe(WAND_CHARGES_MAX);
 	});
 });

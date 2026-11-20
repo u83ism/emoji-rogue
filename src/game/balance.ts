@@ -428,6 +428,9 @@ export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */
 export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 15;
 
+/** A wand's charges when found — original Rogue's fix_stick(): `rnd(5) + 3` (the wand of light's 10-19 is not in this game). */
+export const WAND_CHARGES_MIN = 3;
+export const WAND_CHARGES_MAX = 7;
 /** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
 export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 8;
 

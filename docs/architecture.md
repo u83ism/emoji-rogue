@@ -55,7 +55,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `initialState.ts` / `columns.ts` | キー変換 / スコア / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体)+`messages.ts`(スコアの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体。持ち物を使う系の文言は`itemEventMessages.ts`)+`messages.ts`(スコアの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関数。ドライバは`scripts/run-bot.ts`でJSONLログを`~/.emoji-rogue/bot-logs/`へ出す。出荷するゲームの一部ではない)。
 

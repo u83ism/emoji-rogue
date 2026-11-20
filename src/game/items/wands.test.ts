@@ -42,12 +42,31 @@ const buildSpreadRngStates = (): readonly RngState[] => {
 };
 
 describe("items/wands", () => {
+	it("a wand with no charges left does nothing but log wand-empty, and the turn passes", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(7, 1)],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 0 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.inventory).toEqual(state.inventory);
+		expect(next.enemies[0]?.speed).toBe("normal");
+		expect(next.events[0]).toEqual({
+			type: "wand-empty",
+			payload: { kind: "slow-wand" },
+		});
+		expect(next.playerFood).toBe(state.playerFood - 1);
+	});
+
 	it("a slow wand slows the nearest visible enemy for good, waking it", () => {
 		const target = zombie(7, 1, 2, false); /* 3 tiles east, asleep */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
-			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -59,7 +78,9 @@ describe("items/wands", () => {
 		expect(next.enemies).toEqual([
 			{ ...target, x: 6, awake: true, speed: "slowed-resting" },
 		]);
-		expect(next.inventory).toEqual([]);
+		expect(next.inventory).toEqual([
+			{ itemId: 1, kind: "slow-wand", charges: 4 },
+		]);
 		expect(next.events).toEqual([
 			{ type: "enemy-slowed", payload: { target: "zombie" } },
 		]);
@@ -71,7 +92,7 @@ describe("items/wands", () => {
 			{
 				...buildArenaGameState(9, 3, 1),
 				enemies: [target],
-				inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+				inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 			},
 			{ type: "use-item", payload: { itemId: 1 } },
 		);
@@ -87,7 +108,7 @@ describe("items/wands", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [far, near],
-			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -105,7 +126,7 @@ describe("items/wands", () => {
 	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "slow-wand" as const }],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
@@ -114,20 +135,24 @@ describe("items/wands", () => {
 		expect(next).toBe(state);
 	});
 
-	it("a held magic missile wand is used up on the nearest visible enemy, which either takes the bolt or saves against it", () => {
+	it("a magic missile zap spends a charge on the nearest visible enemy, which either takes the bolt or saves against it", () => {
 		const outcomes = buildSpreadRngStates().map((rng) => {
 			const state = {
 				...buildArenaGameState(9, 3, 1),
 				rng,
 				enemies: [zombie(7, 1, 100)],
-				inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
+				inventory: [
+					{ itemId: 1, kind: "magic-missile-wand" as const, charges: 5 },
+				],
 			};
 			const next = advanceTurn(state, {
 				type: "use-item",
 				payload: { itemId: 1 },
 			});
 			expect(next.player).toEqual(state.player);
-			expect(next.inventory).toEqual([]);
+			expect(next.inventory).toEqual([
+				{ itemId: 1, kind: "magic-missile-wand", charges: 4 },
+			]);
 			return next.events[0]?.type;
 		});
 		expect(outcomes).toContain("wand-struck");
@@ -137,7 +162,9 @@ describe("items/wands", () => {
 	it("using a held magic missile wand with no visible enemy is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "magic-missile-wand" as const }],
+			inventory: [
+				{ itemId: 1, kind: "magic-missile-wand" as const, charges: 5 },
+			],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

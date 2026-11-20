@@ -67,7 +67,7 @@ describe("toSelectedHeldItem", () => {
 			{ itemId: 6, kind: "teleport-scroll" },
 			{ itemId: 7, kind: "mapping-scroll" },
 			{ itemId: 8, kind: "identify-scroll" },
-			{ itemId: 9, kind: "slow-wand" },
+			{ itemId: 9, kind: "slow-wand", charges: 5 },
 		];
 		expect(toSelectedHeldItem("i", nineItems)?.kind).toBe("slow-wand");
 		expect(toSelectedHeldItem("j", nineItems)).toBeUndefined();

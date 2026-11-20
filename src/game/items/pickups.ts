@@ -1,5 +1,5 @@
 import { INVENTORY_CAPACITY } from "../balance.js";
-import { buildEventLog, isEquipmentItemKind } from "../events.js";
+import { buildEventLog, hasItemIdentity } from "../events.js";
 import type { GameState } from "../state.js";
 import { toItemEventPayload } from "./equipmentKinds.js";
 import { toHeldItem } from "./heldItemFactory.js";
@@ -52,7 +52,7 @@ export const applyItemPickup = (state: GameState): GameState => {
 			]),
 		};
 	}
-	const isFreshConsumable = !isEquipmentItemKind(item.kind);
+	const isFreshConsumable = !hasItemIdentity(item.kind);
 	return {
 		...state,
 		inventory: addToInventory(state.inventory, heldItem),

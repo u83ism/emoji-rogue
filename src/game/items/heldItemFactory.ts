@@ -4,13 +4,15 @@ import {
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
+	WAND_CHARGES_MAX,
+	WAND_CHARGES_MIN,
 	WEAPON_CURSE_CHANCE_PERCENT,
 	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
 } from "../balance.js";
 import {
 	ARMOR_KIND_VALUES,
+	hasItemIdentity,
 	type ItemKind,
-	isEquipmentItemKind,
 	WEAPON_KIND_VALUES,
 } from "../events.js";
 import type { HeldItem, Item, Position } from "../state.js";
@@ -91,10 +93,21 @@ export const buildFloorItem = (
 	position: Position,
 	rng: Rng,
 ): Item => {
-	if (!isEquipmentItemKind(kind)) {
+	if (!hasItemIdentity(kind)) {
 		return { ...position, kind };
 	}
 	switch (kind) {
+		case "slow-wand":
+		case "teleport-wand":
+		case "magic-missile-wand":
+			return {
+				...position,
+				kind,
+				identity: {
+					itemId,
+					charges: rng.getUniformInt(WAND_CHARGES_MIN, WAND_CHARGES_MAX),
+				},
+			};
 		case "weapon": {
 			const weaponKind = drawWeightedKind(
 				rng,
@@ -168,6 +181,10 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 		case "stealth-ring":
 		case "aggravate-monster-ring":
 			return { kind: item.kind, equipped: false, ...item.identity };
+		case "slow-wand":
+		case "teleport-wand":
+		case "magic-missile-wand":
+			return { kind: item.kind, ...item.identity };
 		default:
 			return { itemId: freshItemId, kind: item.kind };
 	}

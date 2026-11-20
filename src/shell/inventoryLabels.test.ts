@@ -88,7 +88,7 @@ describe("formatHeldItemLabel", () => {
 			equipped: true,
 			cursed: false,
 		};
-		const wand: HeldItem = { itemId: 2, kind: "slow-wand" };
+		const wand: HeldItem = { itemId: 2, kind: "slow-wand", charges: 5 };
 		expect(formatHeldItemLabel(ring, [])).toBe("✅ 指輪");
 		expect(formatHeldItemLabel(wand, [])).toBe("杖");
 		expect(formatHeldItemLabel(ring, ["regeneration-ring"])).toBe(

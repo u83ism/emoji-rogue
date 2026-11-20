@@ -53,6 +53,13 @@ const buildFullInventory = (): readonly HeldItem[] =>
 		) {
 			return { itemId, kind, equipped: false, cursed: false };
 		}
+		if (
+			kind === "slow-wand" ||
+			kind === "teleport-wand" ||
+			kind === "magic-missile-wand"
+		) {
+			return { itemId, kind, charges: 5 };
+		}
 		return { itemId, kind };
 	});
 

@@ -28,7 +28,7 @@ import {
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WEAPON_SPAWN_CHANCE_PERCENT,
 } from "../balance.js";
-import { type ItemKind, isEquipmentItemKind } from "../events.js";
+import { hasItemIdentity, type ItemKind } from "../events.js";
 import { buildFloorItem } from "../items/heldItemFactory.js";
 import type { Item, Position, Trap } from "../state.js";
 import { drawSpawnTile, type SpawnChance } from "./spawnPool.js";
@@ -155,7 +155,7 @@ export const drawFloorItems = (
 		) {
 			const position = drawSpawnTile(remaining, rng);
 			items.push(buildFloorItem(spawn.kind, itemId, position, rng));
-			if (isEquipmentItemKind(spawn.kind)) {
+			if (hasItemIdentity(spawn.kind)) {
 				itemId += 1;
 			}
 		}

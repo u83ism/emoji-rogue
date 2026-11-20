@@ -3,11 +3,16 @@ name: develop
 description: Spec check → implement → test (if logic involved) → update progress docs. Use for a single, focused development task in this repo (e.g. "convert MinHeap to a factory function", "add a test file for util.ts").
 ---
 
-1. **Prep**: read `docs/design.md` (product brief) and `docs/tasks/game.md` (active task tracker) to
-   understand the spec/constraints for the task at hand.
+1. **Prep**: read `docs/architecture.md` (codebase reading guide, including its dev-command pitfalls),
+   `docs/design.md` (product brief) and `docs/tasks/game.md` (active task tracker) to understand the
+   spec/constraints for the task at hand.
 2. **Implement**: form an implementation plan, then write code following `.claude/rules/`.
 3. **Test**: if the change involves logic (not pure config/docs), write or update the corresponding
-   `foo.test.ts` and run `npm test`. Skip only for changes that touch no logic.
+   `foo.test.ts` and run `npm test`. Skip only for changes that touch no logic. Run `npm test` /
+   `npm run check` from a cwd with an upper-case drive letter (`cd /C/...` in Git Bash,
+   `Set-Location C:\...` in PowerShell): with a lower-case one every Vitest file fails with
+   `reading 'config'` — see `docs/architecture.md`. (2026-11-20: the VS Code shell starts at `c:`, and
+   the failure was re-diagnosed from scratch because architecture.md had not been read.)
 4. **Structure check**: run `npm run lint` (which includes `scripts/check-structure.ts`) and act on
    what it reports per `.claude/rules/file-structure.md`: errors must be resolved within this task — by
    splitting, or by a **human-approved** justification (never self-authorized); a folder-limit error means

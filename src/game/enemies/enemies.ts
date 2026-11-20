@@ -50,6 +50,8 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: state.playerHp,
 		playerMaxHp: state.playerMaxHp,
 		playerStrength: state.playerStrength,
+		playerLevel: state.playerLevel,
+		playerExperience: state.playerExperience,
 		playerConfusedTurnsRemaining: state.confusedTurnsRemaining,
 		playerParalyzedTurnsRemaining: state.paralyzedTurnsRemaining,
 		flytrapHoldDamage: state.flytrapHoldDamage,
@@ -156,6 +158,8 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerHp: Math.max(0, progress.playerHp),
 		playerMaxHp: progress.playerMaxHp,
 		playerStrength: progress.playerStrength,
+		playerLevel: progress.playerLevel,
+		playerExperience: progress.playerExperience,
 		/* an attack on the player, landed or not, ends the quiet natural healing waits for */
 		quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
 		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,

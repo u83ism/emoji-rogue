@@ -79,8 +79,17 @@ export const calculateMagicSaveChancePercent = (level: number): number =>
 export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
 	calculateSaveChancePercent(0, playerLevel);
 
-/** Percentage (floored) of the damage a vampire landed this turn that it heals itself for, capped at its own max HP — see vampireLifesteal.ts. An arrangement: the original vampire steals max HP instead. */
-export const VAMPIRE_LIFESTEAL_PERCENT = 50;
+/** Chance (out of 100) that a vampire's or wraith's landed hit drains the player (original Rogue's attack(): 30 for 'V', 15 for 'W') — see enemies/vitalityDrain.ts. */
+export const VITALITY_DRAIN_CHANCE_PERCENT: Readonly<
+	Record<"vampire" | "wraith", number>
+> = { vampire: 30, wraith: 15 };
+/** Max HP (and HP) a drain takes: 1d3 for a vampire, 1d10 for a wraith (which also takes a level) — original Rogue's attack(). */
+export const VITALITY_DRAIN_DICE: Readonly<
+	Record<
+		"vampire" | "wraith",
+		{ readonly count: number; readonly sides: number }
+	>
+> = { vampire: { count: 1, sides: 3 }, wraith: { count: 1, sides: 10 } };
 
 /** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands — same "roll every eligible turn" idiom as WAKE_CHANCE_PERCENT. */
 export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
@@ -96,9 +105,6 @@ export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
 export const ICE_MONSTER_FREEZE_TURNS_MIN = 2;
 export const ICE_MONSTER_FREEZE_TURNS_MAX = 3;
 export const PARALYSIS_DEATH_TURNS = 50;
-
-/** Permanent playerMaxHp lost on a turn a wraith lands a hit — see wraithDrain.ts. Never drains playerMaxHp below 1. An arrangement: the original wraith drains a level instead. */
-export const WRAITH_DRAIN_AMOUNT = 1;
 
 /**
  * Wandering monsters (original Rogue's WANDERTIME and rollwand(), see

@@ -296,7 +296,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			? payload.variant === undefined
 			: isItemEventPayload(payload),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
-	"player-drained": (payload) => isPositiveInteger(payload.amount),
+	"player-drained": (payload) =>
+		(payload.by === "vampire" || payload.by === "wraith") &&
+		isPositiveInteger(payload.maxHpLost),
+	"player-level-drained": (payload) => isPositiveInteger(payload.level),
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),
 	"player-frozen": (payload) => isPositiveInteger(payload.turns),
@@ -343,7 +346,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) =>
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
-	"vampire-healed": (payload) => isPositiveInteger(payload.amount),
 	"player-attack-missed": (payload) => isEnemyKind(payload.target),
 	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),
 };

@@ -508,14 +508,17 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind; readonly turns: number };
 	  }
 	| {
-			/** A vampire healing itself off a landed hit — see vampireLifesteal.ts. Fired only when the heal is nonzero (already at max HP is silent). */
-			readonly type: "vampire-healed";
-			readonly payload: { readonly amount: number };
+			/** A vampire's or wraith's landed hit draining max HP (and HP) for good — see enemies/vitalityDrain.ts. */
+			readonly type: "player-drained";
+			readonly payload: {
+				readonly by: "vampire" | "wraith";
+				readonly maxHpLost: number;
+			};
 	  }
 	| {
-			/** A wraith's landed hit permanently lowering playerMaxHp — see wraithDrain.ts. Fired only when the drain is nonzero (already at the floor is silent). */
-			readonly type: "player-drained";
-			readonly payload: { readonly amount: number };
+			/** A wraith's drain taking a level — logged before its player-drained. `level` is the level the player drops to. */
+			readonly type: "player-level-drained";
+			readonly payload: { readonly level: number };
 	  }
 	| {
 			/** A medusa's ranged gaze landing — sets confusedTurnsRemaining, same field as player-confused (the confusion potion) but its own event/flavor text, same "same field, different source" idiom as the sleeping gas trap reusing paralyzedTurnsRemaining. See advanceEnemies. */

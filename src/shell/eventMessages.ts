@@ -171,10 +171,10 @@ export const formatEvent = (
 			return "幻覚がおさまった";
 		case "enemy-held":
 			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
-		case "vampire-healed":
-			return `${ENEMY_NAMES.vampire}が血を吸い、HPを${event.payload.amount}回復した`;
 		case "player-drained":
-			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
+			return `${ENEMY_NAMES[event.payload.by]}に生命力を吸われ、急に体が弱った。最大HPが${event.payload.maxHpLost}下がった`;
+		case "player-level-drained":
+			return `レベルが${event.payload.level}に下がった`;
 		case "player-gazed":
 			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
 		case "player-strength-drained":

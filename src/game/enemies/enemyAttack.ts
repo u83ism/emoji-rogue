@@ -1,5 +1,4 @@
 import type { RngState } from "../../rng.js";
-import { WRAITH_DRAIN_AMOUNT } from "../balance.js";
 import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import { resolvePoisonDrain } from "../combat/strength.js";
@@ -7,8 +6,10 @@ import type { EnemyKind, GameEvent } from "../events.js";
 import { resolveArmorRust } from "../items/equipment.js";
 import type { Enemy, HeldItem } from "../state.js";
 import { ENEMY_STATS } from "./enemyStats.js";
-import { resolveVampireLifesteal } from "./vampireLifesteal.js";
-import { resolveWraithDrain } from "./wraithDrain.js";
+import {
+	resolveVitalityDrain,
+	type VitalityDrainerKind,
+} from "./vitalityDrain.js";
 
 /** The player's side of an enemy attack: everything a hit or a kind's on-hit effect can change. */
 export interface AttackTarget {
@@ -16,6 +17,7 @@ export interface AttackTarget {
 	readonly playerMaxHp: number;
 	readonly playerStrength: number;
 	readonly playerLevel: number;
+	readonly playerExperience: number;
 	readonly inventory: readonly HeldItem[];
 	readonly rng: RngState;
 }
@@ -33,11 +35,23 @@ interface OnHit {
 	readonly enemyHp: number;
 	readonly target: AttackTarget;
 	readonly events: readonly GameEvent[];
+	/** The effect itself killed the player (a drain to 0 max HP) — the dice alone show as playerHp <= 0. */
+	readonly died: boolean;
 }
-type OnHitEffect = (enemy: Enemy, damageDealt: number, hit: OnHit) => OnHit;
+type OnHitEffect = (enemy: Enemy, hit: OnHit) => OnHit;
 
 const withEvent = (hit: OnHit, event: GameEvent | undefined): OnHit =>
 	event === undefined ? hit : { ...hit, events: [...hit.events, event] };
+
+const drainVitality = (kind: VitalityDrainerKind, hit: OnHit): OnHit => {
+	const drain = resolveVitalityDrain(kind, hit.target);
+	return {
+		...hit,
+		target: { ...hit.target, ...drain.target },
+		events: [...hit.events, ...drain.events],
+		died: hit.died || drain.died,
+	};
+};
 
 /**
  * What a kind does once per turn on top of its damage, when at least one of
@@ -46,43 +60,19 @@ const withEvent = (hit: OnHit, event: GameEvent | undefined): OnHit =>
  */
 const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
 	/* rusts the worn armor — or logs that its protection blocked the rust */
-	aquator: (_enemy, _damage, hit) => {
+	aquator: (_enemy, hit) => {
 		const rust = resolveArmorRust(hit.target.inventory);
 		return withEvent(
 			{ ...hit, target: { ...hit.target, inventory: rust.inventory } },
 			rust.event,
 		);
 	},
-	/* heals itself for part of the damage — vampireLifesteal.ts */
-	vampire: (enemy, damageDealt, hit) => {
-		const lifesteal = resolveVampireLifesteal(
-			hit.enemyHp,
-			enemy.maxHp,
-			damageDealt,
-		);
-		return withEvent({ ...hit, enemyHp: lifesteal.hp }, lifesteal.event);
-	},
-	/* lowers the player's max HP for good — wraithDrain.ts */
-	wraith: (_enemy, _damage, hit) => {
-		const drain = resolveWraithDrain(
-			hit.target.playerMaxHp,
-			hit.target.playerHp,
-			WRAITH_DRAIN_AMOUNT,
-		);
-		return withEvent(
-			{
-				...hit,
-				target: {
-					...hit.target,
-					playerMaxHp: drain.playerMaxHp,
-					playerHp: drain.playerHp,
-				},
-			},
-			drain.event,
-		);
-	},
+	/* sometimes takes max HP for good — vitalityDrain.ts */
+	vampire: (_enemy, hit) => drainVitality("vampire", hit),
+	/* sometimes takes a level and max HP for good — vitalityDrain.ts */
+	wraith: (_enemy, hit) => drainVitality("wraith", hit),
 	/* original Rogue's rattlesnake: a poisoned sting — strength.ts's resolvePoisonDrain */
-	scorpion: (_enemy, _damage, hit) => {
+	scorpion: (_enemy, hit) => {
 		const drain = resolvePoisonDrain(
 			hit.target.playerStrength,
 			hit.target.playerLevel,
@@ -163,14 +153,13 @@ export const resolveEnemyAttack = (
 		enemyHp,
 		target: { ...target, playerHp, rng },
 		events,
+		died: false,
 	};
 	const effect = ON_HIT_EFFECTS[enemy.kind];
 	const afterEffect =
-		landed && effect !== undefined
-			? effect(enemy, damageDealt, afterDice)
-			: afterDice;
+		landed && effect !== undefined ? effect(enemy, afterDice) : afterDice;
 
-	const died = afterEffect.target.playerHp <= 0;
+	const died = afterEffect.died || afterEffect.target.playerHp <= 0;
 	return {
 		enemyHp: afterEffect.enemyHp,
 		target: afterEffect.target,

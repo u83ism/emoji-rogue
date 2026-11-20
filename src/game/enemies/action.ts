@@ -16,6 +16,9 @@ export interface EnemyTurnProgress {
 	readonly playerHp: number;
 	readonly playerMaxHp: number;
 	readonly playerStrength: number;
+	/** A wraith's drain can take a level — vitalityDrain.ts. */
+	readonly playerLevel: number;
+	readonly playerExperience: number;
 	readonly playerConfusedTurnsRemaining: number;
 	readonly playerParalyzedTurnsRemaining: number;
 	readonly flytrapHoldDamage: number;

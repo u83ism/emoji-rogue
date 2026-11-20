@@ -353,12 +353,12 @@ describe("formatEvent", () => {
 				"警報の指輪を身につけた。敵の気配に気づかれてしまった!",
 			],
 			[
-				{ type: "vampire-healed", payload: { amount: 1 } },
-				"ヴァンパイアが血を吸い、HPを1回復した",
+				{ type: "player-drained", payload: { by: "vampire", maxHpLost: 2 } },
+				"ヴァンパイアに生命力を吸われ、急に体が弱った。最大HPが2下がった",
 			],
 			[
-				{ type: "player-drained", payload: { amount: 1 } },
-				"レイスに生命力を吸われた。最大HPが1下がった",
+				{ type: "player-level-drained", payload: { level: 3 } },
+				"レベルが3に下がった",
 			],
 			[
 				{ type: "player-gazed", payload: { turns: 6 } },

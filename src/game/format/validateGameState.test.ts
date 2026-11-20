@@ -778,17 +778,11 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed vampire-healed event and rejects broken ones", () => {
-		const result = validateGameState({
-			...buildValidState(),
-			events: [{ type: "vampire-healed", payload: { amount: 1 } }],
-		});
-		expect(result.ok).toBe(true);
-
+	it("rejects the removed vampire-healed event", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "vampire-healed", payload: { amount: 0 } }],
+				events: [{ type: "vampire-healed", payload: { amount: 1 } }],
 			},
 			"events",
 		);
@@ -812,17 +806,21 @@ describe("validateGameState", () => {
 	it("accepts a well-formed player-drained event and rejects broken ones", () => {
 		const result = validateGameState({
 			...buildValidState(),
-			events: [{ type: "player-drained", payload: { amount: 1 } }],
+			events: [
+				{ type: "player-drained", payload: { by: "wraith", maxHpLost: 4 } },
+				{ type: "player-level-drained", payload: { level: 2 } },
+			],
 		});
 		expect(result.ok).toBe(true);
 
-		expectRejected(
-			{
-				...buildValidState(),
-				events: [{ type: "player-drained", payload: { amount: 0 } }],
-			},
-			"events",
-		);
+		for (const event of [
+			{ type: "player-drained", payload: { by: "wraith", maxHpLost: 0 } },
+			{ type: "player-drained", payload: { by: "zombie", maxHpLost: 1 } },
+			{ type: "player-drained", payload: { amount: 1 } },
+			{ type: "player-level-drained", payload: { level: 0 } },
+		]) {
+			expectRejected({ ...buildValidState(), events: [event] }, "events");
+		}
 	});
 
 	it("accepts a well-formed player-gazed event and rejects broken ones", () => {

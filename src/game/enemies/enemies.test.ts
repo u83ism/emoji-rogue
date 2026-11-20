@@ -7,8 +7,6 @@ import {
 	PLAYER_MAX_HP,
 	PLAYER_START_STRENGTH,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	VAMPIRE_LIFESTEAL_PERCENT,
-	WRAITH_DRAIN_AMOUNT,
 } from "../balance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
@@ -894,44 +892,25 @@ describe("advanceEnemies", () => {
 		expect(next.rng).toEqual(state.rng);
 	});
 
-	it("an adjacent vampire heals itself off its own landed hit and logs vampire-healed", () => {
-		const base = buildExposedState([vampire(5, 1, TEST_ENEMY_HP - 10)]);
-		/* a vampire rolls 1d10 — a 1 would round its heal down to nothing */
-		const rng = findRngState(
-			(candidate) =>
-				(collectHitDamages(
-					advanceEnemies({ ...base, rng: candidate }).events,
-				)[0] ?? 0) >= 2,
+	it("an adjacent vampire's landed hit sometimes drains max HP and HP by 1d3 (original Rogue's 30%)", () => {
+		const base = buildExposedState([vampire(5, 1)]);
+		const rng = findRngState((candidate) =>
+			advanceEnemies({ ...base, rng: candidate }).events.some(
+				(event) => event.type === "player-drained",
+			),
 		);
 		const next = advanceEnemies({ ...base, rng });
 		const [damage] = collectHitDamages(next.events);
-		const healedAmount = Math.floor(
-			((damage ?? 0) * VAMPIRE_LIFESTEAL_PERCENT) / 100,
+		const drained = next.events.find(
+			(event) => event.type === "player-drained",
 		);
-		expect(next.enemies).toEqual([
-			vampire(5, 1, TEST_ENEMY_HP - 10 + healedAmount),
-		]);
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "vampire", damage } },
-			{ type: "vampire-healed", payload: { amount: healedAmount } },
-		]);
-	});
-
-	it("a vampire already at max HP does not overheal and logs no vampire-healed event", () => {
-		const state = buildExposedState([vampire(5, 1)]);
-		const next = advanceEnemies(state);
+		const lost =
+			drained?.type === "player-drained" ? drained.payload.maxHpLost : 0;
+		expect(lost).toBeGreaterThanOrEqual(1);
+		expect(lost).toBeLessThanOrEqual(3);
+		expect(next.playerMaxHp).toBe(base.playerMaxHp - lost);
+		expect(next.playerHp).toBe(base.playerHp - (damage ?? 0) - lost);
 		expect(next.enemies).toEqual([vampire(5, 1)]);
-		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
-			false,
-		);
-	});
-
-	it("a non-vampire adjacent enemy never heals off its own hit", () => {
-		const state = buildExposedState([zombie(5, 1)]);
-		const next = advanceEnemies(state);
-		expect(next.events.some((event) => event.type === "vampire-healed")).toBe(
-			false,
-		);
 	});
 
 	it("a wounded troll or griffin does not heal itself — original Rogue's ISREGEN has no enemy-side effect", () => {
@@ -1090,24 +1069,21 @@ describe("advanceEnemies", () => {
 		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
-	it("an adjacent wraith permanently drains playerMaxHp on a landed hit", () => {
-		const state = buildExposedState([wraith(5, 1)]);
-		const next = advanceEnemies(state);
-		const [damage] = collectHitDamages(next.events);
-		expect(next.playerMaxHp).toBe(state.playerMaxHp - WRAITH_DRAIN_AMOUNT);
-		expect(next.playerHp).toBe(state.playerHp - (damage ?? 0));
-		expect(next.events).toEqual([
-			{ type: "player-hit", payload: { by: "wraith", damage } },
-			{ type: "player-drained", payload: { amount: WRAITH_DRAIN_AMOUNT } },
-		]);
-	});
-
-	it("wraith drain never lowers playerMaxHp below 1, and logs no player-drained once there", () => {
-		const state = { ...buildCorridorState([wraith(5, 1)]), playerMaxHp: 1 };
-		const next = advanceEnemies(state);
-		expect(next.playerMaxHp).toBe(1);
-		expect(next.events.some((event) => event.type === "player-drained")).toBe(
-			false,
+	it("an adjacent wraith's landed hit sometimes takes a level and 1d10 max HP (original Rogue's 15%)", () => {
+		const base = {
+			...buildExposedState([wraith(5, 1)]),
+			playerLevel: 3,
+			playerExperience: 25,
+		};
+		const rng = findRngState((candidate) =>
+			advanceEnemies({ ...base, rng: candidate }).events.some(
+				(event) => event.type === "player-level-drained",
+			),
 		);
+		const next = advanceEnemies({ ...base, rng });
+		expect(next.playerLevel).toBe(2);
+		/* one past the threshold of the level just lost (LEVEL_EXPERIENCE_THRESHOLDS[1] = 20) */
+		expect(next.playerExperience).toBe(21);
+		expect(next.playerMaxHp).toBeLessThan(base.playerMaxHp);
 	});
 });

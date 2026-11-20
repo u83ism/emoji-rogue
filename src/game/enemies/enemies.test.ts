@@ -3,12 +3,10 @@ import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
-	GRIFFIN_REGEN_AMOUNT,
 	MEDUSA_GAZE_CONFUSE_DURATION,
 	PLAYER_MAX_HP,
 	PLAYER_START_STRENGTH,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	TROLL_REGEN_AMOUNT,
 	VAMPIRE_LIFESTEAL_PERCENT,
 	WRAITH_DRAIN_AMOUNT,
 } from "../balance.js";
@@ -71,8 +69,6 @@ const aquator = (x: number, y: number, awake = true): Enemy =>
 	enemyOf("aquator", x, y, awake);
 const vampire = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
 	enemyOf("vampire", x, y, true, hp);
-const griffin = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
-	enemyOf("griffin", x, y, true, hp);
 const troll = (x: number, y: number, hp = TEST_ENEMY_HP): Enemy =>
 	enemyOf("troll", x, y, true, hp);
 const iceMonster = (x: number, y: number, awake = true): Enemy =>
@@ -942,51 +938,14 @@ describe("advanceEnemies", () => {
 		);
 	});
 
-	it("a non-adjacent troll regenerates HP every turn even without landing a hit", () => {
-		const state = buildCorridorState([troll(7, 1, TEST_ENEMY_HP - 3)]);
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([
-			troll(6, 1, TEST_ENEMY_HP - 3 + TROLL_REGEN_AMOUNT),
-		]);
-		expect(next.events).toEqual([
-			{
-				type: "enemy-regenerated",
-				payload: { target: "troll", amount: TROLL_REGEN_AMOUNT },
-			},
-		]);
-	});
-
-	it("regeneration caps at the enemy's own maxHp and logs no event once already full", () => {
-		const almostFull = buildCorridorState([troll(7, 1, TEST_ENEMY_HP - 1)]);
-		expect(advanceEnemies(almostFull).enemies).toEqual([troll(6, 1)]);
-
-		const state = buildCorridorState([troll(7, 1)]);
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([troll(6, 1)]);
-		expect(
-			next.events.some((event) => event.type === "enemy-regenerated"),
-		).toBe(false);
-	});
-
-	it("an enemy that just killed the player does not regenerate — player-died stays the last event", () => {
-		const state = {
-			...buildExposedState([troll(5, 1, TEST_ENEMY_HP - 3)]),
-			playerHp: 1,
-		};
-		const next = advanceEnemies(state);
-		expect(next.status).toBe("dead");
-		expect(next.events.at(-1)?.type).toBe("player-died");
-		expect(next.enemies).toEqual([troll(5, 1, TEST_ENEMY_HP - 3)]);
-	});
-
-	it("a griffin regenerates once per turn", () => {
-		const state = buildCorridorState([griffin(7, 1, TEST_ENEMY_HP - 3)]);
-		const next = advanceEnemies(state);
-		const regenEvents = next.events.filter(
-			(event) => event.type === "enemy-regenerated",
-		);
-		expect(regenEvents.length).toBe(1);
-		expect(next.enemies[0]?.hp).toBe(TEST_ENEMY_HP - 3 + GRIFFIN_REGEN_AMOUNT);
+	it("a wounded troll or griffin does not heal itself — original Rogue's ISREGEN has no enemy-side effect", () => {
+		for (const enemy of [
+			enemyOf("troll", 7, 1, true, TEST_ENEMY_HP - 3),
+			enemyOf("griffin", 7, 1, true, TEST_ENEMY_HP - 3),
+		]) {
+			const next = advanceEnemies(buildCorridorState([enemy]));
+			expect(next.enemies[0]?.hp).toBe(TEST_ENEMY_HP - 3);
+		}
 	});
 
 	it("a scorpion's sting that lands may drain a point of strength, the maximum untouched", () => {

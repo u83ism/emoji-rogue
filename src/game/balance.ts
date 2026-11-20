@@ -83,11 +83,6 @@ export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
 /** Percentage (floored) of the damage a vampire landed this turn that it heals itself for, capped at its own max HP — see vampireLifesteal.ts. An arrangement: the original vampire steals max HP instead. */
 export const VAMPIRE_LIFESTEAL_PERCENT = 50;
 
-/** HP a griffin regenerates per awake turn while below its max HP — see enemyRegen.ts. */
-export const GRIFFIN_REGEN_AMOUNT = 1;
-/** HP a troll regenerates per awake turn while below its max HP — see enemyRegen.ts. */
-export const TROLL_REGEN_AMOUNT = 2;
-
 /** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands — same "roll every eligible turn" idiom as WAKE_CHANCE_PERCENT. */
 export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
 /** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */

@@ -298,8 +298,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			? payload.variant === undefined
 			: isItemEventPayload(payload),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
-	"enemy-regenerated": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.amount),
 	"player-drained": (payload) => isPositiveInteger(payload.amount),
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),

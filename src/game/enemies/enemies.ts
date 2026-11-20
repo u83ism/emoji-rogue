@@ -11,7 +11,6 @@ import type { Enemy, GameState } from "../state.js";
 import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
 import { type EnemyTurnProgress, resolveEnemyAction } from "./action.js";
 import { canFlyAgain } from "./enemyFlight.js";
-import { resolveEnemyRegen } from "./enemyRegen.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
@@ -24,9 +23,9 @@ import { isHeldByFlytrap } from "./flytrapHold.js";
  * from the player after the first (enemyFlight.ts's canFlyAgain) — original
  * Rogue's only speed difference. A
  * slowedTurnsRemaining > 0 enemy (slow wand) skips its whole turn, just
- * ticking down. Griffin and troll additionally regenerate HP every awake
- * turn regardless of action (enemyRegen.ts), independent of whether they
- * landed a hit. The player's HP reaching zero ends the run; the enemies
+ * ticking down. No kind heals itself between hits: original Rogue's
+ * ISREGEN flag (griffin, troll, vampire) only feeds the player-side status
+ * display, never an enemy heal. The player's HP reaching zero ends the run; the enemies
  * after that one still take their turn, but resolveEnemyAction's attack
  * path stops rolling against a dead player.
  */
@@ -137,14 +136,6 @@ export const advanceEnemies = (state: GameState): GameState => {
 		const actor = result.actor;
 		progress = result.progress;
 
-		/* nothing is logged after the blow that ended the run — player-died stays the last event */
-		const regen = progress.died
-			? { hp: actor.hp, event: undefined }
-			: resolveEnemyRegen(enemy.kind, actor.hp, enemy.maxHp);
-		if (regen.event !== undefined) {
-			progress = { ...progress, events: [...progress.events, regen.event] };
-		}
-
 		if (actor.fled) {
 			continue;
 		}
@@ -154,7 +145,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			...enemy,
 			x: next.x,
 			y: next.y,
-			hp: regen.hp,
+			hp: actor.hp,
 			awake: true,
 			confusedTurnsRemaining,
 		});

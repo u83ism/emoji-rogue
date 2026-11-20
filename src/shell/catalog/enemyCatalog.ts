@@ -1,14 +1,12 @@
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
-	GRIFFIN_REGEN_AMOUNT,
 	ICE_MONSTER_FREEZE_TURNS_MAX,
 	ICE_MONSTER_FREEZE_TURNS_MIN,
 	MEDUSA_GAZE_CHANCE_PERCENT,
 	MEDUSA_GAZE_CONFUSE_DURATION,
 	PARALYSIS_DEATH_TURNS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-	TROLL_REGEN_AMOUNT,
 	VAMPIRE_LIFESTEAL_PERCENT,
 	WRAITH_DRAIN_AMOUNT,
 } from "../../game/balance.js";
@@ -52,8 +50,9 @@ export const ENEMY_BEHAVIOR: Readonly<Record<EnemyKind, string>> = {
 	quagga: "特殊能力はない。1ターンに2回攻撃する",
 	rhinoceros: "特殊能力はないが非常に硬く、1ターンに3回攻撃する",
 	jabberwock: "特殊能力はないがレベルが最も高く、1ターンに2回攻撃する",
-	griffin: `毎ターン${GRIFFIN_REGEN_AMOUNT}ずつHPが回復する。1ターンに2回攻撃する。飛んでいて、プレイヤーから離れている間は1ターンに2回動く`,
-	troll: `毎ターン${TROLL_REGEN_AMOUNT}ずつHPが回復する。1ターンに3回攻撃する`,
+	griffin:
+		"特殊能力はない。1ターンに2回攻撃する。飛んでいて、プレイヤーから離れている間は1ターンに2回動く",
+	troll: "特殊能力はない。1ターンに3回攻撃する",
 	"ice-monster": `攻撃が命中してもダメージは無いが、${ICE_MONSTER_FREEZE_TURNS_MIN}〜${ICE_MONSTER_FREEZE_TURNS_MAX}ターン凍りついて動けなくなる。凍っている間に重ねて凍らされると加算され、合計が${PARALYSIS_DEATH_TURNS}ターンを超えると凍え死ぬ`,
 	"venus-flytrap":
 		"その場から動かず、隣接している間だけ攻撃してくる。隣接中はプレイヤーを拘束し、離れようとする移動を妨げる(その場合もターンは消費される)。ダメージは最初の命中で1、命中するたびに1ずつ増え、外れたターンもそれまでに増えた分のダメージを受ける。倒すか離れると元に戻る",

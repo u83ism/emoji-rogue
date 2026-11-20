@@ -814,34 +814,14 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed enemy-regenerated event and rejects broken ones", () => {
-		const result = validateGameState({
-			...buildValidState(),
-			events: [
-				{ type: "enemy-regenerated", payload: { target: "troll", amount: 2 } },
-			],
-		});
-		expect(result.ok).toBe(true);
-
+	it("rejects the removed enemy-regenerated event", () => {
 		expectRejected(
 			{
 				...buildValidState(),
 				events: [
 					{
 						type: "enemy-regenerated",
-						payload: { target: "troll", amount: 0 },
-					},
-				],
-			},
-			"events",
-		);
-		expectRejected(
-			{
-				...buildValidState(),
-				events: [
-					{
-						type: "enemy-regenerated",
-						payload: { target: "unknown-kind", amount: 1 },
+						payload: { target: "troll", amount: 2 },
 					},
 				],
 			},

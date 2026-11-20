@@ -373,10 +373,6 @@ describe("formatEvent", () => {
 				"ヴァンパイアが血を吸い、HPを1回復した",
 			],
 			[
-				{ type: "enemy-regenerated", payload: { target: "troll", amount: 2 } },
-				"トロルのHPが2回復した",
-			],
-			[
 				{ type: "player-drained", payload: { amount: 1 } },
 				"レイスに生命力を吸われた。最大HPが1下がった",
 			],

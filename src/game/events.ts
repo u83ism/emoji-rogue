@@ -539,11 +539,6 @@ export type GameEvent =
 			readonly payload: { readonly amount: number };
 	  }
 	| {
-			/** A griffin/troll's passive per-turn self-heal — see enemyRegen.ts. Fired only when the heal is nonzero (already at max HP is silent). */
-			readonly type: "enemy-regenerated";
-			readonly payload: { readonly target: EnemyKind; readonly amount: number };
-	  }
-	| {
 			/** A wraith's landed hit permanently lowering playerMaxHp — see wraithDrain.ts. Fired only when the drain is nonzero (already at the floor is silent). */
 			readonly type: "player-drained";
 			readonly payload: { readonly amount: number };

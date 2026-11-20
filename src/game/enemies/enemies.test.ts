@@ -313,15 +313,16 @@ describe("advanceEnemies", () => {
 		expect(advanceEnemies(state).rng).toEqual(state.rng);
 	});
 
-	it("a kind with several attacks rolls each of them every turn", () => {
-		/* a troll attacks 1d8/1d8/2d6 */
+	it("a kind with several attacks rolls each of them every turn, logged as one summed hit", () => {
+		/* a troll attacks 1d8/1d8/2d6 — all three landing totals 4..28 */
 		const state = buildExposedState([troll(5, 1)]);
 		const next = advanceEnemies(state);
 		const damages = collectHitDamages(next.events);
-		expect(damages.length).toBe(3);
-		expect(next.playerHp).toBe(
-			state.playerHp - damages.reduce((sum, damage) => sum + damage, 0),
-		);
+		expect(damages.length).toBe(1);
+		const [damage = 0] = damages;
+		expect(damage).toBeGreaterThanOrEqual(4);
+		expect(damage).toBeLessThanOrEqual(28);
+		expect(next.playerHp).toBe(state.playerHp - damage);
 	});
 
 	it("the remaining attacks are skipped once one of them already ended the run", () => {
@@ -342,9 +343,8 @@ describe("advanceEnemies", () => {
 		};
 		const next = advanceEnemies(state);
 		expect(next.playerHp).toBe(state.playerHp);
+		/* three failed to-hit rolls, one log line */
 		expect(next.events).toEqual([
-			{ type: "enemy-attack-missed", payload: { by: "troll" } },
-			{ type: "enemy-attack-missed", payload: { by: "troll" } },
 			{ type: "enemy-attack-missed", payload: { by: "troll" } },
 		]);
 	});
@@ -353,11 +353,10 @@ describe("advanceEnemies", () => {
 		/* each of a quagga's two bites that lands is a full 1d5, never reduced by armor */
 		const state = buildExposedState([enemyOf("quagga", 5, 1)]);
 		const damages = collectHitDamages(advanceEnemies(state).events);
-		expect(damages.length).toBeGreaterThan(0);
-		for (const damage of damages) {
-			expect(damage).toBeGreaterThanOrEqual(1);
-			expect(damage).toBeLessThanOrEqual(5);
-		}
+		expect(damages.length).toBe(1);
+		const [damage = 0] = damages;
+		expect(damage).toBeGreaterThanOrEqual(1);
+		expect(damage).toBeLessThanOrEqual(10);
 	});
 
 	it("an adjacent thief steals gold and flees instead of dealing damage", () => {
@@ -675,7 +674,6 @@ describe("advanceEnemies", () => {
 			calculatePlayerDefense(state.inventory),
 		);
 		expect(next.events).toEqual([
-			{ type: "enemy-attack-missed", payload: { by: "aquator" } },
 			{ type: "enemy-attack-missed", payload: { by: "aquator" } },
 		]);
 	});
@@ -1133,12 +1131,8 @@ describe("advanceEnemies", () => {
 		const state = buildExposedState([medusa(5, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.confusedTurnsRemaining).toBe(0);
-		/* 3d4/3d4/2d5 — three attacks, nothing else */
-		expect(next.events.map((event) => event.type)).toEqual([
-			"player-hit",
-			"player-hit",
-			"player-hit",
-		]);
+		/* 3d4/3d4/2d5 — three attacks in one logged hit, nothing else */
+		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
 	});
 
 	it("an adjacent wraith permanently drains playerMaxHp on a landed hit", () => {

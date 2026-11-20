@@ -117,8 +117,9 @@ const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
  * One adjacent enemy's whole attack turn, as in original Rogue's roll_em():
  * every die of ENEMY_STATS[kind].attacks is its own to-hit roll
  * (calculateEnemyHitChancePercent) and, when it lands, its own damage roll
- * — armor only makes the enemy miss, it never reduces damage. A miss logs
- * enemy-attack-missed; the remaining attacks are skipped once the player is
+ * — armor only makes the enemy miss, it never reduces damage. The turn logs
+ * one event: player-hit with the summed damage if any attack landed, else
+ * enemy-attack-missed. The remaining attacks are skipped once the player is
  * dead. If at least one attack landed, the kind's ON_HIT_EFFECTS entry then
  * triggers once. Thief/nymph, the venus-flytrap and the ice monster never
  * come here — their turn next to the player is their own (adjacentAction.ts).
@@ -144,7 +145,6 @@ export const resolveEnemyAttack = (
 		const hitRoll = rollToHit(rng, hitChancePercent);
 		rng = hitRoll.rng;
 		if (!hitRoll.hit) {
-			events.push({ type: "enemy-attack-missed", payload: { by: enemy.kind } });
 			continue;
 		}
 		const diceRoll = rollDamageDice(rng, attackDice, 0, 0);
@@ -152,11 +152,18 @@ export const resolveEnemyAttack = (
 		playerHp -= diceRoll.damage;
 		damageDealt += diceRoll.damage;
 		landed = true;
-		events.push({
-			type: "player-hit",
-			payload: { by: enemy.kind, damage: diceRoll.damage },
-		});
 	}
+	/* One log line per enemy turn, however many dice it has — as original
+	 * Rogue's attack() prints one hit/miss message. One line per die pushed
+	 * the player's own attack result out of the 3-line log (2026-11-20). */
+	events.push(
+		landed
+			? {
+					type: "player-hit",
+					payload: { by: enemy.kind, damage: damageDealt },
+				}
+			: { type: "enemy-attack-missed", payload: { by: enemy.kind } },
+	);
 
 	const afterDice: OnHit = {
 		enemyHp,

@@ -215,6 +215,7 @@ export type TeleportSource = "teleport-scroll" | "teleport-trap";
 
 export type GameEvent =
 	| {
+			/** One adjacent enemy's whole attack turn that landed at least once — damage is the sum over its dice (enemyAttack.ts). */
 			readonly type: "player-hit";
 			readonly payload: { readonly by: EnemyKind; readonly damage: number };
 	  }
@@ -568,7 +569,7 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** An adjacent enemy's attack that failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain) triggers unless another of the same turn's attacks lands. See enemyAttack.ts. */
+			/** An adjacent enemy's whole attack turn in which every die failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain). See enemyAttack.ts. */
 			readonly type: "enemy-attack-missed";
 			readonly payload: { readonly by: EnemyKind };
 	  };

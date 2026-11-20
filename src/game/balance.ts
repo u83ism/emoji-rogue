@@ -435,15 +435,6 @@ export const BLIND_POTION_SPAWN_CHANCE_PERCENT = 12;
 /** Field of view radius while blind — adjacent tiles only. */
 export const BLIND_VIEW_RADIUS = 1;
 
-/**
- * How many turns a paralysis potion locks the player out of acting for.
- * Shorter than the other temporary statuses — being unable to act at all
- * for even a few turns next to an enemy is punishing enough.
- */
-export const PARALYSIS_POTION_DURATION = 3;
-/** Chance (out of 100), independently rolled per floor, that a paralysis potion spawns. */
-export const PARALYSIS_POTION_SPAWN_CHANCE_PERCENT = 12;
-
 /** Chance (out of 100), independently rolled per floor, that a potion of raise level spawns — rarer than the other potions since an instant level-up is a strong effect. */
 export const RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT = 8;
 

@@ -49,7 +49,6 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	/* Same glyph again — blindness is unidentified until drunk too. */
 	blindness: { glyph: "💊" },
 	/* Same glyph again — paralysis is unidentified until drunk too. */
-	paralysis: { glyph: "💊" },
 	/* Same glyph again — raise-level is unidentified until drunk too. */
 	"raise-level": { glyph: "💊" },
 	/* Same glyph again — detect-monster is unidentified until drunk too. */

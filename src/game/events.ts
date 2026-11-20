@@ -57,7 +57,6 @@ export const ITEM_KIND_VALUES = [
 	"levitation",
 	"protect-armor",
 	"blindness",
-	"paralysis",
 	"raise-level",
 	"detect-monster",
 	"life",
@@ -141,7 +140,6 @@ const POTION_KIND_VALUES = [
 	"confusion",
 	"levitation",
 	"blindness",
-	"paralysis",
 	"raise-level",
 	"detect-monster",
 	"life",
@@ -447,11 +445,6 @@ export type GameEvent =
 			/** Fired each level gained — see applyExperienceGain. */
 			readonly type: "player-leveled-up";
 			readonly payload: { readonly level: number };
-	  }
-	| {
-			/** Drinking a paralysis potion — see applyStatusCountdownTicks. */
-			readonly type: "player-paralyzed";
-			readonly payload: { readonly turns: number };
 	  }
 	| {
 			/** Fired the turn paralyzedTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */

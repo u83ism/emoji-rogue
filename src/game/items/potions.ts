@@ -6,7 +6,6 @@ import {
 	HEAL_POTION_DICE_SIDES,
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
-	PARALYSIS_POTION_DURATION,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
@@ -118,17 +117,6 @@ export const applyUsePotion = (
 				blindTurnsRemaining: BLIND_POTION_DURATION,
 				events: buildEventLog(state.events, [
 					{ type: "player-blinded", payload: { turns: BLIND_POTION_DURATION } },
-				]),
-			};
-		case "paralysis":
-			return {
-				...state,
-				paralyzedTurnsRemaining: PARALYSIS_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-paralyzed",
-						payload: { turns: PARALYSIS_POTION_DURATION },
-					},
 				]),
 			};
 		case "raise-level":

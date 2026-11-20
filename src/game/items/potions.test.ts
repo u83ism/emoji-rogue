@@ -7,7 +7,6 @@ import {
 	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
-	PARALYSIS_POTION_DURATION,
 	PLAYER_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
@@ -213,27 +212,6 @@ describe("items/potions", () => {
 				(event) =>
 					event.type === "player-blinded" &&
 					event.payload.turns === BLIND_POTION_DURATION,
-			),
-		).toBe(true);
-	});
-
-	it("using a held paralysis potion sets paralyzedTurnsRemaining and logs player-paralyzed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "paralysis" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
-		expect(next.paralyzedTurnsRemaining).toBe(PARALYSIS_POTION_DURATION - 1);
-		expect(next.inventory).toEqual([]);
-		expect(
-			next.events.some(
-				(event) =>
-					event.type === "player-paralyzed" &&
-					event.payload.turns === PARALYSIS_POTION_DURATION,
 			),
 		).toBe(true);
 	});

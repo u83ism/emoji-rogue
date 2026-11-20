@@ -604,13 +604,7 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts well-formed player-paralyzed and paralysis-faded events and rejects a broken one", () => {
-		const paralyzed = validateGameState({
-			...buildValidState(),
-			events: [{ type: "player-paralyzed", payload: { turns: 3 } }],
-		});
-		expect(paralyzed.ok).toBe(true);
-
+	it("accepts a paralysis-faded event and rejects the removed player-paralyzed", () => {
 		const faded = validateGameState({
 			...buildValidState(),
 			events: [{ type: "paralysis-faded", payload: {} }],
@@ -620,7 +614,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-paralyzed", payload: { turns: 0 } }],
+				events: [{ type: "player-paralyzed", payload: { turns: 3 } }],
 			},
 			"events",
 		);

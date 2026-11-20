@@ -94,7 +94,6 @@ const applyItemEffect = (
 		case "confusion":
 		case "levitation":
 		case "blindness":
-		case "paralysis":
 		case "raise-level":
 		case "detect-monster":
 		case "life":

@@ -109,7 +109,6 @@ describe("items/scrolls", () => {
 				"confusion",
 				"levitation",
 				"blindness",
-				"paralysis",
 				"raise-level",
 				"detect-monster",
 				"life",

@@ -326,7 +326,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-blinded": (payload) => isPositiveInteger(payload.turns),
 	"blindness-faded": emptyPayload,
 	"player-leveled-up": (payload) => isPositiveInteger(payload.level),
-	"player-paralyzed": (payload) => isPositiveInteger(payload.turns),
 	"paralysis-faded": emptyPayload,
 	"player-detected-monsters": (payload) => isPositiveInteger(payload.turns),
 	"detect-monsters-faded": emptyPayload,

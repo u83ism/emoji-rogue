@@ -307,10 +307,6 @@ describe("formatEvent", () => {
 				{ type: "player-leveled-up", payload: { level: 2 } },
 				"レベルが上がった!(Lv.2)",
 			],
-			[
-				{ type: "player-paralyzed", payload: { turns: 3 } },
-				"麻痺の薬を飲んだ。体が動かなくなった!",
-			],
 			[{ type: "paralysis-faded", payload: {} }, "体が動くようになった"],
 			[
 				{ type: "player-detected-monsters", payload: { turns: 20 } },

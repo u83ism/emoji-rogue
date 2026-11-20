@@ -17,7 +17,7 @@ export interface ItemUseDecision {
  * Item kinds this bot drinks/reads the moment it holds one, in no particular
  * priority among themselves — every one of these is pure permanent upside
  * with no downside worth waiting for, unlike the potions this list
- * deliberately omits (poison, confusion, blindness, paralysis, hallucination)
+ * deliberately omits (poison, confusion, blindness, hallucination)
  * which the bot never drinks proactively. The core state always carries the
  * real kind (identification only affects shell display text), so there is no
  * guessing involved.

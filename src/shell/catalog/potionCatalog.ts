@@ -13,8 +13,6 @@ import {
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
 	LIFE_POTION_MAX_HP_BONUS,
 	LIFE_POTION_SPAWN_CHANCE_PERCENT,
-	PARALYSIS_POTION_DURATION,
-	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	POTION_COUNT_PER_FLOOR,
@@ -66,12 +64,6 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		category: "薬",
 		spawn: { type: "chance", percent: BLIND_POTION_SPAWN_CHANCE_PERCENT },
 		effect: `${BLIND_POTION_DURATION}ターンの間、視界が周囲${BLIND_VIEW_RADIUS}マスに縮む`,
-	},
-	paralysis: {
-		catalogName: "麻痺の薬",
-		category: "薬",
-		spawn: { type: "chance", percent: PARALYSIS_POTION_SPAWN_CHANCE_PERCENT },
-		effect: `${PARALYSIS_POTION_DURATION}ターンの間、行動できなくなる(敵は動く)`,
 	},
 	"raise-level": {
 		catalogName: "レベルアップの薬",

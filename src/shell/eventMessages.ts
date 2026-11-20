@@ -151,8 +151,6 @@ export const formatEvent = (
 			return "目が見えるようになった";
 		case "player-leveled-up":
 			return `レベルが上がった!(Lv.${event.payload.level})`;
-		case "player-paralyzed":
-			return `${ITEM_NAMES.paralysis}を飲んだ。体が動かなくなった!`;
 		case "paralysis-faded":
 			return "体が動くようになった";
 		case "player-detected-monsters":

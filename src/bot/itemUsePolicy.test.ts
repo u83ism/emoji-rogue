@@ -106,8 +106,7 @@ describe("decideItemToUse", () => {
 				consumable(1, "poison"),
 				consumable(2, "confusion"),
 				consumable(3, "blindness"),
-				consumable(4, "paralysis"),
-				consumable(5, "hallucination"),
+				consumable(4, "hallucination"),
 			],
 		};
 		expect(decideItemToUse(state)).toBeUndefined();

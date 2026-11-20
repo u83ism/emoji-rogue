@@ -64,7 +64,6 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	levitation: "浮遊の薬",
 	"protect-armor": "防具保護の巻物",
 	blindness: "盲目の薬",
-	paralysis: "麻痺の薬",
 	"raise-level": "レベルアップの薬",
 	"detect-monster": "索敵の薬",
 	life: "生命の薬",

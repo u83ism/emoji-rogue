@@ -19,6 +19,7 @@ import {
 	drawSpawnTileWhere,
 	isRoomTileAwayFromDoors,
 } from "./spawnPool.js";
+import { drawTreasureRoom } from "./treasureRoom.js";
 
 /** Everything one dungeon floor is made of, before it becomes game state. */
 export interface FloorLayout {
@@ -98,6 +99,17 @@ export const buildFloorLayout = (
 		floorsWithoutFood,
 	);
 
+	/* original Rogue's put_things(): the treasure room comes before the floor's items */
+	const treasure = drawTreasureRoom(
+		pool,
+		rng,
+		floor,
+		rooms,
+		placesGold,
+		nextItemIdAfterRooms,
+		floorsWithoutFoodAfterRooms,
+	);
+
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);
 	const isWalkAroundTile = (position: Position): boolean =>
 		isRoomTileAwayFromDoors(rooms, position);
@@ -118,16 +130,16 @@ export const buildFloorLayout = (
 		rng,
 		floor,
 		isWalkAroundTile,
-		nextItemIdAfterRooms,
-		floorsWithoutFoodAfterRooms,
+		treasure.nextItemId,
+		treasure.floorsWithoutFood,
 		placesGold,
 	);
 
 	return {
 		terrain: columns,
 		player,
-		enemies,
-		items,
+		enemies: [...enemies, ...treasure.enemies],
+		items: [...treasure.items, ...items],
 		goldPiles,
 		traps,
 		stairs,

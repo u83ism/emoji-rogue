@@ -260,6 +260,11 @@ export const FOOD_RATION_RESTORE_MAX = 1499;
  * sure (new_thing()'s no_food).
  */
 export const ITEM_DRAW_ATTEMPTS_PER_FLOOR = 9;
+/** A floor gets a treasure room 1 time in this many (original Rogue's TREAS_ROOM) — see floor/treasureRoom.ts. */
+export const TREASURE_ROOM_CHANCE_DENOMINATOR = 20;
+/** A treasure room holds MINTREAS..MAXTREAS items. */
+export const TREASURE_ROOM_MIN = 2;
+export const TREASURE_ROOM_MAX = 10;
 export const ITEM_DRAW_CHANCE_PERCENT = 36;
 export const FOOD_DROUGHT_FLOOR_LIMIT = 3;
 

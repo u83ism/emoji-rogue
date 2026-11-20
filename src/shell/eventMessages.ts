@@ -30,8 +30,6 @@ export const formatEvent = (
 				: `${ENEMY_NAMES[event.payload.by]}の攻撃が当たった`;
 		case "enemy-hit":
 			return `${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}のダメージを与えた`;
-		case "sneak-attack":
-			return `${ENEMY_NAMES[event.payload.target]}に不意打ち!${event.payload.damage}のダメージを与えた!`;
 		case "enemy-defeated":
 			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
 		case "player-died":

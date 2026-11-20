@@ -3,7 +3,7 @@ import { createRng } from "../rng.js";
 import {
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_WAND_DAMAGE,
-	SNEAK_ATTACK_MULTIPLIER,
+	SLEEPING_TARGET_HIT_BONUS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
@@ -119,10 +119,9 @@ const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
 	);
 
 /**
- * The player's bump attack resolved against one enemy. A still-sleeping
- * target is always a guaranteed sneak attack (SNEAK_ATTACK_MULTIPLIER on the
- * dice roll, no to-hit check — original Rogue's surprise attacks always
- * land); an awake target first rolls calculatePlayerHitChancePercent, and a
+ * The player's bump attack resolved against one enemy: it first rolls
+ * calculatePlayerHitChancePercent (SLEEPING_TARGET_HIT_BONUS added against
+ * a target still asleep — original Rogue's only edge for that), and a
  * miss ends the turn with no damage (player-attack-missed) but still marks
  * hasAttacked (swinging, even missing, breaks the pacifist conduct). The
  * player does not move — attacking is what the movement turn was spent on.
@@ -131,18 +130,13 @@ export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
-	if (!target.awake) {
-		const diceRoll = rollPlayerDamage(state.rng, state);
-		const damage = diceRoll.damage * SNEAK_ATTACK_MULTIPLIER;
-		return applyEnemyHit({ ...state, rng: diceRoll.rng }, target, damage, {
-			type: "sneak-attack",
-			payload: { target: target.kind, damage },
-		});
-	}
-
 	const hitRoll = rollToHit(
 		state.rng,
-		calculatePlayerHitChancePercent(state, target.kind),
+		calculatePlayerHitChancePercent(
+			state,
+			target.kind,
+			target.awake ? 0 : SLEEPING_TARGET_HIT_BONUS,
+		),
 	);
 	if (!hitRoll.hit) {
 		return {
@@ -170,7 +164,7 @@ export const applyPlayerAttack = (
 /**
  * A wand of striking's fixed-damage ranged hit against `target`:
  * WAND_STRIKE_DAMAGE is flat regardless of the player's own attack damage or
- * whether `target` was asleep (no sneak-attack multiplier at range). The
+ * whether `target` was asleep. The
  * player does not move; only the caller decides whether the target was even
  * reachable (visible) to aim at.
  */
@@ -182,7 +176,7 @@ export const applyWandStrike = (state: GameState, target: Enemy): GameState =>
 
 /**
  * A wand of magic missile's fixed-damage ranged hit — same shape as
- * applyWandStrike (shared applyEnemyHit core, no sneak-attack multiplier),
+ * applyWandStrike (shared applyEnemyHit core),
  * just a higher flat MAGIC_MISSILE_WAND_DAMAGE.
  */
 export const applyMagicMissileWandStrike = (

@@ -33,16 +33,18 @@ const calculateHitChancePercent = (
 		),
 	);
 
-/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus and the strength's to-hit bonus. */
+/** Percent chance a player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus, the strength's to-hit bonus and `situationalHitBonus` (SLEEPING_TARGET_HIT_BONUS against a sleeping target — combat.ts decides). */
 export const calculatePlayerHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
+	situationalHitBonus = 0,
 ): number =>
 	calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
 		calculatePlayerHitBonus(state.inventory) +
-			calculateStrengthHitBonus(state.playerStrength),
+			calculateStrengthHitBonus(state.playerStrength) +
+			situationalHitBonus,
 	);
 
 /** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the strength's to-hit bonus and `hitBonus` (the missile's own, its launcher's, and the sleeping-target bonus — throw.ts adds them up). */

@@ -252,8 +252,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.by) && isNonNegativeInteger(payload.damage),
 	"enemy-hit": (payload) =>
 		isEnemyKind(payload.target) && isNonNegativeInteger(payload.damage),
-	"sneak-attack": (payload) =>
-		isEnemyKind(payload.target) && isNonNegativeInteger(payload.damage),
 	"enemy-defeated": (payload) => isEnemyKind(payload.target),
 	"player-died": (payload) => isDeathCause(payload.by),
 	"floor-descended": (payload) => isPositiveInteger(payload.floor),

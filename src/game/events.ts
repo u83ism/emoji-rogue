@@ -228,11 +228,6 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** Attacking a still-sleeping enemy — see SNEAK_ATTACK_MULTIPLIER. */
-			readonly type: "sneak-attack";
-			readonly payload: { readonly target: EnemyKind; readonly damage: number };
-	  }
-	| {
 			readonly type: "player-died";
 			readonly payload: { readonly by: DeathCause };
 	  }
@@ -564,7 +559,7 @@ export type GameEvent =
 			readonly payload: { readonly by: EnemyKind };
 	  }
 	| {
-			/** A player melee attack (bump or sneak) that failed its to-hit roll — no damage, no side effects. See combat.ts's applyPlayerAttack. */
+			/** A player melee attack that failed its to-hit roll — no damage, no side effects. See combat.ts's applyPlayerAttack. */
 			readonly type: "player-attack-missed";
 			readonly payload: { readonly target: EnemyKind };
 	  }

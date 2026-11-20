@@ -15,7 +15,8 @@ const THROW_PREFERENCE_ORDER: readonly WeaponKind[] = [
  * The itemId of a weapon to throw this turn, if any: only when the nearest
  * visible enemy (what a throw auto-aims at — items/throw.ts) is awake and
  * not yet adjacent, so the bot softens up what is coming for it instead of
- * waking something asleep (a melee sneak attack is worth more). Never the
+ * waking something asleep (a melee swing at it gets the sleeping-target
+ * to-hit bonus first). Never the
  * wielded weapon, which cannot be thrown.
  */
 export const decideWeaponToThrow = (state: GameState): number | undefined => {
@@ -72,8 +73,8 @@ const ALL_DIRECTIONS: readonly Direction[] = ["north", "south", "west", "east"];
 
 /**
  * The direction of an enemy standing right next to the player, if any.
- * Attacking it — awake or still asleep, sleeping ones are a cheap/free
- * sneak-attack kill (see SNEAK_ATTACK_MULTIPLIER) — takes priority over
+ * Attacking it — awake or still asleep (sleeping ones are easier to hit,
+ * see SLEEPING_TARGET_HIT_BONUS) — takes priority over
  * continuing toward the exploration goal: an adjacent enemy attacks every
  * turn regardless of what the player does, so walking past one instead of
  * finishing it off just means taking repeated free hits.

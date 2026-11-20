@@ -25,12 +25,11 @@ export const DAMAGE_VARIANCE_STDDEV = 0.5;
  * reach 20 - attacker level - defender armor class. Restated on the
  * percent-roll idiom used everywhere else in this file, that is this many
  * percent per point of (level + armor class + bonus) — see
- * items/hitChance.ts. Sneak attacks (target still asleep) skip the roll
- * entirely, an arrangement kept from before (the original gives +4 to hit
- * instead; to be aligned — docs/tasks/game.md).
+ * items/hitChance.ts. A target still asleep only adds
+ * SLEEPING_TARGET_HIT_BONUS to the roll.
  */
 export const HIT_CHANCE_PERCENT_PER_POINT = 5;
-/** Added to the to-hit roll of a thrown weapon against a target still asleep — original Rogue's +4 against anything not yet running. (Melee keeps its own sneak-attack rule, see SNEAK_ATTACK_MULTIPLIER.) */
+/** Added to the to-hit roll of a melee swing or thrown weapon against a target still asleep — original Rogue's roll_em() +4 against anything not yet running. No damage bonus: the original has no sneak-attack multiplier. */
 export const SLEEPING_TARGET_HIT_BONUS = 4;
 /** How many arrows a run starts with — original Rogue's `rnd(15) + 25`. */
 export const STARTING_ARROWS_MIN = 25;
@@ -123,12 +122,6 @@ export const ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD = 80;
 export const ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD = 25;
 
 /**
- * All enemies spawn asleep (see floor.ts) and take no action until they wake
- * (see advanceEnemies) — attacking a still-sleeping enemy is a sneak attack,
- * dealing this many times the normal damage (matching original Rogue).
- */
-export const SNEAK_ATTACK_MULTIPLIER = 3;
-/**
  * Chance (out of 100), rolled independently every turn a sleeping enemy is
  * adjacent to or within sight of the player, that it wakes up this turn.
  * Deliberately not "wakes for sure the instant it's adjacent/visible" — a
@@ -136,7 +129,7 @@ export const SNEAK_ATTACK_MULTIPLIER = 3;
  * the only way to become adjacent, so there is always a prior turn standing
  * next to the enemy), so a guaranteed-on-adjacency wake would make every
  * approach wake the enemy one full turn before the player could ever attack,
- * leaving no room for a real sneak attack.
+ * leaving no room to swing at a sleeping one (SLEEPING_TARGET_HIT_BONUS).
  */
 export const WAKE_CHANCE_PERCENT = 33;
 
@@ -381,9 +374,8 @@ export const ENCHANT_ARMOR_BONUS = 1;
 export const ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
 /**
- * Fixed ranged damage a wand of striking deals — higher than the player's
- * base melee damage as compensation for never getting a sneak-attack
- * multiplier (see combat.ts's applyWandStrike).
+ * Fixed ranged damage a wand of striking deals (see combat.ts's
+ * applyWandStrike).
  */
 export const WAND_STRIKE_DAMAGE = 3;
 /** Chance (out of 100), independently rolled per floor, that a wand spawns. */

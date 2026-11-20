@@ -1027,32 +1027,12 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed sneak-attack event and rejects a broken one", () => {
-		const result = validateGameState({
-			...buildValidState(),
-			events: [
-				{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
-			],
-		});
-		expect(result.ok).toBe(true);
-
+	it("rejects the removed sneak-attack event", () => {
 		expectRejected(
 			{
 				...buildValidState(),
 				events: [
-					{
-						type: "sneak-attack",
-						payload: { target: "unknown-kind", damage: 3 },
-					},
-				],
-			},
-			"events",
-		);
-		expectRejected(
-			{
-				...buildValidState(),
-				events: [
-					{ type: "sneak-attack", payload: { target: "zombie", damage: -1 } },
+					{ type: "sneak-attack", payload: { target: "zombie", damage: 3 } },
 				],
 			},
 			"events",

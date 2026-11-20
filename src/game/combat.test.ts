@@ -5,7 +5,6 @@ import {
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
 	PLAYER_START_STRENGTH,
-	SNEAK_ATTACK_MULTIPLIER,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	WAND_STRIKE_DAMAGE,
 } from "./balance.js";
@@ -105,12 +104,10 @@ describe("applyPlayerAttack", () => {
 		...buildArenaGameState(9, 9, 1),
 		playerLevel: SURE_HIT_LEVEL,
 	};
-	/** The damage of the first enemy-hit / sneak-attack event. */
+	/** The damage of the first enemy-hit event. */
 	const readDamage = (next: typeof state): number => {
 		const event = next.events[0];
-		return event?.type === "enemy-hit" || event?.type === "sneak-attack"
-			? event.payload.damage
-			: Number.NaN;
+		return event?.type === "enemy-hit" ? event.payload.damage : Number.NaN;
 	};
 
 	it("damages the target by the unarmed roll (1d4 + the strength bonus) and logs the hit", () => {
@@ -182,37 +179,16 @@ describe("applyPlayerAttack", () => {
 		expect(next.enemies).toEqual([target]);
 	});
 
-	it("a sneak attack on a sleeping target deals SNEAK_ATTACK_MULTIPLIER times the damage and wakes it", () => {
+	it("a hit on a sleeping target deals the normal roll (no multiplier), logs enemy-hit and wakes it", () => {
 		const target = zombie(5, 4, 100, false);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		const damage = readDamage(next);
-		expect(damage % SNEAK_ATTACK_MULTIPLIER).toBe(0);
-		expect(damage).toBeGreaterThanOrEqual(
-			(1 + START_STRENGTH_DAMAGE) * SNEAK_ATTACK_MULTIPLIER,
-		);
-		expect(damage).toBeLessThanOrEqual(
-			(4 + START_STRENGTH_DAMAGE) * SNEAK_ATTACK_MULTIPLIER,
-		);
+		expect(damage).toBeGreaterThanOrEqual(1 + START_STRENGTH_DAMAGE);
+		expect(damage).toBeLessThanOrEqual(4 + START_STRENGTH_DAMAGE);
 		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage, true)]);
 		expect(next.events).toEqual([
-			{ type: "sneak-attack", payload: { target: "zombie", damage } },
+			{ type: "enemy-hit", payload: { target: "zombie", damage } },
 		]);
-	});
-
-	it("a sneak attack that kills logs sneak-attack then enemy-defeated", () => {
-		const target = zombie(5, 4, 3, false);
-		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.enemies).toEqual([]);
-		expect(next.events.map((event) => event.type)).toEqual([
-			"sneak-attack",
-			"enemy-defeated",
-		]);
-	});
-
-	it("a follow-up attack on an already-awake target is a normal hit, not another sneak attack", () => {
-		const target = zombie(5, 4, 100, true);
-		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		expect(next.events.map((event) => event.type)).toEqual(["enemy-hit"]);
 	});
 
 	it("a kill awards the experience that individual is worth", () => {
@@ -248,12 +224,13 @@ describe("applyPlayerAttack", () => {
 		expect(next.rng).not.toEqual(missState.rng);
 	});
 
-	it("a sneak attack on a sleeping target never misses, however low the hit chance would otherwise be", () => {
-		/* the same 0% chance that misses an awake target still guarantees a sneak attack */
+	it("a sleeping target can still be missed — sleep only adds to the to-hit roll", () => {
 		const missState = { ...state, inventory: [weaponWith(-100)] };
 		const target = zombie(5, 4, 10, false);
 		const next = applyPlayerAttack({ ...missState, enemies: [target] }, target);
-		expect(next.events[0]?.type).toBe("sneak-attack");
+		expect(next.events).toEqual([
+			{ type: "player-attack-missed", payload: { target: "zombie" } },
+		]);
 	});
 });
 
@@ -290,7 +267,7 @@ describe("applyWandStrike", () => {
 		]);
 	});
 
-	it("wakes a sleeping target but never applies a sneak-attack multiplier", () => {
+	it("wakes a sleeping target and deals the same fixed damage", () => {
 		const target = zombie(5, 4, 10, false);
 		const next = applyWandStrike({ ...state, enemies: [target] }, target);
 		expect(next.enemies).toEqual([zombie(5, 4, 10 - WAND_STRIKE_DAMAGE, true)]);

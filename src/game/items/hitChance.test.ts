@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	HIT_CHANCE_PERCENT_PER_POINT,
+	SLEEPING_TARGET_HIT_BONUS,
 	UNARMORED_ARMOR_CLASS,
 } from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
@@ -42,6 +43,16 @@ describe("calculatePlayerHitChancePercent", () => {
 			(state.playerLevel + ENEMY_STATS.zombie.armorClass) *
 				HIT_CHANCE_PERCENT_PER_POINT,
 		);
+	});
+
+	it("a sleeping target's bonus (original Rogue's +4) adds its points on top", () => {
+		expect(
+			calculatePlayerHitChancePercent(
+				state,
+				"zombie",
+				SLEEPING_TARGET_HIT_BONUS,
+			),
+		).toBe(45 + SLEEPING_TARGET_HIT_BONUS * HIT_CHANCE_PERCENT_PER_POINT);
 	});
 
 	it("is lower against a harder (lower) armor class and higher at a higher level", () => {

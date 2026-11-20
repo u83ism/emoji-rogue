@@ -22,7 +22,7 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	yeti: "雪男",
 	snake: "蛇",
 	vampire: "ヴァンパイア",
-	rat: "ラット",
+	scorpion: "サソリ",
 	emu: "エミュー",
 	kestrel: "ケストレル",
 	hobgoblin: "ホブゴブリン",

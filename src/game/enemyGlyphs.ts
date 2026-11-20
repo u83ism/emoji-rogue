@@ -34,7 +34,10 @@ export const ENEMY_GLYPHS: Readonly<Record<EnemyKind, Cell>> = {
 	 * is the best fit rather than a stand-in). */
 	vampire: { glyph: "🧛" },
 	/* Rat: direct literal match, single-codepoint, Unicode 6.0. */
-	rat: { glyph: "🐀" },
+	/* Original Rogue's rattlesnake — 🐍 already shows the plain snake, and
+	 * the two must tell apart, so the poisonous one becomes a scorpion
+	 * (Unicode 8.0) and takes its name (developer's choice, 2026-11-20). */
+	scorpion: { glyph: "🦂" },
 	/* No stable single-codepoint emu emoji exists — dodo (Unicode 13.0)
 	 * stands in as the nearest "large flightless bird" glyph, same
 	 * substitution reasoning as the yeti/bear pairing above. */

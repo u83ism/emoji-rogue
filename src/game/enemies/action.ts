@@ -15,6 +15,7 @@ export interface EnemyTurnProgress {
 	readonly rng: RngState;
 	readonly playerHp: number;
 	readonly playerMaxHp: number;
+	readonly playerStrength: number;
 	readonly playerConfusedTurnsRemaining: number;
 	readonly playerParalyzedTurnsRemaining: number;
 	readonly flytrapHoldDamage: number;

@@ -991,6 +991,24 @@ describe("advanceEnemies", () => {
 		expect(next.enemies[0]?.hp).toBe(TEST_ENEMY_HP - 3 + GRIFFIN_REGEN_AMOUNT);
 	});
 
+	it("a scorpion's sting that lands may drain a point of strength, the maximum untouched", () => {
+		const outcomes = buildSpreadRngStates().map((rng) => {
+			const state = { ...buildExposedState([enemyOf("scorpion", 5, 1)]), rng };
+			const next = advanceEnemies(state);
+			expect(next.playerMaxStrength).toBe(state.playerMaxStrength);
+			const lost = state.playerStrength - next.playerStrength;
+			expect(
+				next.events.some((event) => event.type === "player-strength-drained"),
+			).toBe(lost > 0);
+			return lost;
+		});
+		expect(outcomes.every((lost) => lost === 0 || lost === 1)).toBe(true);
+		/* the level-1 poison save passes 35% of the time */
+		const drained = outcomes.filter((lost) => lost === 1).length;
+		expect(drained).toBeGreaterThan(outcomes.length / 3);
+		expect(drained).toBeLessThan(outcomes.length);
+	});
+
 	it("an awake ice monster chases like any other kind", () => {
 		const state = buildCorridorState([iceMonster(7, 1)]);
 		const next = advanceEnemies(state);

@@ -16,7 +16,7 @@ export const ENEMY_KIND_VALUES = [
 	"yeti",
 	"snake",
 	"vampire",
-	"rat",
+	"scorpion",
 	"emu",
 	"kestrel",
 	"hobgoblin",
@@ -512,7 +512,7 @@ export type GameEvent =
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** A poisoned wound (a dart trap's dart) costing strength — see strength.ts's resolvePoisonDrain. */
+			/** A poisoned wound (a dart trap's dart, a scorpion's sting) costing strength — see strength.ts's resolvePoisonDrain. */
 			readonly type: "player-strength-drained";
 			readonly payload: { readonly strengthLost: number };
 	  }

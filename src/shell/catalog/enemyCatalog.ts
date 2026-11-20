@@ -44,7 +44,7 @@ export const ENEMY_BEHAVIOR: Readonly<Record<EnemyKind, string>> = {
 	yeti: "特殊能力はない。1ターンに2回攻撃する",
 	snake: "特殊能力はない",
 	vampire: `攻撃が命中するとそのダメージの${VAMPIRE_LIFESTEAL_PERCENT}%を自分のHPとして回復する(出現時のHPが上限)`,
-	rat: "特殊能力はない",
+	scorpion: "攻撃が命中すると、毒へのセーブに失敗したとき力が1下がる",
 	emu: "特殊能力はない",
 	kestrel: "飛んでいて、プレイヤーから離れている間は1ターンに2回動く",
 	hobgoblin: "特殊能力はない。序盤では一撃が重い",

@@ -21,10 +21,9 @@ const dice = (count: number, sides: number): DamageDice => ({ count, sides });
 /**
  * Three kinds carry another name and emoji than their original Rogue 5.4
  * monster, because no stable emoji shows the original (docs/design.md's
- * "まず本家ありき"): rhinoceros = black unicorn, and — until they are
- * replaced — thief = leprechaun (kept by the developer's choice) and rat =
- * rattlesnake (to become a scorpion). Their numbers are the original's all
- * the same. Two 0x0 rows are the original's too: the ice monster's real
+ * "まず本家ありき"): scorpion = rattlesnake, rhinoceros = black unicorn,
+ * and thief = leprechaun (kept by the developer's choice). Their numbers
+ * are the original's all the same. Two 0x0 rows are the original's too: the ice monster's real
  * attack is its freeze (iceMonsterFreeze.ts), the venus flytrap's is the
  * hold that grows with every bite (flytrapHold.ts).
  */
@@ -91,7 +90,7 @@ export const ENEMY_STATS: Readonly<Record<EnemyKind, EnemyStats>> = {
 		attacks: [dice(1, 5), dice(1, 5)],
 		experience: 15,
 	},
-	rat: { level: 2, armorClass: 3, attacks: [dice(1, 6)], experience: 9 },
+	scorpion: { level: 2, armorClass: 3, attacks: [dice(1, 6)], experience: 9 },
 	snake: { level: 1, armorClass: 5, attacks: [dice(1, 3)], experience: 2 },
 	troll: {
 		level: 6,
@@ -166,7 +165,7 @@ export const ENEMY_DEPTH_ORDER: readonly EnemyKind[] = [
 	"snake",
 	"hobgoblin",
 	"ice-monster",
-	"rat",
+	"scorpion",
 	"orc",
 	"zombie",
 	"thief",

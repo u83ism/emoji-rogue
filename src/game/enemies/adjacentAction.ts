@@ -95,26 +95,20 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 };
 
 /** Every other kind: one to-hit and damage roll per attack die, plus its own on-hit effect (enemyAttack.ts). */
-const attackWithDice: AdjacentAction = (_state, enemy, actor, progress) => {
-	const hit = resolveEnemyAttack(
-		enemy,
-		actor.hp,
-		progress.playerHp,
-		progress.playerMaxHp,
-		progress.inventory,
-		progress.rng,
-	);
+const attackWithDice: AdjacentAction = (state, enemy, actor, progress) => {
+	const hit = resolveEnemyAttack(enemy, actor.hp, {
+		playerHp: progress.playerHp,
+		playerMaxHp: progress.playerMaxHp,
+		playerStrength: progress.playerStrength,
+		playerLevel: state.playerLevel,
+		inventory: progress.inventory,
+		rng: progress.rng,
+	});
+	const { playerLevel: _unchanged, ...target } = hit.target;
 	return {
 		actor: { ...actor, hp: hit.enemyHp },
 		progress: withEvents(
-			{
-				...progress,
-				playerHp: hit.playerHp,
-				playerMaxHp: hit.playerMaxHp,
-				inventory: hit.inventory,
-				rng: hit.rng,
-				died: progress.died || hit.died,
-			},
+			{ ...progress, ...target, died: progress.died || hit.died },
 			hit.events,
 		),
 	};

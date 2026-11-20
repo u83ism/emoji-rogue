@@ -1,24 +1,117 @@
 import type { RngState } from "../../rng.js";
 import { WRAITH_DRAIN_AMOUNT } from "../balance.js";
 import { rollDamageDice, rollToHit } from "../damage.js";
-import type { GameEvent } from "../events.js";
+import type { EnemyKind, GameEvent } from "../events.js";
 import { applyArmorRust, canRustEquippedArmor } from "../items/equipment.js";
 import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, HeldItem } from "../state.js";
+import { resolvePoisonDrain } from "../strength.js";
 import { ENEMY_STATS } from "./enemyStats.js";
 import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { resolveWraithDrain } from "./wraithDrain.js";
 
-/** Everything one enemy's attacks on the player change in a turn — see enemies.ts's advanceEnemies. */
-export interface EnemyAttackResult {
-	readonly enemyHp: number;
+/** The player's side of an enemy attack: everything a hit or a kind's on-hit effect can change. */
+export interface AttackTarget {
 	readonly playerHp: number;
 	readonly playerMaxHp: number;
+	readonly playerStrength: number;
+	readonly playerLevel: number;
 	readonly inventory: readonly HeldItem[];
 	readonly rng: RngState;
+}
+
+/** Everything one enemy's attacks on the player change in a turn — see adjacentAction.ts. */
+export interface EnemyAttackResult {
+	readonly enemyHp: number;
+	readonly target: AttackTarget;
 	readonly events: readonly GameEvent[];
 	readonly died: boolean;
 }
+
+/** What a kind's on-hit effect sees and returns — see ON_HIT_EFFECTS. */
+interface OnHit {
+	readonly enemyHp: number;
+	readonly target: AttackTarget;
+	readonly events: readonly GameEvent[];
+}
+type OnHitEffect = (enemy: Enemy, damageDealt: number, hit: OnHit) => OnHit;
+
+const withEvent = (hit: OnHit, event: GameEvent | undefined): OnHit =>
+	event === undefined ? hit : { ...hit, events: [...hit.events, event] };
+
+/**
+ * What a kind does once per turn on top of its damage, when at least one of
+ * its attacks landed. A lookup table rather than an if-chain
+ * (functional-style.md) — converted at the 4th kind, the scorpion.
+ */
+const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
+	/* rusts the worn armor */
+	aquator: (_enemy, _damage, hit) =>
+		canRustEquippedArmor(hit.target.inventory)
+			? withEvent(
+					{
+						...hit,
+						target: {
+							...hit.target,
+							inventory: applyArmorRust(hit.target.inventory),
+						},
+					},
+					{ type: "armor-rusted", payload: { amount: 1 } },
+				)
+			: hit,
+	/* heals itself for part of the damage — vampireLifesteal.ts */
+	vampire: (enemy, damageDealt, hit) => {
+		const lifesteal = resolveVampireLifesteal(
+			hit.enemyHp,
+			enemy.maxHp,
+			damageDealt,
+		);
+		return withEvent({ ...hit, enemyHp: lifesteal.hp }, lifesteal.event);
+	},
+	/* lowers the player's max HP for good — wraithDrain.ts */
+	wraith: (_enemy, _damage, hit) => {
+		const drain = resolveWraithDrain(
+			hit.target.playerMaxHp,
+			hit.target.playerHp,
+			WRAITH_DRAIN_AMOUNT,
+		);
+		return withEvent(
+			{
+				...hit,
+				target: {
+					...hit.target,
+					playerMaxHp: drain.playerMaxHp,
+					playerHp: drain.playerHp,
+				},
+			},
+			drain.event,
+		);
+	},
+	/* original Rogue's rattlesnake: a poisoned sting — strength.ts's resolvePoisonDrain */
+	scorpion: (_enemy, _damage, hit) => {
+		const drain = resolvePoisonDrain(
+			hit.target.playerStrength,
+			hit.target.playerLevel,
+			hit.target.rng,
+		);
+		return withEvent(
+			{
+				...hit,
+				target: {
+					...hit.target,
+					playerStrength: drain.playerStrength,
+					rng: drain.rng,
+				},
+			},
+			drain.strengthLost > 0
+				? {
+						type: "player-strength-drained",
+						payload: { strengthLost: drain.strengthLost },
+					}
+				: undefined,
+		);
+	},
+};
 
 /**
  * One adjacent enemy's whole attack turn, as in original Rogue's roll_em():
@@ -26,43 +119,37 @@ export interface EnemyAttackResult {
  * (calculateEnemyHitChancePercent) and, when it lands, its own damage roll
  * — armor only makes the enemy miss, it never reduces damage. A miss logs
  * enemy-attack-missed; the remaining attacks are skipped once the player is
- * dead. If at least one attack landed, the kind's own effect then triggers
- * once: aquator's armor rust, vampire's lifesteal on the turn's total
- * damage (vampireLifesteal.ts), wraith's permanent playerMaxHp drain
- * (wraithDrain.ts). Thief/nymph skip this path entirely, fleeing instead
- * (see enemyFlee.ts), and so does the venus-flytrap, whose hold has its own
- * rule (flytrapHold.ts).
+ * dead. If at least one attack landed, the kind's ON_HIT_EFFECTS entry then
+ * triggers once. Thief/nymph, the venus-flytrap and the ice monster never
+ * come here — their turn next to the player is their own (adjacentAction.ts).
  */
 export const resolveEnemyAttack = (
 	enemy: Enemy,
 	enemyHp: number,
-	playerHp: number,
-	playerMaxHp: number,
-	inventory: readonly HeldItem[],
-	rng: RngState,
+	target: AttackTarget,
 ): EnemyAttackResult => {
 	const events: GameEvent[] = [];
 	const hitChancePercent = calculateEnemyHitChancePercent(
 		enemy.kind,
-		inventory,
+		target.inventory,
 	);
-	let nextRng = rng;
-	let nextPlayerHp = playerHp;
+	let rng = target.rng;
+	let playerHp = target.playerHp;
 	let damageDealt = 0;
 	let landed = false;
 	for (const attackDice of ENEMY_STATS[enemy.kind].attacks) {
-		if (nextPlayerHp <= 0) {
+		if (playerHp <= 0) {
 			break;
 		}
-		const hitRoll = rollToHit(nextRng, hitChancePercent);
-		nextRng = hitRoll.rng;
+		const hitRoll = rollToHit(rng, hitChancePercent);
+		rng = hitRoll.rng;
 		if (!hitRoll.hit) {
 			events.push({ type: "enemy-attack-missed", payload: { by: enemy.kind } });
 			continue;
 		}
-		const diceRoll = rollDamageDice(nextRng, attackDice, 0, 0);
-		nextRng = diceRoll.rng;
-		nextPlayerHp -= diceRoll.damage;
+		const diceRoll = rollDamageDice(rng, attackDice, 0, 0);
+		rng = diceRoll.rng;
+		playerHp -= diceRoll.damage;
 		damageDealt += diceRoll.damage;
 		landed = true;
 		events.push({
@@ -71,48 +158,27 @@ export const resolveEnemyAttack = (
 		});
 	}
 
-	let nextPlayerMaxHp = playerMaxHp;
-	let nextInventory = inventory;
-	let nextEnemyHp = enemyHp;
-	if (landed && enemy.kind === "aquator" && canRustEquippedArmor(inventory)) {
-		nextInventory = applyArmorRust(inventory);
-		events.push({ type: "armor-rusted", payload: { amount: 1 } });
-	}
-	if (landed && enemy.kind === "vampire") {
-		const lifesteal = resolveVampireLifesteal(
-			enemyHp,
-			enemy.maxHp,
-			damageDealt,
-		);
-		nextEnemyHp = lifesteal.hp;
-		if (lifesteal.event !== undefined) {
-			events.push(lifesteal.event);
-		}
-	}
-	if (landed && enemy.kind === "wraith") {
-		const drain = resolveWraithDrain(
-			nextPlayerMaxHp,
-			nextPlayerHp,
-			WRAITH_DRAIN_AMOUNT,
-		);
-		nextPlayerMaxHp = drain.playerMaxHp;
-		nextPlayerHp = drain.playerHp;
-		if (drain.event !== undefined) {
-			events.push(drain.event);
-		}
-	}
-
-	const died = nextPlayerHp <= 0;
-	if (died) {
-		events.push({ type: "player-died", payload: { by: enemy.kind } });
-	}
-	return {
-		enemyHp: nextEnemyHp,
-		playerHp: nextPlayerHp,
-		playerMaxHp: nextPlayerMaxHp,
-		inventory: nextInventory,
-		rng: nextRng,
+	const afterDice: OnHit = {
+		enemyHp,
+		target: { ...target, playerHp, rng },
 		events,
+	};
+	const effect = ON_HIT_EFFECTS[enemy.kind];
+	const afterEffect =
+		landed && effect !== undefined
+			? effect(enemy, damageDealt, afterDice)
+			: afterDice;
+
+	const died = afterEffect.target.playerHp <= 0;
+	return {
+		enemyHp: afterEffect.enemyHp,
+		target: afterEffect.target,
+		events: died
+			? [
+					...afterEffect.events,
+					{ type: "player-died", payload: { by: enemy.kind } },
+				]
+			: afterEffect.events,
 		died,
 	};
 };

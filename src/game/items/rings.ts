@@ -10,19 +10,14 @@ type RingItem = Extract<
 			| "regeneration-ring"
 			| "sustenance-ring"
 			| "stealth-ring"
-			| "awareness-ring"
 			| "aggravate-monster-ring";
 	}
 >;
 
-/** Whether a ring of `kind` is currently equipped — regeneration.ts/hunger.ts's turn-end ticks, enemies.ts's wake check, and frame.ts's detection check read this instead of a permanent flag. */
+/** Whether a ring of `kind` is currently equipped — regeneration.ts/hunger.ts's turn-end ticks, and enemies.ts's wake check read this instead of a permanent flag. */
 export const hasEquippedRing = (
 	inventory: readonly HeldItem[],
-	kind:
-		| "regeneration-ring"
-		| "sustenance-ring"
-		| "stealth-ring"
-		| "awareness-ring",
+	kind: "regeneration-ring" | "sustenance-ring" | "stealth-ring",
 ): boolean =>
 	inventory.some(
 		(item) => item.kind === kind && "equipped" in item && item.equipped,

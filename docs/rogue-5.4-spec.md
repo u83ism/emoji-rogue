@@ -67,7 +67,7 @@
 
 ## 戦闘計算 — `fight.c`
 
-- **命中判定**(`swing()`): `1d20 + 命中補正(武器のhplus + 力によるstr_plus補正) >= (20 - 攻撃側class) - 防御側arm` で命中。**敵が未警戒(睡眠中/held中)の対象を攻撃する場合は命中補正に+4**(不意打ちボーナス。emoji-rogueの`SNEAK_ATTACK_MULTIPLIER`はダメージ3倍という別実装だが、意図(不意打ちが有利)は本家と共通)
+- **命中判定**(`swing()`): `1d20 + 命中補正(武器のhplus + 力によるstr_plus補正) >= (20 - 攻撃側class) - 防御側arm` で命中。**敵が未警戒(睡眠中/held中)の対象を攻撃する場合は命中補正に+4**(不意打ちボーナス。emoji-rogueも2026-11-21に、それまでの必中・ダメージ3倍をやめて本家どおり+4だけにした——`SLEEPING_TARGET_HIT_BONUS`、近接と投擲で共通)
 - **ダメージ**: `dplus(武器補正) + 武器のダイスロール + add_dam[str](力によるダメージ補正)`。0未満にはならない(`max(0, damage)`)。防具(AC)は命中判定にだけ効き、ダメージは減らさない
 - **モンスターの攻撃**: `monsters[]`のダメージ欄(例: ドラゴン`1x8/1x8/3x10`)は「/」区切りの1つずつが別々の命中判定+ダメージ。HPは`roll(レベル, 8)`、経験値は表の値+`exp_add()`(最大HPの1/8〜1/6、レベル7以上は×4、10以上は×20)
 - **プレイヤーの成長**(`check_level()`、`extern.c`の`e_levels[]`・`INIT_STATS`): HP12・力16・AC10・素手1d4で開始。経験値10/20/40/…でレベルが上がり、1レベルごとに最大HP+1d10
@@ -144,7 +144,7 @@ emoji-rogueはマイルストーン111で近接5種(mace・long sword・dagger�
 
 confusion / hallucination / poison / gain strength / see invisible / healing / monster detection / magic detection / raise level / extra healing / haste self / restore strength / blindness / levitation
 
-emoji-rogueにあるのは poison・strength(gain相当)・raise-level・detect-monster・hallucination・confusion・levitation・blind(ness)・heal(healing相当、extra healingの上位区分は無し)・**life(最大HP恒久増加)**・paralysis。うち**life(生命の薬)は本家の14種に無い**——`docs/idea-memo.md`にも記載の通りBrogue由来。本家にあってemoji-rogueに無いもの: see invisible・magic detection・extra healing(healingとの2段階区分)・haste self・restore strength(gain strengthとは別物、力を吸われた時の回復専用)
+emoji-rogueにあるのは poison・strength(gain相当)・raise-level・detect-monster・hallucination・confusion・levitation・blind(ness)・heal(healing相当、extra healingの上位区分は無し)。本家に無いlife(生命の薬、Brogue由来)・paralysis(麻痺の薬)は2026-11-21に削除した。本家にあってemoji-rogueに無いもの: see invisible・magic detection・extra healing(healingとの2段階区分)・haste self・restore strength(gain strengthとは別物、力を吸われた時の回復専用)
 
 ### 巻物18種(`scr_info`)
 
@@ -156,13 +156,13 @@ emoji-rogueにあるのは teleport・mapping・identify(**カテゴリ別5種�
 
 protection / add strength / sustain strength / searching / see invisible / adornment / aggravate monster / dexterity / increase damage / regeneration / slow digestion / teleportation / stealth / maintain armor
 
-emoji-rogueにあるのは regeneration・sustenance(slow digestion相当)・stealth・aggravate-monster・**awareness**(本家14種のどれとも明確に一致しない——「searching」の言い換えである可能性が高いが未確認)。本家にあってemoji-rogueに無いもの: protection・add strength・sustain strength・see invisible・adornment・dexterity・increase damage・teleportation(指輪版)・maintain armor(防具の錆防止——emoji-rogueは同じ効果を巻物(`protect-armor`)側だけで持つ)
+emoji-rogueにあるのは regeneration・sustenance(slow digestion相当)・stealth・aggravate-monster。本家14種に無いawareness(千里眼の指輪——敵を常に映す。searchingは隠し扉・わなを探す指輪で別物)は2026-11-21に削除した。本家にあってemoji-rogueに無いもの: protection・add strength・sustain strength・see invisible・adornment・dexterity・increase damage・teleportation(指輪版)・maintain armor(防具の錆防止——emoji-rogueは同じ効果を巻物(`protect-armor`)側だけで持つ)
 
 ### 杖/魔法棒14種(`ws_info`)
 
 light / invisibility / lightning / fire / cold / polymorph / magic missile / haste monster / slow monster / drain life / nothing / teleport away / teleport to / cancellation
 
-emoji-rogueにあるのは **striking**(本家のこの14種に無い——NetHack由来の可能性)・teleport・magic-missile・**sleep**(本家は巻物のみで杖形態が無い)・slow(monster相当)。本家にあってemoji-rogueに無いもの: light・invisibility・lightning・fire・cold・polymorph・drain life・nothing(ハズレ枠)・teleport to(teleport awayとは別方向)・cancellation
+emoji-rogueにあるのは teleport(teleport away相当)・magic-missile・slow(monster相当)。本家に無いstriking(打撃、出どころ不明)・sleep(眠り。本家は巻物のみ)の杖は2026-11-21に削除し、魔法の矢は本家どおり1d4+1・敵が魔法へのセーブに成功すると消える、にした。本家にあってemoji-rogueに無いもの: light・invisibility・lightning・fire・cold・polymorph・drain life・nothing(ハズレ枠)・teleport to(teleport awayとは別方向)・cancellation
 
 ## emoji-rogueに存在せず、本家にも存在しない要素(不思議のダンジョン由来と確認)
 
@@ -179,6 +179,5 @@ emoji-rogueにあるのは **striking**(本家のこの14種に無い——NetHa
 
 - (解決済み、マイルストーン110)呪いの数値ペナルティ・持ち物上限26・盗賊の挙動は本家準拠にした。盗賊の名前だけはアレンジとして残す。残った細かい差分は各節の「emoji-rogueの対応」と`docs/tasks/game.md`のバックログを参照
 - (解決済み、2026-11-20)`rat`・`ur-vile`・`icky-thing`は本家5.4に無かったので、rattlesnake(🦂サソリ)・black unicorn(🦏サイ)・ice monster(🧊)に置き換えた
-- **生命の薬(life potion)は本家の薬14種に存在しない**——`docs/idea-memo.md`にも記載の通りBrogue由来。シレン由来ではないため今回の削除方針の対象外だが、忠実度観点では同じ性質の差分
-- **杖の「striking」は本家の杖14種に存在しない**——出どころ不明(NetHack等の可能性)
+- (解決済み、2026-11-21)生命の薬(Brogue由来)・杖の「striking」(出どころ不明)は、2026-11-20の方針(本家に無い要素は削除)で削除した
 - (解決済み、マイルストーン111)武器は近接5種・防具は8種を本家の数値で実装し、戦闘の数値スケール全体(敵の能力値・プレイヤーHP・命中式・26階)を本家に合わせた。残った差分は「戦闘計算」節の「emoji-rogueの対応」に記載

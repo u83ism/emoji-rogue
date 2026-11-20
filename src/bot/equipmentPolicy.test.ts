@@ -44,7 +44,6 @@ const ring = (
 		| "regeneration-ring"
 		| "sustenance-ring"
 		| "stealth-ring"
-		| "awareness-ring"
 		| "aggravate-monster-ring",
 	equipped = false,
 ): HeldItem => ({ itemId, kind, equipped, cursed: false });
@@ -141,9 +140,9 @@ describe("decideRingToEquip", () => {
 	it("only ever wears one ring at a time regardless of kind", () => {
 		const state = {
 			...baseState(),
-			inventory: [ring(1, "awareness-ring", true), ring(2, "stealth-ring")],
+			inventory: [ring(1, "regeneration-ring", true), ring(2, "stealth-ring")],
 		};
-		/* awareness outranks stealth in RING_PREFERENCE_ORDER, so the already-worn one stays */
+		/* regeneration outranks stealth in RING_PREFERENCE_ORDER, so the already-worn one stays */
 		expect(decideRingToEquip(state, noDisabled)).toBeUndefined();
 	});
 });

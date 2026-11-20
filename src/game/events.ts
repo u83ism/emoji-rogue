@@ -61,7 +61,6 @@ export const ITEM_KIND_VALUES = [
 	"remove-curse-scroll",
 	"teleport-wand",
 	"stealth-ring",
-	"awareness-ring",
 	"magic-missile-wand",
 	"confuse-monster-scroll",
 	"hallucination",
@@ -77,7 +76,6 @@ const EQUIPMENT_ITEM_KIND_VALUES = [
 	"regeneration-ring",
 	"sustenance-ring",
 	"stealth-ring",
-	"awareness-ring",
 	"aggravate-monster-ring",
 ] as const satisfies readonly ItemKind[];
 
@@ -158,7 +156,6 @@ export const RING_KINDS = [
 	"regeneration-ring",
 	"sustenance-ring",
 	"stealth-ring",
-	"awareness-ring",
 	"aggravate-monster-ring",
 ] as const satisfies readonly ItemKind[];
 

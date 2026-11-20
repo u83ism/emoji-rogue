@@ -333,10 +333,6 @@ describe("formatEvent", () => {
 				"隠密の指輪を身につけた。足音が忍びやかになった!",
 			],
 			[
-				{ type: "ring-equipped", payload: { kind: "awareness-ring" } },
-				"千里眼の指輪を身につけた。敵の気配を常に感じ取れるようになった!",
-			],
-			[
 				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
 				"混乱の巻物を読んだ。ゾンビが混乱した!",
 			],

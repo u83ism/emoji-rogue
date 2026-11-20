@@ -53,7 +53,6 @@ const applyItemEffect = (
 		case "regeneration-ring":
 		case "sustenance-ring":
 		case "stealth-ring":
-		case "awareness-ring":
 		case "aggravate-monster-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":

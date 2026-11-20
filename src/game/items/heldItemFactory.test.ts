@@ -136,7 +136,6 @@ describe("buildFloorItem", () => {
 			"regeneration-ring",
 			"sustenance-ring",
 			"stealth-ring",
-			"awareness-ring",
 		] as const) {
 			expect(buildFloorItem(kind, 2, { x: 0, y: 0 }, rng)).toEqual({
 				x: 0,

@@ -68,7 +68,6 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"remove-curse-scroll": "解呪の巻物",
 	"teleport-wand": "テレポートの杖",
 	"stealth-ring": "隠密の指輪",
-	"awareness-ring": "千里眼の指輪",
 	"magic-missile-wand": "魔法の矢の杖",
 	/* Scrolls show their real name immediately, unlike potions/rings/wands — no generic placeholder. */
 	"confuse-monster-scroll": "混乱の巻物",
@@ -90,7 +89,6 @@ export const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> =
 		"regeneration-ring": "じわじわとHPが回復するようになった!",
 		"sustenance-ring": "空腹の進みがゆるやかになった!",
 		"stealth-ring": "足音が忍びやかになった!",
-		"awareness-ring": "敵の気配を常に感じ取れるようになった!",
 		"aggravate-monster-ring": "敵の気配に気づかれてしまった!",
 	};
 

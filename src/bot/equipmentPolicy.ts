@@ -12,7 +12,6 @@ type RingItem = Extract<
 			| "regeneration-ring"
 			| "sustenance-ring"
 			| "stealth-ring"
-			| "awareness-ring"
 			| "aggravate-monster-ring";
 	}
 >;
@@ -25,20 +24,18 @@ const isRingItem = (item: HeldItem): item is RingItem =>
 	item.kind === "regeneration-ring" ||
 	item.kind === "sustenance-ring" ||
 	item.kind === "stealth-ring" ||
-	item.kind === "awareness-ring" ||
 	item.kind === "aggravate-monster-ring";
 
 /**
  * Best-first ring preference: sustenance first (the food economy is the
  * dominant killer — see docs/tasks/game-notes.md's balance notes), then
- * regeneration (passive combat sustain), then the awareness/stealth utility
- * pair. `aggravate-monster-ring` is deliberately absent — equipping it wakes
+ * regeneration (passive combat sustain), then the stealth
+ * utility ring. `aggravate-monster-ring` is deliberately absent — equipping it wakes
  * every enemy on the floor at once, a trap the bot should never opt into.
  */
 const RING_PREFERENCE_ORDER: readonly ItemKind[] = [
 	"sustenance-ring",
 	"regeneration-ring",
-	"awareness-ring",
 	"stealth-ring",
 ];
 

@@ -57,7 +57,7 @@ export const ENEMY_BEHAVIOR: Readonly<Record<EnemyKind, string>> = {
 	"venus-flytrap":
 		"その場から動かず、隣接している間だけ攻撃してくる。隣接中はプレイヤーを拘束し、離れようとする移動を妨げる(その場合もターンは消費される)。ダメージは最初の命中で1、命中するたびに1ずつ増え、外れたターンもそれまでに増えた分のダメージを受ける。倒すか離れると元に戻る",
 	medusa: `視界内にいる間、隣接していなくても毎ターン${MEDUSA_GAZE_CHANCE_PERCENT}%の確率で視線攻撃を放ち、${MEDUSA_GAZE_CONFUSE_DURATION}ターン混乱させる。1ターンに3回攻撃する`,
-	phantom: `姿が透明で、隣接するまで見えない(索敵の薬・千里眼の指輪の効果中を除く)。行動のたびに${ERRATIC_MOVE_CHANCE_PERCENT.phantom}%の確率で、攻撃も追跡もせずでたらめな方向へ1歩動く`,
+	phantom: `姿が透明で、隣接するまで見えない(索敵の薬の効果中を除く)。行動のたびに${ERRATIC_MOVE_CHANCE_PERCENT.phantom}%の確率で、攻撃も追跡もせずでたらめな方向へ1歩動く`,
 	wraith: `攻撃が命中すると最大HPを${WRAITH_DRAIN_AMOUNT}永続的に奪う`,
 	xeroc: "眠っている間は金貨の山に擬態しており、目覚めるまで正体が分からない",
 };

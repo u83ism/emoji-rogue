@@ -155,28 +155,6 @@ describe("items/rings", () => {
 		]);
 	});
 
-	it("equipping a held awareness ring flips its equipped flag and logs ring-equipped", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "awareness-ring" as const,
-					equipped: false,
-					cursed: false,
-				},
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(hasEquippedRing(next.inventory, "awareness-ring")).toBe(true);
-		expect(next.events).toEqual([
-			{ type: "ring-equipped", payload: { kind: "awareness-ring" } },
-		]);
-	});
-
 	it("equipping a ring of aggravate monster wakes every sleeping enemy on the floor at once", () => {
 		const asleepA = {
 			x: 6,

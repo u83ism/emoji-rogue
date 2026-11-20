@@ -1,6 +1,5 @@
 import {
 	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
-	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	REGENERATION_RING_FOOD_COST,
 	RING_REGEN_AMOUNT,
 	RING_SPAWN_CHANCE_PERCENT,
@@ -22,7 +21,6 @@ type RingKind =
 	| "regeneration-ring"
 	| "sustenance-ring"
 	| "stealth-ring"
-	| "awareness-ring"
 	| "aggravate-monster-ring";
 
 export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
@@ -43,12 +41,6 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		category: "指輪",
 		spawn: { type: "chance", percent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
 		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる代わりに、満腹度の減りが毎ターン${STEALTH_RING_FOOD_COST}増える(外すと効果も消える)`,
-	},
-	"awareness-ring": {
-		catalogName: "千里眼の指輪",
-		category: "指輪",
-		spawn: { type: "chance", percent: AWARENESS_RING_SPAWN_CHANCE_PERCENT },
-		effect: `装備している間、視界外・未探索領域を含め常に敵の位置を感知する(索敵の薬の恒久版、外すと効果も消える)`,
 	},
 	"aggravate-monster-ring": {
 		catalogName: "警報の指輪",

@@ -2,7 +2,6 @@ import type { Rng } from "../../rng.js";
 import {
 	AGGRAVATE_MONSTER_RING_SPAWN_CHANCE_PERCENT,
 	ARMOR_SPAWN_CHANCE_PERCENT,
-	AWARENESS_RING_SPAWN_CHANCE_PERCENT,
 	BLIND_POTION_SPAWN_CHANCE_PERCENT,
 	CONFUSE_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	CONFUSION_POTION_SPAWN_CHANCE_PERCENT,
@@ -95,10 +94,6 @@ const ITEM_SPAWN_TABLE: readonly SpawnChance<ItemKind>[] = [
 		chancePercent: TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	},
 	{ kind: "stealth-ring", chancePercent: STEALTH_RING_SPAWN_CHANCE_PERCENT },
-	{
-		kind: "awareness-ring",
-		chancePercent: AWARENESS_RING_SPAWN_CHANCE_PERCENT,
-	},
 	{
 		kind: "magic-missile-wand",
 		chancePercent: MAGIC_MISSILE_WAND_SPAWN_CHANCE_PERCENT,

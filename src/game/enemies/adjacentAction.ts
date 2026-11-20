@@ -26,22 +26,34 @@ type AdjacentAction = (
 	progress: EnemyTurnProgress,
 ) => EnemyActionResult;
 
-/** Thief/nymph: steal and flee (enemyFlee.ts) instead of fighting. */
+/**
+ * Thief/nymph: an ordinary attack first (attackWithDice — a thief's 1d1, a
+ * nymph's 0d0); only a landed hit lets it steal (enemyFlee.ts), as in
+ * original Rogue's attack(). A thief then always vanishes; a nymph only
+ * once it has taken something.
+ */
 const stealAndFlee: AdjacentAction = (state, enemy, actor, progress) => {
 	if (enemy.kind !== "thief" && enemy.kind !== "nymph") {
 		throw new Error("unreachable: stealAndFlee is only listed for thieves");
 	}
+	const attacked = attackWithDice(state, enemy, actor, progress);
+	if (!attacked.landed || attacked.progress.died) {
+		return attacked;
+	}
 	const { event, ...stolen } = resolveFleeingTheft(
 		enemy.kind,
-		progress.rng,
-		progress.goldCollected,
-		progress.inventory,
+		attacked.progress.rng,
+		attacked.progress.goldCollected,
+		attacked.progress.inventory,
 		state.playerLevel,
 		state.floor,
 	);
+	if (event === undefined) {
+		return attacked;
+	}
 	return {
-		actor: { ...actor, fled: true },
-		progress: withEvents({ ...progress, ...stolen }, [event]),
+		actor: { ...attacked.actor, fled: true },
+		progress: withEvents({ ...attacked.progress, ...stolen }, [event]),
 	};
 };
 
@@ -95,7 +107,12 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 };
 
 /** Every other kind: one to-hit and damage roll per attack die, plus its own on-hit effect (enemyAttack.ts). */
-const attackWithDice: AdjacentAction = (_state, enemy, actor, progress) => {
+const attackWithDice = (
+	_state: GameState,
+	enemy: Enemy,
+	actor: EnemyActor,
+	progress: EnemyTurnProgress,
+): EnemyActionResult & { readonly landed: boolean } => {
 	const hit = resolveEnemyAttack(enemy, actor.hp, {
 		playerHp: progress.playerHp,
 		playerMaxHp: progress.playerMaxHp,
@@ -111,6 +128,7 @@ const attackWithDice: AdjacentAction = (_state, enemy, actor, progress) => {
 			{ ...progress, ...hit.target, died: progress.died || hit.died },
 			hit.events,
 		),
+		landed: hit.landed,
 	};
 };
 

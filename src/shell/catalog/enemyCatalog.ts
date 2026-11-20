@@ -32,8 +32,9 @@ const GOLD_PILE_RANGE = `1階で${GOLD_AMOUNT_MIN}〜${calculateGoldAmountMax(1)
 export const ENEMY_BEHAVIOR: Readonly<Record<EnemyKind, string>> = {
 	zombie: "特殊能力はない。視界に入ると追跡し、隣接すると攻撃してくる",
 	bat: `飛んでいて、プレイヤーから離れている間は1ターンに2回動く。ただし行動のたびに${ERRATIC_MOVE_CHANCE_PERCENT.bat}%の確率で、攻撃も追跡もせずでたらめな方向へ1歩動く`,
-	thief: `攻撃はせず、接触すると所持金を盗んで姿を消す(${GOLD_PILE_RANGE}、運が悪いとその${THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME}回分。レベルが高いほど少額で済みやすい)。盗まれる前に倒せば逆に金貨を落とす(これまでに降りた最も深い階にいるときだけ)`,
-	nymph: "攻撃はせず、接触すると持ち物を1つ盗んで姿を消す",
+	thief: `攻撃が命中すると所持金を盗んで姿を消す(${GOLD_PILE_RANGE}、運が悪いとその${THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME}回分。レベルが高いほど少額で済みやすい)。盗まれる前に倒せば逆に金貨を落とす(これまでに降りた最も深い階にいるときだけ)`,
+	nymph:
+		"攻撃が命中すると(ダメージは無い)、装備していない魔法の品(薬・巻物・杖・指輪と、補正のある武器・防具)を1つ盗んで姿を消す。盗める物が無ければ居座る",
 	aquator:
 		"攻撃が命中してもダメージは無いが、装備中の防具を錆びさせ、その防御力を1下げる(0未満にはならない。防具保護の巻物で無効化)",
 	orc: `特殊能力はない。倒すと金貨の山1つ分(${GOLD_PILE_RANGE})をその場で落とす`,

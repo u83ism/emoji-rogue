@@ -340,10 +340,10 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** kind is undefined when the inventory was empty — see advanceEnemies. */
+			/** A nymph's landed hit taking one unequipped magic item — see enemies/enemyFlee.ts. */
 			readonly type: "item-stolen";
 			readonly payload: {
-				readonly kind: ItemKind | undefined;
+				readonly kind: ItemKind;
 				readonly variant?: EquipmentVariant;
 			};
 	  }

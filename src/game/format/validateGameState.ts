@@ -291,10 +291,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		payload.strength >= STRENGTH_MIN &&
 		payload.strength <= STRENGTH_MAX,
 	"gold-stolen": (payload) => isNonNegativeInteger(payload.amount),
-	"item-stolen": (payload) =>
-		payload.kind === undefined
-			? payload.variant === undefined
-			: isItemEventPayload(payload),
+	"item-stolen": (payload) => isItemEventPayload(payload),
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&

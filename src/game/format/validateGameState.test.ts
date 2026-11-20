@@ -1494,18 +1494,20 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed item-stolen event (including an empty-inventory steal), rejects a broken one", () => {
+	it("accepts a well-formed item-stolen event, rejects a broken or empty one", () => {
 		const stolenSomething = validateGameState({
 			...buildValidState(),
 			events: [{ type: "item-stolen", payload: { kind: "weapon" } }],
 		});
 		expect(stolenSomething.ok).toBe(true);
 
-		const stolenNothing = validateGameState({
-			...buildValidState(),
-			events: [{ type: "item-stolen", payload: { kind: undefined } }],
-		});
-		expect(stolenNothing.ok).toBe(true);
+		expectRejected(
+			{
+				...buildValidState(),
+				events: [{ type: "item-stolen", payload: { kind: undefined } }],
+			},
+			"events",
+		);
 
 		expectRejected(
 			{

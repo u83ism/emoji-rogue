@@ -20,8 +20,38 @@ export interface FleeingTheftResult {
 	readonly rng: RngState;
 	readonly goldCollected: number;
 	readonly inventory: readonly HeldItem[];
-	readonly event: GameEvent;
+	/** undefined when a nymph found nothing magic to take — she then stays and keeps attacking. */
+	readonly event: GameEvent | undefined;
 }
+
+/**
+ * What a nymph wants (original Rogue's is_magic()): a weapon with a hit or
+ * damage bonus, armor off its kind's armor class or rust-protected, and every
+ * potion, scroll, wand, ring and the amulet. Plain gear and food are not.
+ */
+const isMagicItem = (item: HeldItem): boolean => {
+	if (item.kind === "weapon") {
+		return item.hitBonus !== 0 || item.damageBonus !== 0;
+	}
+	if (item.kind === "armor") {
+		return item.defenseBonus !== 0 || item.rustProtected;
+	}
+	return item.kind !== "food";
+};
+
+/** Takes one item at `itemIndex` — one off a weapon bundle, the whole slot otherwise. */
+const removeOneOf = (
+	inventory: readonly HeldItem[],
+	itemIndex: number,
+): readonly HeldItem[] => {
+	const item = inventory[itemIndex];
+	if (item?.kind === "weapon" && item.quantity > 1) {
+		return inventory.map((held, index) =>
+			index === itemIndex ? { ...item, quantity: item.quantity - 1 } : held,
+		);
+	}
+	return removeHeldItemAtIndex(inventory, itemIndex);
+};
 
 /** One gold pile's worth on `floor` (GOLD_AMOUNT_MIN..calculateGoldAmountMax), off one rng step. */
 const rollGoldPileAmount = (
@@ -45,10 +75,11 @@ const rollGoldPileAmount = (
  * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME piles' worth when the player fails a
  * magic save (calculateMagicSaveChancePercent, easier at higher
  * playerLevel) — capped at what the player carries; with no gold at all it
- * takes nothing and consumes no rng. A nymph steals one random
- * *unequipped* held item (equipped items are never stolen — item-stolen
- * fires with kind: undefined if nothing unequipped was held). Neither deals
- * damage; the caller always treats this as a flee (see advanceEnemies).
+ * takes nothing and consumes no rng, but still vanishes. A nymph steals one
+ * random *unequipped* magic item (isMagicItem; one off a bundle of
+ * weapons). With none she takes nothing and stays (event undefined), as in
+ * original Rogue's attack(). The caller has already landed the hit
+ * (adjacentAction.ts).
  */
 export const resolveFleeingTheft = (
 	kind: "thief" | "nymph",
@@ -86,17 +117,14 @@ export const resolveFleeingTheft = (
 			event: { type: "gold-stolen", payload: { amount: stolen } },
 		};
 	}
-	// Only unequipped items are up for grabs — what's worn stays worn.
+	// Only unequipped magic items are up for grabs — what's worn stays worn.
 	const stealable = inventory
 		.map((item, itemIndex) => ({ item, itemIndex }))
-		.filter(({ item }) => !("equipped" in item && item.equipped));
+		.filter(
+			({ item }) => !("equipped" in item && item.equipped) && isMagicItem(item),
+		);
 	if (stealable.length === 0) {
-		return {
-			rng,
-			goldCollected,
-			inventory,
-			event: { type: "item-stolen", payload: { kind: undefined } },
-		};
+		return { rng, goldCollected, inventory, event: undefined };
 	}
 	const pick = stepUniform(rng);
 	const picked = stealable[Math.floor(pick.value * stealable.length)];
@@ -106,7 +134,7 @@ export const resolveFleeingTheft = (
 	return {
 		rng: pick.state,
 		goldCollected,
-		inventory: removeHeldItemAtIndex(inventory, picked.itemIndex),
+		inventory: removeOneOf(inventory, picked.itemIndex),
 		event: { type: "item-stolen", payload: toItemEventPayload(picked.item) },
 	};
 };

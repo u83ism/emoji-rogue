@@ -351,25 +351,46 @@ describe("advanceEnemies", () => {
 		expect(damage).toBeLessThanOrEqual(10);
 	});
 
-	it("an adjacent thief steals gold and flees instead of dealing damage", () => {
+	it("an adjacent thief's landed 1d1 hit steals gold, and it flees", () => {
 		const state = {
-			...buildCorridorState([thief(5, 1)]),
+			...buildExposedState([thief(5, 1)]),
 			goldCollected: 50,
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]); /* the thief is gone for good */
-		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
+		expect(next.playerHp).toBe(state.playerHp - 1);
 		const stolen = state.goldCollected - next.goldCollected;
 		expect(stolen).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
 		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "thief", damage: 1 } },
 			{ type: "gold-stolen", payload: { amount: stolen } },
 		]);
+	});
+
+	it("a thief or nymph that misses steals nothing and stays", () => {
+		for (const enemy of [thief(5, 1), nymph(5, 1)]) {
+			const state = {
+				...buildCorridorState([enemy]),
+				inventory: [
+					equippedArmor(100),
+					{ itemId: 2, kind: "heal-potion" } as const,
+				],
+				goldCollected: 50,
+			};
+			const next = advanceEnemies(state);
+			expect(next.enemies).toEqual([enemy]);
+			expect(next.goldCollected).toBe(50);
+			expect(next.inventory).toEqual(state.inventory);
+			expect(next.events).toEqual([
+				{ type: "enemy-attack-missed", payload: { by: enemy.kind } },
+			]);
+		}
 	});
 
 	it("a thief steals one gold pile's worth on a passed magic save, up to five piles' worth on a failed one", () => {
 		const thefts = buildSpreadRngStates().map((rng) => {
 			const state = {
-				...buildCorridorState([thief(5, 1)]),
+				...buildExposedState([thief(5, 1)]),
 				rng,
 				goldCollected: 1000,
 			};
@@ -394,7 +415,7 @@ describe("advanceEnemies", () => {
 			buildSpreadRngStates()
 				.map((rng) => {
 					const state = {
-						...buildCorridorState([thief(5, 1)]),
+						...buildExposedState([thief(5, 1)]),
 						rng,
 						goldCollected: 1000,
 						playerLevel,
@@ -407,179 +428,131 @@ describe("advanceEnemies", () => {
 
 	it("a thief steals no more than the player's remaining gold", () => {
 		const state = {
-			...buildCorridorState([thief(5, 1)]),
+			...buildExposedState([thief(5, 1)]),
 			goldCollected: 1,
 		};
 		const next = advanceEnemies(state);
 		expect(next.goldCollected).toBe(0);
-		expect(next.events).toEqual([
-			{ type: "gold-stolen", payload: { amount: 1 } },
-		]);
+		expect(next.events.at(-1)).toEqual({
+			type: "gold-stolen",
+			payload: { amount: 1 },
+		});
 	});
 
-	it("a thief still flees when the player has no gold, stealing nothing", () => {
+	it("a thief still flees after a landed hit when the player has no gold, stealing nothing", () => {
 		const state = {
-			...buildCorridorState([thief(5, 1)]),
+			...buildExposedState([thief(5, 1)]),
 			goldCollected: 0,
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]);
 		expect(next.goldCollected).toBe(0);
-		expect(next.rng).toEqual(state.rng); /* nothing to roll for */
-		expect(next.events).toEqual([
-			{ type: "gold-stolen", payload: { amount: 0 } },
-		]);
+		expect(next.events.at(-1)).toEqual({
+			type: "gold-stolen",
+			payload: { amount: 0 },
+		});
 	});
 
 	it("a fleeing thief does not affect other enemies acting the same turn", () => {
 		const state = {
-			...buildCorridorState([thief(3, 1), zombie(5, 1)]),
+			...buildExposedState([thief(3, 1), zombie(5, 1)]),
 			goldCollected: 50,
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([
 			zombie(5, 1),
 		]); /* the thief is gone, the zombie remains */
-		/* the zombie still got its attack attempt (hit or miss) */
 		expect(
 			next.events.some(
-				(event) =>
-					(event.type === "player-hit" ||
-						event.type === "enemy-attack-missed") &&
-					event.payload.by === "zombie",
+				(event) => event.type === "player-hit" && event.payload.by === "zombie",
 			),
 		).toBe(true);
 		expect(next.goldCollected).toBeLessThan(state.goldCollected);
 	});
 
-	it("an adjacent nymph steals the only held item slot and flees", () => {
+	it("an adjacent nymph's landed 0d0 hit steals the only magic item and she flees", () => {
 		const state = {
-			...buildCorridorState([nymph(5, 1)]),
-			inventory: [{ itemId: 1, kind: "heal-potion" } as const],
+			...buildExposedState([nymph(5, 1)]),
+			inventory: [EXPOSING_ARMOR, { itemId: 2, kind: "heal-potion" } as const],
 		};
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([]); /* the nymph is gone for good */
-		expect(next.playerHp).toBe(state.playerHp); /* no damage taken */
-		expect(next.inventory).toEqual([]);
+		expect(next.playerHp).toBe(state.playerHp); /* 0d0: no damage */
+		expect(next.inventory).toEqual([EXPOSING_ARMOR]);
 		expect(next.events).toEqual([
+			{ type: "player-hit", payload: { by: "nymph", damage: 0 } },
 			{ type: "item-stolen", payload: { kind: "heal-potion" } },
 		]);
 	});
 
-	it("an adjacent nymph steals one slot when several of the same kind are held, leaving the rest", () => {
+	it("a nymph takes one off a magic weapon bundle, leaving the rest", () => {
+		const darts = {
+			itemId: 2,
+			kind: "weapon",
+			equipped: false,
+			cursed: false,
+			weaponKind: "dart" as const,
+			hitBonus: 1,
+			damageBonus: 0,
+			quantity: 5,
+		} as const;
 		const state = {
-			...buildCorridorState([nymph(5, 1)]),
+			...buildExposedState([nymph(5, 1)]),
+			inventory: [EXPOSING_ARMOR, darts],
+		};
+		const next = advanceEnemies(state);
+		expect(next.inventory).toEqual([EXPOSING_ARMOR, { ...darts, quantity: 4 }]);
+	});
+
+	it("a nymph never takes food, plain gear or anything equipped — finding nothing, she stays", () => {
+		const plainSword = {
+			itemId: 2,
+			kind: "weapon",
+			equipped: false,
+			cursed: false,
+			weaponKind: "long-sword" as const,
+			hitBonus: 0,
+			damageBonus: 0,
+			quantity: 1,
+		} as const;
+		const state = {
+			...buildExposedState([nymph(5, 1)]),
 			inventory: [
-				{ itemId: 1, kind: "food" } as const,
-				{ itemId: 2, kind: "food" } as const,
+				EXPOSING_ARMOR,
+				plainSword,
 				{ itemId: 3, kind: "food" } as const,
 			],
 		};
 		const next = advanceEnemies(state);
-		/* which itemId is picked depends on the rng roll, but every candidate
-		 * is a "food" entry, so the observable result is the same either way */
-		expect(next.inventory.length).toBe(2);
-		expect(next.inventory.every((item) => item.kind === "food")).toBe(true);
+		expect(next.enemies).toEqual([nymph(5, 1)]);
+		expect(next.inventory).toEqual(state.inventory);
 		expect(next.events).toEqual([
-			{ type: "item-stolen", payload: { kind: "food" } },
+			{ type: "player-hit", payload: { by: "nymph", damage: 0 } },
 		]);
 	});
 
-	it("an adjacent nymph steals exactly one slot total when several kinds are held", () => {
+	it("a nymph steals an enchanted weapon (a hit or damage bonus makes it magic)", () => {
+		const enchanted = {
+			itemId: 2,
+			kind: "weapon",
+			equipped: false,
+			cursed: false,
+			weaponKind: "long-sword" as const,
+			hitBonus: 0,
+			damageBonus: 1,
+			quantity: 1,
+		} as const;
 		const state = {
-			...buildCorridorState([nymph(5, 1)]),
-			inventory: [
-				{ itemId: 1, kind: "heal-potion" } as const,
-				{
-					itemId: 2,
-					kind: "weapon",
-					equipped: false,
-					cursed: false,
-					weaponKind: "long-sword" as const,
-					hitBonus: 1,
-					damageBonus: 1,
-					quantity: 1,
-				} as const,
-			],
+			...buildExposedState([nymph(5, 1)]),
+			inventory: [EXPOSING_ARMOR, enchanted],
 		};
 		const next = advanceEnemies(state);
-		expect(next.inventory.length).toBe(1); /* one slot consumed */
-		const stolenEvent = next.events.at(-1);
-		if (stolenEvent === undefined || stolenEvent.type !== "item-stolen") {
-			throw new Error("unreachable: expected an item-stolen event");
-		}
-		expect(["heal-potion", "weapon"]).toContain(stolenEvent.payload.kind);
-		expect(
-			next.inventory.some((item) => item.kind === stolenEvent.payload.kind),
-		).toBe(false);
-	});
-
-	it("an adjacent nymph never steals an equipped item, even alongside unequipped ones", () => {
-		/* the only unequipped candidate is the heal-potion — the equipped weapon
-		 * must never be picked, however the rng roll lands */
-		const state = {
-			...buildCorridorState([nymph(5, 1)]),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "weapon",
-					equipped: true,
-					cursed: false,
-					weaponKind: "long-sword" as const,
-					hitBonus: 1,
-					damageBonus: 1,
-					quantity: 1,
-				} as const,
-				{ itemId: 2, kind: "heal-potion" } as const,
-			],
-		};
-		const next = advanceEnemies(state);
-		expect(next.inventory).toEqual([
-			{
-				itemId: 1,
-				kind: "weapon",
-				equipped: true,
-				cursed: false,
-				weaponKind: "long-sword" as const,
-				hitBonus: 1,
-				damageBonus: 1,
-				quantity: 1,
-			},
-		]);
-		expect(next.events).toEqual([
-			{ type: "item-stolen", payload: { kind: "heal-potion" } },
-		]);
-	});
-
-	it("an adjacent nymph still flees with an empty inventory, stealing nothing", () => {
-		const state = {
-			...buildCorridorState([nymph(5, 1)]),
-			inventory: [],
-		};
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([]);
-		expect(next.inventory).toEqual([]);
-		expect(next.events).toEqual([
-			{ type: "item-stolen", payload: { kind: undefined } },
-		]);
-	});
-
-	it("an adjacent nymph steals nothing when every held item is equipped", () => {
-		const state = {
-			...buildCorridorState([nymph(5, 1)]),
-			inventory: [equippedArmor(1)],
-		};
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([]);
-		expect(next.inventory).toEqual([equippedArmor(1)]);
-		expect(next.events).toEqual([
-			{ type: "item-stolen", payload: { kind: undefined } },
-		]);
+		expect(next.inventory).toEqual([EXPOSING_ARMOR]);
 	});
 
 	it("a fleeing nymph does not affect other enemies acting the same turn", () => {
 		const state = {
-			...buildCorridorState([nymph(3, 1), zombie(5, 1)]),
+			...buildExposedState([nymph(3, 1), zombie(5, 1)]),
 			inventory: [EXPOSING_ARMOR, { itemId: 2, kind: "heal-potion" } as const],
 		};
 		const next = advanceEnemies(state);

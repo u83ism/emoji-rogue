@@ -227,10 +227,6 @@ describe("formatEvent", () => {
 				"ニンフに武器を盗まれた!",
 			],
 			[
-				{ type: "item-stolen", payload: { kind: undefined } },
-				"ニンフに襲われたが、何も盗られなかった",
-			],
-			[
 				{ type: "ring-equipped", payload: { kind: "regeneration-ring" } },
 				"再生の指輪を身につけた。じわじわとHPが回復するようになった!",
 			],

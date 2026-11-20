@@ -28,6 +28,8 @@ export interface EnemyAttackResult {
 	readonly target: AttackTarget;
 	readonly events: readonly GameEvent[];
 	readonly died: boolean;
+	/** At least one attack die hit — what a thief or nymph needs before it can steal (adjacentAction.ts). */
+	readonly landed: boolean;
 }
 
 /** What a kind's on-hit effect sees and returns — see ON_HIT_EFFECTS. */
@@ -105,8 +107,9 @@ const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
  * one event: player-hit with the summed damage if any attack landed, else
  * enemy-attack-missed. The remaining attacks are skipped once the player is
  * dead. If at least one attack landed, the kind's ON_HIT_EFFECTS entry then
- * triggers once. Thief/nymph, the venus-flytrap and the ice monster never
- * come here — their turn next to the player is their own (adjacentAction.ts).
+ * triggers once. A thief or nymph comes here first and steals only when
+ * `landed` (adjacentAction.ts); the venus-flytrap and the ice monster
+ * never come here — their turn next to the player is their own.
  */
 export const resolveEnemyAttack = (
 	enemy: Enemy,
@@ -170,5 +173,6 @@ export const resolveEnemyAttack = (
 				]
 			: afterEffect.events,
 		died,
+		landed,
 	};
 };

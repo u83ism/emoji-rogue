@@ -24,7 +24,7 @@ export const formatEvent = (
 	identifiedItemKinds: readonly ItemKind[],
 ): string => {
 	switch (event.type) {
-		case "player-hit" /* 0 only for the aquator, whose attacks just rust */:
+		case "player-hit" /* 0 for the aquator (its attacks just rust) and the nymph (0d0) */:
 			return event.payload.damage > 0
 				? `${ENEMY_NAMES[event.payload.by]}から${event.payload.damage}のダメージを受けた`
 				: `${ENEMY_NAMES[event.payload.by]}の攻撃が当たった`;
@@ -107,9 +107,7 @@ export const formatEvent = (
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 		case "item-stolen":
-			return event.payload.kind !== undefined
-				? `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を盗まれた!`
-				: `${ENEMY_NAMES.nymph}に襲われたが、何も盗られなかった`;
+			return `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を盗まれた!`;
 		case "ring-equipped": {
 			const effect = RING_EQUIPPED_EFFECT[event.payload.kind];
 			if (effect === undefined) {

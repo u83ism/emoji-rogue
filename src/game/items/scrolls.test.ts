@@ -118,6 +118,7 @@ describe("items/scrolls", () => {
 			awake: true,
 			speed: "normal" as const,
 			held: false,
+			carried: [],
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -162,6 +163,7 @@ describe("items/scrolls", () => {
 			awake: true,
 			speed: "normal" as const,
 			held: false,
+			carried: [],
 			confusedTurnsRemaining: 0,
 		};
 		const far = {
@@ -173,6 +175,7 @@ describe("items/scrolls", () => {
 			awake: true,
 			speed: "normal" as const,
 			held: false,
+			carried: [],
 			confusedTurnsRemaining: 0,
 		};
 		const state = {

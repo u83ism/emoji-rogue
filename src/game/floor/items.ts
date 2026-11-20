@@ -33,7 +33,7 @@ export interface FloorItems {
  * `floorsWithoutFood` has passed FOOD_DROUGHT_FLOOR_LIMIT — then the kind
  * within it by its own weight (spawnTable.ts).
  */
-const drawItemKind = (rng: Rng, floorsWithoutFood: number): ItemKind => {
+export const drawItemKind = (rng: Rng, floorsWithoutFood: number): ItemKind => {
 	const category =
 		floorsWithoutFood > FOOD_DROUGHT_FLOOR_LIMIT
 			? "food"

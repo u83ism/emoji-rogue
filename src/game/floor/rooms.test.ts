@@ -76,6 +76,8 @@ describe("drawRoomContents", () => {
 			1,
 			ROOMS,
 			true,
+			1,
+			0,
 		);
 		expect(enemies.length).toBe(ROOMS.length);
 		expect(goldPiles.length).toBe(ROOMS.length);
@@ -98,6 +100,8 @@ describe("drawRoomContents", () => {
 			1,
 			ROOMS,
 			true,
+			1,
+			0,
 		);
 		expect(pool.length).toBe(before - enemies.length - goldPiles.length);
 		for (const placed of [...enemies, ...goldPiles]) {
@@ -109,8 +113,21 @@ describe("drawRoomContents", () => {
 
 	it("with every roll missing, places nothing", () => {
 		expect(
-			drawRoomContents(buildPool(), createHighestRollRng(), 1, ROOMS, true),
-		).toEqual({ enemies: [], goldPiles: [] });
+			drawRoomContents(
+				buildPool(),
+				createHighestRollRng(),
+				1,
+				ROOMS,
+				true,
+				1,
+				0,
+			),
+		).toEqual({
+			enemies: [],
+			goldPiles: [],
+			nextItemId: 1,
+			floorsWithoutFood: 0,
+		});
 	});
 
 	it("skips a room none of whose tiles are pooled", () => {
@@ -121,6 +138,8 @@ describe("drawRoomContents", () => {
 			1,
 			ROOMS,
 			true,
+			1,
+			0,
 		);
 		expect(enemies.length).toBe(ROOMS.length - 1);
 		expect(goldPiles.length).toBe(ROOMS.length - 1);
@@ -135,6 +154,8 @@ describe("drawRoomContents", () => {
 			1,
 			ROOMS,
 			false,
+			1,
+			0,
 		);
 		expect(goldPiles).toEqual([]);
 		expect(enemies.length).toBe(ROOMS.length);
@@ -147,6 +168,8 @@ describe("drawRoomContents", () => {
 			5,
 			MANY_ROOMS,
 			true,
+			1,
+			0,
 		);
 		const roomsWithGold = MANY_ROOMS.filter((room) =>
 			goldPiles.some((pile) => isInRoom(room, pile)),
@@ -185,6 +208,8 @@ describe("drawRoomContents", () => {
 			5,
 			MANY_ROOMS,
 			false,
+			1,
+			0,
 		);
 		const percent = (enemies.length / MANY_ROOMS.length) * 100;
 		expect(

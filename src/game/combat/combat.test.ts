@@ -36,6 +36,7 @@ const enemyOf = (
 	awake,
 	speed: "normal" as const,
 	held: false,
+	carried: [],
 	confusedTurnsRemaining: 0,
 });
 
@@ -258,16 +259,25 @@ describe("enemy gold drop", () => {
 			payload: { target: target.kind, damage: target.hp },
 		});
 
-	it("drops one pile of gold's worth for the floor into goldCollected on a melee kill", () => {
+	it("an orc drops no gold — original Rogue's orc only guards the room's gold", () => {
 		const target = orc(5, 4, 1);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
-		const dropped = next.goldCollected - state.goldCollected;
-		expect(dropped).toBeGreaterThanOrEqual(GOLD_AMOUNT_MIN);
-		expect(dropped).toBeLessThanOrEqual(GOLD_AMOUNT_MAX);
-		expect(next.events).toContainEqual({
-			type: "enemy-gold-drop",
-			payload: { by: "orc", amount: dropped },
-		});
+		expect(next.goldCollected).toBe(state.goldCollected);
+		expect(next.events.some((event) => event.type === "enemy-gold-drop")).toBe(
+			false,
+		);
+	});
+
+	it("a killed monster drops what it carried where it died, or next to it", () => {
+		const potion = { x: 0, y: 0, kind: "heal-potion" as const };
+		const target = { ...orc(5, 4, 1), carried: [potion, potion] };
+		const next = killOutright({ ...state, enemies: [target] }, target);
+		expect(next.items).toHaveLength(2);
+		expect(next.items[0]).toEqual({ ...potion, x: 5, y: 4 });
+		const second = next.items[1];
+		expect(second?.kind).toBe("heal-potion");
+		expect(Math.abs((second?.x ?? 0) - 5)).toBeLessThanOrEqual(1);
+		expect(Math.abs((second?.y ?? 0) - 4)).toBeLessThanOrEqual(1);
 	});
 
 	it("a killed thief drops one gold pile's worth, or five on a passed magic save — more often at a higher level", () => {
@@ -315,21 +325,14 @@ describe("enemy gold drop", () => {
 		);
 	});
 
-	it("an orc still drops its gold above the deepest floor reached", () => {
-		const target = orc(5, 4, 1);
-		const climbing = { ...state, floor: 3, deepestFloor: 5, enemies: [target] };
-		const next = applyPlayerAttack(climbing, target);
-		expect(next.goldCollected).toBeGreaterThan(climbing.goldCollected);
-	});
-
 	it("is deterministic for a given rng state", () => {
-		const target = orc(5, 4, 1);
+		const target = thief(5, 4);
 		const first = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		const second = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(first.goldCollected).toBe(second.goldCollected);
 	});
 
-	it("does not drop gold when a kind other than orc/thief is killed", () => {
+	it("does not drop gold when a kind other than the thief is killed", () => {
 		const target = zombie(5, 4, 1);
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.goldCollected).toBe(state.goldCollected);
@@ -361,6 +364,7 @@ describe("dragon", () => {
 			awake: true,
 			speed: "normal" as const,
 			held: false,
+			carried: [],
 			confusedTurnsRemaining: 0,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);

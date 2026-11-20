@@ -83,12 +83,19 @@ export const buildFloorLayout = (
 	const player: Position = { x: playerX, y: playerY };
 
 	const pool = collectSpawnPool(columns, player);
-	const { enemies, goldPiles } = drawRoomContents(
+	const {
+		enemies,
+		goldPiles,
+		nextItemId: nextItemIdAfterRooms,
+		floorsWithoutFood: floorsWithoutFoodAfterRooms,
+	} = drawRoomContents(
 		pool,
 		rng,
 		floor,
 		rooms,
 		placesGold,
+		nextItemId,
+		floorsWithoutFood,
 	);
 
 	const remaining = pool.length > 0 ? pool : collectSpawnPool(columns, player);
@@ -111,8 +118,8 @@ export const buildFloorLayout = (
 		rng,
 		floor,
 		isWalkAroundTile,
-		nextItemId,
-		floorsWithoutFood,
+		nextItemIdAfterRooms,
+		floorsWithoutFoodAfterRooms,
 		placesGold,
 	);
 

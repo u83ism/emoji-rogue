@@ -116,6 +116,7 @@ const isEnemyArray = (
 			isBooleanValue(enemy.awake) &&
 			isOneOf(ENEMY_SPEEDS, enemy.speed) &&
 			isBooleanValue(enemy.held) &&
+			isItemArray(enemy.carried, terrain) &&
 			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
@@ -425,6 +426,51 @@ const isRngState = (value: unknown): value is RngState =>
  * on floor tiles, hp in range); a save is only ever written mid-run, so
  * status must be "playing".
  */
+/** One floor (or carried) Item rebuilt from known fields only. */
+const rebuildItem = (item: Item): Item => {
+	const position = { x: item.x, y: item.y };
+	switch (item.kind) {
+		case "weapon":
+			return { ...position, kind: "weapon", identity: item.identity };
+		case "armor":
+			return { ...position, kind: "armor", identity: item.identity };
+		case "regeneration-ring":
+		case "sustenance-ring":
+		case "stealth-ring":
+		case "aggravate-monster-ring":
+		case "sustain-strength-ring":
+		case "adornment-ring":
+		case "teleportation-ring":
+		case "maintain-armor-ring":
+		case "see-invisible-ring":
+		case "searching-ring":
+			return {
+				...position,
+				kind: item.kind,
+				identity: item.identity,
+			};
+		case "protection-ring":
+		case "add-strength-ring":
+		case "dexterity-ring":
+		case "increase-damage-ring":
+			return {
+				...position,
+				kind: item.kind,
+				identity: item.identity,
+			};
+		case "slow-wand":
+		case "teleport-wand":
+		case "magic-missile-wand":
+			return {
+				...position,
+				kind: item.kind,
+				identity: item.identity,
+			};
+		default:
+			return { ...position, kind: item.kind };
+	}
+};
+
 export const validateGameState = (
 	value: unknown,
 ): Result<GameState, string> => {
@@ -691,51 +737,10 @@ export const validateGameState = (
 			awake: enemy.awake,
 			speed: enemy.speed,
 			held: enemy.held,
+			carried: enemy.carried.map(rebuildItem),
 			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
-		items: items.map((item): Item => {
-			const position = { x: item.x, y: item.y };
-			switch (item.kind) {
-				case "weapon":
-					return { ...position, kind: "weapon", identity: item.identity };
-				case "armor":
-					return { ...position, kind: "armor", identity: item.identity };
-				case "regeneration-ring":
-				case "sustenance-ring":
-				case "stealth-ring":
-				case "aggravate-monster-ring":
-				case "sustain-strength-ring":
-				case "adornment-ring":
-				case "teleportation-ring":
-				case "maintain-armor-ring":
-				case "see-invisible-ring":
-				case "searching-ring":
-					return {
-						...position,
-						kind: item.kind,
-						identity: item.identity,
-					};
-				case "protection-ring":
-				case "add-strength-ring":
-				case "dexterity-ring":
-				case "increase-damage-ring":
-					return {
-						...position,
-						kind: item.kind,
-						identity: item.identity,
-					};
-				case "slow-wand":
-				case "teleport-wand":
-				case "magic-missile-wand":
-					return {
-						...position,
-						kind: item.kind,
-						identity: item.identity,
-					};
-				default:
-					return { ...position, kind: item.kind };
-			}
-		}),
+		items: items.map(rebuildItem),
 		inventory: [...inventory],
 		nextItemId,
 		identifiedItemKinds: [...identifiedItemKinds],

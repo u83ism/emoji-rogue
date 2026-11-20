@@ -42,6 +42,7 @@ const enemyOf = (
 	awake,
 	speed: "normal" as const,
 	held: false,
+	carried: [],
 	confusedTurnsRemaining: 0,
 });
 

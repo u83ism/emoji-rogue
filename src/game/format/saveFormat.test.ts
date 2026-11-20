@@ -68,6 +68,7 @@ describe("save file shape guard", () => {
 						awake: "boolean",
 						speed: "string",
 						held: "boolean",
+						carried: [],
 						confusedTurnsRemaining: "number",
 					},
 				],

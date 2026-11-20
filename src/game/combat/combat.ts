@@ -5,6 +5,7 @@ import {
 	calculateMagicSaveChancePercent,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
+import { applyCarriedItemsDrop } from "../enemies/enemyPack.js";
 import { calculateEnemyExperienceReward } from "../enemies/enemyStats.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import { drawGoldAmount } from "../floor/rooms.js";
@@ -29,18 +30,14 @@ import { calculatePlayerHitChancePercent } from "./hitChance.js";
  * out). Consumes state.rng via the same "temporarily wake a stateful Rng"
  * pattern as teleport.ts's applyRandomTeleport.
  */
-const applyEnemyGoldDrop = (
-	state: GameState,
-	kind: "orc" | "thief",
-): GameState => {
-	if (kind === "thief" && state.floor < state.deepestFloor) {
+const applyThiefGoldDrop = (state: GameState): GameState => {
+	if (state.floor < state.deepestFloor) {
 		return state;
 	}
 	const rng = createRng(1).setState(state.rng);
 	const savedAgainstMagic =
-		kind === "thief" &&
 		rng.getUniformInt(0, 99) <
-			calculateMagicSaveChancePercent(state.playerLevel);
+		calculateMagicSaveChancePercent(state.playerLevel);
 	const pileCount = savedAgainstMagic ? THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME : 1;
 	let amount = 0;
 	for (let i = 0; i < pileCount; i++) {
@@ -51,7 +48,7 @@ const applyEnemyGoldDrop = (
 		goldCollected: state.goldCollected + amount,
 		rng: rng.getState(),
 		events: buildEventLog(state.events, [
-			{ type: "enemy-gold-drop", payload: { by: kind, amount } },
+			{ type: "enemy-gold-drop", payload: { by: "thief", amount } },
 		]),
 	};
 };
@@ -104,9 +101,8 @@ export const applyEnemyHit = (
 			calculateEnemyLevelBonus(state.floor),
 		),
 	);
-	return target.kind === "orc" || target.kind === "thief"
-		? applyEnemyGoldDrop(withExperience, target.kind)
-		: withExperience;
+	const dropped = applyCarriedItemsDrop(withExperience, target);
+	return target.kind === "thief" ? applyThiefGoldDrop(dropped) : dropped;
 };
 
 /**

@@ -27,6 +27,7 @@ const zombie = (x: number, y: number, hp = 2, awake = true): Enemy => ({
 	awake,
 	speed: "normal" as const,
 	held: false,
+	carried: [],
 	confusedTurnsRemaining: 0,
 });
 

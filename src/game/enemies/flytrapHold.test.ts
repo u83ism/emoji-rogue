@@ -82,6 +82,7 @@ describe("isHeldByFlytrap", () => {
 		awake,
 		speed: "normal" as const,
 		held: false,
+		carried: [],
 		confusedTurnsRemaining: 0,
 	});
 	const player = { x: 2, y: 2 };

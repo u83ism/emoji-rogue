@@ -106,6 +106,7 @@ export const buildSpawnedEnemy = (
 		awake: false,
 		speed: floor >= HASTED_ENEMY_FLOOR ? "hasted" : "normal",
 		held: false,
+		carried: [],
 		confusedTurnsRemaining: 0,
 	};
 };

@@ -7,14 +7,22 @@ import {
 	ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD,
 	ROOM_GOLD_CHANCE_PERCENT,
 } from "../balance.js";
+import { rollsCarriedItem } from "../enemies/enemyPack.js";
+import { hasItemIdentity } from "../events.js";
+import { buildFloorItem } from "../items/heldItemFactory.js";
 import type { Enemy, GoldPile, Position } from "../state.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "./enemies.js";
+import { drawItemKind } from "./items.js";
 import { drawSpawnTileWhere, isInsideRoom } from "./spawnPool.js";
 
 /** What the rooms of a fresh floor hold — see drawRoomContents. */
 export interface RoomContents {
 	readonly enemies: readonly Enemy[];
 	readonly goldPiles: readonly GoldPile[];
+	/** `nextItemId` after the carried items took theirs. */
+	readonly nextItemId: number;
+	/** The food drought counter after the carried items (one of them may be food). */
+	readonly floorsWithoutFood: number;
 }
 
 /** One pile of gold's worth on `floor` — original Rogue's GOLDCALC. */
@@ -30,8 +38,12 @@ export const drawGoldAmount = (rng: Rng, floor: number): number =>
  * ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD otherwise — of a kind
  * drawEnemyKindForFloor picks for this depth.
  *
+ * A monster may carry an item (enemies/enemyPack.ts's rollsCarriedItem —
+ * original Rogue's give_pack(), drawn like any found item), taking an
+ * itemId from `startItemId` and touching the food drought counter.
+ *
  * `placesGold` false is the original's "climbing back with the amulet"
- * rule: the gold roll is still made, but no room gets a pile (so every room
+ * rule (no carried items either): the gold roll is still made, but no room gets a pile (so every room
  * rolls the lower enemy chance). A room with no pooled tile (the player's
  * own, fully in view) gets neither gold nor an enemy.
  */
@@ -41,9 +53,13 @@ export const drawRoomContents = (
 	floor: number,
 	rooms: readonly Room[],
 	placesGold: boolean,
+	startItemId: number,
+	previousFloorsWithoutFood: number,
 ): RoomContents => {
 	const enemies: Enemy[] = [];
 	const goldPiles: GoldPile[] = [];
+	let nextItemId = startItemId;
+	let floorsWithoutFood = previousFloorsWithoutFood;
 	for (const room of rooms) {
 		const isInThisRoom = (tile: Position): boolean => isInsideRoom(room, tile);
 		const goldRollLanded =
@@ -66,14 +82,28 @@ export const drawRoomContents = (
 		if (enemyTile === undefined) {
 			continue;
 		}
-		enemies.push(
-			buildSpawnedEnemy(
-				drawEnemyKindForFloor(rng, floor),
-				enemyTile,
-				rng,
-				floor,
-			),
+		const enemy = buildSpawnedEnemy(
+			drawEnemyKindForFloor(rng, floor),
+			enemyTile,
+			rng,
+			floor,
 		);
+		if (!rollsCarriedItem(rng, enemy.kind, placesGold)) {
+			enemies.push(enemy);
+			continue;
+		}
+		/* original Rogue's give_pack(): one new_thing() for the monster to hold */
+		const kind = drawItemKind(rng, floorsWithoutFood);
+		if (kind === "food") {
+			floorsWithoutFood = 0;
+		}
+		enemies.push({
+			...enemy,
+			carried: [buildFloorItem(kind, nextItemId, enemyTile, rng)],
+		});
+		if (hasItemIdentity(kind)) {
+			nextItemId += 1;
+		}
 	}
-	return { enemies, goldPiles };
+	return { enemies, goldPiles, nextItemId, floorsWithoutFood };
 };

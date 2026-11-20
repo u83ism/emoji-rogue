@@ -95,6 +95,8 @@ export type Enemy = Position & {
 	readonly speed: EnemySpeed;
 	/** Stopped where it stands by a hold monster scroll (original Rogue's ISHELD) until the player attacks or zaps it — see advanceEnemies. */
 	readonly held: boolean;
+	/** What it carries (original Rogue's t_pack) — dropped where it dies (enemies/enemyPack.ts). Positions are meaningless until then. */
+	readonly carried: readonly Item[];
 	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
 	readonly confusedTurnsRemaining: number;
 };

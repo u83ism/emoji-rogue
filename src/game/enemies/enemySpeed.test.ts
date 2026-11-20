@@ -16,6 +16,7 @@ const awake = (
 	awake: true,
 	speed,
 	held: false,
+	carried: [],
 	confusedTurnsRemaining: 0,
 });
 

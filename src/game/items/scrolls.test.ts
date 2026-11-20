@@ -111,7 +111,6 @@ describe("items/scrolls", () => {
 				"blindness",
 				"raise-level",
 				"detect-monster",
-				"life",
 				"hallucination",
 			] as const,
 			inventory: [{ itemId: 1, kind: "identify-scroll" as const }],

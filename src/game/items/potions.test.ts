@@ -6,7 +6,6 @@ import {
 	DETECT_MONSTER_POTION_DURATION,
 	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
-	LIFE_POTION_MAX_HP_BONUS,
 	PLAYER_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
@@ -257,27 +256,6 @@ describe("items/potions", () => {
 					event.payload.turns === DETECT_MONSTER_POTION_DURATION,
 			),
 		).toBe(true);
-	});
-
-	it("using a held life potion permanently raises playerMaxHp and fully heals", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			playerHp: 3,
-			inventory: [{ itemId: 1, kind: "life" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next.playerMaxHp).toBe(state.playerMaxHp + LIFE_POTION_MAX_HP_BONUS);
-		expect(next.playerHp).toBe(next.playerMaxHp);
-		expect(next.inventory).toEqual([]);
-		expect(next.events).toEqual([
-			{
-				type: "player-revitalized",
-				payload: { maxHpBonus: LIFE_POTION_MAX_HP_BONUS },
-			},
-		]);
 	});
 
 	it("using a held hallucination potion sets hallucinatingTurnsRemaining and logs player-hallucinated", () => {

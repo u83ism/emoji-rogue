@@ -11,8 +11,6 @@ import {
 	HEAL_POTION_DICE_SIDES,
 	LEVITATION_POTION_DURATION,
 	LEVITATION_POTION_SPAWN_CHANCE_PERCENT,
-	LIFE_POTION_MAX_HP_BONUS,
-	LIFE_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	POTION_COUNT_PER_FLOOR,
@@ -82,12 +80,6 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 			percent: DETECT_MONSTER_POTION_SPAWN_CHANCE_PERCENT,
 		},
 		effect: `${DETECT_MONSTER_POTION_DURATION}ターンの間、視界外の敵も見える`,
-	},
-	life: {
-		catalogName: "生命の薬",
-		category: "薬",
-		spawn: { type: "chance", percent: LIFE_POTION_SPAWN_CHANCE_PERCENT },
-		effect: `最大HPが${LIFE_POTION_MAX_HP_BONUS}恒久的に上がり、全回復する`,
 	},
 	hallucination: {
 		catalogName: "幻覚の薬",

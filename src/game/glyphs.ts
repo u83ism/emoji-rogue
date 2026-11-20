@@ -54,7 +54,6 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	/* Same glyph again — detect-monster is unidentified until drunk too. */
 	"detect-monster": { glyph: "💊" },
 	/* Same glyph again — life is unidentified until drunk too. */
-	life: { glyph: "💊" },
 	/* Same glyph again — hallucination is unidentified until drunk too. */
 	hallucination: { glyph: "💊" },
 	/* Scroll: single-codepoint, Unicode 6.0. Every scroll kind shares this

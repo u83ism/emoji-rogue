@@ -317,10 +317,6 @@ describe("formatEvent", () => {
 				"敵の気配を感じられなくなった",
 			],
 			[
-				{ type: "player-revitalized", payload: { maxHpBonus: 5 } },
-				"生命の薬を飲んだ。最大HPが5上がり、体力が全回復した!",
-			],
-			[
 				{ type: "enemy-gold-drop", payload: { by: "orc", amount: 7 } },
 				"オークが金貨を落とした!7ゴールド手に入れた",
 			],

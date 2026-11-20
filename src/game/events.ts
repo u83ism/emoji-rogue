@@ -59,7 +59,6 @@ export const ITEM_KIND_VALUES = [
 	"blindness",
 	"raise-level",
 	"detect-monster",
-	"life",
 	"remove-curse-scroll",
 	"teleport-wand",
 	"stealth-ring",
@@ -142,7 +141,6 @@ const POTION_KIND_VALUES = [
 	"blindness",
 	"raise-level",
 	"detect-monster",
-	"life",
 	"hallucination",
 ] as const satisfies readonly ItemKind[];
 
@@ -460,11 +458,6 @@ export type GameEvent =
 			/** Fired the turn detectMonstersTurnsRemaining reaches 0 — see applyStatusCountdownTicks. */
 			readonly type: "detect-monsters-faded";
 			readonly payload: Record<string, never>;
-	  }
-	| {
-			/** Drinking a potion of life — permanently raises playerMaxHp and fully heals. */
-			readonly type: "player-revitalized";
-			readonly payload: { readonly maxHpBonus: number };
 	  }
 	| {
 			/** Taking off a weapon/armor/ring — the mirror of weapon-equipped/armor-equipped/ring-equipped. */

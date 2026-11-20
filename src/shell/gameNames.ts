@@ -66,7 +66,6 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	blindness: "盲目の薬",
 	"raise-level": "レベルアップの薬",
 	"detect-monster": "索敵の薬",
-	life: "生命の薬",
 	"remove-curse-scroll": "解呪の巻物",
 	"teleport-wand": "テレポートの杖",
 	"stealth-ring": "隠密の指輪",

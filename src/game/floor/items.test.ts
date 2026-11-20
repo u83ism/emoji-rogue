@@ -41,7 +41,6 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"blindness",
 	"raise-level",
 	"detect-monster",
-	"life",
 	"protect-armor",
 	"teleport-scroll",
 	"mapping-scroll",

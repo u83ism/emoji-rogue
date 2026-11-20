@@ -653,17 +653,11 @@ describe("validateGameState", () => {
 		);
 	});
 
-	it("accepts a well-formed player-revitalized event and rejects a broken one", () => {
-		const result = validateGameState({
-			...buildValidState(),
-			events: [{ type: "player-revitalized", payload: { maxHpBonus: 5 } }],
-		});
-		expect(result.ok).toBe(true);
-
+	it("rejects the removed player-revitalized event", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-revitalized", payload: { maxHpBonus: 0 } }],
+				events: [{ type: "player-revitalized", payload: { maxHpBonus: 5 } }],
 			},
 			"events",
 		);

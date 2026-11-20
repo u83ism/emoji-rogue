@@ -329,7 +329,6 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"paralysis-faded": emptyPayload,
 	"player-detected-monsters": (payload) => isPositiveInteger(payload.turns),
 	"detect-monsters-faded": emptyPayload,
-	"player-revitalized": (payload) => isPositiveInteger(payload.maxHpBonus),
 	"item-unequipped": (payload) => isItemKind(payload.kind),
 	"equip-blocked-cursed": (payload) => isItemKind(payload.kind),
 	"curse-revealed": (payload) => isItemKind(payload.kind),

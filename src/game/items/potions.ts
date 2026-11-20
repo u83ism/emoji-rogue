@@ -5,7 +5,6 @@ import {
 	HALLUCINATION_POTION_DURATION,
 	HEAL_POTION_DICE_SIDES,
 	LEVITATION_POTION_DURATION,
-	LIFE_POTION_MAX_HP_BONUS,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
@@ -143,19 +142,5 @@ export const applyUsePotion = (
 					},
 				]),
 			};
-		case "life": {
-			const playerMaxHp = state.playerMaxHp + LIFE_POTION_MAX_HP_BONUS;
-			return {
-				...state,
-				playerMaxHp,
-				playerHp: playerMaxHp,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-revitalized",
-						payload: { maxHpBonus: LIFE_POTION_MAX_HP_BONUS },
-					},
-				]),
-			};
-		}
 	}
 };

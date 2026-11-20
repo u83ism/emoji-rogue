@@ -23,7 +23,6 @@ export interface ItemUseDecision {
  * guessing involved.
  */
 const PERMANENT_UPSIDE_POTION_KINDS: readonly ItemKind[] = [
-	"life",
 	"raise-level",
 	"strength",
 ];

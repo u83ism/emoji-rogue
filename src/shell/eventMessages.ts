@@ -157,8 +157,6 @@ export const formatEvent = (
 			return `${ITEM_NAMES["detect-monster"]}を飲んだ。敵の気配を感じ取れるようになった!`;
 		case "detect-monsters-faded":
 			return "敵の気配を感じられなくなった";
-		case "player-revitalized":
-			return `${ITEM_NAMES.life}を飲んだ。最大HPが${event.payload.maxHpBonus}上がり、体力が全回復した!`;
 		case "enemy-gold-drop":
 			return `${ENEMY_NAMES[event.payload.by]}が金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
 		case "enemy-teleported":

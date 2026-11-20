@@ -16,7 +16,6 @@ import {
 	formatEvent,
 	formatHeldItemLabel,
 	formatInventoryTitle,
-	formatPlayerAttack,
 	formatPlayerStrength,
 	GOAL_FLOOR,
 	HALLUCINATION_GLYPH,
@@ -219,7 +218,7 @@ const renderStatus = () => {
 					: undefined,
 	);
 	appendStatusSegment(
-		` 💪 ${formatPlayerStrength(state)}(${formatPlayerAttack(state)}) 🦺 ${calculatePlayerDefense(state.inventory)}`,
+		` 💪 ${formatPlayerStrength(state)} 🦺 ${calculatePlayerDefense(state.inventory)}`,
 	);
 	appendStatusSegment(` 💰 ${state.goldCollected}`, "#fd6");
 	for (const chip of STATUS_CHIPS) {

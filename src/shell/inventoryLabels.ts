@@ -2,11 +2,7 @@ import { INVENTORY_CAPACITY, UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { ItemKind } from "../game/events.js";
 import { EQUIPPED_GLYPH } from "../game/glyphs.js";
 import { canThrowItem } from "../game/inventoryKeymap.js";
-import {
-	calculateArmorClass,
-	calculatePlayerDamageBonus,
-	calculatePlayerDamageDice,
-} from "../game/items/equipmentStats.js";
+import { calculateArmorClass } from "../game/items/equipmentStats.js";
 import type { GameState, HeldItem } from "../game/state.js";
 import { EQUIPMENT_NAMES, resolveItemDisplayName } from "./gameNames.js";
 import { INVENTORY_TITLE } from "./systemMessages.js";
@@ -26,13 +22,6 @@ export const formatSignedBonus = (bonus: number): string =>
 /** Strength beside its run maximum, as original Rogue's status line shows it ("16/16", "14/17" once poisoned). */
 export const formatPlayerStrength = (state: GameState): string =>
 	`${state.playerStrength}/${state.playerMaxStrength}`;
-
-/** What the player's hits roll right now, in dice notation with the flat bonus appended ("2d4+2", "1d4+1", "3d4-1") — the status bar's attack readout. */
-export const formatPlayerAttack = (state: GameState): string => {
-	const dice = calculatePlayerDamageDice(state.inventory);
-	const bonus = calculatePlayerDamageBonus(state);
-	return `${dice.count}d${dice.sides}${bonus === 0 ? "" : formatSignedBonus(bonus)}`;
-};
 
 /**
  * The inventory row label for a held item: its display name (a weapon or

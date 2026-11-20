@@ -11,7 +11,6 @@ export { resolveItemDisplayName } from "../shell/gameNames.js";
 export {
 	formatHeldItemLabel,
 	formatInventoryTitle,
-	formatPlayerAttack,
 	formatPlayerStrength,
 	resolveItemVerbPrompt,
 } from "../shell/inventoryLabels.js";

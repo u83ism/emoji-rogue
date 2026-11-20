@@ -13,7 +13,7 @@ import {
 } from "../game/glyphs.js";
 import { calculatePlayerDefense } from "../game/items/equipmentStats.js";
 import type { GameState } from "../game/state.js";
-import { formatPlayerAttack, formatPlayerStrength } from "./inventoryLabels.js";
+import { formatPlayerStrength } from "./inventoryLabels.js";
 
 const LOW_HP_THRESHOLD = 3;
 
@@ -123,7 +123,7 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 		</Text>
 		<Text> </Text>
 		<Text>
-			💪 {formatPlayerStrength(state)}({formatPlayerAttack(state)}) 🦺{" "}
+			💪 {formatPlayerStrength(state)} 🦺{" "}
 			{calculatePlayerDefense(state.inventory)}
 		</Text>
 		<Text> </Text>

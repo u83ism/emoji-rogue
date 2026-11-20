@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
 	LEVEL_EXPERIENCE_THRESHOLDS,
 	PLAYER_LEVEL_UP_HP_DICE_SIDES,
-} from "./balance.js";
+} from "../balance.js";
+import { buildArenaGameState } from "../initialState.js";
 import { applyExperienceGain, applyLevelUp } from "./experience.js";
-import { buildArenaGameState } from "./initialState.js";
 
 describe("applyExperienceGain", () => {
 	it("accumulates experience without leveling up below the first threshold", () => {

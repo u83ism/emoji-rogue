@@ -1,11 +1,11 @@
 import type { RngState } from "../../rng.js";
 import { WRAITH_DRAIN_AMOUNT } from "../balance.js";
-import { rollDamageDice, rollToHit } from "../damage.js";
+import { rollDamageDice, rollToHit } from "../combat/damage.js";
+import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
+import { resolvePoisonDrain } from "../combat/strength.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import { resolveArmorRust } from "../items/equipment.js";
-import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, HeldItem } from "../state.js";
-import { resolvePoisonDrain } from "../strength.js";
 import { ENEMY_STATS } from "./enemyStats.js";
 import { resolveVampireLifesteal } from "./vampireLifesteal.js";
 import { resolveWraithDrain } from "./wraithDrain.js";

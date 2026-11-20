@@ -1,7 +1,7 @@
 import { UNARMED_DAMAGE_DICE, UNARMORED_ARMOR_CLASS } from "../balance.js";
-import type { DamageDice } from "../damage.js";
+import type { DamageDice } from "../combat/damage.js";
+import { calculateStrengthDamageBonus } from "../combat/strength.js";
 import type { GameState, HeldItem } from "../state.js";
-import { calculateStrengthDamageBonus } from "../strength.js";
 import { ARMOR_STATS, WEAPON_STATS } from "./equipmentKinds.js";
 
 // What the player's worn items add up to in combat — pure derivations from
@@ -58,7 +58,7 @@ export const calculatePlayerHitBonus = (
 export const calculateArmorClass = (armor: ArmorItem): number =>
 	ARMOR_STATS[armor.armorKind].armorClass - armor.defenseBonus;
 
-/** The player's armor class — the equipped armor's, or UNARMORED_ARMOR_CLASS with nothing worn. Lower is harder to hit (see items/hitChance.ts). */
+/** The player's armor class — the equipped armor's, or UNARMORED_ARMOR_CLASS with nothing worn. Lower is harder to hit (see combat/hitChance.ts). */
 export const calculatePlayerArmorClass = (
 	inventory: readonly HeldItem[],
 ): number => {

@@ -4,7 +4,7 @@ import {
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "../balance.js";
-import { isAdjacent } from "../combat.js";
+import { isAdjacent } from "../combat/combat.js";
 import { buildEventLog } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";

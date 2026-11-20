@@ -5,12 +5,12 @@ import {
 } from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
-import type { GameState, HeldItem } from "../state.js";
-import { calculateStrengthHitBonus } from "../strength.js";
 import {
 	calculatePlayerArmorClass,
 	calculatePlayerHitBonus,
-} from "./equipmentStats.js";
+} from "../items/equipmentStats.js";
+import type { GameState, HeldItem } from "../state.js";
+import { calculateStrengthHitBonus } from "./strength.js";
 
 /**
  * Original Rogue's swing() as a percent: a d20 (0-19) plus `hitBonus` must

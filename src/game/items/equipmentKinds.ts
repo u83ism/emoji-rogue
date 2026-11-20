@@ -1,4 +1,4 @@
-import type { DamageDice } from "../damage.js";
+import type { DamageDice } from "../combat/damage.js";
 import type {
 	ArmorKind,
 	EquipmentVariant,

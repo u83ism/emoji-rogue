@@ -1,5 +1,5 @@
-import { createRng, type RngState, stepUniform } from "../rng.js";
-import { DAMAGE_VARIANCE_STDDEV } from "./balance.js";
+import { createRng, type RngState, stepUniform } from "../../rng.js";
+import { DAMAGE_VARIANCE_STDDEV } from "../balance.js";
 
 export interface DamageRoll {
 	readonly damage: number;

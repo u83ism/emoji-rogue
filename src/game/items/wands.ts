@@ -4,8 +4,8 @@ import {
 	MAGIC_MISSILE_DAMAGE_DICE,
 	SLOW_WAND_DURATION,
 } from "../balance.js";
-import { applyEnemyHit } from "../combat.js";
-import { rollDamageDice, rollToHit } from "../damage.js";
+import { applyEnemyHit } from "../combat/combat.js";
+import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";

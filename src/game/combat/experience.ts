@@ -1,10 +1,10 @@
 import {
 	LEVEL_EXPERIENCE_THRESHOLDS,
 	PLAYER_LEVEL_UP_HP_DICE_SIDES,
-} from "./balance.js";
+} from "../balance.js";
+import { buildEventLog, type GameEvent } from "../events.js";
+import type { GameState } from "../state.js";
 import { rollDamageDice } from "./damage.js";
-import { buildEventLog, type GameEvent } from "./events.js";
-import type { GameState } from "./state.js";
 
 /**
  * The player moved up `levelsGained` levels: playerMaxHp and playerHp both

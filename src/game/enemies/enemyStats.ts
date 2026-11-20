@@ -1,4 +1,4 @@
-import type { DamageDice } from "../damage.js";
+import type { DamageDice } from "../combat/damage.js";
 import type { EnemyKind } from "../events.js";
 
 // Original Rogue 5.4's monsters[] table (extern.c), one row per kind:
@@ -9,7 +9,7 @@ import type { EnemyKind } from "../events.js";
 
 export interface EnemyStats {
 	readonly level: number;
-	/** Lower is harder to hit — the player's to-hit chance adds this number (see items/hitChance.ts). */
+	/** Lower is harder to hit — the player's to-hit chance adds this number (see combat/hitChance.ts). */
 	readonly armorClass: number;
 	/** Every entry is one separate to-hit roll per turn. A 0-count die lands for 0 damage (aquator: the hit only rusts). */
 	readonly attacks: readonly DamageDice[];

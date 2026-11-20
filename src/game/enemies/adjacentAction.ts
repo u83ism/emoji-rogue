@@ -1,5 +1,5 @@
+import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
-import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, GameState } from "../state.js";
 import type {
 	EnemyActionResult,

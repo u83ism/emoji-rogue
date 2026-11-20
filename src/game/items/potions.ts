@@ -8,11 +8,11 @@ import {
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
-import { rollDamageDice } from "../damage.js";
+import { rollDamageDice } from "../combat/damage.js";
+import { applyLevelUp } from "../combat/experience.js";
+import { applyStrengthChange } from "../combat/strength.js";
 import { buildEventLog, type PotionKind } from "../events.js";
-import { applyLevelUp } from "../experience.js";
 import type { GameState } from "../state.js";
-import { applyStrengthChange } from "../strength.js";
 
 /**
  * Drinking one potion of `kind`. Drinking also identifies the kind for the

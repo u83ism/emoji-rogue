@@ -1,21 +1,21 @@
-import type { RngState } from "../rng.js";
-import { createRng } from "../rng.js";
+import type { RngState } from "../../rng.js";
+import { createRng } from "../../rng.js";
 import {
 	calculateMagicSaveChancePercent,
 	SLEEPING_TARGET_HIT_BONUS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-} from "./balance.js";
-import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
-import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
-import { buildEventLog, type GameEvent } from "./events.js";
-import { applyExperienceGain } from "./experience.js";
-import { drawGoldAmount } from "./floor/rooms.js";
+} from "../balance.js";
+import { calculateEnemyExperienceReward } from "../enemies/enemyStats.js";
+import { buildEventLog, type GameEvent } from "../events.js";
+import { drawGoldAmount } from "../floor/rooms.js";
 import {
 	calculatePlayerDamageBonus,
 	calculatePlayerDamageDice,
-} from "./items/equipmentStats.js";
-import { calculatePlayerHitChancePercent } from "./items/hitChance.js";
-import type { Enemy, GameState, Position } from "./state.js";
+} from "../items/equipmentStats.js";
+import type { Enemy, GameState, Position } from "../state.js";
+import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
+import { applyExperienceGain } from "./experience.js";
+import { calculatePlayerHitChancePercent } from "./hitChance.js";
 
 /**
  * The gold an orc or thief leaves behind, dropped straight into

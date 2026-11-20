@@ -1,6 +1,6 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell } from "../renderer/index.js";
-import { isAdjacent } from "./combat.js";
+import { isAdjacent } from "./combat/combat.js";
 import { ENEMY_GLYPHS } from "./enemyGlyphs.js";
 import {
 	AMULET_CELL,

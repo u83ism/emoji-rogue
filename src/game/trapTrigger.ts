@@ -5,13 +5,13 @@ import {
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 	TRAP_DAMAGE,
 } from "./balance.js";
-import { rollDamageDice, rollToHit } from "./damage.js";
+import { rollDamageDice, rollToHit } from "./combat/damage.js";
+import { calculateDartTrapHitChancePercent } from "./combat/hitChance.js";
+import { resolvePoisonDrain } from "./combat/strength.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
 import { resolveArmorRust } from "./items/equipment.js";
-import { calculateDartTrapHitChancePercent } from "./items/hitChance.js";
 import type { GameState } from "./state.js";
-import { resolvePoisonDrain } from "./strength.js";
 import { applyRandomTeleport } from "./teleport.js";
 
 /**

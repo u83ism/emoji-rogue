@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
 import { PLAYER_START_STRENGTH } from "./balance.js";
+import { calculateStrengthDamageBonus } from "./combat/strength.js";
 import type { EnemyKind, WeaponKind } from "./events.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState, HeldItem } from "./state.js";
-import { calculateStrengthDamageBonus } from "./strength.js";
 import { applyThrowItem } from "./throw.js";
 
 /** add_dam[] for the starting strength of 16 — what every fixture hit adds on top of its dice. */

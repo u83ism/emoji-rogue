@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { UNARMED_DAMAGE_DICE, UNARMORED_ARMOR_CLASS } from "../balance.js";
+import { calculateStrengthDamageBonus } from "../combat/strength.js";
 import type { ArmorKind, WeaponKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { HeldItem } from "../state.js";
-import { calculateStrengthDamageBonus } from "../strength.js";
 import {
 	calculatePlayerArmorClass,
 	calculatePlayerDamageBonus,

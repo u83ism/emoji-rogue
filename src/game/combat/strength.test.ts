@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../rng.js";
-import { PLAYER_START_STRENGTH } from "./balance.js";
-import { buildArenaGameState } from "./initialState.js";
+import { seedToState } from "../../rng.js";
+import { PLAYER_START_STRENGTH } from "../balance.js";
+import { buildArenaGameState } from "../initialState.js";
 import {
 	applyStrengthChange,
 	calculateStrengthDamageBonus,

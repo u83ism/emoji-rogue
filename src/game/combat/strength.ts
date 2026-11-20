@@ -1,8 +1,8 @@
-import { at } from "../indexing.js";
-import type { RngState } from "../rng.js";
-import { calculatePoisonSaveChancePercent } from "./balance.js";
+import { at } from "../../indexing.js";
+import type { RngState } from "../../rng.js";
+import { calculatePoisonSaveChancePercent } from "../balance.js";
+import type { GameState } from "../state.js";
 import { rollToHit } from "./damage.js";
-import type { GameState } from "./state.js";
 
 /** Strength never leaves this range — original Rogue's add_str(). */
 export const STRENGTH_MIN = 3;

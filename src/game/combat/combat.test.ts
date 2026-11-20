@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { type RngState, seedToState, stepUniform } from "../rng.js";
+import { type RngState, seedToState, stepUniform } from "../../rng.js";
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	PLAYER_START_STRENGTH,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
-} from "./balance.js";
+} from "../balance.js";
+import { calculateEnemyExperienceReward } from "../enemies/enemyStats.js";
+import type { EnemyKind } from "../events.js";
+import { buildArenaGameState } from "../initialState.js";
+import type { Enemy, HeldItem } from "../state.js";
 import { applyEnemyHit, applyPlayerAttack, isAdjacent } from "./combat.js";
-import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
-import type { EnemyKind } from "./events.js";
-import { buildArenaGameState } from "./initialState.js";
-import type { Enemy, HeldItem } from "./state.js";
 import { calculateStrengthDamageBonus } from "./strength.js";
 
 /** add_dam[] for the starting strength of 16 — what every fixture hit adds on top of its dice. */

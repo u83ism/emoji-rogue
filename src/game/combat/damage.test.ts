@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../rng.js";
+import { seedToState } from "../../rng.js";
 import { rollDamage, rollDamageDice, rollToHit } from "./damage.js";
 
 describe("rollDamage", () => {

@@ -7,11 +7,11 @@ import {
 	PLAYER_START_STRENGTH,
 	SLOW_WAND_DURATION,
 } from "../balance.js";
+import { calculateStrengthDamageBonus } from "../combat/strength.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { Enemy } from "../state.js";
-import { calculateStrengthDamageBonus } from "../strength.js";
 import { applyMagicMissileWandStrike } from "./wands.js";
 
 /** add_dam[] for the starting strength of 16. */

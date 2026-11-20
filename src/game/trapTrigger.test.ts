@@ -7,7 +7,7 @@ import {
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Action, Direction, Enemy } from "./state.js";
 
-/** Levels at which a dart trap's to-hit chance clamps to 100% / 0% (see items/hitChance.ts). */
+/** Levels at which a dart trap's to-hit chance clamps to 100% / 0% (see combat/hitChance.ts). */
 const SURE_HIT_LEVEL = 30;
 const SURE_MISS_LEVEL = -30;
 

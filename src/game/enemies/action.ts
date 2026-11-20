@@ -1,5 +1,5 @@
 import { type RngState, stepUniform } from "../../rng.js";
-import { isAdjacent } from "../combat.js";
+import { isAdjacent } from "../combat/combat.js";
 import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction, withEvents } from "./adjacentAction.js";

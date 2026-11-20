@@ -2,6 +2,7 @@
 import { err, ok, type Result } from "../../result.js";
 import type { RngState } from "../../rng.js";
 import { PLAYER_MAX_FOOD, STARVATION_TURNS } from "../balance.js";
+import { STRENGTH_MAX, STRENGTH_MIN } from "../combat/strength.js";
 import {
 	ARMOR_KIND_VALUES,
 	type DeathCause,
@@ -25,7 +26,6 @@ import type {
 	Stairs,
 	Trap,
 } from "../state.js";
-import { STRENGTH_MAX, STRENGTH_MIN } from "../strength.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);

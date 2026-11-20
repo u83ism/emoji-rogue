@@ -1,6 +1,6 @@
 /* file-size-exception: リデューサ本体(applyMove/applyTurnEndTicks/applyItemAction/advanceTurn)の一体性を優先(2026-07-19裁可) */
 import { stepUniform } from "../rng.js";
-import { applyPlayerAttack, isAdjacent } from "./combat.js";
+import { applyPlayerAttack, isAdjacent } from "./combat/combat.js";
 import { advanceEnemies } from "./enemies/enemies.js";
 import { buildEventLog } from "./events.js";
 import { ascendStairs, descendStairs } from "./floor/transitions.js";

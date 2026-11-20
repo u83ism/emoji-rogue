@@ -6,7 +6,7 @@
 // (a normal-distribution roll tried and rolled back in game-history.md
 // milestone 15) stays dormant, unrelated to the dice below.
 
-import type { DamageDice } from "./damage.js";
+import type { DamageDice } from "./combat/damage.js";
 import type { TrapKind } from "./events.js";
 
 /** Original Rogue's starting hit points (INIT_STATS). */
@@ -25,7 +25,7 @@ export const DAMAGE_VARIANCE_STDDEV = 0.5;
  * reach 20 - attacker level - defender armor class. Restated on the
  * percent-roll idiom used everywhere else in this file, that is this many
  * percent per point of (level + armor class + bonus) — see
- * items/hitChance.ts. A target still asleep only adds
+ * combat/hitChance.ts. A target still asleep only adds
  * SLEEPING_TARGET_HIT_BONUS to the roll.
  */
 export const HIT_CHANCE_PERCENT_PER_POINT = 5;

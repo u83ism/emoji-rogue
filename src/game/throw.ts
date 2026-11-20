@@ -1,7 +1,8 @@
 import { createRng } from "../rng.js";
 import { SLEEPING_TARGET_HIT_BONUS } from "./balance.js";
-import { applyEnemyHit } from "./combat.js";
-import { rollDamageDice, rollToHit } from "./damage.js";
+import { applyEnemyHit } from "./combat/combat.js";
+import { rollDamageDice, rollToHit } from "./combat/damage.js";
+import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
 import { buildEventLog } from "./events.js";
 import { WEAPON_STATS } from "./items/equipmentKinds.js";
 import {
@@ -9,7 +10,6 @@ import {
 	findEquippedWeapon,
 	type WeaponItem,
 } from "./items/equipmentStats.js";
-import { calculateThrowHitChancePercent } from "./items/hitChance.js";
 import { removeHeldItem, replaceHeldItem } from "./items/inventory.js";
 import type { Enemy, GameState, Item, Position } from "./state.js";
 import { findNearestVisibleEnemy } from "./vision.js";

@@ -4,7 +4,7 @@ import {
 	ICE_MONSTER_FREEZE_TURNS_MIN,
 	PARALYSIS_DEATH_TURNS,
 } from "../balance.js";
-import { rollToHit } from "../damage.js";
+import { rollToHit } from "../combat/damage.js";
 import type { GameEvent } from "../events.js";
 
 /** What one ice monster attack changes — see resolveIceMonsterAttack. */

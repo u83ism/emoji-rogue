@@ -6,7 +6,7 @@ import {
 	SLEEPING_TARGET_HIT_BONUS,
 	UNARMORED_ARMOR_CLASS,
 } from "../../game/balance.js";
-import type { DamageDice } from "../../game/damage.js";
+import type { DamageDice } from "../../game/combat/damage.js";
 import {
 	ENEMY_HP_DICE_SIDES,
 	ENEMY_STATS,

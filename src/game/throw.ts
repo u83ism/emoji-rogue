@@ -1,5 +1,4 @@
 import { createRng } from "../rng.js";
-import { SLEEPING_TARGET_HIT_BONUS } from "./balance.js";
 import { applyEnemyHit } from "./combat/combat.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
@@ -79,10 +78,7 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 		stats.launcher === undefined || isLaunched
 			? stats.hurlDice
 			: stats.damageDice;
-	const hitBonus =
-		item.hitBonus +
-		(isLaunched ? (wielded?.hitBonus ?? 0) : 0) +
-		(target.awake ? 0 : SLEEPING_TARGET_HIT_BONUS);
+	const hitBonus = item.hitBonus + (isLaunched ? (wielded?.hitBonus ?? 0) : 0);
 	const damageBonus =
 		item.damageBonus +
 		(isLaunched ? (wielded?.damageBonus ?? 0) : 0) +

@@ -1,8 +1,8 @@
 import {
+	NOT_RUNNING_HIT_BONUS,
 	ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD,
 	ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD,
 	ROOM_GOLD_CHANCE_PERCENT,
-	SLEEPING_TARGET_HIT_BONUS,
 	UNARMORED_ARMOR_CLASS,
 } from "../../game/balance.js";
 import type { DamageDice } from "../../game/combat/damage.js";
@@ -84,7 +84,7 @@ const buildEnemySection = (): string => {
 		"",
 		`能力値は原作Rogue 5.4の表そのまま。HPは個体ごとに「レベル」個の${ENEMY_HP_DICE_SIDES}面ダイスで決まる。ACは小さいほど攻撃が当たりにくい。攻撃は「/」で区切った数だけ1ターンに命中判定があり、当たった分だけダイスのダメージを受ける(防具は当たりにくくするだけで、ダメージは減らさない)。経験値は表の値に、その個体のHPに応じた加算が付く。`,
 		"",
-		`各部屋には${ROOM_GOLD_CHANCE_PERCENT}%で金貨の山が1つ置かれ、金貨のある部屋は${ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD}%・ない部屋は${ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD}%で敵が1体配置される。種類は階が深くなるほど強いものに入れ替わる。これとは別に、約70ターン経つと4ターンごとに1/6の確率で、徘徊する敵が見えない場所に起きた状態で現れる(現れるとまた約70ターン待つ。イッキーシング・盗賊・ニンフ・ハエトリソウ・ゼロック・ドラゴンは徘徊しない)。部屋の敵は眠った状態で出現し、隣接または視界内で毎ターン確率で目を覚ます。眠っている敵への攻撃は命中判定に+${SLEEPING_TARGET_HIT_BONUS}される。`,
+		`各部屋には${ROOM_GOLD_CHANCE_PERCENT}%で金貨の山が1つ置かれ、金貨のある部屋は${ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD}%・ない部屋は${ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD}%で敵が1体配置される。種類は階が深くなるほど強いものに入れ替わる。これとは別に、約70ターン経つと4ターンごとに1/6の確率で、徘徊する敵が見えない場所に起きた状態で現れる(現れるとまた約70ターン待つ。イッキーシング・盗賊・ニンフ・ハエトリソウ・ゼロック・ドラゴンは徘徊しない)。部屋の敵は眠った状態で出現し、隣接または視界内で毎ターン確率で目を覚ます。プレイヤーが凍らされる・眠らされる・空腹の段階が変わると、次に動けなくなった状態から回復するまで、敵の攻撃が命中判定に+${NOT_RUNNING_HIT_BONUS}される(ゲーム開始時も同じ。本家5.4のISRUNの扱いそのまま)。`,
 		"",
 		"| 絵文字 | 名前 | レベル | AC | 攻撃 | 経験値 | 出現階 | 習性 |",
 		"|---|---|---|---|---|---|---|---|",

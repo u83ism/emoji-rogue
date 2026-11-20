@@ -482,6 +482,10 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(paralyzedTurnsRemaining)) {
 		return err("paralyzedTurnsRemaining");
 	}
+	const playerRunFlag = value.playerRunFlag;
+	if (!isBooleanValue(playerRunFlag)) {
+		return err("playerRunFlag");
+	}
 	const detectMonstersTurnsRemaining = value.detectMonstersTurnsRemaining;
 	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
 		return err("detectMonstersTurnsRemaining");
@@ -610,6 +614,7 @@ export const validateGameState = (
 		levitationTurnsRemaining,
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
+		playerRunFlag,
 		detectMonstersTurnsRemaining,
 		hallucinatingTurnsRemaining,
 		floor,

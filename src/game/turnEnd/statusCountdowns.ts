@@ -57,5 +57,10 @@ export const applyStatusCountdownTicks = (state: GameState): GameState => {
 	if (state.status !== "playing") {
 		return state;
 	}
-	return COUNTDOWN_FIELDS.reduce(applyCountdownTick, state);
+	const ticked = COUNTDOWN_FIELDS.reduce(applyCountdownTick, state);
+	/* original Rogue's "you can move again" turns the run flag back on */
+	return state.paralyzedTurnsRemaining > 0 &&
+		ticked.paralyzedTurnsRemaining === 0
+		? { ...ticked, playerRunFlag: true }
+		: ticked;
 };

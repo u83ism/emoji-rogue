@@ -3,7 +3,6 @@ import { createRng } from "../../rng.js";
 import {
 	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
-	SLEEPING_TARGET_HIT_BONUS,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
 import { calculateEnemyExperienceReward } from "../enemies/enemyStats.js";
@@ -124,8 +123,8 @@ const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
 
 /**
  * The player's bump attack resolved against one enemy: it first rolls
- * calculatePlayerHitChancePercent (SLEEPING_TARGET_HIT_BONUS added against
- * a target still asleep — original Rogue's only edge for that), and a
+ * calculatePlayerHitChancePercent — no edge against a sleeping target, since
+ * original Rogue's fight() wakes it before rolling — and a
  * miss ends the turn with no damage (player-attack-missed) but still resets
  * quietTurns (swinging, even missing, is fighting). The
  * player does not move — attacking is what the movement turn was spent on.
@@ -136,11 +135,7 @@ export const applyPlayerAttack = (
 ): GameState => {
 	const hitRoll = rollToHit(
 		state.rng,
-		calculatePlayerHitChancePercent(
-			state,
-			target.kind,
-			target.awake ? 0 : SLEEPING_TARGET_HIT_BONUS,
-		),
+		calculatePlayerHitChancePercent(state, target.kind),
 	);
 	if (!hitRoll.hit) {
 		return {

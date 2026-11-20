@@ -35,6 +35,8 @@ const TRAP_SIDE_EFFECTS: Readonly<
 	"sleeping-gas": (state) => ({
 		...state,
 		paralyzedTurnsRemaining: SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
+		/* falling asleep takes the run flag away (original Rogue's be_trapped()) */
+		playerRunFlag: false,
 	}),
 	/** Same armor-rusted degradation as an aquator's landed hit, but guaranteed on trigger rather than a rolled chance. */
 	rust: (state) => {

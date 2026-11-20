@@ -271,6 +271,14 @@ export interface GameState {
 	readonly blindTurnsRemaining: number;
 	/** Turns left of being unable to act at all — see applyStatusCountdownTicks and advanceTurn. */
 	readonly paralyzedTurnsRemaining: number;
+	/**
+	 * Original Rogue's ISRUN flag on the player, which roll_em() reads: while
+	 * it is off, every monster attack gets NOT_RUNNING_HIT_BONUS. It starts
+	 * off, comes on when a paralysis wears off ("you can move again"), and
+	 * goes off again when the player is frozen or put to sleep, or the hunger
+	 * stage changes — see combat/hitChance.ts.
+	 */
+	readonly playerRunFlag: boolean;
 	/** Turns left of seeing every enemy regardless of FOV — see applyStatusCountdownTicks and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
 	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/statusCountdowns.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */

@@ -50,6 +50,19 @@ describe("applyHungerTick", () => {
 		expect(next.rng).toEqual(state.rng);
 	});
 
+	it("a new hunger stage takes the player's run flag away (original Rogue's stomach())", () => {
+		const running = {
+			...buildState(PLAYER_HUNGER_WARNING_THRESHOLD + 1),
+			playerRunFlag: true,
+		};
+		expect(applyHungerTick(running).playerRunFlag).toBe(false);
+		const steady = {
+			...buildState(PLAYER_HUNGER_WARNING_THRESHOLD + 10),
+			playerRunFlag: true,
+		};
+		expect(applyHungerTick(steady).playerRunFlag).toBe(true);
+	});
+
 	it("fires player-hungry exactly once, the turn food crosses the warning threshold", () => {
 		const state = buildState(PLAYER_HUNGER_WARNING_THRESHOLD + 1);
 		const next = applyHungerTick(state);

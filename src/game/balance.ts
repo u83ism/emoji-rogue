@@ -25,12 +25,18 @@ export const DAMAGE_VARIANCE_STDDEV = 0.5;
  * reach 20 - attacker level - defender armor class. Restated on the
  * percent-roll idiom used everywhere else in this file, that is this many
  * percent per point of (level + armor class + bonus) — see
- * combat/hitChance.ts. A target still asleep only adds
- * SLEEPING_TARGET_HIT_BONUS to the roll.
+ * combat/hitChance.ts. A monster attacking a player whose run flag is off
+ * adds NOT_RUNNING_HIT_BONUS to the roll.
  */
 export const HIT_CHANCE_PERCENT_PER_POINT = 5;
-/** Added to the to-hit roll of a melee swing or thrown weapon against a target still asleep — original Rogue's roll_em() +4 against anything not yet running. No damage bonus: the original has no sneak-attack multiplier. */
-export const SLEEPING_TARGET_HIT_BONUS = 4;
+/**
+ * Original Rogue's roll_em() +4 to hit a defender that is not running
+ * (ISRUN off). The player's own attacks never get it: fight() wakes the
+ * target (runto()) before rolling, so a monster is always running by then.
+ * A monster attacking the player gets it whenever GameState.playerRunFlag
+ * is off. No damage bonus: the original has no sneak-attack multiplier.
+ */
+export const NOT_RUNNING_HIT_BONUS = 4;
 /** How many arrows a run starts with — original Rogue's `rnd(15) + 25`. */
 export const STARTING_ARROWS_MIN = 25;
 export const STARTING_ARROWS_MAX = 39;
@@ -135,7 +141,7 @@ export const ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD = 25;
  * the only way to become adjacent, so there is always a prior turn standing
  * next to the enemy), so a guaranteed-on-adjacency wake would make every
  * approach wake the enemy one full turn before the player could ever attack,
- * leaving no room to swing at a sleeping one (SLEEPING_TARGET_HIT_BONUS).
+ * leaving no room to swing at a sleeping one.
  */
 export const WAKE_CHANCE_PERCENT = 33;
 

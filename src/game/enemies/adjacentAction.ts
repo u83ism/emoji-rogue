@@ -78,6 +78,7 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 				enemy.kind,
 				progress.inventory,
 				calculateEnemyLevelBonus(state.floor),
+				progress.playerRunFlag,
 			),
 			progress.rng,
 		);
@@ -97,6 +98,7 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 				enemy.kind,
 				progress.inventory,
 				calculateEnemyLevelBonus(state.floor),
+				progress.playerRunFlag,
 			),
 			progress.rng,
 		);
@@ -107,6 +109,12 @@ const SPECIAL_ADJACENT_ACTIONS: Readonly<
 					...progress,
 					rng: frozen.rng,
 					playerParalyzedTurnsRemaining: frozen.paralyzedTurnsRemaining,
+					/* a landed freeze takes the run flag away (original Rogue's attack()) */
+					playerRunFlag:
+						frozen.paralyzedTurnsRemaining >
+						progress.playerParalyzedTurnsRemaining
+							? false
+							: progress.playerRunFlag,
 					died: progress.died || frozen.died,
 				},
 				events,
@@ -131,6 +139,7 @@ const attackWithDice = (
 		inventory: progress.inventory,
 		rng: progress.rng,
 		levelBonus: calculateEnemyLevelBonus(state.floor),
+		playerRunFlag: progress.playerRunFlag,
 	});
 	return {
 		actor: { ...actor, hp: hit.enemyHp },

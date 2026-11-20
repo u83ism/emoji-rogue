@@ -52,6 +52,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		playerLevel: state.playerLevel,
 		playerExperience: state.playerExperience,
 		playerConfusedTurnsRemaining: state.confusedTurnsRemaining,
+		playerRunFlag: state.playerRunFlag,
 		playerParalyzedTurnsRemaining: state.paralyzedTurnsRemaining,
 		flytrapHoldDamage: state.flytrapHoldDamage,
 		playerAttacked: false,
@@ -141,6 +142,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
 		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
 		paralyzedTurnsRemaining: progress.playerParalyzedTurnsRemaining,
+		playerRunFlag: progress.playerRunFlag,
 		/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
 		flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)
 			? progress.flytrapHoldDamage

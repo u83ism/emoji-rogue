@@ -20,6 +20,8 @@ export interface EnemyTurnProgress {
 	readonly playerLevel: number;
 	readonly playerExperience: number;
 	readonly playerConfusedTurnsRemaining: number;
+	/** GameState.playerRunFlag — an ice monster's freeze clears it mid-turn, so later attackers get the bonus. */
+	readonly playerRunFlag: boolean;
 	readonly playerParalyzedTurnsRemaining: number;
 	readonly flytrapHoldDamage: number;
 	/** Some enemy acted against the player this turn (attacked, missed or stole) — ends the quiet natural healing waits for. */

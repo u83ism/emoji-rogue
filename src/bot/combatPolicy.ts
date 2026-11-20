@@ -73,8 +73,7 @@ const ALL_DIRECTIONS: readonly Direction[] = ["north", "south", "west", "east"];
 
 /**
  * The direction of an enemy standing right next to the player, if any.
- * Attacking it — awake or still asleep (sleeping ones are easier to hit,
- * see SLEEPING_TARGET_HIT_BONUS) — takes priority over
+ * Attacking it — awake or still asleep — takes priority over
  * continuing toward the exploration goal: an adjacent enemy attacks every
  * turn regardless of what the player does, so walking past one instead of
  * finishing it off just means taking repeated free hits.

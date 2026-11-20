@@ -197,8 +197,8 @@ describe("applyThrowItem", () => {
 		expect(applyThrowItem(state, 1).enemies[0]?.awake).toBe(true);
 	});
 
-	it("gets +4 to hit against a sleeping target", () => {
-		/* level 1 against a zombie (armor class 8): 45% awake. A -9 to hit makes that 0% awake, 20% asleep. */
+	it("gets no edge against a sleeping target — original Rogue's fight() wakes it before rolling", () => {
+		/* level 1 against a zombie (armor class 8): 45%. A -9 to hit makes that 0%, asleep or not. */
 		const inventory = [weaponOf(1, "dart", { quantity: 400, hitBonus: -9 })];
 		const countHits = (awake: boolean): number => {
 			let state = buildState(inventory, {
@@ -221,7 +221,7 @@ describe("applyThrowItem", () => {
 			return hits;
 		};
 		expect(countHits(true)).toBe(0);
-		expect(countHits(false)).toBeGreaterThan(30);
+		expect(countHits(false)).toBe(0);
 	});
 
 	it("through advanceTurn, throwing spends the turn", () => {

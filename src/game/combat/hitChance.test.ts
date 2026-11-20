@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	HIT_CHANCE_PERCENT_PER_POINT,
-	SLEEPING_TARGET_HIT_BONUS,
+	NOT_RUNNING_HIT_BONUS,
 	UNARMORED_ARMOR_CLASS,
 } from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
@@ -49,16 +49,6 @@ describe("calculatePlayerHitChancePercent", () => {
 		expect(
 			calculatePlayerHitChancePercent({ ...state, floor: 28 }, "zombie"),
 		).toBe(45 - 2 * HIT_CHANCE_PERCENT_PER_POINT);
-	});
-
-	it("a sleeping target's bonus (original Rogue's +4) adds its points on top", () => {
-		expect(
-			calculatePlayerHitChancePercent(
-				state,
-				"zombie",
-				SLEEPING_TARGET_HIT_BONUS,
-			),
-		).toBe(45 + SLEEPING_TARGET_HIT_BONUS * HIT_CHANCE_PERCENT_PER_POINT);
 	});
 
 	it("is lower against a harder (lower) armor class and higher at a higher level", () => {
@@ -116,6 +106,12 @@ describe("calculateEnemyHitChancePercent", () => {
 
 	it("a deep-floor level bonus raises it 5% a level", () => {
 		expect(calculateEnemyHitChancePercent("hobgoblin", [], 2)).toBe(65);
+	});
+
+	it("gets original Rogue's +4 while the player's run flag is off", () => {
+		expect(calculateEnemyHitChancePercent("hobgoblin", [], 0, false)).toBe(
+			55 + NOT_RUNNING_HIT_BONUS * HIT_CHANCE_PERCENT_PER_POINT,
+		);
 	});
 
 	it("falls 5 points per point of defense: the armor kind's own class plus its defenseBonus", () => {

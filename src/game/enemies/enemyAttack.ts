@@ -22,6 +22,8 @@ export interface AttackTarget {
 	readonly rng: RngState;
 	/** The attacker's deep-floor level bonus (balance.ts's calculateEnemyLevelBonus) — it hits more often. Absent counts as 0. */
 	readonly levelBonus?: number;
+	/** GameState.playerRunFlag — off, every attack gets NOT_RUNNING_HIT_BONUS. Absent counts as on. */
+	readonly playerRunFlag?: boolean;
 }
 
 /** Everything one enemy's attacks on the player change in a turn — see adjacentAction.ts. */
@@ -123,6 +125,7 @@ export const resolveEnemyAttack = (
 		enemy.kind,
 		target.inventory,
 		target.levelBonus ?? 0,
+		target.playerRunFlag ?? true,
 	);
 	let rng = target.rng;
 	let playerHp = target.playerHp;

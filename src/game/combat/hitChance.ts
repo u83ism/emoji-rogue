@@ -3,6 +3,7 @@ import {
 	DART_TRAP_HIT_BONUS,
 	DART_TRAP_LEVEL_BONUS,
 	HIT_CHANCE_PERCENT_PER_POINT,
+	NOT_RUNNING_HIT_BONUS,
 } from "../balance.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
@@ -34,21 +35,19 @@ const calculateHitChancePercent = (
 		),
 	);
 
-/** Percent chance a player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus, the strength's to-hit bonus and `situationalHitBonus` (SLEEPING_TARGET_HIT_BONUS against a sleeping target — combat.ts decides). */
+/** Percent chance a player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class (better on deep floors), plus the equipped weapon's hitBonus and the strength's to-hit bonus. */
 export const calculatePlayerHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
-	situationalHitBonus = 0,
 ): number =>
 	calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass - calculateEnemyLevelBonus(state.floor),
 		calculatePlayerHitBonus(state.inventory) +
-			calculateStrengthHitBonus(state.playerStrength) +
-			situationalHitBonus,
+			calculateStrengthHitBonus(state.playerStrength),
 	);
 
-/** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the strength's to-hit bonus and `hitBonus` (the missile's own, its launcher's, and the sleeping-target bonus — throw.ts adds them up). */
+/** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the strength's to-hit bonus and `hitBonus` (the missile's own and its launcher's — throw.ts adds them up). */
 export const calculateThrowHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
@@ -71,14 +70,21 @@ export const calculateDartTrapHitChancePercent = (
 		DART_TRAP_HIT_BONUS,
 	);
 
-/** Percent chance one attack of an `attackerKind` enemy connects with the player: that kind's level (plus `levelBonus` on deep floors — calculateEnemyLevelBonus) against the player's armor class. */
+/**
+ * Percent chance one attack of an `attackerKind` enemy connects with the
+ * player: that kind's level (plus `levelBonus` on deep floors —
+ * calculateEnemyLevelBonus) against the player's armor class, plus
+ * NOT_RUNNING_HIT_BONUS while the player's run flag is off
+ * (GameState.playerRunFlag).
+ */
 export const calculateEnemyHitChancePercent = (
 	attackerKind: EnemyKind,
 	inventory: readonly HeldItem[],
 	levelBonus = 0,
+	playerRunFlag = true,
 ): number =>
 	calculateHitChancePercent(
 		ENEMY_STATS[attackerKind].level + levelBonus,
 		calculatePlayerArmorClass(inventory),
-		0,
+		playerRunFlag ? 0 : NOT_RUNNING_HIT_BONUS,
 	);

@@ -13,6 +13,17 @@ const COUNTDOWNS = [
 ] as const;
 
 describe("applyStatusCountdownTicks", () => {
+	it("a paralysis wearing off turns the player's run flag on (original Rogue's \"you can move again\")", () => {
+		const state = {
+			...buildArenaGameState(5, 5, 1),
+			paralyzedTurnsRemaining: 1,
+			playerRunFlag: false,
+		};
+		expect(applyStatusCountdownTicks(state).playerRunFlag).toBe(true);
+		const still = { ...state, paralyzedTurnsRemaining: 2 };
+		expect(applyStatusCountdownTicks(still).playerRunFlag).toBe(false);
+	});
+
 	it("is a no-op (same reference) when no countdown is active", () => {
 		const state = buildArenaGameState(5, 5, 1);
 		expect(applyStatusCountdownTicks(state)).toBe(state);

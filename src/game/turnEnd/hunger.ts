@@ -46,6 +46,8 @@ const applyStarvationTurn = (state: GameState): GameState => {
 		...state,
 		playerFood,
 		paralyzedTurnsRemaining: turns,
+		/* the hunger stage changed (stomach()): the run flag goes off */
+		playerRunFlag: false,
 		rng: rng.getState(),
 		events: buildEventLog(state.events, [
 			{ type: "player-fainted", payload: { turns } },
@@ -114,6 +116,8 @@ export const applyHungerTick = (state: GameState): GameState => {
 	return {
 		...state,
 		playerFood,
+		/* a new hunger stage (stomach()) takes the run flag away */
+		playerRunFlag: events.length > 0 ? false : state.playerRunFlag,
 		rng: rngState,
 		events: buildEventLog(state.events, events),
 	};

@@ -109,7 +109,7 @@ npm run build       # tsdown → dist/
 npm run check       # 上の5つを順に全部(コミット前はこれ1本)
 ```
 
-**cwdのドライブ文字が小文字(`c:...`、Git Bashなら`cd /c/...`)だと`npm test`は全テストファイルが`Cannot read properties of undefined (reading 'config')`で失敗する**(2026-11-12、同じファイルが`/c/`で失敗・`/C/`で成功することを確認)。大文字のドライブ文字で入り直すこと(`cd /C/Users/...`、またはPowerShellで`Set-Location C:...`)。
+**cwdのドライブ文字が小文字(`c:...`、Git Bashなら`cd /c/...`)だと`npm test`は全テストファイルが`Cannot read properties of undefined (reading 'config')`で失敗する**(2026-11-12、同じファイルが`/c/`で失敗・`/C/`で成功することを確認)。大文字のドライブ文字で入り直すこと(`cd /C/Users/...`、またはPowerShellで`Set-Location C:...`)。発動条件は詰め切れていない(2026-11-21、同じ`/c/`から通ることもあった)ので、次に踏んだら`node -e "console.log(process.cwd(), process.env.PWD)"`の出力を一緒に記録すること。
 
 CI(`.github/workflows/ci.yml`)はPRと`main`へのpushでだけ同じ5つを走らせる。無料枠のプロジェクトなので日常の`develop`作業ではCIを回さず、**ローカルの`npm run check`が正**(2026-11-12本人決定)。
 

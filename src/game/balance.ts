@@ -11,13 +11,8 @@ import type { TrapKind } from "./events.js";
 
 /** Original Rogue's starting hit points (INIT_STATS). */
 export const PLAYER_MAX_HP = 12;
-/**
- * The flat damage every player hit adds on top of its dice — original
- * Rogue's add_dam[] for the starting strength of 16. Raised by strength
- * potions (STRENGTH_POTION_ATTACK_BONUS); this game has no separate strength
- * stat, so a potion always adds a full point.
- */
-export const PLAYER_ATTACK_DAMAGE = 1;
+/** Original Rogue's starting strength (INIT_STATS) — see strength.ts for what it adds to hits. */
+export const PLAYER_START_STRENGTH = 16;
 /**
  * Standard deviation for damage.ts's rollDamage(), which nothing currently
  * calls — melee combat uses the discrete-dice constants below instead. Kept
@@ -196,8 +191,8 @@ export const MAPPING_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 /** Chance (out of 100), independently rolled per floor, that an identify scroll spawns. */
 export const IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT = 15;
 
-/** Permanent boost to playerPower per strength potion drunk — meaningful even with no weapon equipped. */
-export const STRENGTH_POTION_ATTACK_BONUS = 1;
+/** Strength gained per gain strength potion drunk — original Rogue's `chg_str(1)`. */
+export const STRENGTH_POTION_STRENGTH_GAIN = 1;
 /** Chance (out of 100), independently rolled per floor, that a strength potion spawns. */
 export const STRENGTH_POTION_SPAWN_CHANCE_PERCENT = 15;
 
@@ -225,17 +220,13 @@ export const PLAYER_MAX_FOOD = 2000;
  */
 export const PLAYER_HUNGER_WARNING_THRESHOLD = 299;
 /**
- * playerFood at or below this triggers the one-time player-weak warning and
- * applies WEAK_ATTACK_PENALTY to the player's attack (see
- * calculatePlayerAttackDamage). A second, more urgent stage below
- * PLAYER_HUNGER_WARNING_THRESHOLD, matching original Rogue's
- * Hungry→Weak→Faint progression — the Weak-stage strength loss, modeled here
- * as an attack penalty since this game has no separate strength stat.
- * Original Rogue's "Weak" stage begins below MORETIME = 150.
+ * playerFood at or below this triggers the one-time player-weak warning — a
+ * second, more urgent stage below PLAYER_HUNGER_WARNING_THRESHOLD, matching
+ * original Rogue's Hungry→Weak→Faint progression (its "Weak" stage begins
+ * below MORETIME = 150). As in the original, Weak is only a warning: it
+ * changes nothing in combat.
  */
 export const PLAYER_WEAK_THRESHOLD = 149;
-/** Flat reduction to calculatePlayerAttackDamage while playerFood <= PLAYER_WEAK_THRESHOLD. */
-export const WEAK_ATTACK_PENALTY = 1;
 /** How many turns an empty stomach lasts before the player starves to death — original Rogue's STARVETIME. */
 export const STARVATION_TURNS = 850;
 /** Chance (out of 100), rolled every turn spent with an empty stomach while not already out cold, of fainting. */

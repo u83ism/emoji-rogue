@@ -23,6 +23,10 @@ export const formatInventoryTitle = (heldCount: number): string =>
 export const formatSignedBonus = (bonus: number): string =>
 	bonus < 0 ? `${bonus}` : `+${bonus}`;
 
+/** Strength beside its run maximum, as original Rogue's status line shows it ("16/16", "14/17" once poisoned). */
+export const formatPlayerStrength = (state: GameState): string =>
+	`${state.playerStrength}/${state.playerMaxStrength}`;
+
 /** What the player's hits roll right now, in dice notation with the flat bonus appended ("2d4+2", "1d4+1", "3d4-1") — the status bar's attack readout. */
 export const formatPlayerAttack = (state: GameState): string => {
 	const dice = calculatePlayerDamageDice(state.inventory);

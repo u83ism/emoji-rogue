@@ -19,8 +19,8 @@ import {
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
 	POTION_COUNT_PER_FLOOR,
 	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
-	STRENGTH_POTION_ATTACK_BONUS,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
+	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../../game/balance.js";
 import type { PotionKind } from "../../game/events.js";
 import type { ItemCatalogEntry } from "./catalogData.js";
@@ -47,7 +47,7 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		catalogName: "怪力の薬",
 		category: "薬",
 		spawn: { type: "chance", percent: STRENGTH_POTION_SPAWN_CHANCE_PERCENT },
-		effect: `攻撃のダメージが${STRENGTH_POTION_ATTACK_BONUS}恒久的に上がる`,
+		effect: `力が${STRENGTH_POTION_STRENGTH_GAIN}上がる(力は命中とダメージに効く)`,
 	},
 	confusion: {
 		catalogName: "混乱の薬",

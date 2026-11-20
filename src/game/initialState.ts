@@ -2,9 +2,9 @@ import { at } from "../indexing.js";
 import { createArenaMap } from "../map/arena.js";
 import { createRng, seedToState } from "../rng.js";
 import {
-	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
 	PLAYER_START_FOOD,
+	PLAYER_START_STRENGTH,
 	STARTING_ARROWS_MAX,
 	STARTING_ARROWS_MIN,
 	WANDERER_DELAY_TURNS,
@@ -26,7 +26,8 @@ const INITIAL_RUN_STATE = {
 	playerMaxHp: PLAYER_MAX_HP,
 	playerLevel: 1,
 	playerExperience: 0,
-	playerPower: PLAYER_ATTACK_DAMAGE,
+	playerStrength: PLAYER_START_STRENGTH,
+	playerMaxStrength: PLAYER_START_STRENGTH,
 	playerFood: PLAYER_START_FOOD,
 	confusedTurnsRemaining: 0,
 	levitationTurnsRemaining: 0,

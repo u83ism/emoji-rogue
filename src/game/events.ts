@@ -275,7 +275,7 @@ export type GameEvent =
 			readonly payload: { readonly turns: number };
 	  }
 	| {
-			/** Fired once, the turn playerFood crosses PLAYER_WEAK_THRESHOLD going down — see calculatePlayerAttackDamage. */
+			/** Fired once, the turn playerFood crosses PLAYER_WEAK_THRESHOLD going down — a warning only, as in original Rogue. See turnEnd/hunger.ts. */
 			readonly type: "player-weak";
 			readonly payload: Record<string, never>;
 	  }
@@ -309,8 +309,9 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
+			/** A gain strength potion drunk — `strength` is the new playerStrength. */
 			readonly type: "player-strengthened";
-			readonly payload: { readonly bonus: number };
+			readonly payload: { readonly strength: number };
 	  }
 	| {
 			/** amount is the actual gold stolen (capped at what the player carried) — 0 when the thief struck with nothing to take. */

@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
-import {
-	UNARMED_DAMAGE_DICE,
-	UNARMORED_ARMOR_CLASS,
-	WEAK_ATTACK_PENALTY,
-} from "../balance.js";
+import { UNARMED_DAMAGE_DICE, UNARMORED_ARMOR_CLASS } from "../balance.js";
 import type { ArmorKind, WeaponKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
 import type { HeldItem } from "../state.js";
+import { calculateStrengthDamageBonus } from "../strength.js";
 import {
 	calculatePlayerArmorClass,
 	calculatePlayerDamageBonus,
@@ -79,28 +76,34 @@ describe("calculatePlayerDamageDice", () => {
 describe("calculatePlayerDamageBonus / calculatePlayerHitBonus", () => {
 	const state = buildArenaGameState(9, 3, 1);
 
-	it("keeps the weapon's two bonuses apart: damage adds to playerPower, to-hit stands alone", () => {
+	it("keeps the weapon's two bonuses apart: damage adds to the strength bonus, to-hit stands alone", () => {
 		const inventory = [weaponOf("mace", 3, 1)];
 		expect(calculatePlayerDamageBonus({ ...state, inventory })).toBe(
-			state.playerPower + 1,
+			calculateStrengthDamageBonus(state.playerStrength) + 1,
 		);
 		expect(calculatePlayerHitBonus(inventory)).toBe(3);
 	});
 
-	it("is just playerPower and 0 with nothing wielded", () => {
-		expect(calculatePlayerDamageBonus(state)).toBe(state.playerPower);
+	it("is just the strength bonus and 0 with nothing wielded", () => {
+		expect(calculatePlayerDamageBonus(state)).toBe(
+			calculateStrengthDamageBonus(state.playerStrength),
+		);
 		expect(calculatePlayerHitBonus([])).toBe(0);
 		expect(calculatePlayerHitBonus([weaponOf("mace", 3, 1, false)])).toBe(0);
 	});
 
-	it("loses WEAK_ATTACK_PENALTY while starving, with no floor of its own", () => {
-		expect(
+	it("follows the strength: weak below 7, strong from 16 up, with no floor of its own", () => {
+		const atStrength = (playerStrength: number): number =>
 			calculatePlayerDamageBonus({
 				...state,
-				playerFood: 0,
+				playerStrength,
 				inventory: [weaponOf("mace", 0, -3)],
-			}),
-		).toBe(state.playerPower - 3 - WEAK_ATTACK_PENALTY);
+			});
+		expect(atStrength(3)).toBe(-4 - 3);
+		expect(atStrength(12)).toBe(0 - 3);
+		expect(atStrength(16)).toBe(1 - 3);
+		expect(atStrength(18)).toBe(2 - 3);
+		expect(atStrength(31)).toBe(6 - 3);
 	});
 });
 

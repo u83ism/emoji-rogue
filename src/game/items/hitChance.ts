@@ -6,6 +6,7 @@ import {
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import type { EnemyKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
+import { calculateStrengthHitBonus } from "../strength.js";
 import {
 	calculatePlayerArmorClass,
 	calculatePlayerHitBonus,
@@ -32,7 +33,7 @@ const calculateHitChancePercent = (
 		),
 	);
 
-/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus. */
+/** Percent chance a non-sneak player melee attack connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the equipped weapon's hitBonus and the strength's to-hit bonus. */
 export const calculatePlayerHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
@@ -40,10 +41,11 @@ export const calculatePlayerHitChancePercent = (
 	calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
-		calculatePlayerHitBonus(state.inventory),
+		calculatePlayerHitBonus(state.inventory) +
+			calculateStrengthHitBonus(state.playerStrength),
 	);
 
-/** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus `hitBonus` (the missile's own, its launcher's, and the sleeping-target bonus — items/throw.ts adds them up). */
+/** Percent chance a thrown weapon connects with a `targetKind` enemy: the player's level against that kind's armor class, plus the strength's to-hit bonus and `hitBonus` (the missile's own, its launcher's, and the sleeping-target bonus — throw.ts adds them up). */
 export const calculateThrowHitChancePercent = (
 	state: GameState,
 	targetKind: EnemyKind,
@@ -52,7 +54,7 @@ export const calculateThrowHitChancePercent = (
 	calculateHitChancePercent(
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass,
-		hitBonus,
+		hitBonus + calculateStrengthHitBonus(state.playerStrength),
 	);
 
 /** Percent chance a dart trap's dart connects with the player — see DART_TRAP_LEVEL_BONUS. */

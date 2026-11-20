@@ -117,13 +117,14 @@ describe("items/equipment", () => {
 				quantity: 1,
 			},
 		]);
-		expect(calculatePlayerAttackDamage(next)).toBe(state.playerPower + 3);
+		expect(calculatePlayerAttackDamage(next)).toBe(
+			calculatePlayerAttackDamage({ ...state, inventory: [] }) + 3,
+		);
 	});
 
 	it("a cursed weapon applies its (negative) attack bonus when equipped — worse than unarmed — and cannot be unequipped", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerPower: 5,
 			inventory: [
 				{
 					itemId: 1,
@@ -141,7 +142,9 @@ describe("items/equipment", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(calculatePlayerAttackDamage(equipped)).toBe(state.playerPower - 2);
+		expect(calculatePlayerAttackDamage(equipped)).toBe(
+			calculatePlayerAttackDamage({ ...state, inventory: [] }) - 2,
+		);
 		expect(equipped.inventory).toEqual([
 			{
 				itemId: 1,
@@ -340,32 +343,15 @@ describe("items/equipment", () => {
 		expect(applyArmorRust(leather)).toBe(leather);
 	});
 
-	it("is unaffected by playerFood while above PLAYER_WEAK_THRESHOLD", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			playerFood: PLAYER_WEAK_THRESHOLD + 1,
-		};
-		expect(calculatePlayerAttackDamage(state)).toBe(state.playerPower);
-	});
-
-	it("subtracts WEAK_ATTACK_PENALTY once playerFood drops to PLAYER_WEAK_THRESHOLD or below", () => {
-		const weakened = {
-			...buildArenaGameState(9, 3, 1),
-			playerPower: 3,
-			playerFood: PLAYER_WEAK_THRESHOLD,
-		};
-		expect(calculatePlayerAttackDamage(weakened)).toBe(2);
-
-		const starving = { ...weakened, playerFood: 0 };
-		expect(calculatePlayerAttackDamage(starving)).toBe(2);
-	});
-
-	it("the Weak penalty can cancel the whole bonus — the dice still roll on top of it", () => {
-		const unarmedAndWeak = {
-			...buildArenaGameState(9, 3, 1),
-			playerPower: 1,
-			playerFood: 0,
-		};
-		expect(calculatePlayerAttackDamage(unarmedAndWeak)).toBe(0);
+	it("is unaffected by hunger — original Rogue's Weak stage changes nothing in combat", () => {
+		const fed = buildArenaGameState(9, 3, 1);
+		const weak = { ...fed, playerFood: PLAYER_WEAK_THRESHOLD };
+		const fainting = { ...fed, playerFood: -10 };
+		expect(calculatePlayerAttackDamage(weak)).toBe(
+			calculatePlayerAttackDamage(fed),
+		);
+		expect(calculatePlayerAttackDamage(fainting)).toBe(
+			calculatePlayerAttackDamage(fed),
+		);
 	});
 });

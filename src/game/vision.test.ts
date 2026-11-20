@@ -3,8 +3,8 @@ import { encodePointKey } from "../pointkey.js";
 import { seedToState } from "../rng.js";
 import {
 	BLIND_VIEW_RADIUS,
-	PLAYER_ATTACK_DAMAGE,
 	PLAYER_MAX_HP,
+	PLAYER_START_STRENGTH,
 } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
@@ -113,7 +113,8 @@ describe("deriveExploredState", () => {
 			playerMaxHp: PLAYER_MAX_HP,
 			playerLevel: 1,
 			playerExperience: 0,
-			playerPower: PLAYER_ATTACK_DAMAGE,
+			playerStrength: PLAYER_START_STRENGTH,
+			playerMaxStrength: PLAYER_START_STRENGTH,
 			playerFood: 100,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,
@@ -166,7 +167,8 @@ describe("deriveExploredState", () => {
 			playerMaxHp: PLAYER_MAX_HP,
 			playerLevel: 1,
 			playerExperience: 0,
-			playerPower: PLAYER_ATTACK_DAMAGE,
+			playerStrength: PLAYER_START_STRENGTH,
+			playerMaxStrength: PLAYER_START_STRENGTH,
 			playerFood: 100,
 			confusedTurnsRemaining: 0,
 			levitationTurnsRemaining: 0,

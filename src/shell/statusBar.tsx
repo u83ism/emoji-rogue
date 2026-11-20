@@ -13,13 +13,13 @@ import {
 } from "../game/glyphs.js";
 import { calculatePlayerDefense } from "../game/items/equipmentStats.js";
 import type { GameState } from "../game/state.js";
-import { formatPlayerAttack } from "./inventoryLabels.js";
+import { formatPlayerAttack, formatPlayerStrength } from "./inventoryLabels.js";
 
 const LOW_HP_THRESHOLD = 3;
 
 /**
  * Three stages: yellow once food dips to the warning threshold, brighter red
- * once it dips to the weak threshold (see calculatePlayerAttackDamage), full
+ * once it dips to the weak threshold (PLAYER_WEAK_THRESHOLD), full
  * red once it hits 0 (starving).
  */
 const resolveFoodTextStyle = (
@@ -123,7 +123,7 @@ export const StatusBar = ({ state }: { readonly state: GameState }) => (
 		</Text>
 		<Text> </Text>
 		<Text>
-			💪 {formatPlayerAttack(state)} 🦺{" "}
+			💪 {formatPlayerStrength(state)}({formatPlayerAttack(state)}) 🦺{" "}
 			{calculatePlayerDefense(state.inventory)}
 		</Text>
 		<Text> </Text>

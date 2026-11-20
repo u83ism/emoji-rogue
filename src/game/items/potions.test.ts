@@ -138,11 +138,15 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.playerPower).toBe(state.playerPower + 1);
+		expect(next.playerStrength).toBe(state.playerStrength + 1);
+		expect(next.playerMaxStrength).toBe(state.playerStrength + 1);
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "strength" }]);
 		expect(next.identifiedPotionKinds).toEqual(["strength"]);
 		expect(next.events).toEqual([
-			{ type: "player-strengthened", payload: { bonus: 1 } },
+			{
+				type: "player-strengthened",
+				payload: { strength: state.playerStrength + 1 },
+			},
 		]);
 	});
 

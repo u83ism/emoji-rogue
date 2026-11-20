@@ -201,8 +201,8 @@ describe("formatEvent", () => {
 				"毒薬がどれか判明した。以後この種類は実名で表示される",
 			],
 			[
-				{ type: "player-strengthened", payload: { bonus: 1 } },
-				"怪力の薬を飲んだ。ダメージが1上がった!",
+				{ type: "player-strengthened", payload: { strength: 17 } },
+				"怪力の薬を飲んだ。力が17になった!",
 			],
 			[
 				{ type: "gold-stolen", payload: { amount: 10 } },

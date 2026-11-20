@@ -4,6 +4,7 @@ import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	MAGIC_MISSILE_WAND_DAMAGE,
+	PLAYER_START_STRENGTH,
 	SNEAK_ATTACK_MULTIPLIER,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	WAND_STRIKE_DAMAGE,
@@ -18,6 +19,12 @@ import { calculateEnemyExperienceReward } from "./enemies/enemyStats.js";
 import type { EnemyKind } from "./events.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, HeldItem } from "./state.js";
+import { calculateStrengthDamageBonus } from "./strength.js";
+
+/** add_dam[] for the starting strength of 16 — what every fixture hit adds on top of its dice. */
+const START_STRENGTH_DAMAGE = calculateStrengthDamageBonus(
+	PLAYER_START_STRENGTH,
+);
 
 /** Every fixture enemy's max HP (what its experience reward is computed from) and default HP — more than one unarmed hit (1d4+1) removes. */
 const TEST_ENEMY_HP = 12;
@@ -106,7 +113,7 @@ describe("applyPlayerAttack", () => {
 			: Number.NaN;
 	};
 
-	it("damages the target by the unarmed roll (1d4 + playerPower) and logs the hit", () => {
+	it("damages the target by the unarmed roll (1d4 + the strength bonus) and logs the hit", () => {
 		const target = zombie(5, 4);
 		const bystander = zombie(7, 7);
 		const next = applyPlayerAttack(
@@ -114,8 +121,8 @@ describe("applyPlayerAttack", () => {
 			target,
 		);
 		const damage = readDamage(next);
-		expect(damage).toBeGreaterThanOrEqual(1 + state.playerPower);
-		expect(damage).toBeLessThanOrEqual(4 + state.playerPower);
+		expect(damage).toBeGreaterThanOrEqual(1 + START_STRENGTH_DAMAGE);
+		expect(damage).toBeLessThanOrEqual(4 + START_STRENGTH_DAMAGE);
 		expect(next.enemies).toEqual([
 			zombie(5, 4, TEST_ENEMY_HP - damage),
 			bystander,
@@ -154,9 +161,9 @@ describe("applyPlayerAttack", () => {
 		const armed = { ...state, inventory: [weaponWith(2)], enemies: [target] };
 		const next = applyPlayerAttack(armed, target);
 		const damage = readDamage(next);
-		/* 3d4 + playerPower + 2 */
-		expect(damage).toBeGreaterThanOrEqual(3 + state.playerPower + 2);
-		expect(damage).toBeLessThanOrEqual(12 + state.playerPower + 2);
+		/* 3d4 + the strength bonus + 2 */
+		expect(damage).toBeGreaterThanOrEqual(3 + START_STRENGTH_DAMAGE + 2);
+		expect(damage).toBeLessThanOrEqual(12 + START_STRENGTH_DAMAGE + 2);
 		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage)]);
 	});
 
@@ -181,10 +188,10 @@ describe("applyPlayerAttack", () => {
 		const damage = readDamage(next);
 		expect(damage % SNEAK_ATTACK_MULTIPLIER).toBe(0);
 		expect(damage).toBeGreaterThanOrEqual(
-			(1 + state.playerPower) * SNEAK_ATTACK_MULTIPLIER,
+			(1 + START_STRENGTH_DAMAGE) * SNEAK_ATTACK_MULTIPLIER,
 		);
 		expect(damage).toBeLessThanOrEqual(
-			(4 + state.playerPower) * SNEAK_ATTACK_MULTIPLIER,
+			(4 + START_STRENGTH_DAMAGE) * SNEAK_ATTACK_MULTIPLIER,
 		);
 		expect(next.enemies).toEqual([zombie(5, 4, 100 - damage, true)]);
 		expect(next.events).toEqual([

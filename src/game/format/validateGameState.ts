@@ -25,6 +25,7 @@ import type {
 	Stairs,
 	Trap,
 } from "../state.js";
+import { STRENGTH_MAX, STRENGTH_MIN } from "../strength.js";
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -284,7 +285,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y),
 	"floor-mapped": emptyPayload,
 	"potion-identified": (payload) => isItemKind(payload.kind),
-	"player-strengthened": (payload) => isPositiveInteger(payload.bonus),
+	"player-strengthened": (payload) =>
+		isInteger(payload.strength) &&
+		payload.strength >= STRENGTH_MIN &&
+		payload.strength <= STRENGTH_MAX,
 	"gold-stolen": (payload) => isNonNegativeInteger(payload.amount),
 	"item-stolen": (payload) =>
 		payload.kind === undefined
@@ -429,9 +433,21 @@ export const validateGameState = (
 	if (!isNonNegativeInteger(playerExperience)) {
 		return err("playerExperience");
 	}
-	const playerPower = value.playerPower;
-	if (!isPositiveInteger(playerPower)) {
-		return err("playerPower");
+	const playerMaxStrength = value.playerMaxStrength;
+	if (
+		!isInteger(playerMaxStrength) ||
+		playerMaxStrength < STRENGTH_MIN ||
+		playerMaxStrength > STRENGTH_MAX
+	) {
+		return err("playerMaxStrength");
+	}
+	const playerStrength = value.playerStrength;
+	if (
+		!isInteger(playerStrength) ||
+		playerStrength < STRENGTH_MIN ||
+		playerStrength > playerMaxStrength
+	) {
+		return err("playerStrength");
 	}
 	const playerFood = value.playerFood;
 	if (
@@ -587,7 +603,8 @@ export const validateGameState = (
 		playerMaxHp,
 		playerLevel,
 		playerExperience,
-		playerPower,
+		playerStrength,
+		playerMaxStrength,
 		playerFood,
 		confusedTurnsRemaining,
 		levitationTurnsRemaining,

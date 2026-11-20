@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
+import { PLAYER_START_STRENGTH } from "./balance.js";
 import type { EnemyKind, WeaponKind } from "./events.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState, HeldItem } from "./state.js";
+import { calculateStrengthDamageBonus } from "./strength.js";
 import { applyThrowItem } from "./throw.js";
+
+/** add_dam[] for the starting strength of 16 — what every fixture hit adds on top of its dice. */
+const START_STRENGTH_DAMAGE = calculateStrengthDamageBonus(
+	PLAYER_START_STRENGTH,
+);
 
 const weaponOf = (
 	itemId: number,
@@ -74,15 +81,15 @@ describe("applyThrowItem", () => {
 		expect(applyThrowItem(state, 1)).toBe(state);
 	});
 
-	it("a hit rolls the weapon's hurl dice plus playerPower, uses the missile up and wakes the target", () => {
+	it("a hit rolls the weapon's hurl dice plus the strength bonus, uses the missile up and wakes the target", () => {
 		const state = buildState([weaponOf(1, "spear")], {
 			enemies: [enemyOf("zombie", 7, 4, false)],
 		});
 		const next = applyThrowItem(state, 1);
 		const damage = readDamage(next);
 		/* a thrown spear is 1d6 */
-		expect(damage).toBeGreaterThanOrEqual(1 + state.playerPower);
-		expect(damage).toBeLessThanOrEqual(6 + state.playerPower);
+		expect(damage).toBeGreaterThanOrEqual(1 + START_STRENGTH_DAMAGE);
+		expect(damage).toBeLessThanOrEqual(6 + START_STRENGTH_DAMAGE);
 		expect(next.inventory).toEqual([]);
 		expect(next.items).toEqual(state.items); /* nothing lands */
 		expect(next.enemies).toEqual([
@@ -110,8 +117,8 @@ describe("applyThrowItem", () => {
 			weaponOf(2, "arrow", { quantity: 5 }),
 		]);
 		const damage = readDamage(applyThrowItem(state, 2));
-		expect(damage).toBeGreaterThanOrEqual(2 + 10 + state.playerPower);
-		expect(damage).toBeLessThanOrEqual(6 + 10 + state.playerPower);
+		expect(damage).toBeGreaterThanOrEqual(2 + 10 + START_STRENGTH_DAMAGE);
+		expect(damage).toBeLessThanOrEqual(6 + 10 + START_STRENGTH_DAMAGE);
 	});
 
 	it("an arrow thrown by hand, without the bow wielded, is only its plain 1d1", () => {
@@ -119,7 +126,9 @@ describe("applyThrowItem", () => {
 			weaponOf(1, "short-bow", { damageBonus: 10 }) /* held, not wielded */,
 			weaponOf(2, "arrow", { quantity: 5 }),
 		]);
-		expect(readDamage(applyThrowItem(state, 2))).toBe(1 + state.playerPower);
+		expect(readDamage(applyThrowItem(state, 2))).toBe(
+			1 + START_STRENGTH_DAMAGE,
+		);
 	});
 
 	it("a kill by a thrown weapon removes the enemy and awards experience", () => {

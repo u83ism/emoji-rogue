@@ -98,7 +98,7 @@ export const formatEvent = (
 			 * and kinds not held looked like vanished items). */
 			return `${ITEM_NAMES[event.payload.kind]}がどれか判明した。以後この種類は実名で表示される`;
 		case "player-strengthened":
-			return `${ITEM_NAMES.strength}を飲んだ。ダメージが${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES.strength}を飲んだ。力が${event.payload.strength}になった!`;
 		case "gold-stolen":
 			return event.payload.amount > 0
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`

@@ -144,8 +144,23 @@ describe("validateGameState", () => {
 			{ ...buildValidState(), playerExperience: "0" },
 			"playerExperience",
 		);
-		expectRejected({ ...buildValidState(), playerPower: 0 }, "playerPower");
-		expectRejected({ ...buildValidState(), playerPower: "1" }, "playerPower");
+		expectRejected(
+			{ ...buildValidState(), playerStrength: 2 },
+			"playerStrength",
+		);
+		expectRejected(
+			{ ...buildValidState(), playerStrength: "16" },
+			"playerStrength",
+		);
+		/* above the run maximum */
+		expectRejected(
+			{ ...buildValidState(), playerStrength: 17, playerMaxStrength: 16 },
+			"playerStrength",
+		);
+		expectRejected(
+			{ ...buildValidState(), playerMaxStrength: 32 },
+			"playerMaxStrength",
+		);
 		/* an empty stomach counts below zero, down to one past STARVATION_TURNS */
 		expect(
 			validateGameState({ ...buildValidState(), playerFood: -851 }).ok,
@@ -1478,14 +1493,14 @@ describe("validateGameState", () => {
 			...buildValidState(),
 			items: [],
 			inventory: [{ itemId: 1, kind: "strength" }],
-			events: [{ type: "player-strengthened", payload: { bonus: 1 } }],
+			events: [{ type: "player-strengthened", payload: { strength: 17 } }],
 		});
 		expect(accepted.ok).toBe(true);
 
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-strengthened", payload: { bonus: 0 } }],
+				events: [{ type: "player-strengthened", payload: { strength: 0 } }],
 			},
 			"events",
 		);

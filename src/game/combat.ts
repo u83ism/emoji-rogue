@@ -107,8 +107,8 @@ export const applyEnemyHit = (
 
 /**
  * Rolls the player's damage as original Rogue does: the weapon's dice (bare
- * hands otherwise) plus calculatePlayerDamageBonus (playerPower, the
- * equipped weapon's own damageBonus, the Weak penalty), never below 0.
+ * hands otherwise) plus calculatePlayerDamageBonus (the strength bonus and
+ * the equipped weapon's own damageBonus), never below 0.
  */
 const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
 	rollDamageDice(

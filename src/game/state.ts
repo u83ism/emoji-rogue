@@ -245,13 +245,10 @@ export interface GameState {
 	readonly playerLevel: number;
 	/** Cumulative kills-based experience. See applyExperienceGain and LEVEL_EXPERIENCE_THRESHOLDS. */
 	readonly playerExperience: number;
-	/**
-	 * "Power" in the Fushigi no Dungeon sense: a permanent character stat
-	 * raised only by strength potions, meaningful even unarmed. The actual
-	 * attack total adds the equipped weapon's own attackBonus on top — see
-	 * calculatePlayerAttackDamage in items/equipment.ts.
-	 */
-	readonly playerPower: number;
+	/** Original Rogue's strength (3-31, starting at 16): adds to every to-hit and damage roll of the player's (strength.ts). Raised by gain strength potions, lowered by poison. */
+	readonly playerStrength: number;
+	/** The highest playerStrength reached this run — original Rogue's max_stats.s_str, shown beside it and what a drained strength can be restored to. */
+	readonly playerMaxStrength: number;
 	/** Starts at PLAYER_START_FOOD and drops every turn; once empty it keeps counting below zero toward starvation at -STARVATION_TURNS. See turnEnd/hunger.ts. */
 	readonly playerFood: number;
 	/** Turns left of randomized movement — see applyStatusCountdownTicks and applyMove. 0 means not confused. */

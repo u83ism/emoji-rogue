@@ -12,6 +12,7 @@ export {
 	formatHeldItemLabel,
 	formatInventoryTitle,
 	formatPlayerAttack,
+	formatPlayerStrength,
 	resolveItemVerbPrompt,
 } from "../shell/inventoryLabels.js";
 export {

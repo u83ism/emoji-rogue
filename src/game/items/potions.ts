@@ -8,7 +8,7 @@ import {
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
 	POISON_DAMAGE,
-	STRENGTH_POTION_ATTACK_BONUS,
+	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
 import { rollDamageDice } from "../damage.js";
 import {
@@ -19,6 +19,7 @@ import {
 } from "../events.js";
 import { applyLevelUp } from "../experience.js";
 import type { GameState } from "../state.js";
+import { applyStrengthChange } from "../strength.js";
 
 /** `identifiedPotionKinds` with `kind` added, if it was not already there. */
 const identifyPotionKind = (
@@ -87,18 +88,22 @@ export const applyUsePotion = (
 				events: buildEventLog(state.events, events),
 			};
 		}
-		case "strength":
+		case "strength": {
+			const stronger = applyStrengthChange(
+				state,
+				STRENGTH_POTION_STRENGTH_GAIN,
+			);
 			return {
-				...state,
-				playerPower: state.playerPower + STRENGTH_POTION_ATTACK_BONUS,
+				...stronger,
 				identifiedPotionKinds,
 				events: buildEventLog(state.events, [
 					{
 						type: "player-strengthened",
-						payload: { bonus: STRENGTH_POTION_ATTACK_BONUS },
+						payload: { strength: stronger.playerStrength },
 					},
 				]),
 			};
+		}
 		case "confusion":
 			return {
 				...state,

@@ -123,12 +123,15 @@ export type {
 	CellRun,
 	GameScreenProps,
 	MapRowProps,
+	TerminalProfile,
 	TileGlyphs,
 } from "./renderer/index.js";
 export {
+	formatGlyphForTerminal,
 	GameScreen,
 	gridFrom,
 	groupIntoRuns,
 	MapRow,
+	parseTerminalProfile,
 	TILE_W,
 } from "./renderer/index.js";

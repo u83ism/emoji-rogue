@@ -15,6 +15,7 @@ import {
 	createRng,
 	GameScreen,
 	gridFrom,
+	parseTerminalProfile,
 	type TileGlyphs,
 } from "../src/index.js";
 import { at } from "../src/indexing.js";
@@ -38,4 +39,9 @@ const fallback: Cell = { glyph: "⚠️" };
 
 const grid = gridFrom(map, glyphs, fallback);
 
-render(React.createElement(GameScreen, { grid }));
+render(
+	React.createElement(GameScreen, {
+		grid,
+		terminalProfile: parseTerminalProfile(process.env.TERM_PROGRAM),
+	}),
+);

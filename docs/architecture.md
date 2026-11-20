@@ -80,6 +80,7 @@ BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関
 - セル単位の `<Box>` は使わない(Inkの過去の絵文字幅バグ ink#733 の震源地。修正済みだが防御的に避ける)
 - 代わりに `groupIntoRuns()` で同色連続セルを文字列に事前結合し、1行 = `<Box flexDirection="row">` 内の少数の `<Text>` として描画
 - `TILE_W = 2`(1論理セル=1絵文字=2カラム)は設計判断の明文化であって、実測はしない
+- **端末ごとの幅の表**(`terminalProfile.ts`): VS Codeの内蔵ターミナル(xterm.js)は幅の表がUnicode 12.1までなので、13.0以降の絵文字を1カラムと数える。`main.tsx`が起動時に`TERM_PROGRAM`から`TerminalProfile`を決め、`groupIntoRuns`がその絵文字の後ろに空白を1つ足す。これも実測ではなく、端末ごとの既知の挙動の決め打ち(`docs/emoji-policy.md`の2026-11-20のADR)
 - 周辺UI(ステータスバー等)は普通にInkのBox/Borderを使ってよい。**chrome内の絵文字はタイルと同じ安定基準**を満たすものだけ許可(マイルストーン68で「chrome絵文字全面禁止」から改訂。💰が先例、現在は🍖💪🦺も使用)
 - 差分描画はInkのreconcilerに全部任せる(自前ANSIバッファは書かない)
 
@@ -112,7 +113,7 @@ npm run check       # 上の5つを順に全部(コミット前はこれ1本)
 
 CI(`.github/workflows/ci.yml`)はPRと`main`へのpushでだけ同じ5つを走らせる。無料枠のプロジェクトなので日常の`develop`作業ではCIを回さず、**ローカルの`npm run check`が正**(2026-11-12本人決定)。
 
-実機確認の手段: `npm run build && npm start`(Windows Terminal必須)、`npx unrun scripts/demo-renderer.ts`(レンダラー単体)、`npx unrun scripts/replay-verify.ts`(リプレイ再構築)、`demo/`(ブラウザ版)。
+実機確認の手段: `npm run build && npm start`(Windows TerminalかVS Codeの内蔵ターミナル)、`npx unrun scripts/demo-renderer.ts`(レンダラー単体)、`npx unrun scripts/replay-verify.ts`(リプレイ再構築)、`demo/`(ブラウザ版)。
 
 ## 設計上の既知の決定
 

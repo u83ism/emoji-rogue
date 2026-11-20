@@ -1,4 +1,8 @@
 import type { Cell } from "./cell.js";
+import {
+	formatGlyphForTerminal,
+	type TerminalProfile,
+} from "./terminalProfile.js";
 
 /**
  * A run of consecutive cells sharing the same colors, collapsed into a
@@ -16,17 +20,23 @@ const sameStyle = (run: CellRun, cell: Cell): boolean => {
 };
 
 /**
- * Run-length-encodes a row of cells by color. Pure: same input, same output.
+ * Run-length-encodes a row of cells by color, padding glyphs the given
+ * terminal counts as 1 column (see terminalProfile.ts). Pure: same input,
+ * same output.
  */
-export const groupIntoRuns = (cells: readonly Cell[]): CellRun[] => {
+export const groupIntoRuns = (
+	cells: readonly Cell[],
+	profile: TerminalProfile,
+): CellRun[] => {
 	const runs: CellRun[] = [];
 
 	for (const cell of cells) {
+		const glyph = formatGlyphForTerminal(cell.glyph, profile);
 		const last = runs[runs.length - 1];
 		if (last !== undefined && sameStyle(last, cell)) {
-			runs[runs.length - 1] = { ...last, text: last.text + cell.glyph };
+			runs[runs.length - 1] = { ...last, text: last.text + glyph };
 		} else {
-			runs.push({ text: cell.glyph, fg: cell.fg, bg: cell.bg });
+			runs.push({ text: glyph, fg: cell.fg, bg: cell.bg });
 		}
 	}
 

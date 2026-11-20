@@ -17,7 +17,9 @@ describe("GameScreen", () => {
 			[{ glyph: "🚪" }, { glyph: "·" }, { glyph: "·" }],
 		];
 
-		const { lastFrame } = render(<GameScreen grid={grid} />);
+		const { lastFrame } = render(
+			<GameScreen grid={grid} terminalProfile="standard" />,
+		);
 		const frame = stripAnsi(lastFrame() ?? "");
 		const lines = frame.split("\n");
 
@@ -33,7 +35,9 @@ describe("GameScreen", () => {
 		// renderer avoids per-cell <Box> sizing in the first place).
 		const grid: Cell[][] = [[{ glyph: "⚠️" }, { glyph: "🌡️" }, { glyph: "·" }]];
 
-		const { lastFrame } = render(<GameScreen grid={grid} />);
+		const { lastFrame } = render(
+			<GameScreen grid={grid} terminalProfile="standard" />,
+		);
 		const frame = stripAnsi(lastFrame() ?? "");
 
 		expect(frame).toBe("⚠️🌡️·");
@@ -52,7 +56,9 @@ describe("GameScreen", () => {
 			],
 		];
 
-		const { lastFrame } = render(<GameScreen grid={grid} />);
+		const { lastFrame } = render(
+			<GameScreen grid={grid} terminalProfile="standard" />,
+		);
 		expect(stripAnsi(lastFrame() ?? "")).toBe("abc");
 	});
 });

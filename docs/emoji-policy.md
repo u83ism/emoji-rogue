@@ -44,6 +44,8 @@ Unicodeの文字幅プロパティ(East Asian Width)には Narrow(1桁確定)・
 
 確認方法: 候補の絵文字が導入されたUnicode/Emojiバージョンを [emojipedia](https://emojipedia.org/) 等のリファレンスで確認し、15.1以下かどうかを見る。
 
+**Unicode 13.0〜15.1の絵文字は、`src/renderer/terminalProfile.ts`の`UNICODE_13_PLUS_GLYPHS`にも登録する。** VS Codeの内蔵ターミナルは幅の表がUnicode 12.1までなので、13.0以降の絵文字を1カラムと数える。登録した絵文字は、VS Codeの内蔵ターミナルで描くときだけ後ろに空白が1つ足される(2026-11-20のADR)。登録し忘れると、VS Codeの内蔵ターミナルでその絵文字の行だけ1カラムずれる。
+
 ## 適用範囲
 
 - **マップタイル**(`src/game/glyphs.ts` の `TERRAIN_GLYPHS`/`ENEMY_GLYPHS`/`ITEM_GLYPHS`等): 上記4基準を厳格に適用。
@@ -56,8 +58,8 @@ Unicodeの文字幅プロパティ(East Asian Width)には Narrow(1桁確定)・
 1. 候補を選ぶ
 2. `[...候補].length` で単一コードポイントか確認(基準1・2)
 3. Unicode公式データまたは絵文字リファレンスでEAWとデフォルト表示(text/emoji)・導入バージョンを確認、Unicode 15.1以下か見る(基準3・4)
-4. `src/game/glyphs.ts` に追加する際、選定理由をコメントで残す(既存エントリのコメント形式に倣う)
-5. Windows Terminalでの実機確認(`npx unrun scripts/demo-renderer.ts` 等)。基準を満たしていても実機確認は省略しない
+4. `src/game/glyphs.ts` に追加する際、選定理由をコメントで残す(既存エントリのコメント形式に倣う)。Unicode 13.0以降なら`src/renderer/terminalProfile.ts`の`UNICODE_13_PLUS_GLYPHS`にも足す
+5. Windows TerminalとVS Codeの内蔵ターミナルの両方で実機確認(`npm run build && npm start` 等)。基準を満たしていても実機確認は省略しない
 
 ## 決定の記録(ADR)
 
@@ -73,11 +75,29 @@ Unicodeの文字幅プロパティ(East Asian Width)には Narrow(1桁確定)・
 **決定**:
 1. Unicodeバージョンの許可ラインを **15.1以下** に更新(2026-07時点でWindows 11の広い展開から約2年経過しており枯れている。16.0は展開から日が浅く24H2限定のため保留)
 2. VS16回避(基準2)は緩めない — Windows Terminal自体の未解決バグであり、環境を最新に絞っても解消しない
-3. 対象環境はWindows Terminal限定を維持 — macOS/Linuxは対応の的が定まらないため拡大しない
+3. 対象環境はWindows Terminal限定を維持 — macOS/Linuxは対応の的が定まらないため拡大しない(2026-11-20にVS Codeの内蔵ターミナルを追加。下のADR参照)
 
 **Status**: 決定・反映済み。次回見直し時期の目安は2027年前半、またはUnicode 16.0のWindows展開が進んだと判断できるタイミング。
 
 **保留事項**: この基準変更で🪄(Emoji 13.0)が候補として使用可能になった。🔮→🪄への実際の差し替えは2026-07-19中に別件として実施済み(`docs/tasks/game.md` マイルストーン73)。
+
+### 2026-11-20: VS Codeの内蔵ターミナルを対応環境に加え、Unicode 13.0以降の絵文字は空白で桁を補う
+
+**背景**: VS Codeの内蔵ターミナルでのテストプレイで、エミュー(🦤)の行が1カラムずれた。全マップ絵文字を🟫と並べて表示する確認スクリプトを実行すると、ずれるのはUnicode 13.0以降の5つ(🦤🪙🪄🧌🫥)だけで、12.0以下(🧊🦺など)はそろっていた。本人の普段の環境はVS Codeなので、そこでずれるのは困る。一方で、上限を12.1に下げると使える絵文字が狭まりすぎる(本人の意見)。
+
+**調べたこと**:
+- VS Codeの内蔵ターミナル(xterm.js)は、幅の表がUnicode 12.1(2019年)まで。設定`terminal.integrated.unicodeVersion`の選択肢は"6"と"11"だけで、設定では直せない([VS Code公式ドキュメント](https://code.visualstudio.com/docs/terminal/advanced)、[ucs-detect](https://jeffquast.com/post/ucs-detect-test-results))
+- 表に無い絵文字は1カラムと数えられる(カーソルが1カラムしか進まない)。フォントは2カラム分の絵を描くので、はみ出した右半分に次の文字が重なり、行の残りが1カラム左にずれる
+- 絵文字の後ろに空白を1つ足すと、カーソルが合計2カラム進んで桁がそろう。空白は何も描かないので、はみ出した右半分も欠けずに見える。VS Codeの内蔵ターミナルで5つとも確認した(2026-11-20、本人の実機)。なお、これは「はみ出して描かれている」という見立てで、xterm.jsの描画のソースまでは確認していない
+
+**決定**:
+1. 対応環境を「Windows Terminal」から「Windows TerminalとVS Codeの内蔵ターミナル」に広げる(2026-07-19のADRの決定3を改める)
+2. 基準4の上限(15.1以下)はそのまま。VS Codeの内蔵ターミナルで描くとき(`TERM_PROGRAM=vscode`)だけ、Unicode 13.0以降の絵文字の後ろに空白を1つ足す(`src/renderer/terminalProfile.ts`)
+3. 「幅を実行時に計測しない」という方針は変えない。端末ごとの既知の挙動を表で決め打ちしているだけで、計測はしていない
+
+**注意点**: 足した空白はそのセルと同じ色で描かれる。今のマップでは13.0以降の絵文字(敵とアイテム)に背景色が付くことは無いが、背景色を付けるときは、はみ出した右半分が塗りつぶされないか実機で確かめる。chrome(ステータスバー)は「絵文字の後ろに必ず空白」の規律(適用範囲の節)で、もともと同じ形になっている。
+
+**Status**: 決定・反映済み。
 
 ## 参照
 

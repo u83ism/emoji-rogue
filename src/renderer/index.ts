@@ -8,3 +8,8 @@ export type { MapRowProps } from "./MapRow.js";
 export { MapRow } from "./MapRow.js";
 export type { CellRun } from "./runs.js";
 export { groupIntoRuns } from "./runs.js";
+export type { TerminalProfile } from "./terminalProfile.js";
+export {
+	formatGlyphForTerminal,
+	parseTerminalProfile,
+} from "./terminalProfile.js";

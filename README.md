@@ -41,7 +41,7 @@ npm start
 ## 動作環境(重要)
 
 - **Node.js >= 20**
-- **Windows Terminal必須**(Windows 11の既定ターミナルであればそのままでOK)。カラー絵文字はターミナルのフォントフォールバック(Segoe UI Emoji)で描画されるため、設定フォント自体は等幅フォントなら何でもよい。**推奨フォント**: Windows Terminalの既定フォント(Cascadia Mono/Cascadia Code)でそのまま動作確認済み。フォントを変えていない・変えたくない場合はそれで問題ない
+- **Windows Terminal、またはVS Codeの内蔵ターミナル**(Windows 11の既定ターミナルであればそのままでOK)。VS Codeの内蔵ターミナルはUnicode 13.0以降の絵文字を1カラムと数えるため、起動時に環境変数`TERM_PROGRAM=vscode`を見て、その絵文字の後ろに空白を1つ足して桁をそろえる。カラー絵文字はターミナルのフォントフォールバック(Segoe UI Emoji)で描画されるため、設定フォント自体は等幅フォントなら何でもよい。**推奨フォント**: Windows Terminalの既定フォント(Cascadia Mono/Cascadia Code)でそのまま動作確認済み。フォントを変えていない・変えたくない場合はそれで問題ない
 - 旧コンソールホスト(conhost)はカラー絵文字を描画できないため**非対応**
 - macOS/Linuxの各種ターミナルは未検証(カラー絵文字+全角幅のフォールバックが効く環境なら動く見込み)
 

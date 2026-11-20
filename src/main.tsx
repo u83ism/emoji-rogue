@@ -4,7 +4,7 @@ import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
 import { isFullWidthInput, toAction } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
-import { GameScreen } from "./renderer/index.js";
+import { GameScreen, parseTerminalProfile } from "./renderer/index.js";
 import { formatEvent } from "./shell/eventMessages.js";
 import { useInventoryInteraction } from "./shell/inventoryInteraction.js";
 import { InventoryOverlay } from "./shell/inventoryOverlay.js";
@@ -27,6 +27,8 @@ import {
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 20;
 const LOG_LINE_COUNT = 3;
+// Read once at startup: the terminal doesn't change mid-run.
+const TERMINAL_PROFILE = parseTerminalProfile(process.env.TERM_PROGRAM);
 
 /** Death and victory get their own color to stand out from ordinary log lines. */
 const resolveLogLineStyle = (
@@ -118,7 +120,10 @@ const App = () => {
 					/>
 				</Box>
 			) : (
-				<GameScreen grid={buildFrameGrid(state)} />
+				<GameScreen
+					grid={buildFrameGrid(state)}
+					terminalProfile={TERMINAL_PROFILE}
+				/>
 			)}
 			{logLines.map(({ eventIndex, event }) => (
 				<Text key={eventIndex} {...resolveLogLineStyle(event)}>

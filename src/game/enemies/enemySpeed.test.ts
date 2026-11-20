@@ -1,54 +1,64 @@
 import { describe, expect, it } from "vitest";
-import { HASTED_ENEMY_FLOOR } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import type { Enemy, GameState } from "../state.js";
+import type { Enemy, EnemySpeed, GameState } from "../state.js";
 import { advanceEnemies } from "./enemies.js";
 
-const awake = (kind: Enemy["kind"], x: number): Enemy => ({
+const awake = (
+	kind: Enemy["kind"],
+	x: number,
+	speed: EnemySpeed = "normal",
+): Enemy => ({
 	x,
 	y: 1,
 	kind,
 	hp: 30,
 	maxHp: 30,
 	awake: true,
-	slowedTurnsRemaining: 0,
+	speed,
+	held: false,
 	confusedTurnsRemaining: 0,
 });
 
-/** 15x3 corridor, the player at (7,1), on `floor`. */
-const corridorOn = (floor: number, enemies: readonly Enemy[]): GameState => ({
+/** 15x3 corridor, the player at (7,1). */
+const corridor = (enemies: readonly Enemy[]): GameState => ({
 	...buildArenaGameState(15, 3, 1),
-	floor,
-	deepestFloor: floor,
 	enemies,
 });
 
 describe("enemy speed (enemySpeed.ts)", () => {
-	it("a monster steps once a turn above HASTED_ENEMY_FLOOR, twice from it down", () => {
-		const slow = advanceEnemies(corridorOn(1, [awake("zombie", 12)]));
-		expect(slow.enemies[0]?.x).toBe(11);
-		const hasted = advanceEnemies(
-			corridorOn(HASTED_ENEMY_FLOOR, [awake("zombie", 12)]),
+	it("a normal monster steps once a turn, a hasted one twice", () => {
+		expect(advanceEnemies(corridor([awake("zombie", 12)])).enemies[0]?.x).toBe(
+			11,
 		);
-		expect(hasted.enemies[0]?.x).toBe(10);
-		const justAbove = advanceEnemies(
-			corridorOn(HASTED_ENEMY_FLOOR - 1, [awake("zombie", 12)]),
+		expect(
+			advanceEnemies(corridor([awake("zombie", 12, "hasted")])).enemies[0]?.x,
+		).toBe(10);
+	});
+
+	it("a slowed monster steps on its acting move only, alternating", () => {
+		const first = advanceEnemies(
+			corridor([awake("zombie", 12, "slowed-acting")]),
 		);
-		expect(justAbove.enemies[0]?.x).toBe(11);
+		expect(first.enemies[0]).toMatchObject({ x: 11, speed: "slowed-resting" });
+		const second = advanceEnemies(first);
+		expect(second.enemies[0]).toMatchObject({ x: 11, speed: "slowed-acting" });
 	});
 
 	it("a hasted flier far away gets a whole second hasted move — four steps", () => {
 		/* the kestrel's flight never lurches at random (no erratic chance) */
-		const next = advanceEnemies(
-			corridorOn(HASTED_ENEMY_FLOOR, [awake("kestrel", 13)]),
-		);
+		const next = advanceEnemies(corridor([awake("kestrel", 13, "hasted")]));
 		expect(next.enemies[0]?.x).toBe(9);
 	});
 
-	it("a hasted monster next to the player attacks twice", () => {
+	it("a slowed flier far away acts every turn — its second move flips the turn back", () => {
 		const next = advanceEnemies(
-			corridorOn(HASTED_ENEMY_FLOOR, [awake("zombie", 8)]),
+			corridor([awake("kestrel", 13, "slowed-acting")]),
 		);
+		expect(next.enemies[0]).toMatchObject({ x: 12, speed: "slowed-acting" });
+	});
+
+	it("a hasted monster next to the player attacks twice", () => {
+		const next = advanceEnemies(corridor([awake("zombie", 8, "hasted")]));
 		const attacks = next.events.filter(
 			(event) =>
 				event.type === "player-hit" || event.type === "enemy-attack-missed",

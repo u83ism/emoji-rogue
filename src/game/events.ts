@@ -421,9 +421,14 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** A wand of slow monster freezing its target — see advanceEnemies. */
+			/** A wand of slow monster slowing its target for good (it acts every other move) — see items/wands.ts. */
 			readonly type: "enemy-slowed";
-			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A wand of slow monster that only took away its hasted target's haste — see items/wands.ts. */
+			readonly type: "enemy-slowed-removed";
+			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
 			/** Drinking a levitation potion — see applyStatusCountdownTicks. */
@@ -516,9 +521,9 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** A hold monster scroll freezing one visible enemy — same shape as enemy-slowed, independent flavor text (it's the scroll, not a wand). */
+			/** A hold monster scroll stopping one monster near the player until it is attacked — see items/scrolls.ts. */
 			readonly type: "enemy-held";
-			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
 			/** A vampire's or wraith's landed hit draining max HP (and HP) for good — see enemies/vitalityDrain.ts. */

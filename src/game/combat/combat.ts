@@ -83,7 +83,9 @@ export const applyEnemyHit = (
 		remainingHp <= 0
 			? state.enemies.filter((enemy) => enemy !== target)
 			: state.enemies.map((enemy) =>
-					enemy === target ? { ...enemy, hp: remainingHp, awake: true } : enemy,
+					enemy === target
+						? { ...enemy, hp: remainingHp, awake: true, held: false }
+						: enemy,
 				);
 	const next: GameState = {
 		...state,
@@ -143,6 +145,10 @@ export const applyPlayerAttack = (
 	if (!hitRoll.hit) {
 		return {
 			...state,
+			/* original Rogue's fight() wakes the target (runto()) before it even rolls */
+			enemies: state.enemies.map((enemy) =>
+				enemy === target ? { ...enemy, awake: true, held: false } : enemy,
+			),
 			rng: hitRoll.rng,
 			quietTurns: 0,
 			events: buildEventLog(state.events, [

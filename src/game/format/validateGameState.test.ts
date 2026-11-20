@@ -474,7 +474,8 @@ describe("validateGameState", () => {
 		const result = validateGameState({
 			...buildValidState(),
 			events: [
-				{ type: "enemy-slowed", payload: { target: "zombie", turns: 5 } },
+				{ type: "enemy-slowed", payload: { target: "zombie" } },
+				{ type: "enemy-slowed-removed", payload: { target: "zombie" } },
 			],
 		});
 		expect(result.ok).toBe(true);
@@ -485,34 +486,26 @@ describe("validateGameState", () => {
 				events: [
 					{
 						type: "enemy-slowed",
-						payload: { target: "unknown-kind", turns: 5 },
+						payload: { target: "unknown-kind" },
 					},
-				],
-			},
-			"events",
-		);
-		expectRejected(
-			{
-				...buildValidState(),
-				events: [
-					{ type: "enemy-slowed", payload: { target: "zombie", turns: 0 } },
 				],
 			},
 			"events",
 		);
 	});
 
-	it("rejects a non-integer or negative slowedTurnsRemaining on an enemy", () => {
+	it("rejects an enemy with an unknown speed or a non-boolean held", () => {
 		const valid = buildValidState();
 		const enemies = valid.enemies;
 		if (!Array.isArray(enemies) || enemies.length === 0) {
 			throw new Error("unreachable: the dungeon state spawns enemies");
 		}
 		expectRejected(
-			{
-				...valid,
-				enemies: [{ ...enemies[0], slowedTurnsRemaining: -1 }],
-			},
+			{ ...valid, enemies: [{ ...enemies[0], speed: "fast" }] },
+			"enemies",
+		);
+		expectRejected(
+			{ ...valid, enemies: [{ ...enemies[0], held: 1 }] },
 			"enemies",
 		);
 	});

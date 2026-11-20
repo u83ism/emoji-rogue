@@ -150,7 +150,8 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 				: state.nextItemId,
 		items: landed === undefined ? state.items : [...state.items, landed],
 		enemies: state.enemies.map(
-			(enemy): Enemy => (enemy === target ? { ...enemy, awake: true } : enemy),
+			(enemy): Enemy =>
+				enemy === target ? { ...enemy, awake: true, held: false } : enemy,
 		),
 		events: buildEventLog(state.events, [
 			{

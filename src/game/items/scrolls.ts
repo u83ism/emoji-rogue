@@ -1,11 +1,11 @@
 import {
 	CONFUSE_MONSTER_SCROLL_DURATION,
-	HOLD_MONSTER_SCROLL_DURATION,
+	HOLD_MONSTER_SCROLL_RANGE,
 } from "../balance.js";
 import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
 import type { GameState } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
-import { findNearestVisibleEnemy, findVisibleEnemies } from "../vision.js";
+import { findNearestVisibleEnemy } from "../vision.js";
 import { applyScrollWasted } from "./equipmentScrolls.js";
 
 // The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
@@ -87,26 +87,32 @@ export const applyUseConfuseMonsterScroll = (state: GameState): GameState => {
 };
 
 /**
- * A hold monster scroll freezes every currently visible enemy at once
- * (reusing the slow wand's Enemy.slowedTurnsRemaining — no new state field),
- * unlike the single-target wands/scrolls above. No-op with nothing visible.
+ * A hold monster scroll, as original Rogue's read_scroll(): every awake
+ * monster within HOLD_MONSTER_SCROLL_RANGE tiles of the player (either
+ * axis, seen or not) stops where it stands — held, doing nothing at all
+ * until the player attacks or zaps it (enemies.ts). Asleep ones are left
+ * alone. With none in range the scroll is wasted.
  */
 export const applyUseHoldMonsterScroll = (state: GameState): GameState => {
-	const targets = findVisibleEnemies(state);
+	const targets = state.enemies.filter(
+		(enemy) =>
+			enemy.awake &&
+			!enemy.held &&
+			Math.abs(enemy.x - state.player.x) <= HOLD_MONSTER_SCROLL_RANGE &&
+			Math.abs(enemy.y - state.player.y) <= HOLD_MONSTER_SCROLL_RANGE,
+	);
 	if (targets.length === 0) {
-		return state;
+		return applyScrollWasted(state, "hold-monster-scroll");
 	}
 	const targetSet = new Set(targets);
 	const events: GameEvent[] = targets.map((target) => ({
 		type: "enemy-held",
-		payload: { target: target.kind, turns: HOLD_MONSTER_SCROLL_DURATION },
+		payload: { target: target.kind },
 	}));
 	return {
 		...state,
 		enemies: state.enemies.map((enemy) =>
-			targetSet.has(enemy)
-				? { ...enemy, slowedTurnsRemaining: HOLD_MONSTER_SCROLL_DURATION }
-				: enemy,
+			targetSet.has(enemy) ? { ...enemy, held: true } : enemy,
 		),
 		events: buildEventLog(state.events, events),
 	};

@@ -18,6 +18,7 @@ import {
 } from "../events.js";
 import type {
 	Enemy,
+	EnemySpeed,
 	GameState,
 	GoldPile,
 	HeldItem,
@@ -83,6 +84,13 @@ const isOneOf = <Member>(
 	value: unknown,
 ): value is Member => values.some((candidate) => candidate === value);
 
+const ENEMY_SPEEDS: readonly EnemySpeed[] = [
+	"normal",
+	"hasted",
+	"slowed-acting",
+	"slowed-resting",
+];
+
 export const isEnemyKind = (value: unknown): value is EnemyKind =>
 	isOneOf(ENEMY_KIND_VALUES, value);
 
@@ -104,7 +112,8 @@ const isEnemyArray = (
 			isPositiveInteger(enemy.maxHp) &&
 			enemy.hp <= enemy.maxHp &&
 			isBooleanValue(enemy.awake) &&
-			isNonNegativeInteger(enemy.slowedTurnsRemaining) &&
+			isOneOf(ENEMY_SPEEDS, enemy.speed) &&
+			isBooleanValue(enemy.held) &&
 			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
@@ -321,8 +330,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"magic-missile-vanished": (payload) => isEnemyKind(payload.target),
 	"player-confused": (payload) => isPositiveInteger(payload.turns),
 	"confusion-faded": emptyPayload,
-	"enemy-slowed": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"enemy-slowed": (payload) => isEnemyKind(payload.target),
+	"enemy-slowed-removed": (payload) => isEnemyKind(payload.target),
 	"player-levitated": (payload) => isPositiveInteger(payload.turns),
 	"levitation-faded": emptyPayload,
 	"armor-protected": emptyPayload,
@@ -343,8 +352,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
-	"enemy-held": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"enemy-held": (payload) => isEnemyKind(payload.target),
 	"player-attack-missed": (payload) => isEnemyKind(payload.target),
 	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),
 };
@@ -622,7 +630,8 @@ export const validateGameState = (
 			hp: enemy.hp,
 			maxHp: enemy.maxHp,
 			awake: enemy.awake,
-			slowedTurnsRemaining: enemy.slowedTurnsRemaining,
+			speed: enemy.speed,
+			held: enemy.held,
 			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
 		items: items.map((item): Item => {

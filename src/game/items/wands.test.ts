@@ -5,7 +5,6 @@ import {
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	PLAYER_START_STRENGTH,
-	SLOW_WAND_DURATION,
 } from "../balance.js";
 import { calculateStrengthDamageBonus } from "../combat/strength.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
@@ -26,7 +25,8 @@ const zombie = (x: number, y: number, hp = 2, awake = true): Enemy => ({
 	hp,
 	maxHp: hp,
 	awake,
-	slowedTurnsRemaining: 0,
+	speed: "normal" as const,
+	held: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -42,8 +42,8 @@ const buildSpreadRngStates = (): readonly RngState[] => {
 };
 
 describe("items/wands", () => {
-	it("using a held slow wand freezes the nearest visible (non-adjacent) enemy", () => {
-		const target = zombie(7, 1); /* 3 tiles east, well within view radius */
+	it("a slow wand slows the nearest visible enemy for good, waking it", () => {
+		const target = zombie(7, 1, 2, false); /* 3 tiles east, asleep */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			enemies: [target],
@@ -54,17 +54,30 @@ describe("items/wands", () => {
 			payload: { itemId: 1 },
 		});
 		expect(next.player).toEqual(state.player); /* the player does not move */
-		/* advanceEnemies runs as part of the same turn-consuming action, so the
-		 * freezing turn itself already counts as the first tick */
+		/* advanceEnemies runs as part of the same turn: the slowed zombie acts
+		 * on that move (one step west) and rests on the next */
 		expect(next.enemies).toEqual([
-			{ ...target, slowedTurnsRemaining: SLOW_WAND_DURATION - 1 },
+			{ ...target, x: 6, awake: true, speed: "slowed-resting" },
 		]);
 		expect(next.inventory).toEqual([]);
 		expect(next.events).toEqual([
+			{ type: "enemy-slowed", payload: { target: "zombie" } },
+		]);
+	});
+
+	it("a slow wand on a hasted monster only takes its haste away", () => {
+		const target = { ...zombie(7, 1), speed: "hasted" as const };
+		const next = advanceTurn(
 			{
-				type: "enemy-slowed",
-				payload: { target: "zombie", turns: SLOW_WAND_DURATION },
+				...buildArenaGameState(9, 3, 1),
+				enemies: [target],
+				inventory: [{ itemId: 1, kind: "slow-wand" as const }],
 			},
+			{ type: "use-item", payload: { itemId: 1 } },
+		);
+		expect(next.enemies[0]?.speed).toBe("normal");
+		expect(next.events).toEqual([
+			{ type: "enemy-slowed-removed", payload: { target: "zombie" } },
 		]);
 	});
 
@@ -81,14 +94,12 @@ describe("items/wands", () => {
 			payload: { itemId: 1 },
 		});
 		expect(next.events).toEqual([
-			{
-				type: "enemy-slowed",
-				payload: { target: "zombie", turns: SLOW_WAND_DURATION },
-			},
+			{ type: "enemy-slowed", payload: { target: "zombie" } },
 		]);
-		expect(next.enemies.find((enemy) => enemy.x === 6)).toMatchObject({
-			slowedTurnsRemaining: SLOW_WAND_DURATION - 1,
-		});
+		expect(
+			next.enemies.filter((enemy) => enemy.speed !== "normal"),
+		).toHaveLength(1);
+		expect(next.enemies.find((enemy) => enemy.speed !== "normal")?.x).toBe(5);
 	});
 
 	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {

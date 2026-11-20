@@ -16,7 +16,8 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	hp: 2,
 	maxHp: 2,
 	awake: true,
-	slowedTurnsRemaining: 0,
+	speed: "normal" as const,
+	held: false,
 	confusedTurnsRemaining: 0,
 });
 

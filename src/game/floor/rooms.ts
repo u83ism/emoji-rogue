@@ -1,7 +1,6 @@
 import type { Room } from "../../map/features.js";
 import type { Rng } from "../../rng.js";
 import {
-	calculateEnemyLevelBonus,
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
 	ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD,
@@ -72,7 +71,7 @@ export const drawRoomContents = (
 				drawEnemyKindForFloor(rng, floor),
 				enemyTile,
 				rng,
-				calculateEnemyLevelBonus(floor),
+				floor,
 			),
 		);
 	}

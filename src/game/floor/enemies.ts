@@ -1,5 +1,6 @@
 import { at } from "../../indexing.js";
 import type { Rng } from "../../rng.js";
+import { calculateEnemyLevelBonus, HASTED_ENEMY_FLOOR } from "../balance.js";
 import {
 	ENEMY_DEPTH_ORDER,
 	ENEMY_HP_DICE_SIDES,
@@ -80,15 +81,20 @@ export const calculateEnemyFloorRange = (
 	};
 };
 
-/** A fresh, sleeping `kind` at `position`, its HP rolled as level d8 (original Rogue's new_monster) — the level boosted by `levelBonus` on deep floors (calculateEnemyLevelBonus). */
+/**
+ * A fresh, sleeping `kind` born on `floor` at `position`, as original
+ * Rogue's new_monster(): its HP rolled as level d8 — the level boosted by
+ * calculateEnemyLevelBonus on deep floors — and hasted from
+ * HASTED_ENEMY_FLOOR down.
+ */
 export const buildSpawnedEnemy = (
 	kind: EnemyKind,
 	position: Position,
 	rng: Rng,
-	levelBonus = 0,
+	floor = 1,
 ): Enemy => {
 	let maxHp = 0;
-	const level = ENEMY_STATS[kind].level + levelBonus;
+	const level = ENEMY_STATS[kind].level + calculateEnemyLevelBonus(floor);
 	for (let dieIndex = 0; dieIndex < level; dieIndex++) {
 		maxHp += rng.getUniformInt(1, ENEMY_HP_DICE_SIDES);
 	}
@@ -98,7 +104,8 @@ export const buildSpawnedEnemy = (
 		hp: maxHp,
 		maxHp,
 		awake: false,
-		slowedTurnsRemaining: 0,
+		speed: floor >= HASTED_ENEMY_FLOOR ? "hasted" : "normal",
+		held: false,
 		confusedTurnsRemaining: 0,
 	};
 };

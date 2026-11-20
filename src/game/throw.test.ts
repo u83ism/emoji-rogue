@@ -40,7 +40,8 @@ const enemyOf = (
 	hp: 200,
 	maxHp: 200,
 	awake,
-	slowedTurnsRemaining: 0,
+	speed: "normal" as const,
+	held: false,
 	confusedTurnsRemaining: 0,
 });
 

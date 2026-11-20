@@ -163,7 +163,8 @@ describe("items/rings", () => {
 			hp: 2,
 			maxHp: 2,
 			awake: false,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const asleepB = {
@@ -173,7 +174,8 @@ describe("items/rings", () => {
 			hp: 1,
 			maxHp: 1,
 			awake: false,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -209,7 +211,8 @@ describe("items/rings", () => {
 			hp: 2,
 			maxHp: 2,
 			awake: false,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const item = {

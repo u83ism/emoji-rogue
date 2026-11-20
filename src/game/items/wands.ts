@@ -3,7 +3,6 @@ import {
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	MAGIC_MISSILE_DAMAGE_DICE,
-	SLOW_WAND_DURATION,
 } from "../balance.js";
 import { applyEnemyHit } from "../combat/combat.js";
 import { rollDamageDice, rollToHit } from "../combat/damage.js";
@@ -15,28 +14,37 @@ import { findNearestVisibleEnemy } from "../vision.js";
 import { calculatePlayerDamageBonus } from "./equipmentStats.js";
 
 /**
- * A wand of slow monster freezes the nearest visible enemy for
- * SLOW_WAND_DURATION turns. With no visible target it is a no-op — same
- * reference, no turn spent, wand not consumed, matching how using an unheld
- * item behaves (every wand here does the same). Consumption from inventory
- * happens in the dispatcher (items/use.ts).
+ * A wand of slow monster on the nearest visible enemy, as original Rogue's
+ * do_zap(): a hasted one only loses its haste, any other is slowed for good
+ * — acting every other move, starting with the next (enemies/enemySpeed.ts).
+ * Either way the zap wakes it and breaks a hold (runto()). With no visible
+ * target it is a no-op — same reference, no turn spent, wand not consumed,
+ * matching how using an unheld item behaves (every wand here does the
+ * same). Consumption from inventory happens in the dispatcher
+ * (items/use.ts).
  */
 export const applyUseSlowWand = (state: GameState): GameState => {
 	const target = findNearestVisibleEnemy(state);
 	if (target === undefined) {
 		return state;
 	}
+	const wasHasted = target.speed === "hasted";
 	return {
 		...state,
 		enemies: state.enemies.map((enemy) =>
 			enemy === target
-				? { ...enemy, slowedTurnsRemaining: SLOW_WAND_DURATION }
+				? {
+						...enemy,
+						speed: wasHasted ? "normal" : "slowed-acting",
+						awake: true,
+						held: false,
+					}
 				: enemy,
 		),
 		events: buildEventLog(state.events, [
 			{
-				type: "enemy-slowed",
-				payload: { target: target.kind, turns: SLOW_WAND_DURATION },
+				type: wasHasted ? "enemy-slowed-removed" : "enemy-slowed",
+				payload: { target: target.kind },
 			},
 		]),
 	};

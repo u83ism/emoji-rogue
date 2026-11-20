@@ -1,7 +1,6 @@
 import { encodePointKey } from "../../pointkey.js";
 import { stepUniform } from "../../rng.js";
 import {
-	HASTED_ENEMY_FLOOR,
 	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	WAKE_CHANCE_PERCENT,
 } from "../balance.js";
@@ -22,9 +21,8 @@ import { isHeldByFlytrap } from "./flytrapHold.js";
  * special case) lives in action.ts's resolveEnemyAction. The flying kinds
  * (bat, kestrel, griffin) take a second action while they are still away
  * from the player after the first, and from HASTED_ENEMY_FLOOR down every
- * monster acts twice per move (enemySpeed.ts). A
- * slowedTurnsRemaining > 0 enemy (slow wand) skips its whole turn, just
- * ticking down. No kind heals itself between hits: original Rogue's
+ * monster acts twice per move, a slowed one every other move (enemySpeed.ts).
+ * A held enemy (hold monster scroll) does nothing at all. No kind heals itself between hits: original Rogue's
  * ISREGEN flag (griffin, troll, vampire) only feeds the player-side status
  * display, never an enemy heal. The player's HP reaching zero ends the run; the enemies
  * after that one still take their turn, but resolveEnemyAction's attack
@@ -64,6 +62,11 @@ export const advanceEnemies = (state: GameState): GameState => {
 	};
 	const nextEnemies: Enemy[] = [];
 	for (const enemy of state.enemies) {
+		if (enemy.held) {
+			/* a hold monster scroll's hold: nothing at all until attacked or zapped */
+			nextEnemies.push(enemy);
+			continue;
+		}
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		let awake = enemy.awake;
@@ -87,25 +90,13 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 
-		/* Decided from this turn's still-undecremented value (same idiom as
-		 * slowedTurnsRemaining below) — the scroll's own application turn
-		 * already wanders instead of chasing. */
+		/* Decided from this turn's still-undecremented value — the scroll's
+		 * own application turn already wanders instead of chasing. */
 		const confused = enemy.confusedTurnsRemaining > 0;
 		const confusedTurnsRemaining = Math.max(
 			0,
 			enemy.confusedTurnsRemaining - 1,
 		);
-
-		if (enemy.slowedTurnsRemaining > 0) {
-			occupied.add(encodePointKey(enemy.x, enemy.y));
-			nextEnemies.push({
-				...enemy,
-				awake,
-				slowedTurnsRemaining: enemy.slowedTurnsRemaining - 1,
-				confusedTurnsRemaining,
-			});
-			continue;
-		}
 
 		if (progress.died) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
@@ -116,7 +107,6 @@ export const advanceEnemies = (state: GameState): GameState => {
 			state,
 			enemy,
 			progress,
-			state.floor >= HASTED_ENEMY_FLOOR,
 			confused,
 			visiblePoints,
 			occupied,
@@ -135,6 +125,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			y: next.y,
 			hp: actor.hp,
 			awake: true,
+			speed: result.speed,
 			confusedTurnsRemaining,
 		});
 	}

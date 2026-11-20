@@ -145,7 +145,9 @@ export const formatEvent = (
 		case "confusion-faded":
 			return "混乱がおさまった";
 		case "enemy-slowed":
-			return `杖の力で${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
+			return `杖の力で${ENEMY_NAMES[event.payload.target]}の動きが鈍くなった!`;
+		case "enemy-slowed-removed":
+			return `杖の力で${ENEMY_NAMES[event.payload.target]}の素早さが元に戻った`;
 		case "player-levitated":
 			return `${ITEM_NAMES.levitation}を飲んだ。体がふわりと浮いた!`;
 		case "levitation-faded":
@@ -175,7 +177,7 @@ export const formatEvent = (
 		case "hallucination-faded":
 			return "幻覚がおさまった";
 		case "enemy-held":
-			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}の動きを封じた!`;
+			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}が動きを止めた!`;
 		case "player-drained":
 			return `${ENEMY_NAMES[event.payload.by]}に生命力を吸われ、急に体が弱った。最大HPが${event.payload.maxHpLost}下がった`;
 		case "player-level-drained":

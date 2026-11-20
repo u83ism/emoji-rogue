@@ -86,7 +86,13 @@ export const applyEnemyTeleport = (
 		...state,
 		enemies: state.enemies.map((enemy) =>
 			enemy === target
-				? { ...enemy, x: destination.x, y: destination.y, awake: true }
+				? {
+						...enemy,
+						x: destination.x,
+						y: destination.y,
+						awake: true,
+						held: false,
+					}
 				: enemy,
 		),
 		rng: rng.getState(),

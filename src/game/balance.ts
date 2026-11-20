@@ -412,8 +412,8 @@ export const HALLUCINATION_POTION_DURATION = 20;
 /** Chance (out of 100), independently rolled per floor, that a hallucination potion spawns. */
 export const HALLUCINATION_POTION_SPAWN_CHANCE_PERCENT = 12;
 
-/** How many turns a hold monster scroll freezes every visible enemy for — same length as SLOW_WAND_DURATION, its single-target counterpart. */
-export const HOLD_MONSTER_SCROLL_DURATION = 5;
+/** How near (in tiles, either axis) a monster must be for a hold monster scroll to stop it — original Rogue's read_scroll(): hero.x - 2 .. hero.x + 2. */
+export const HOLD_MONSTER_SCROLL_RANGE = 2;
 /** Chance (out of 100), independently rolled per floor, that a hold monster scroll spawns. */
 export const HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT = 10;
 
@@ -422,8 +422,6 @@ export const CONFUSION_POTION_DURATION = 10;
 /** Chance (out of 100), independently rolled per floor, that a confusion potion spawns. */
 export const CONFUSION_POTION_SPAWN_CHANCE_PERCENT = 15;
 
-/** How many turns a wand of slow monster freezes its target for. */
-export const SLOW_WAND_DURATION = 5;
 /** Chance (out of 100), independently rolled per floor, that a slow wand spawns. */
 export const SLOW_WAND_SPAWN_CHANCE_PERCENT = 8;
 

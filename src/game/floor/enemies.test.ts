@@ -101,7 +101,8 @@ describe("buildSpawnedEnemy", () => {
 			hp: ENEMY_STATS.troll.level,
 			maxHp: ENEMY_STATS.troll.level,
 			awake: false,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		});
 		const sturdiest = buildSpawnedEnemy(
@@ -113,13 +114,21 @@ describe("buildSpawnedEnemy", () => {
 		expect(sturdiest.hp).toBe(sturdiest.maxHp);
 	});
 
-	it("rolls one more HP die per level of a deep-floor level bonus", () => {
+	it("below AMULET_FLOOR rolls one more HP die per floor, and from floor 30 is hasted", () => {
 		const boosted = buildSpawnedEnemy(
 			"troll",
 			{ x: 1, y: 2 },
 			createLowestRollRng(),
-			3,
+			29,
 		);
 		expect(boosted.maxHp).toBe(ENEMY_STATS.troll.level + 3);
+		expect(boosted.speed).toBe("normal");
+		const hasted = buildSpawnedEnemy(
+			"troll",
+			{ x: 1, y: 2 },
+			createLowestRollRng(),
+			30,
+		);
+		expect(hasted.speed).toBe("hasted");
 	});
 });

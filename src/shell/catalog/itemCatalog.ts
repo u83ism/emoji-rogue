@@ -15,7 +15,7 @@ import {
 	FOOD_ROLLS_PER_FLOOR,
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
-	HOLD_MONSTER_SCROLL_DURATION,
+	HOLD_MONSTER_SCROLL_RANGE,
 	HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 	IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT,
 	MAGIC_MISSILE_DAMAGE_BONUS,
@@ -27,7 +27,6 @@ import {
 	PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 	REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 	SCROLL_SPAWN_CHANCE_PERCENT,
-	SLOW_WAND_DURATION,
 	SLOW_WAND_SPAWN_CHANCE_PERCENT,
 	TELEPORT_WAND_SPAWN_CHANCE_PERCENT,
 	WEAPON_CURSE_CHANCE_PERCENT,
@@ -82,7 +81,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: HOLD_MONSTER_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `視界内の敵全員を${HOLD_MONSTER_SCROLL_DURATION}ターン行動不能にする(鈍足の杖の範囲版)`,
+		effect: `周囲${HOLD_MONSTER_SCROLL_RANGE}マス以内の起きている敵を、攻撃されるまでその場で止める(いなければ何も起きずに無くなる)`,
 	},
 	"enchant-weapon": {
 		catalogName: "武器強化の巻物",
@@ -125,7 +124,8 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "鈍足の杖",
 		category: "杖",
 		spawn: { type: "chance", percent: SLOW_WAND_SPAWN_CHANCE_PERCENT },
-		effect: `視界内の最も近い敵を${SLOW_WAND_DURATION}ターン行動不能にする。1回使い切り`,
+		effect:
+			"視界内の最も近い敵を恒久的に鈍足にする(2回に1回しか動けない)。加速している敵なら加速を解くだけ",
 	},
 	"teleport-wand": {
 		catalogName: "テレポートの杖",

@@ -34,7 +34,8 @@ const enemyOf = (
 	hp,
 	maxHp: TEST_ENEMY_HP,
 	awake,
-	slowedTurnsRemaining: 0,
+	speed: "normal" as const,
+	held: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -89,6 +90,26 @@ describe("isAdjacent", () => {
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 3, y: 3 })).toBe(false);
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 2 })).toBe(false);
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 4 })).toBe(false);
+	});
+});
+
+describe("applyPlayerAttack wakes its target, hit or miss", () => {
+	it("a swing at a sleeping or held enemy wakes it and breaks the hold even when it misses", () => {
+		const target = { ...zombie(5, 4, TEST_ENEMY_HP, false), held: true };
+		const misses = buildSpreadRngStates()
+			.map((rng) =>
+				applyPlayerAttack(
+					{ ...buildArenaGameState(9, 9, 1), rng, enemies: [target] },
+					target,
+				),
+			)
+			.filter((next) =>
+				next.events.some((event) => event.type === "player-attack-missed"),
+			);
+		expect(misses.length).toBeGreaterThan(0);
+		for (const next of misses) {
+			expect(next.enemies[0]).toMatchObject({ awake: true, held: false });
+		}
 	});
 });
 
@@ -338,7 +359,8 @@ describe("dragon", () => {
 			hp: 1,
 			maxHp: 1,
 			awake: true,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);

@@ -290,8 +290,12 @@ describe("formatEvent", () => {
 			],
 			[{ type: "confusion-faded", payload: {} }, "混乱がおさまった"],
 			[
-				{ type: "enemy-slowed", payload: { target: "zombie", turns: 5 } },
-				"杖の力でゾンビの動きを封じた!",
+				{ type: "enemy-slowed", payload: { target: "zombie" } },
+				"杖の力でゾンビの動きが鈍くなった!",
+			],
+			[
+				{ type: "enemy-slowed-removed", payload: { target: "zombie" } },
+				"杖の力でゾンビの素早さが元に戻った",
 			],
 			[
 				{ type: "player-levitated", payload: { turns: 15 } },
@@ -342,8 +346,8 @@ describe("formatEvent", () => {
 			],
 			[{ type: "hallucination-faded", payload: {} }, "幻覚がおさまった"],
 			[
-				{ type: "enemy-held", payload: { target: "zombie", turns: 5 } },
-				"束縛の巻物を読んだ。ゾンビの動きを封じた!",
+				{ type: "enemy-held", payload: { target: "zombie" } },
+				"束縛の巻物を読んだ。ゾンビが動きを止めた!",
 			],
 			[
 				{

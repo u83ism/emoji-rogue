@@ -67,6 +67,12 @@ export interface Position {
  * A live enemy. Intersects Position so existing position-shaped code
  * (pathfinding, drawing) keeps reading `enemy.x` / `enemy.y` directly.
  */
+export type EnemySpeed =
+	| "normal"
+	| "hasted"
+	| "slowed-acting"
+	| "slowed-resting";
+
 export type Enemy = Position & {
 	readonly kind: EnemyKind;
 	readonly hp: number;
@@ -74,8 +80,16 @@ export type Enemy = Position & {
 	readonly maxHp: number;
 	/** Sleeping enemies take no action at all until woken — see advanceEnemies. */
 	readonly awake: boolean;
-	/** Frozen (no movement, no attack) while positive — see advanceEnemies and the slow wand. */
-	readonly slowedTurnsRemaining: number;
+	/**
+	 * How often it acts (original Rogue's ISHASTE/ISSLOW, enemies/enemySpeed.ts):
+	 * "hasted" twice per move (every monster born from HASTED_ENEMY_FLOOR down),
+	 * a slowed one (the slow monster wand) every other move — "slowed-acting"
+	 * on the move it acts (the original's t_turn), "slowed-resting" on the one
+	 * it skips.
+	 */
+	readonly speed: EnemySpeed;
+	/** Stopped where it stands by a hold monster scroll (original Rogue's ISHELD) until the player attacks or zaps it — see advanceEnemies. */
+	readonly held: boolean;
 	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
 	readonly confusedTurnsRemaining: number;
 };

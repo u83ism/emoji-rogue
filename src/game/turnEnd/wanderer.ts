@@ -1,7 +1,6 @@
 import { encodePointKey } from "../../pointkey.js";
 import { createRng, type Rng } from "../../rng.js";
 import {
-	calculateEnemyLevelBonus,
 	WANDERER_DELAY_TURNS,
 	WANDERER_ROLL_DIE_SIDES,
 	WANDERER_ROLL_INTERVAL_TURNS,
@@ -79,12 +78,7 @@ export const applyWandererTick = (state: GameState): GameState => {
 	}
 	const kind = drawEnemyKindForFloor(rng, state.floor, "wanderer");
 	const wanderer = {
-		...buildSpawnedEnemy(
-			kind,
-			position,
-			rng,
-			calculateEnemyLevelBonus(state.floor),
-		),
+		...buildSpawnedEnemy(kind, position, rng, state.floor),
 		awake: true,
 	};
 	return {

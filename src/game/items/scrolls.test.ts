@@ -116,7 +116,8 @@ describe("items/scrolls", () => {
 			hp: 2,
 			maxHp: 2,
 			awake: true,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -151,7 +152,7 @@ describe("items/scrolls", () => {
 		expect(next).toBe(state);
 	});
 
-	it("using a held hold monster scroll freezes every visible enemy and logs one enemy-held per target", () => {
+	it("a hold monster scroll stops every awake monster within 2 tiles, and only those", () => {
 		const near = {
 			x: 6,
 			y: 4,
@@ -159,7 +160,8 @@ describe("items/scrolls", () => {
 			hp: 2,
 			maxHp: 2,
 			awake: true,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const far = {
@@ -169,7 +171,8 @@ describe("items/scrolls", () => {
 			hp: 1,
 			maxHp: 1,
 			awake: true,
-			slowedTurnsRemaining: 0,
+			speed: "normal" as const,
+			held: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -182,15 +185,19 @@ describe("items/scrolls", () => {
 			payload: { itemId: 1 },
 		});
 		expect(next.inventory).toEqual([]);
-		expect(next.enemies.every((enemy) => enemy.slowedTurnsRemaining > 0)).toBe(
+		/* the player stands at (4,4): the zombie 2 tiles away is held, the bat 3 away is not */
+		expect(next.enemies.find((enemy) => enemy.kind === "zombie")?.held).toBe(
 			true,
 		);
-		expect(
-			next.events.filter((event) => event.type === "enemy-held").length,
-		).toBe(2);
+		expect(next.enemies.find((enemy) => enemy.kind === "bat")?.held).toBe(
+			false,
+		);
+		expect(next.events.filter((event) => event.type === "enemy-held")).toEqual([
+			{ type: "enemy-held", payload: { target: "zombie" } },
+		]);
 	});
 
-	it("using a held hold monster scroll with no visible enemy is a no-op (same reference, not consumed)", () => {
+	it("a hold monster scroll with no awake monster near is wasted", () => {
 		const state = {
 			...buildArenaGameState(9, 9, 1),
 			inventory: [{ itemId: 1, kind: "hold-monster-scroll" as const }],
@@ -199,6 +206,9 @@ describe("items/scrolls", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next).toBe(state);
+		expect(next.inventory).toEqual([]);
+		expect(next.events).toEqual([
+			{ type: "scroll-wasted", payload: { kind: "hold-monster-scroll" } },
+		]);
 	});
 });

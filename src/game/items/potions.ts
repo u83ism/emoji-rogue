@@ -1,10 +1,9 @@
 import {
-	BLIND_POTION_DURATION,
-	CONFUSION_POTION_DURATION,
-	DETECT_MONSTER_POTION_DURATION,
-	HALLUCINATION_POTION_DURATION,
+	EXTRA_HEALING_POTION_DICE_SIDES,
+	HASTE_EXHAUSTION_TURNS_MAX,
+	HASTE_POTION_TURNS_MAX,
+	HASTE_POTION_TURNS_MIN,
 	HEAL_POTION_DICE_SIDES,
-	LEVITATION_POTION_DURATION,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
@@ -12,47 +11,133 @@ import { rollDamageDice } from "../combat/damage.js";
 import { applyLevelUp } from "../combat/experience.js";
 import {
 	applyStrengthChange,
+	calculateRestoredStrength,
 	isStrengthSustained,
 } from "../combat/strength.js";
-import { buildEventLog, type PotionKind } from "../events.js";
+import { buildEventLog, type GameEvent, type PotionKind } from "../events.js";
 import type { GameState } from "../state.js";
+import { applyTimedPotion } from "../turnEnd/statusCountdowns.js";
+
+const withEvents = (state: GameState, events: readonly GameEvent[]) => ({
+	...state,
+	events: buildEventLog(state.events, events),
+});
+
+/** Blindness cured by a healing potion (original Rogue's sight()) — logged only if the player was blind. */
+const cureBlindness = (state: GameState): GameState =>
+	state.blindTurnsRemaining > 0
+		? withEvents({ ...state, blindTurnsRemaining: 0 }, [
+				{ type: "blindness-faded", payload: {} },
+			])
+		: state;
+
+/**
+ * A healing potion, as original Rogue's quaff(): level × d\`sides\` HP. Past
+ * the maximum, the maximum goes up by 1 and HP fills it — an extra healing
+ * potion overhealing by more than level + 1 raises it by 2. Either cures
+ * blindness; extra healing also ends a hallucination (come_down()).
+ */
+const applyHealingPotion = (
+	state: GameState,
+	kind: "heal-potion" | "extra-healing-potion",
+): GameState => {
+	const extra = kind === "extra-healing-potion";
+	const healRoll = rollDamageDice(
+		state.rng,
+		{
+			count: state.playerLevel,
+			sides: extra ? EXTRA_HEALING_POTION_DICE_SIDES : HEAL_POTION_DICE_SIDES,
+		},
+		0,
+		0,
+	);
+	const healed = state.playerHp + healRoll.damage;
+	const overheals = healed > state.playerMaxHp;
+	const bigOverheal =
+		extra && healed > state.playerMaxHp + state.playerLevel + 1;
+	const playerMaxHp =
+		state.playerMaxHp + (overheals ? 1 : 0) + (bigOverheal ? 1 : 0);
+	const playerHp = overheals ? playerMaxHp : healed;
+	const drunk = withEvents(
+		{
+			...state,
+			playerHp,
+			playerMaxHp,
+			hallucinatingTurnsRemaining: extra
+				? 0
+				: state.hallucinatingTurnsRemaining,
+			rng: healRoll.rng,
+		},
+		[
+			{
+				type: "player-healed",
+				payload: { by: kind, amount: playerHp - state.playerHp },
+			},
+		],
+	);
+	return cureBlindness(drunk);
+};
+
+/**
+ * Original Rogue's add_haste(): hasted for HASTE_POTION_TURNS_MIN..MAX
+ * turns — two moves to every one of the monsters' (advanceTurn). Drinking
+ * one while already hasted instead makes the player faint from exhaustion
+ * for 0..HASTE_EXHAUSTION_TURNS_MAX turns, ending the haste and taking the
+ * run flag away.
+ */
+const applyHastePotion = (state: GameState): GameState => {
+	const roll = rollDamageDice(
+		state.rng,
+		state.hasteTurnsRemaining > 0
+			? { count: 1, sides: HASTE_EXHAUSTION_TURNS_MAX + 1 }
+			: {
+					count: 1,
+					sides: HASTE_POTION_TURNS_MAX - HASTE_POTION_TURNS_MIN + 1,
+				},
+		0,
+		0,
+	);
+	if (state.hasteTurnsRemaining > 0) {
+		const turns = roll.damage - 1;
+		return withEvents(
+			{
+				...state,
+				hasteTurnsRemaining: 0,
+				hasteMoveSpent: false,
+				paralyzedTurnsRemaining: state.paralyzedTurnsRemaining + turns,
+				playerRunFlag: false,
+				rng: roll.rng,
+			},
+			[{ type: "player-exhausted", payload: { turns } }],
+		);
+	}
+	const turns = HASTE_POTION_TURNS_MIN + roll.damage - 1;
+	/* the haste starts with the next turn: this one already had its single move */
+	return withEvents(
+		{
+			...state,
+			hasteTurnsRemaining: turns,
+			hasteMoveSpent: true,
+			rng: roll.rng,
+		},
+		[{ type: "player-hasted", payload: { turns } }],
+	);
+};
 
 /**
  * Drinking one potion of `kind`. Drinking also identifies the kind for the
  * rest of the run, but that happens in the dispatcher (items/use.ts), like
- * every other item kind's identification on use. The healing potion heals
- * up to the cap (drinking at full health wastes it); poison can end the run.
- * Consumption from inventory happens in the dispatcher (items/use.ts).
+ * every other item kind's identification on use. Consumption from
+ * inventory happens there too.
  */
 export const applyUsePotion = (
 	state: GameState,
 	kind: PotionKind,
 ): GameState => {
 	switch (kind) {
-		case "heal-potion": {
-			/* original Rogue: level d4, and a potion that would overheal raises max HP by 1 instead */
-			const healRoll = rollDamageDice(
-				state.rng,
-				{ count: state.playerLevel, sides: HEAL_POTION_DICE_SIDES },
-				0,
-				0,
-			);
-			const overheals = state.playerHp + healRoll.damage > state.playerMaxHp;
-			const playerMaxHp = overheals ? state.playerMaxHp + 1 : state.playerMaxHp;
-			const playerHp = overheals
-				? playerMaxHp
-				: state.playerHp + healRoll.damage;
-			const amount = playerHp - state.playerHp;
-			return {
-				...state,
-				playerHp,
-				playerMaxHp,
-				rng: healRoll.rng,
-				events: buildEventLog(state.events, [
-					{ type: "player-healed", payload: { by: kind, amount } },
-				]),
-			};
-		}
+		case "heal-potion":
+		case "extra-healing-potion":
+			return applyHealingPotion(state, kind);
 		case "poison": {
 			/* original Rogue: strength drops 1-3 and any hallucination ends (come_down) — no HP lost */
 			const lossRoll = rollDamageDice(
@@ -62,92 +147,52 @@ export const applyUsePotion = (
 				0,
 			);
 			/* a ring of sustain strength keeps it all ("you feel momentarily sick") */
-			const sustained = isStrengthSustained(state.inventory);
-			const weakened = sustained
+			const weakened = isStrengthSustained(state.inventory)
 				? state
 				: applyStrengthChange(state, -lossRoll.damage);
-			return {
-				...weakened,
-				hallucinatingTurnsRemaining: 0,
-				rng: lossRoll.rng,
-				events: buildEventLog(state.events, [
+			return withEvents(
+				{ ...weakened, hallucinatingTurnsRemaining: 0, rng: lossRoll.rng },
+				[
 					{
 						type: "player-poisoned",
 						payload: {
 							strengthLost: state.playerStrength - weakened.playerStrength,
 						},
 					},
-				]),
-			};
+				],
+			);
 		}
 		case "strength": {
 			const stronger = applyStrengthChange(
 				state,
 				STRENGTH_POTION_STRENGTH_GAIN,
 			);
-			return {
-				...stronger,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-strengthened",
-						payload: { strength: stronger.playerStrength },
-					},
-				]),
-			};
+			return withEvents(stronger, [
+				{
+					type: "player-strengthened",
+					payload: { strength: stronger.playerStrength },
+				},
+			]);
 		}
+		case "restore-strength-potion":
+			return withEvents(
+				{ ...state, playerStrength: calculateRestoredStrength(state) },
+				[
+					{
+						type: "strength-restored",
+						payload: { strength: calculateRestoredStrength(state) },
+					},
+				],
+			);
+		case "haste-self-potion":
+			return applyHastePotion(state);
 		case "confusion":
-			return {
-				...state,
-				confusedTurnsRemaining: CONFUSION_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-confused",
-						payload: { turns: CONFUSION_POTION_DURATION },
-					},
-				]),
-			};
 		case "levitation":
-			return {
-				...state,
-				levitationTurnsRemaining: LEVITATION_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-levitated",
-						payload: { turns: LEVITATION_POTION_DURATION },
-					},
-				]),
-			};
 		case "blindness":
-			return {
-				...state,
-				blindTurnsRemaining: BLIND_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{ type: "player-blinded", payload: { turns: BLIND_POTION_DURATION } },
-				]),
-			};
+		case "detect-monster":
+		case "hallucination":
+			return applyTimedPotion(state, kind);
 		case "raise-level":
 			return applyLevelUp(state);
-		case "detect-monster":
-			return {
-				...state,
-				detectMonstersTurnsRemaining: DETECT_MONSTER_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-detected-monsters",
-						payload: { turns: DETECT_MONSTER_POTION_DURATION },
-					},
-				]),
-			};
-		case "hallucination":
-			return {
-				...state,
-				hallucinatingTurnsRemaining: HALLUCINATION_POTION_DURATION,
-				events: buildEventLog(state.events, [
-					{
-						type: "player-hallucinated",
-						payload: { turns: HALLUCINATION_POTION_DURATION },
-					},
-				]),
-			};
 	}
 };

@@ -100,6 +100,9 @@ const applyItemEffect = (
 		case "raise-level":
 		case "detect-monster":
 		case "hallucination":
+		case "restore-strength-potion":
+		case "extra-healing-potion":
+		case "haste-self-potion":
 			return applyUsePotion(state, item.kind);
 	}
 };

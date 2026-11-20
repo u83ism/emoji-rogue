@@ -111,3 +111,20 @@ export const applyStrengthChange = (
 		playerMaxStrength: Math.max(state.playerMaxStrength, withoutRings),
 	};
 };
+
+/**
+ * Original Rogue's restore strength potion: strength without the worn add
+ * strength rings comes back up to playerMaxStrength (never down), then the
+ * rings' values go back on top.
+ */
+export const calculateRestoredStrength = (state: GameState): number => {
+	const bonuses = findWornAddStrengthBonuses(state.inventory);
+	const bare = bonuses.reduce(
+		(current, bonus) => addStrength(current, -bonus),
+		state.playerStrength,
+	);
+	return bonuses.reduce(
+		(current, bonus) => addStrength(current, bonus),
+		Math.max(bare, state.playerMaxStrength),
+	);
+};

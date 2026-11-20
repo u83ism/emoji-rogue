@@ -321,6 +321,13 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"scroll-wasted": (payload) => isItemKind(payload.kind),
 	"wand-empty": (payload) => isItemKind(payload.kind),
 	"ring-hands-full": emptyPayload,
+	"strength-restored": (payload) =>
+		isInteger(payload.strength) &&
+		payload.strength >= STRENGTH_MIN &&
+		payload.strength <= STRENGTH_MAX,
+	"player-hasted": (payload) => isPositiveInteger(payload.turns),
+	"player-exhausted": (payload) => isNonNegativeInteger(payload.turns),
+	"haste-faded": emptyPayload,
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&
@@ -504,6 +511,14 @@ export const validateGameState = (
 	if (!isBooleanValue(playerRunFlag)) {
 		return err("playerRunFlag");
 	}
+	const hasteTurnsRemaining = value.hasteTurnsRemaining;
+	if (!isNonNegativeInteger(hasteTurnsRemaining)) {
+		return err("hasteTurnsRemaining");
+	}
+	const hasteMoveSpent = value.hasteMoveSpent;
+	if (!isBooleanValue(hasteMoveSpent)) {
+		return err("hasteMoveSpent");
+	}
 	const detectMonstersTurnsRemaining = value.detectMonstersTurnsRemaining;
 	if (!isNonNegativeInteger(detectMonstersTurnsRemaining)) {
 		return err("detectMonstersTurnsRemaining");
@@ -633,6 +648,8 @@ export const validateGameState = (
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		playerRunFlag,
+		hasteTurnsRemaining,
+		hasteMoveSpent,
 		detectMonstersTurnsRemaining,
 		hallucinatingTurnsRemaining,
 		floor,

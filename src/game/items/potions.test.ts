@@ -9,6 +9,7 @@ import {
 	PLAYER_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
+import type { GameState } from "../state.js";
 
 describe("items/potions", () => {
 	it("using a held potion heals level d4, one consumed from inventory", () => {
@@ -278,6 +279,91 @@ describe("items/potions", () => {
 					event.type === "player-hallucinated" &&
 					event.payload.turns === HALLUCINATION_POTION_DURATION,
 			),
+		).toBe(true);
+	});
+
+	it("restore strength brings a drained strength back to the maximum, keeping an add strength ring's value on top", () => {
+		const drink = (state: GameState) =>
+			advanceTurn(
+				{
+					...state,
+					inventory: [
+						...state.inventory,
+						{ itemId: 50, kind: "restore-strength-potion" as const },
+					],
+				},
+				{ type: "use-item", payload: { itemId: 50 } },
+			);
+		const drained = {
+			...buildArenaGameState(9, 3, 1),
+			playerStrength: 12,
+			playerMaxStrength: 16,
+		};
+		expect(drink(drained).playerStrength).toBe(16);
+		const ringed = {
+			...drained,
+			playerStrength: 14 /* 12 + the ring's 2 */,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "add-strength-ring" as const,
+					equipped: true,
+					cursed: false,
+					bonus: 2,
+				},
+			],
+		};
+		expect(drink(ringed).playerStrength).toBe(18);
+		const strong = { ...drained, playerStrength: 17 };
+		expect(drink(strong).playerStrength).toBe(17); /* never lowers it */
+	});
+
+	it("extra healing overheals the maximum by 1 or 2, and cures blindness and hallucination", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerLevel: 10,
+			playerHp: 10,
+			playerMaxHp: 10,
+			blindTurnsRemaining: 5,
+			hallucinatingTurnsRemaining: 5,
+			inventory: [{ itemId: 1, kind: "extra-healing-potion" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect([11, 12]).toContain(next.playerMaxHp);
+		expect(next.playerHp).toBe(next.playerMaxHp);
+		expect(next.blindTurnsRemaining).toBe(0);
+		expect(next.hallucinatingTurnsRemaining).toBe(0);
+	});
+
+	it("haste gives two moves per monster turn, and a second potion while hasted faints the player", () => {
+		const start = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{ itemId: 1, kind: "haste-self-potion" as const },
+				{ itemId: 2, kind: "haste-self-potion" as const },
+			],
+		};
+		const hasted = advanceTurn(start, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(hasted.hasteTurnsRemaining).toBeGreaterThanOrEqual(3);
+		const firstMove = advanceTurn(hasted, { type: "wait" });
+		expect(firstMove.playerFood).toBe(hasted.playerFood); /* no turn end yet */
+		expect(firstMove.hasteMoveSpent).toBe(true);
+		const secondMove = advanceTurn(firstMove, { type: "wait" });
+		expect(secondMove.playerFood).toBe(hasted.playerFood - 1);
+		expect(secondMove.hasteMoveSpent).toBe(false);
+		const exhausted = advanceTurn(secondMove, {
+			type: "use-item",
+			payload: { itemId: 2 },
+		});
+		expect(exhausted.hasteTurnsRemaining).toBe(0);
+		expect(
+			exhausted.events.some((event) => event.type === "player-exhausted"),
 		).toBe(true);
 	});
 });

@@ -91,6 +91,9 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"increase-damage-ring": { glyph: "💍" },
 	"teleportation-ring": { glyph: "💍" },
 	"maintain-armor-ring": { glyph: "💍" },
+	"restore-strength-potion": { glyph: "💊" },
+	"extra-healing-potion": { glyph: "💊" },
+	"haste-self-potion": { glyph: "💊" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
 	/* Same scroll glyph as every other scroll kind — see the comment above. */

@@ -291,6 +291,10 @@ export interface GameState {
 	 * stage changes — see combat/hitChance.ts.
 	 */
 	readonly playerRunFlag: boolean;
+	/** Turns left of a haste self potion — two player moves to every monster turn (advanceTurn). */
+	readonly hasteTurnsRemaining: number;
+	/** While hasted: the first of this turn's two moves is spent, so the next one ends the turn. */
+	readonly hasteMoveSpent: boolean;
 	/** Turns left of seeing every enemy regardless of FOV — see applyStatusCountdownTicks and frame.ts. */
 	readonly detectMonstersTurnsRemaining: number;
 	/** Turns left of enemy glyphs being displayed as a decoy — see turnEnd/statusCountdowns.ts and frame.ts. Cosmetic only: real kind, hp, and behavior are unaffected. */

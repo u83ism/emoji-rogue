@@ -64,6 +64,9 @@ const CHANCE_ROLLED_KINDS: readonly ItemKind[] = [
 	"increase-damage-ring",
 	"teleportation-ring",
 	"maintain-armor-ring",
+	"restore-strength-potion",
+	"extra-healing-potion",
+	"haste-self-potion",
 ];
 
 /** How many food rations the tests ask drawFloorItems for — floor/food.ts decides the real number. */

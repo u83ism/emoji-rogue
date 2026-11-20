@@ -160,6 +160,15 @@ export const LEVEL_EXPERIENCE_THRESHOLDS: readonly number[] = [
 export const POTION_COUNT_PER_FLOOR = 1;
 /** A heal potion restores one die of this many sides per player level (original Rogue's `roll(level, 4)`); healing past the cap raises max HP by 1 instead. */
 export const HEAL_POTION_DICE_SIDES = 4;
+/** An extra healing potion heals one die of this many sides per player level (original Rogue's `roll(level, 8)`). */
+export const EXTRA_HEALING_POTION_DICE_SIDES = 8;
+/** How long a haste self potion lasts — original Rogue's add_haste(): `rnd(4) + 4`. */
+export const HASTE_POTION_TURNS_MIN = 4;
+export const HASTE_POTION_TURNS_MAX = 7;
+/** Drinking one while hasted faints the player for 0..this many turns (`rnd(8)`). */
+export const HASTE_EXHAUSTION_TURNS_MAX = 7;
+/** Chance (out of 100), independently rolled per floor, that each potion added in milestone 119 spawns — a stopgap until the original's per-category item draw. */
+export const OTHER_POTION_SPAWN_CHANCE_PERCENT = 10;
 
 /** Chance (out of 100), independently rolled per floor, that a weapon spawns — which of the five kinds is a weighted draw, see items/equipmentKinds.ts. */
 export const WEAPON_SPAWN_CHANCE_PERCENT = 15;

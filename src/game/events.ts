@@ -74,6 +74,9 @@ export const ITEM_KIND_VALUES = [
 	"increase-damage-ring",
 	"teleportation-ring",
 	"maintain-armor-ring",
+	"restore-strength-potion",
+	"extra-healing-potion",
+	"haste-self-potion",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -208,6 +211,9 @@ const POTION_KIND_VALUES = [
 	"raise-level",
 	"detect-monster",
 	"hallucination",
+	"restore-strength-potion",
+	"extra-healing-potion",
+	"haste-self-potion",
 ] as const satisfies readonly ItemKind[];
 
 /** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
@@ -391,6 +397,26 @@ export type GameEvent =
 	| {
 			readonly type: "potion-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A restore strength potion — `strength` is playerStrength after it. See items/potions.ts. */
+			readonly type: "strength-restored";
+			readonly payload: { readonly strength: number };
+	  }
+	| {
+			/** A haste self potion starting `turns` of two moves a turn — see items/potions.ts. */
+			readonly type: "player-hasted";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** A haste self potion drunk while already hasted: fainting for `turns` (original Rogue's add_haste()). */
+			readonly type: "player-exhausted";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn hasteTurnsRemaining reaches 0 — see turnEnd/statusCountdowns.ts. */
+			readonly type: "haste-faded";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** Putting on a ring with one already on each hand — refused (original Rogue's ring_on()). */

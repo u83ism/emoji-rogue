@@ -46,6 +46,9 @@ export type ItemUseEvent = Extract<
 			| "curse-revealed"
 			| "wand-empty"
 			| "ring-hands-full"
+			| "strength-restored"
+			| "player-hasted"
+			| "player-exhausted"
 			| "scroll-wasted"
 			| "items-decursed"
 			| "player-ate"
@@ -95,6 +98,12 @@ export const formatItemUseEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていて外せない!`;
 		case "curse-revealed":
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていた……外せなくなってしまった!`;
+		case "strength-restored":
+			return `${ITEM_NAMES["restore-strength-potion"]}を飲んだ。体じゅうが温かい(力${event.payload.strength})`;
+		case "player-hasted":
+			return `${ITEM_NAMES["haste-self-potion"]}を飲んだ。体が軽い!${event.payload.turns}ターン素早く動ける`;
+		case "player-exhausted":
+			return `${ITEM_NAMES["haste-self-potion"]}を重ねて飲み、疲れ果てて気を失った!`;
 		case "ring-hands-full":
 			return "もう両手に指輪をはめている";
 		case "wand-empty":

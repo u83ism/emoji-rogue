@@ -34,6 +34,8 @@ const INITIAL_RUN_STATE = {
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
 	playerRunFlag: false,
+	hasteTurnsRemaining: 0,
+	hasteMoveSpent: false,
 	detectMonstersTurnsRemaining: 0,
 	hallucinatingTurnsRemaining: 0,
 	inventory: [],

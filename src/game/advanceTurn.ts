@@ -130,7 +130,7 @@ const applyFloorTurnCounterTick = (state: GameState): GameState =>
 /**
  * Everything that runs at the end of a turn-consuming action, in a fixed
  * order: hunger, regeneration, the status countdowns (confusion, levitation,
- * blindness, paralysis, detect monsters, hallucination — see
+ * blindness, paralysis, detect monsters, hallucination, haste — see
  * turnEnd/statusCountdowns.ts), the wandering-monster clock
  * (turnEnd/wanderer.ts), then the floor turn counter. Each is independently
  * a no-op unless its own field/condition is active.
@@ -147,6 +147,19 @@ const applyTurnEndTicks = (state: GameState): GameState =>
 	);
 
 /**
+ * The end of one player move: the monsters act and the turn-end ticks run —
+ * unless the player is hasted and this was the first of the turn's two
+ * moves (original Rogue's command() loops twice under ISHASTE before the
+ * monsters and daemons run once).
+ */
+const endPlayerTurn = (state: GameState): GameState => {
+	if (state.hasteTurnsRemaining > 0 && !state.hasteMoveSpent) {
+		return { ...state, hasteMoveSpent: true };
+	}
+	return applyTurnEndTicks(advanceEnemies({ ...state, hasteMoveSpent: false }));
+};
+
+/**
  * Shared "spend a turn on an item action" flow for use-item/drop-item/throw-item:
  * blocked while not playing, paralyzed acts like a wait, a no-op `apply`
  * spends no turn, and an `apply` ending the run (poison) skips enemies.
@@ -159,7 +172,7 @@ const applyItemAction = (
 		return state;
 	}
 	if (state.paralyzedTurnsRemaining > 0) {
-		return applyTurnEndTicks(advanceEnemies(state));
+		return endPlayerTurn(state);
 	}
 	const after = apply(state);
 	if (after === state) {
@@ -168,7 +181,7 @@ const applyItemAction = (
 	if (after.status !== "playing") {
 		return after;
 	}
-	return applyTurnEndTicks(advanceEnemies(after));
+	return endPlayerTurn(after);
 };
 
 /**
@@ -183,7 +196,7 @@ const applyStairs = (state: GameState, direction: "down" | "up"): GameState => {
 		return state;
 	}
 	if (state.paralyzedTurnsRemaining > 0) {
-		return applyTurnEndTicks(advanceEnemies(state));
+		return endPlayerTurn(state);
 	}
 	const reason = resolveStairsRefusal(state, direction);
 	if (reason !== undefined) {
@@ -213,7 +226,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			if (state.paralyzedTurnsRemaining > 0) {
 				/* Paralyzed: the intended move never happens, but the turn still
 				 * passes and enemies still act — same as a wait. */
-				return applyTurnEndTicks(advanceEnemies(state));
+				return endPlayerTurn(state);
 			}
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
@@ -227,7 +240,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 					afterPlayer,
 				); /* fell through a trapdoor — the new floor's enemies wait */
 			}
-			return applyTurnEndTicks(advanceEnemies(afterPlayer));
+			return endPlayerTurn(afterPlayer);
 		}
 		case "descend":
 			return applyStairs(state, "down");
@@ -237,9 +250,7 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			/* Stand still for one turn; enemies still act. Without this a
 			 * cornered player would soft-lock: bumps consume no turn, so the
 			 * enemy turn that would end the run could never arrive. */
-			return state.status === "playing"
-				? applyTurnEndTicks(advanceEnemies(state))
-				: state;
+			return state.status === "playing" ? endPlayerTurn(state) : state;
 		case "use-item":
 			return applyItemAction(state, (current) =>
 				applyUseItem(

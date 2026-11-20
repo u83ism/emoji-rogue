@@ -1,3 +1,10 @@
+import {
+	BLIND_POTION_DURATION,
+	CONFUSION_POTION_DURATION,
+	DETECT_MONSTER_POTION_DURATION,
+	HALLUCINATION_POTION_DURATION,
+	LEVITATION_POTION_DURATION,
+} from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState } from "../state.js";
 
@@ -16,6 +23,7 @@ const COUNTDOWN_FIELDS = [
 	"paralyzedTurnsRemaining",
 	"detectMonstersTurnsRemaining",
 	"hallucinatingTurnsRemaining",
+	"hasteTurnsRemaining",
 ] as const;
 
 type CountdownField = (typeof COUNTDOWN_FIELDS)[number];
@@ -28,6 +36,7 @@ const FADED_EVENTS: Readonly<Record<CountdownField, GameEvent>> = {
 	paralyzedTurnsRemaining: { type: "paralysis-faded", payload: {} },
 	detectMonstersTurnsRemaining: { type: "detect-monsters-faded", payload: {} },
 	hallucinatingTurnsRemaining: { type: "hallucination-faded", payload: {} },
+	hasteTurnsRemaining: { type: "haste-faded", payload: {} },
 };
 
 const applyCountdownTick = (
@@ -63,4 +72,45 @@ export const applyStatusCountdownTicks = (state: GameState): GameState => {
 		ticked.paralyzedTurnsRemaining === 0
 		? { ...ticked, playerRunFlag: true }
 		: ticked;
+};
+
+/** The potions (items/potions.ts) that only start one of these timed statuses: which countdown, for how long, and the event that says so. */
+const TIMED_POTIONS = {
+	confusion: {
+		field: "confusedTurnsRemaining",
+		turns: CONFUSION_POTION_DURATION,
+		event: "player-confused",
+	},
+	levitation: {
+		field: "levitationTurnsRemaining",
+		turns: LEVITATION_POTION_DURATION,
+		event: "player-levitated",
+	},
+	blindness: {
+		field: "blindTurnsRemaining",
+		turns: BLIND_POTION_DURATION,
+		event: "player-blinded",
+	},
+	"detect-monster": {
+		field: "detectMonstersTurnsRemaining",
+		turns: DETECT_MONSTER_POTION_DURATION,
+		event: "player-detected-monsters",
+	},
+	hallucination: {
+		field: "hallucinatingTurnsRemaining",
+		turns: HALLUCINATION_POTION_DURATION,
+		event: "player-hallucinated",
+	},
+} as const;
+
+export const applyTimedPotion = (
+	state: GameState,
+	kind: keyof typeof TIMED_POTIONS,
+): GameState => {
+	const { field, turns, event } = TIMED_POTIONS[kind];
+	return {
+		...state,
+		[field]: turns,
+		events: buildEventLog(state.events, [{ type: event, payload: { turns } }]),
+	};
 };

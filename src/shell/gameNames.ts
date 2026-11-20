@@ -82,6 +82,9 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"increase-damage-ring": "ダメージの指輪",
 	"teleportation-ring": "テレポートの指輪",
 	"maintain-armor-ring": "鎧の維持の指輪",
+	"restore-strength-potion": "力の回復の薬",
+	"extra-healing-potion": "超回復の薬",
+	"haste-self-potion": "加速の薬",
 };
 
 /** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */

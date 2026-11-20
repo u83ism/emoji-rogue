@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { INVENTORY_CAPACITY } from "./balance.js";
 import {
 	canThrowItem,
-	resolveTargetKind,
+	filterScrollTargets,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,
@@ -74,20 +74,31 @@ describe("toSelectedHeldItem", () => {
 	});
 });
 
-describe("resolveTargetKind", () => {
-	it("maps enchant-weapon to weapon", () => {
-		expect(resolveTargetKind("enchant-weapon")).toBe("weapon");
+describe("filterScrollTargets", () => {
+	it("offers an identify scroll every held potion, and nothing else", () => {
+		const held: HeldItem[] = [
+			potion(1),
+			weapon(2),
+			{ itemId: 3, kind: "blindness" },
+			{ itemId: 4, kind: "food" },
+		];
+		expect(filterScrollTargets("identify-scroll", held)).toEqual([
+			potion(1),
+			{ itemId: 3, kind: "blindness" },
+		]);
+		expect(filterScrollTargets("identify-scroll", [weapon(2)])).toEqual([]);
 	});
 
-	it("maps enchant-armor and protect-armor to armor", () => {
-		expect(resolveTargetKind("enchant-armor")).toBe("armor");
-		expect(resolveTargetKind("protect-armor")).toBe("armor");
-	});
-
-	it("returns undefined for every other kind", () => {
-		expect(resolveTargetKind("heal-potion")).toBeUndefined();
-		expect(resolveTargetKind("weapon")).toBeUndefined();
-		expect(resolveTargetKind("remove-curse-scroll")).toBeUndefined();
+	it("returns undefined for a kind that takes no target — the enchant scrolls act on what is worn", () => {
+		for (const kind of [
+			"enchant-weapon",
+			"enchant-armor",
+			"protect-armor",
+			"heal-potion",
+			"weapon",
+		] as const) {
+			expect(filterScrollTargets(kind, [weapon(2)])).toBeUndefined();
+		}
 	});
 });
 
@@ -113,8 +124,8 @@ describe("toItemVerbAction", () => {
 
 describe("toTargetedUseAction", () => {
 	it("builds a use-item action carrying both the source and target itemIds", () => {
-		const scroll: HeldItem = { itemId: 10, kind: "enchant-weapon" };
-		expect(toTargetedUseAction(scroll, weapon(4))).toEqual({
+		const scroll: HeldItem = { itemId: 10, kind: "identify-scroll" };
+		expect(toTargetedUseAction(scroll, potion(4))).toEqual({
 			type: "use-item",
 			payload: { itemId: 10, targetItemId: 4 },
 		});

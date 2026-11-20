@@ -6,6 +6,7 @@ import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
 import type { GameState } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
 import { findNearestVisibleEnemy, findVisibleEnemies } from "../vision.js";
+import { applyScrollWasted } from "./equipmentScrolls.js";
 
 // The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
 // the weapon/armor-targeting ones, split out once this file passed the
@@ -25,23 +26,30 @@ export const applyUseMappingScroll = (state: GameState): GameState => ({
 });
 
 /**
- * An identify scroll reveals the first potion kind (in POTION_KINDS order)
- * not yet identified this run. With everything already identified it is a
- * no-op — same reference, no turn spent, scroll not consumed, matching how
- * using an unheld item behaves.
+ * An identify scroll (original Rogue's identify potion scroll, whatis())
+ * reveals the kind of the held potion `targetItemId` points at — the
+ * player picks it (inventoryKeymap.ts's filterScrollTargets). With no
+ * potion pointed at, the scroll is wasted, as the original's "you don't
+ * have anything appropriate to identify". Picking one already identified
+ * still uses the scroll up.
  */
-export const applyUseIdentifyScroll = (state: GameState): GameState => {
-	const target = POTION_KINDS.find(
-		(potionKind) => !state.identifiedItemKinds.includes(potionKind),
+export const applyUseIdentifyScroll = (
+	state: GameState,
+	targetItemId: number | undefined,
+): GameState => {
+	const target = state.inventory.find(
+		(item) => item.itemId === targetItemId && POTION_KINDS.includes(item.kind),
 	);
 	if (target === undefined) {
-		return state;
+		return applyScrollWasted(state, "identify-scroll");
 	}
 	return {
 		...state,
-		identifiedItemKinds: [...state.identifiedItemKinds, target],
+		identifiedItemKinds: state.identifiedItemKinds.includes(target.kind)
+			? state.identifiedItemKinds
+			: [...state.identifiedItemKinds, target.kind],
 		events: buildEventLog(state.events, [
-			{ type: "potion-identified", payload: { kind: target } },
+			{ type: "potion-identified", payload: { kind: target.kind } },
 		]),
 	};
 };

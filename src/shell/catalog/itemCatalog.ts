@@ -63,7 +63,8 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "識別の巻物",
 		category: "巻物",
 		spawn: { type: "chance", percent: IDENTIFY_SCROLL_SPAWN_CHANCE_PERCENT },
-		effect: "未鑑定のポーション1種の正体が判明する(固定順)",
+		effect:
+			"持っている薬を1つ選び、その種類の正体が判明する(本家の「薬の識別」の巻物。薬を持っていなければ何も起きずに無くなる)",
 	},
 	"confuse-monster-scroll": {
 		catalogName: "混乱の巻物",
@@ -90,7 +91,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: ENCHANT_WEAPON_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `所持中の武器を1つ選んで指定し、その武器の命中補正かダメージ補正のどちらか(半々)を${ENCHANT_WEAPON_BONUS}恒久的に上げ、呪いも解く(装備中でなくてもよい)`,
+		effect: `装備中の武器の命中補正かダメージ補正のどちらか(半々)を${ENCHANT_WEAPON_BONUS}恒久的に上げ、呪いも解く(武器を装備していなければ何も起きずに無くなる)`,
 	},
 	"enchant-armor": {
 		catalogName: "防具強化の巻物",
@@ -99,7 +100,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: ENCHANT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: `所持中の防具を1つ選んで指定し、その防具の防御力を${ENCHANT_ARMOR_BONUS}恒久的に上げ、呪いも解く(装備中でなくてもよい)`,
+		effect: `装備中の防具の防御力を${ENCHANT_ARMOR_BONUS}恒久的に上げ、呪いも解く(防具を装備していなければ何も起きずに無くなる)`,
 	},
 	"protect-armor": {
 		catalogName: "防具保護の巻物",
@@ -109,7 +110,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			percent: PROTECT_ARMOR_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
 		effect:
-			"所持中の防具を1つ選んで指定し、錆びなくする(アクエーターの錆攻撃を無効化)",
+			"装備中の防具を錆びなくする(アクエーターの錆攻撃を無効化。防具を装備していなければ何も起きずに無くなる)",
 	},
 	"remove-curse-scroll": {
 		catalogName: "解呪の巻物",
@@ -118,7 +119,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 			type: "chance",
 			percent: REMOVE_CURSE_SCROLL_SPAWN_CHANCE_PERCENT,
 		},
-		effect: "装備中で呪われている武器・防具・指輪を全て解呪する(対象選択不要)",
+		effect: "装備中で呪われている武器・防具・指輪を全て解呪する",
 	},
 	"slow-wand": {
 		catalogName: "鈍足の杖",

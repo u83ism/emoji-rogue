@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-	resolveTargetKind,
+	filterScrollTargets,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
@@ -9,8 +9,8 @@ import type { Action, HeldItem } from "../game/state.js";
 
 /**
  * The inventory overlay's key-handling state machine, extracted out of
- * main.tsx once the overlay grew a third phase (target selection for
- * enchant-weapon/enchant-armor/protect-armor) and pushed the file over the
+ * main.tsx once the overlay grew a third phase (target selection for a
+ * targeted scroll — now the identify scroll) and pushed the file over the
  * 200-line structure-lint limit — same reason session.ts was split out in
  * milestone 79. Purely shell display state (never part of GameState, never
  * saved): whether the overlay is open, which row was picked (`selectedItem`),
@@ -61,9 +61,8 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 				close();
 				return undefined;
 			}
-			const candidates = inventory.filter(
-				(item) => item.kind === resolveTargetKind(pendingTargetFor.kind),
-			);
+			const candidates =
+				filterScrollTargets(pendingTargetFor.kind, inventory) ?? [];
 			const target = toSelectedHeldItem(input, candidates);
 			if (target === undefined) {
 				return undefined;
@@ -77,11 +76,9 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 				close();
 				return undefined;
 			}
-			const targetKind = resolveTargetKind(selectedItem.kind);
-			if (input === "u" && targetKind !== undefined) {
-				if (inventory.some((item) => item.kind === targetKind)) {
-					setPendingTargetFor(selectedItem);
-				}
+			const candidates = filterScrollTargets(selectedItem.kind, inventory);
+			if (input === "u" && candidates !== undefined && candidates.length > 0) {
+				setPendingTargetFor(selectedItem);
 				return undefined;
 			}
 			const action = toItemVerbAction(input, selectedItem);

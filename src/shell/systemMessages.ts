@@ -20,5 +20,5 @@ export const INVENTORY_TITLE = "持ち物(Escで閉じる)";
 /** Shown inside the inventory overlay when nothing is held. */
 export const INVENTORY_EMPTY_MESSAGE = "何も持っていません";
 
-/** Shown while picking which held weapon/armor a targeted scroll (enchant-weapon, enchant-armor, protect-armor) applies to. */
+/** Shown while picking which held item a targeted scroll (the identify scroll) applies to. */
 export const ITEM_TARGET_PROMPT = "対象を選んでください(Escで閉じる)";

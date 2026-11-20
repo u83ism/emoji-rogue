@@ -135,6 +135,10 @@ describe("formatEvent", () => {
 				"再生の指輪は呪われていた……外せなくなってしまった!",
 			],
 			[
+				{ type: "scroll-wasted", payload: { kind: "enchant-weapon" } },
+				"武器強化の巻物を読んだが、何も起きなかった",
+			],
+			[
 				{ type: "items-decursed", payload: { count: 2 } },
 				"解呪の巻物を読んだ。呪いが解け、2個のアイテムを外せるようになった!",
 			],
@@ -236,15 +240,15 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "weapon-enchanted", payload: { stat: "hit", bonus: 1 } },
-				"武器強化の巻物を読んだ。指定した武器の命中が1上がった!",
+				"武器強化の巻物を読んだ。装備中の武器の命中が1上がった!",
 			],
 			[
 				{ type: "weapon-enchanted", payload: { stat: "damage", bonus: 1 } },
-				"武器強化の巻物を読んだ。指定した武器のダメージが1上がった!",
+				"武器強化の巻物を読んだ。装備中の武器のダメージが1上がった!",
 			],
 			[
 				{ type: "armor-enchanted", payload: { bonus: 1 } },
-				"防具強化の巻物を読んだ。指定した防具の防御力が1上がった!",
+				"防具強化の巻物を読んだ。装備中の防具の防御力が1上がった!",
 			],
 			[
 				{ type: "armor-rusted", payload: { amount: 1 } },
@@ -296,7 +300,7 @@ describe("formatEvent", () => {
 			[{ type: "levitation-faded", payload: {} }, "浮遊の効果が切れた"],
 			[
 				{ type: "armor-protected", payload: {} },
-				"防具保護の巻物を読んだ。指定した防具が錆びなくなった!",
+				"防具保護の巻物を読んだ。装備中の防具が錆びなくなった!",
 			],
 			[
 				{ type: "player-blinded", payload: { turns: 20 } },

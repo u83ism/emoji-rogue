@@ -1,5 +1,5 @@
 import { at } from "../indexing.js";
-import type { ItemKind } from "./events.js";
+import { type ItemKind, POTION_KINDS } from "./events.js";
 import type { Action, HeldItem } from "./state.js";
 
 /**
@@ -33,22 +33,20 @@ export const toSelectedHeldItem = (
 };
 
 /**
- * Which held-item kind a targeted scroll (enchant-weapon, enchant-armor,
- * protect-armor) needs to be pointed at, or undefined for every other kind.
- * The shell reads this to decide whether pressing "use" opens a target row
- * list (filtered to this kind) instead of dispatching immediately.
+ * The held items a targeted scroll can be pointed at, or undefined for a
+ * kind that takes no target. Only the identify scroll does (original
+ * Rogue's identify potion scroll: the player picks one potion). The shell
+ * reads this to decide whether pressing "use" opens a target row list
+ * instead of dispatching immediately — with no candidate at all it
+ * dispatches the targetless use, which wastes the scroll as in the original.
  */
-export const resolveTargetKind = (
+export const filterScrollTargets = (
 	kind: ItemKind,
-): "weapon" | "armor" | undefined => {
-	if (kind === "enchant-weapon") {
-		return "weapon";
-	}
-	if (kind === "enchant-armor" || kind === "protect-armor") {
-		return "armor";
-	}
-	return undefined;
-};
+	inventory: readonly HeldItem[],
+): readonly HeldItem[] | undefined =>
+	kind === "identify-scroll"
+		? inventory.filter((item) => POTION_KINDS.includes(item.kind))
+		: undefined;
 
 /** Whether the verb prompt offers "throw" for `item`: any weapon except the one currently wielded (original Rogue refuses to throw that one too). */
 export const canThrowItem = (item: HeldItem): boolean =>
@@ -57,8 +55,8 @@ export const canThrowItem = (item: HeldItem): boolean =>
 /**
  * The action for a keypress inside the verb prompt shown after a row is
  * selected: `u` uses the held item, `d` drops it, `t` throws it (weapons
- * only — see canThrowItem). For a kind resolveTargetKind
- * flags, the shell must intercept `u` before calling this (see main.tsx) and
+ * only — see canThrowItem). For a kind filterScrollTargets
+ * gives candidates for, the shell must intercept `u` before calling this (see main.tsx) and
  * open the target row list instead — this function always builds a
  * targetless use-item. Any other key answers undefined so the shell can
  * treat it as "not a recognized verb".
@@ -79,7 +77,7 @@ export const toItemVerbAction = (
 	return undefined;
 };
 
-/** The use-item action for `sourceItem`, pointed at `targetItem` — the target-row-list follow-up to a resolveTargetKind kind. */
+/** The use-item action for `sourceItem`, pointed at `targetItem` — the target-row-list follow-up to a filterScrollTargets kind. */
 export const toTargetedUseAction = (
 	sourceItem: HeldItem,
 	targetItem: HeldItem,

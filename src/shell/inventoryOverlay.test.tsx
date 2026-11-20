@@ -140,17 +140,8 @@ describe("InventoryOverlay", () => {
 	});
 
 	it("shows a filtered target row list, prompt only, while pendingTargetFor is set", () => {
-		const scroll: HeldItem = { itemId: 1, kind: "enchant-weapon" };
-		const weaponA: HeldItem = {
-			itemId: 2,
-			kind: "weapon",
-			equipped: false,
-			cursed: false,
-			weaponKind: "long-sword" as const,
-			hitBonus: 1,
-			damageBonus: 1,
-			quantity: 1,
-		};
+		const scroll: HeldItem = { itemId: 1, kind: "identify-scroll" };
+		const potion: HeldItem = { itemId: 2, kind: "heal-potion" };
 		const armor: HeldItem = {
 			itemId: 3,
 			kind: "armor",
@@ -162,7 +153,8 @@ describe("InventoryOverlay", () => {
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [scroll, weaponA, armor],
+			identifiedItemKinds: ["heal-potion"] as const,
+			inventory: [scroll, potion, armor],
 		};
 		const { lastFrame } = render(
 			<InventoryOverlay
@@ -173,7 +165,7 @@ describe("InventoryOverlay", () => {
 		);
 		const frame = lastFrame() ?? "";
 		expect(frame).toContain("対象を選んでください(Escで閉じる)");
-		expect(frame).toContain("a) 長剣");
+		expect(frame).toContain("a) 回復薬");
 		expect(frame).not.toContain("リングメイル");
 		expect(frame).not.toContain("持ち物(");
 	});

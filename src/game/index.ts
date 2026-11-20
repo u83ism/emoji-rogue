@@ -48,7 +48,7 @@ export {
 } from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export {
-	resolveTargetKind,
+	filterScrollTargets,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,

@@ -36,9 +36,9 @@ import {
  * item.kind (not a same-reference check) to decide whether to remove the
  * item from inventory afterward. Every other handler may return the input
  * state unchanged (same reference) to signal "nothing happened", which
- * applyUseItem reads as "don't consume" — a wand with no visible target, an
- * identify scroll with nothing left to identify, a targeted scroll with no
- * matching target.
+ * applyUseItem reads as "don't consume" — a wand with no visible target.
+ * A scroll is always used up once read, even when it finds nothing to work
+ * on (original Rogue's read_scroll()) — see applyScrollWasted.
  */
 const applyItemEffect = (
 	state: GameState,
@@ -56,11 +56,11 @@ const applyItemEffect = (
 		case "aggravate-monster-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
-			return applyUseEnchantWeaponScroll(state, targetItemId);
+			return applyUseEnchantWeaponScroll(state);
 		case "enchant-armor":
-			return applyUseEnchantArmorScroll(state, targetItemId);
+			return applyUseEnchantArmorScroll(state);
 		case "protect-armor":
-			return applyUseProtectArmorScroll(state, targetItemId);
+			return applyUseProtectArmorScroll(state);
 		case "remove-curse-scroll":
 			return applyUseRemoveCurseScroll(state);
 		case "teleport-scroll":
@@ -68,7 +68,7 @@ const applyItemEffect = (
 		case "mapping-scroll":
 			return applyUseMappingScroll(state);
 		case "identify-scroll":
-			return applyUseIdentifyScroll(state);
+			return applyUseIdentifyScroll(state, targetItemId);
 		case "confuse-monster-scroll":
 			return applyUseConfuseMonsterScroll(state);
 		case "hold-monster-scroll":

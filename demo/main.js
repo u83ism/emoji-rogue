@@ -13,6 +13,7 @@ import {
 	CONFUSION_GLYPH,
 	calculatePlayerDefense,
 	DETECT_MONSTER_GLYPH,
+	filterScrollTargets,
 	formatEvent,
 	formatHeldItemLabel,
 	formatInventoryTitle,
@@ -27,7 +28,6 @@ import {
 	PLAYER_WEAK_THRESHOLD,
 	parseSaveFileContent,
 	resolveItemVerbPrompt,
-	resolveTargetKind,
 	SAVE_LOAD_WARNING_MESSAGE,
 	toInventoryLetter,
 	toItemVerbAction,
@@ -115,7 +115,7 @@ let isInventoryOpen = false;
 let selectedItem;
 /* Set only for a targeted scroll (enchant-weapon, enchant-armor,
  * protect-armor) once "use" is pressed on it — the shell then shows a
- * second, filtered row list (resolveTargetKind) instead of dispatching
+ * second, filtered row list (filterScrollTargets) instead of dispatching
  * immediately. Also display state, same lifetime as selectedItem. */
 let pendingTargetFor;
 let showSaveLoadWarning = savedOutcome.kind === "corrupted";
@@ -259,10 +259,9 @@ const renderInventory = () => {
 		const prompt = document.createElement("div");
 		prompt.textContent = ITEM_TARGET_PROMPT;
 		inventoryElement.appendChild(prompt);
-		const targetKind = resolveTargetKind(pendingTargetFor.kind);
-		state.inventory
-			.filter((item) => item.kind === targetKind)
-			.forEach(appendHeldItemRow);
+		(filterScrollTargets(pendingTargetFor.kind, state.inventory) ?? []).forEach(
+			appendHeldItemRow,
+		);
 		return;
 	}
 	const title = document.createElement("div");
@@ -316,9 +315,8 @@ window.addEventListener("keydown", (event) => {
 				render();
 				return;
 			}
-			const candidates = state.inventory.filter(
-				(item) => item.kind === resolveTargetKind(pendingTargetFor.kind),
-			);
+			const candidates =
+				filterScrollTargets(pendingTargetFor.kind, state.inventory) ?? [];
 			const target = toSelectedHeldItem(event.key, candidates);
 			if (target !== undefined) {
 				const action = toTargetedUseAction(pendingTargetFor, target);
@@ -335,12 +333,17 @@ window.addEventListener("keydown", (event) => {
 				render();
 				return;
 			}
-			const targetKind = resolveTargetKind(selectedItem.kind);
-			if (event.key === "u" && targetKind !== undefined) {
-				if (state.inventory.some((item) => item.kind === targetKind)) {
-					pendingTargetFor = selectedItem;
-					render();
-				}
+			const candidates = filterScrollTargets(
+				selectedItem.kind,
+				state.inventory,
+			);
+			if (
+				event.key === "u" &&
+				candidates !== undefined &&
+				candidates.length > 0
+			) {
+				pendingTargetFor = selectedItem;
+				render();
 				return;
 			}
 			const action = toItemVerbAction(event.key, selectedItem);

@@ -326,6 +326,11 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
+			/** A scroll read with nothing to work on (no weapon/armor worn, nothing cursed, no potion picked) — still used up. See items/equipmentScrolls.ts's applyScrollWasted. */
+			readonly type: "scroll-wasted";
+			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
 			/** A gain strength potion drunk — `strength` is the new playerStrength. */
 			readonly type: "player-strengthened";
 			readonly payload: { readonly strength: number };

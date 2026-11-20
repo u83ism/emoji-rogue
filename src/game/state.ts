@@ -28,9 +28,9 @@ export type Action =
 				/** The specific HeldItem.itemId to use — not a kind, since same-kind items can now differ (equip state, enchantment). */
 				readonly itemId: number;
 				/**
-				 * Which held weapon/armor a targeted scroll (enchant-weapon,
-				 * enchant-armor, protect-armor) applies to, by itemId. Absent/
-				 * unheld clamps to a no-op, same as using an itemId not held.
+				 * Which held item a targeted scroll (the identify scroll — see
+				 * inventoryKeymap.ts's filterScrollTargets) applies to, by
+				 * itemId. Absent, unheld or the wrong kind wastes the scroll.
 				 * Ignored by every other kind.
 				 */
 				readonly targetItemId?: number;

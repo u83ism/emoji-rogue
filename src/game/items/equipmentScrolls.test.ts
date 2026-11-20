@@ -1,68 +1,67 @@
 import { describe, expect, it } from "vitest";
 import { advanceTurn } from "../advanceTurn.js";
 import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
+import type { ItemKind } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
+import type { HeldItem } from "../state.js";
+
+const sword = (equipped: boolean, cursed = false): HeldItem => ({
+	itemId: 1,
+	kind: "weapon",
+	equipped,
+	cursed,
+	weaponKind: "long-sword",
+	hitBonus: 1,
+	damageBonus: 1,
+	quantity: 1,
+});
+
+const ringMail = (
+	itemId: number,
+	equipped: boolean,
+	cursed = false,
+	rustProtected = false,
+): HeldItem => ({
+	itemId,
+	kind: "armor",
+	equipped,
+	cursed,
+	armorKind: "ring-mail",
+	defenseBonus: 1,
+	rustProtected,
+});
+
+/** Reads the scroll (itemId 99) of `kind` with `held` alongside it. */
+const readScroll = (kind: ItemKind, held: readonly HeldItem[]) => {
+	const state = {
+		...buildArenaGameState(9, 3, 1),
+		inventory: [...held, { itemId: 99, kind } as HeldItem],
+	};
+	return {
+		state,
+		next: advanceTurn(state, { type: "use-item", payload: { itemId: 99 } }),
+	};
+};
 
 describe("items/equipmentScrolls", () => {
-	it("using a held enchant weapon scroll raises one of the targeted weapon's two bonuses and lifts its curse", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "weapon" as const,
-					equipped: false,
-					cursed: true /* enchanting also lifts the curse */,
-					weaponKind: "long-sword" as const,
-					hitBonus: 1,
-					damageBonus: 1,
-					quantity: 1,
-				},
-				{ itemId: 2, kind: "enchant-weapon" as const },
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2, targetItemId: 1 },
-		});
+	it("an enchant weapon scroll raises one of the wielded weapon's two bonuses and lifts its curse", () => {
+		const { state, next } = readScroll("enchant-weapon", [sword(true, true)]);
 		const [enchantedEvent] = next.events;
 		if (enchantedEvent?.type !== "weapon-enchanted") {
 			throw new Error("unreachable: the scroll logs weapon-enchanted");
 		}
 		const { stat } = enchantedEvent.payload;
-		/* a coin flip raises exactly one of the two bonuses, and the curse is lifted */
 		expect(next.inventory).toEqual([
 			{
-				itemId: 1,
-				kind: "weapon",
-				equipped: false,
-				cursed: false,
-				weaponKind: "long-sword" as const,
+				...sword(true),
 				hitBonus: 1 + (stat === "hit" ? ENCHANT_WEAPON_BONUS : 0),
 				damageBonus: 1 + (stat === "damage" ? ENCHANT_WEAPON_BONUS : 0),
-				quantity: 1,
 			},
 		]);
 		expect(next.rng).not.toEqual(state.rng); /* the coin flip */
-		expect(next.events).toEqual([
-			{
-				type: "weapon-enchanted",
-				payload: { stat, bonus: ENCHANT_WEAPON_BONUS },
-			},
-		]);
 	});
 
 	it("an enchant weapon scroll's coin flip lands on either bonus", () => {
-		const weapon = {
-			itemId: 1,
-			kind: "weapon" as const,
-			weaponKind: "mace" as const,
-			equipped: true,
-			cursed: false,
-			hitBonus: 0,
-			damageBonus: 0,
-			quantity: 1,
-		};
 		const stats = new Set<string>();
 		let rng = buildArenaGameState(9, 3, 1).rng;
 		for (let attempt = 0; attempt < 40; attempt++) {
@@ -70,9 +69,9 @@ describe("items/equipmentScrolls", () => {
 				{
 					...buildArenaGameState(9, 3, 1),
 					rng,
-					inventory: [weapon, { itemId: 2, kind: "enchant-weapon" as const }],
+					inventory: [sword(true), { itemId: 2, kind: "enchant-weapon" }],
 				},
-				{ type: "use-item", payload: { itemId: 2, targetItemId: 1 } },
+				{ type: "use-item", payload: { itemId: 2 } },
 			);
 			rng = next.rng;
 			const [event] = next.events;
@@ -83,209 +82,79 @@ describe("items/equipmentScrolls", () => {
 		expect([...stats].sort()).toEqual(["damage", "hit"]);
 	});
 
-	it("using a held enchant weapon scroll with no matching weapon held is a no-op (not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "enchant-weapon" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1, targetItemId: 999 },
-		});
-		expect(next).toBe(state);
+	it("an enchant weapon scroll leaves a weapon that is only carried alone, and is wasted", () => {
+		const { next } = readScroll("enchant-weapon", [sword(false)]);
+		expect(next.inventory).toEqual([sword(false)]); /* scroll used up */
+		expect(next.events).toEqual([
+			{ type: "scroll-wasted", payload: { kind: "enchant-weapon" } },
+		]);
 	});
 
-	it("using a held enchant armor scroll raises the targeted armor's own defenseBonus and lifts its curse", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: false,
-					cursed: true,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: false,
-				},
-				{ itemId: 2, kind: "enchant-armor" as const },
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2, targetItemId: 1 },
-		});
-		/* the bonus goes up and the curse is lifted */
-		expect(next.inventory).toEqual([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: false,
-				cursed: false,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 1 + ENCHANT_ARMOR_BONUS,
-				rustProtected: false,
-			},
+	it("an enchant armor scroll raises the worn armor's defenseBonus and lifts its curse — never a carried one", () => {
+		const { state, next } = readScroll("enchant-armor", [
+			ringMail(1, false),
+			ringMail(2, true, true),
 		]);
-		expect(next.rng).toEqual(state.rng); /* deterministic, no curse roll */
+		expect(next.inventory).toEqual([
+			ringMail(1, false),
+			{ ...ringMail(2, true), defenseBonus: 1 + ENCHANT_ARMOR_BONUS },
+		]);
+		expect(next.rng).toEqual(state.rng); /* deterministic */
 		expect(next.events).toEqual([
 			{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
 		]);
 	});
 
-	it("using a held protect armor scroll sets the targeted armor's rustProtected and logs armor-protected", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: false,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: false,
-				},
-				{ itemId: 2, kind: "protect-armor" as const },
-			],
+	it("an enchant armor or protect armor scroll with no armor worn is wasted", () => {
+		for (const kind of ["enchant-armor", "protect-armor"] as const) {
+			const { next } = readScroll(kind, [ringMail(1, false)]);
+			expect(next.inventory).toEqual([ringMail(1, false)]);
+			expect(next.events).toEqual([
+				{ type: "scroll-wasted", payload: { kind } },
+			]);
+		}
+	});
+
+	it("a protect armor scroll makes the worn armor rust-proof — again on armor already protected", () => {
+		for (const alreadyProtected of [false, true]) {
+			const { next } = readScroll("protect-armor", [
+				ringMail(1, true, false, alreadyProtected),
+			]);
+			expect(next.inventory).toEqual([ringMail(1, true, false, true)]);
+			expect(next.events).toEqual([{ type: "armor-protected", payload: {} }]);
+		}
+	});
+
+	it("a remove-curse scroll frees every currently-equipped cursed item at once", () => {
+		const ring: HeldItem = {
+			itemId: 3,
+			kind: "regeneration-ring",
+			equipped: true,
+			cursed: true,
 		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2, targetItemId: 1 },
-		});
-		expect(next.inventory).toEqual([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: false,
-				cursed: false,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 1,
-				rustProtected: true,
-			},
+		const { next } = readScroll("remove-curse-scroll", [
+			sword(true, true),
+			ringMail(2, true, true),
+			ring,
+			/* held but not equipped — its curse must survive untouched */
+			ringMail(4, false, true),
 		]);
-		expect(next.events).toEqual([{ type: "armor-protected", payload: {} }]);
-	});
-
-	it("using a protect armor scroll on already-protected armor is a no-op (not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: false,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: true,
-				},
-				{ itemId: 2, kind: "protect-armor" as const },
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2, targetItemId: 1 },
-		});
-		expect(next).toBe(state);
-	});
-
-	it("using a held remove-curse scroll frees every currently-equipped cursed item at once", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "weapon" as const,
-					equipped: true,
-					cursed: true,
-					weaponKind: "long-sword" as const,
-					hitBonus: 1,
-					damageBonus: 1,
-					quantity: 1,
-				},
-				{
-					itemId: 2,
-					kind: "armor" as const,
-					equipped: true,
-					cursed: true,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: false,
-				},
-				{
-					itemId: 3,
-					kind: "regeneration-ring" as const,
-					equipped: true,
-					cursed: true,
-				},
-				/* held but not equipped — its curse must survive untouched */
-				{
-					itemId: 4,
-					kind: "armor" as const,
-					equipped: false,
-					cursed: true,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: false,
-				},
-				{ itemId: 5, kind: "remove-curse-scroll" as const },
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 5 },
-		});
 		expect(next.inventory).toEqual([
-			{
-				itemId: 1,
-				kind: "weapon",
-				equipped: true,
-				cursed: false,
-				weaponKind: "long-sword" as const,
-				hitBonus: 1,
-				damageBonus: 1,
-				quantity: 1,
-			},
-			{
-				itemId: 2,
-				kind: "armor",
-				equipped: true,
-				cursed: false,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 1,
-				rustProtected: false,
-			},
-			{
-				itemId: 3,
-				kind: "regeneration-ring",
-				equipped: true,
-				cursed: false,
-			},
-			{
-				itemId: 4,
-				kind: "armor",
-				equipped: false,
-				cursed: true,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 1,
-				rustProtected: false,
-			},
+			sword(true),
+			ringMail(2, true),
+			{ ...ring, cursed: false },
+			ringMail(4, false, true),
 		]);
 		expect(next.events).toEqual([
 			{ type: "items-decursed", payload: { count: 3 } },
 		]);
 	});
 
-	it("using a held remove-curse scroll with nothing equipped and cursed is a no-op (not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "remove-curse-scroll" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next).toBe(state);
+	it("a remove-curse scroll with nothing equipped and cursed is wasted", () => {
+		const { next } = readScroll("remove-curse-scroll", [sword(true)]);
+		expect(next.inventory).toEqual([sword(true)]);
+		expect(next.events).toEqual([
+			{ type: "scroll-wasted", payload: { kind: "remove-curse-scroll" } },
+		]);
 	});
 });

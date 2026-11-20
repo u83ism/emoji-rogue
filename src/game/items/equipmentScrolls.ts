@@ -1,35 +1,50 @@
 import { stepUniform } from "../../rng.js";
 import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
-import { buildEventLog } from "../events.js";
+import { buildEventLog, type ItemKind } from "../events.js";
 import type { GameState, HeldItem } from "../state.js";
 import { replaceHeldItem } from "./inventory.js";
 
-// The scroll kinds that target a specific held weapon/armor (or every
-// currently-equipped cursed item), split out of scrolls.ts (milestone 94
-// follow-up) once that file passed the 200-line structure-lint limit.
-// Consumption from inventory happens in the dispatcher (items/use.ts), never
-// in the handlers here — a handler only applies its effect.
+// The scroll kinds that work on the worn weapon/armor (or every worn cursed
+// item), split out of scrolls.ts (milestone 94 follow-up) once that file
+// passed the 200-line structure-lint limit. As in original Rogue's
+// read_scroll(), they act on what is equipped, never on a chosen item, and
+// a scroll is used up even when it finds nothing to work on. Consumption
+// from inventory happens in the dispatcher (items/use.ts), never in the
+// handlers here — a handler only applies its effect.
 
 type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;
 type ArmorItem = Extract<HeldItem, { kind: "armor" }>;
 
-/**
- * Enchants a targeted held weapon — equipped or not (see HeldItem) — as
- * original Rogue's scroll does: a coin flip (consuming state.rng once)
- * raises either its hitBonus or its damageBonus, and its curse is lifted.
- * No-op (same reference, not consumed) with no matching weapon held, same
- * convention as an identify scroll with nothing left to identify.
- */
-export const applyUseEnchantWeaponScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is WeaponItem =>
-			item.kind === "weapon" && item.itemId === targetItemId,
+const findEquippedWeapon = (state: GameState): WeaponItem | undefined =>
+	state.inventory.find(
+		(item): item is WeaponItem => item.kind === "weapon" && item.equipped,
 	);
+
+const findEquippedArmor = (state: GameState): ArmorItem | undefined =>
+	state.inventory.find(
+		(item): item is ArmorItem => item.kind === "armor" && item.equipped,
+	);
+
+/** A read scroll that found nothing to work on — still used up (original Rogue's "you feel a strange sense of loss"). */
+export const applyScrollWasted = (
+	state: GameState,
+	kind: ItemKind,
+): GameState => ({
+	...state,
+	events: buildEventLog(state.events, [
+		{ type: "scroll-wasted", payload: { kind } },
+	]),
+});
+
+/**
+ * Enchants the wielded weapon, as original Rogue's scroll does: a coin flip
+ * (consuming state.rng once) raises either its hitBonus or its damageBonus,
+ * and its curse is lifted. With no weapon wielded the scroll is wasted.
+ */
+export const applyUseEnchantWeaponScroll = (state: GameState): GameState => {
+	const target = findEquippedWeapon(state);
 	if (target === undefined) {
-		return state;
+		return applyScrollWasted(state, "enchant-weapon");
 	}
 	const coinFlip = stepUniform(state.rng);
 	const stat = coinFlip.value < 0.5 ? "hit" : "damage";
@@ -52,25 +67,18 @@ export const applyUseEnchantWeaponScroll = (
 	};
 };
 
-/** Raises a targeted held armor's own defenseBonus and lifts its curse — same targeting/no-op rules as applyUseEnchantWeaponScroll. */
-export const applyUseEnchantArmorScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is ArmorItem =>
-			item.kind === "armor" && item.itemId === targetItemId,
-	);
+/** Raises the worn armor's own defenseBonus and lifts its curse — wasted with no armor worn. */
+export const applyUseEnchantArmorScroll = (state: GameState): GameState => {
+	const target = findEquippedArmor(state);
 	if (target === undefined) {
-		return state;
+		return applyScrollWasted(state, "enchant-armor");
 	}
-	const defenseBonus = target.defenseBonus + ENCHANT_ARMOR_BONUS;
 	return {
 		...state,
 		inventory: replaceHeldItem(state.inventory, target.itemId, {
 			...target,
 			cursed: false,
-			defenseBonus,
+			defenseBonus: target.defenseBonus + ENCHANT_ARMOR_BONUS,
 		}),
 		events: buildEventLog(state.events, [
 			{ type: "armor-enchanted", payload: { bonus: ENCHANT_ARMOR_BONUS } },
@@ -79,20 +87,14 @@ export const applyUseEnchantArmorScroll = (
 };
 
 /**
- * Sets rustProtected on a targeted held armor for good — aquator rust never
- * degrades that specific armor again. No-op with no matching armor held, or
- * with the target already protected.
+ * Sets rustProtected on the worn armor for good — aquator rust never
+ * degrades that armor again. Wasted with no armor worn; on armor already
+ * protected it shimmers again all the same, as in the original.
  */
-export const applyUseProtectArmorScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item): item is ArmorItem =>
-			item.kind === "armor" && item.itemId === targetItemId,
-	);
-	if (target === undefined || target.rustProtected) {
-		return state;
+export const applyUseProtectArmorScroll = (state: GameState): GameState => {
+	const target = findEquippedArmor(state);
+	if (target === undefined) {
+		return applyScrollWasted(state, "protect-armor");
 	}
 	return {
 		...state,
@@ -108,8 +110,8 @@ export const applyUseProtectArmorScroll = (
 
 /**
  * Frees every currently-equipped cursed item at once (weapon/armor/ring
- * slots — up to three). Held-but-unequipped items keep whatever hidden
- * curse they rolled at pickup untouched. No-op with nothing to free.
+ * slots). Held-but-unequipped items keep whatever hidden curse they rolled
+ * at pickup untouched. With nothing worn cursed the scroll is wasted.
  */
 export const applyUseRemoveCurseScroll = (state: GameState): GameState => {
 	const cursedEquipped = state.inventory.filter(
@@ -117,7 +119,7 @@ export const applyUseRemoveCurseScroll = (state: GameState): GameState => {
 			"equipped" in item && item.equipped && item.cursed,
 	);
 	if (cursedEquipped.length === 0) {
-		return state;
+		return applyScrollWasted(state, "remove-curse-scroll");
 	}
 	const inventory = cursedEquipped.reduce(
 		(currentInventory, item) =>

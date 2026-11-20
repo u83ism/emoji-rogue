@@ -62,6 +62,8 @@ export const formatEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていて外せない!`;
 		case "curse-revealed":
 			return `${ITEM_NAMES[event.payload.kind]}は呪われていた……外せなくなってしまった!`;
+		case "scroll-wasted":
+			return `${ITEM_NAMES[event.payload.kind]}を読んだが、何も起きなかった`;
 		case "items-decursed":
 			return `${ITEM_NAMES["remove-curse-scroll"]}を読んだ。呪いが解け、${event.payload.count}個のアイテムを外せるようになった!`;
 		case "player-hungry":
@@ -118,9 +120,9 @@ export const formatEvent = (
 			return `${ITEM_NAMES[event.payload.kind]}を身につけた。${effect}`;
 		}
 		case "weapon-enchanted":
-			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。装備中の武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":
-			return `${ITEM_NAMES["enchant-armor"]}を読んだ。指定した防具の防御力が${event.payload.bonus}上がった!`;
+			return `${ITEM_NAMES["enchant-armor"]}を読んだ。装備中の防具の防御力が${event.payload.bonus}上がった!`;
 		case "armor-rust-blocked":
 			return "防具に付いた錆はたちまち消えた!";
 		case "armor-rusted":
@@ -144,7 +146,7 @@ export const formatEvent = (
 		case "levitation-faded":
 			return "浮遊の効果が切れた";
 		case "armor-protected":
-			return `${ITEM_NAMES["protect-armor"]}を読んだ。指定した防具が錆びなくなった!`;
+			return `${ITEM_NAMES["protect-armor"]}を読んだ。装備中の防具が錆びなくなった!`;
 		case "player-blinded":
 			return `${ITEM_NAMES.blindness}を飲んだ。目の前が真っ暗になった!`;
 		case "blindness-faded":

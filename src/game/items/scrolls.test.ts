@@ -51,75 +51,61 @@ describe("items/scrolls", () => {
 		}
 	});
 
-	it("using a held identify scroll identifies the first unidentified potion kind", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "identify-scroll" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next.inventory).toEqual([]);
-		expect(next.identifiedItemKinds).toEqual(["heal-potion"]);
-		expect(next.events).toEqual([
-			{ type: "potion-identified", payload: { kind: "heal-potion" } },
-		]);
-	});
-
-	it("identifying repeatedly reveals one potion kind per scroll, in order", () => {
+	it("an identify scroll pointed at a held potion identifies that potion's kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
 				{ itemId: 1, kind: "identify-scroll" as const },
-				{ itemId: 2, kind: "identify-scroll" as const },
-				{ itemId: 3, kind: "identify-scroll" as const },
+				{ itemId: 2, kind: "blindness" as const },
 			],
-		};
-		const afterFirst = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(afterFirst.identifiedItemKinds).toEqual(["heal-potion"]);
-
-		const afterSecond = advanceTurn(afterFirst, {
-			type: "use-item",
-			payload: { itemId: 2 },
-		});
-		expect(afterSecond.identifiedItemKinds).toEqual(["heal-potion", "poison"]);
-
-		const afterThird = advanceTurn(afterSecond, {
-			type: "use-item",
-			payload: { itemId: 3 },
-		});
-		expect(afterThird.identifiedItemKinds).toEqual([
-			"heal-potion",
-			"poison",
-			"strength",
-		]);
-	});
-
-	it("is a no-op (same reference, no turn spent) once everything is already identified", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			identifiedItemKinds: [
-				"heal-potion",
-				"poison",
-				"strength",
-				"confusion",
-				"levitation",
-				"blindness",
-				"raise-level",
-				"detect-monster",
-				"hallucination",
-			] as const,
-			inventory: [{ itemId: 1, kind: "identify-scroll" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, targetItemId: 2 },
 		});
-		expect(next).toBe(state);
+		expect(next.inventory).toEqual([{ itemId: 2, kind: "blindness" }]);
+		expect(next.identifiedItemKinds).toEqual(["blindness"]);
+		expect(next.events).toEqual([
+			{ type: "potion-identified", payload: { kind: "blindness" } },
+		]);
+	});
+
+	it("an identify scroll pointed at a potion already known is still used up", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			identifiedItemKinds: ["blindness"] as const,
+			inventory: [
+				{ itemId: 1, kind: "identify-scroll" as const },
+				{ itemId: 2, kind: "blindness" as const },
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1, targetItemId: 2 },
+		});
+		expect(next.inventory).toEqual([{ itemId: 2, kind: "blindness" }]);
+		expect(next.identifiedItemKinds).toEqual(["blindness"]);
+	});
+
+	it("an identify scroll with no potion pointed at is wasted", () => {
+		for (const payload of [{ itemId: 1 }, { itemId: 1, targetItemId: 3 }]) {
+			const state = {
+				...buildArenaGameState(9, 3, 1),
+				inventory: [
+					{ itemId: 1, kind: "identify-scroll" as const },
+					{ itemId: 3, kind: "food" as const },
+				],
+			};
+			const next = advanceTurn(state, {
+				type: "use-item",
+				payload,
+			});
+			expect(next.inventory).toEqual([{ itemId: 3, kind: "food" }]);
+			expect(next.identifiedItemKinds).toEqual([]);
+			expect(next.events).toEqual([
+				{ type: "scroll-wasted", payload: { kind: "identify-scroll" } },
+			]);
+		}
 	});
 
 	it("using a held confuse monster scroll sets the nearest visible (non-adjacent) enemy's confusedTurnsRemaining and logs enemy-confused", () => {

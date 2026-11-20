@@ -151,7 +151,7 @@ describe("decideItemToUse", () => {
 		expect(decideItemToUse(state)).toBeUndefined();
 	});
 
-	it("targets the equipped armor with an enchant-armor scroll", () => {
+	it("reads an enchant-armor scroll once armor is worn", () => {
 		const state = {
 			...baseState(),
 			inventory: [
@@ -160,10 +160,21 @@ describe("decideItemToUse", () => {
 				consumable(3, "enchant-armor"),
 			],
 		};
-		expect(decideItemToUse(state)).toEqual({ itemId: 3, targetItemId: 2 });
+		expect(decideItemToUse(state)).toEqual({ itemId: 3 });
 	});
 
-	it("holds onto an enchant-weapon scroll with no weapon to target", () => {
+	it("holds onto an enchant-armor scroll while the armor is only carried", () => {
+		const state = {
+			...baseState(),
+			inventory: [
+				armor(1, { equipped: false }),
+				consumable(2, "enchant-armor"),
+			],
+		};
+		expect(decideItemToUse(state)?.itemId).not.toBe(2);
+	});
+
+	it("holds onto an enchant-weapon scroll with no weapon wielded", () => {
 		const state = {
 			...baseState(),
 			inventory: [consumable(1, "enchant-weapon")],

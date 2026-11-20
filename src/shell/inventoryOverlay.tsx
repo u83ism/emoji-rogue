@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import {
-	resolveTargetKind,
+	filterScrollTargets,
 	toInventoryLetter,
 } from "../game/inventoryKeymap.js";
 import type { GameState, HeldItem } from "../game/state.js";
@@ -65,11 +65,10 @@ const HeldItemRowList = ({
 /**
  * The held-items panel opened with `i`. Shown INSTEAD of the map (milestone
  * 70, 不思議のダンジョン style). Whether it is open, which row was picked
- * (`selectedItem`), and — only for targeted scrolls (enchant-weapon,
- * enchant-armor, protect-armor) — which item is awaiting a target
- * (`pendingTargetFor`) all live in the shell (main.tsx), never in GameState.
- * Three phases: row list → verb prompt (u/d) → target row list (only for
- * pendingTargetFor kinds, filtered to resolveTargetKind).
+ * (`selectedItem`), and — only for a targeted scroll (the identify
+ * scroll) — which item is awaiting a target (`pendingTargetFor`) all live
+ * in the shell (main.tsx), never in GameState. Three phases: row list →
+ * verb prompt (u/d) → target row list (filterScrollTargets).
  */
 export const InventoryOverlay = ({
 	state,
@@ -81,10 +80,8 @@ export const InventoryOverlay = ({
 	readonly pendingTargetFor: HeldItem | undefined;
 }) => {
 	if (pendingTargetFor !== undefined) {
-		const targetKind = resolveTargetKind(pendingTargetFor.kind);
-		const candidates = state.inventory.filter(
-			(item) => item.kind === targetKind,
-		);
+		const candidates =
+			filterScrollTargets(pendingTargetFor.kind, state.inventory) ?? [];
 		return (
 			<Box flexDirection="column" borderStyle="round">
 				<Text>{ITEM_TARGET_PROMPT}</Text>

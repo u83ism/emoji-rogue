@@ -46,6 +46,48 @@ describe("applyTrapTrigger", () => {
 		]);
 	});
 
+	it("a dart that hits may also drain a point of strength, unless the poison save passes", () => {
+		const outcomes = Array.from({ length: 40 }, (_, seed) => {
+			const state = {
+				...buildArenaGameState(9, 3, seed + 1),
+				playerLevel: SURE_HIT_LEVEL,
+				traps: [{ x: 5, y: 1, kind: "dart" as const }],
+			};
+			const next = advanceTurn(state, move("east"));
+			const lost = state.playerStrength - next.playerStrength;
+			expect(next.playerMaxStrength).toBe(state.playerMaxStrength);
+			expect(
+				next.events.some((event) => event.type === "player-strength-drained"),
+			).toBe(lost > 0);
+			return lost;
+		});
+		expect(outcomes.every((lost) => lost === 0 || lost === 1)).toBe(true);
+		/* at level 30 the poison save always passes — see the next test for a failing one */
+		expect(outcomes.every((lost) => lost === 0)).toBe(true);
+	});
+
+	it("a low-level player usually fails the poison save and loses strength to a hitting dart", () => {
+		const losses = Array.from({ length: 40 }, (_, seed) => {
+			const state = {
+				...buildArenaGameState(9, 3, seed + 1),
+				playerLevel: 1,
+				/* armor so soft every dart hits */
+				inventory: [],
+				playerHp: 100,
+				playerMaxHp: 100,
+				traps: [{ x: 5, y: 1, kind: "dart" as const }],
+			};
+			const next = advanceTurn(state, move("east"));
+			const hit = next.playerHp < state.playerHp;
+			return hit ? state.playerStrength - next.playerStrength : undefined;
+		}).filter((lost) => lost !== undefined);
+		expect(losses.length).toBeGreaterThan(10);
+		/* the save passes 35% of the time at level 1 */
+		const drained = losses.filter((lost) => lost === 1).length;
+		expect(drained).toBeGreaterThan(losses.length / 3);
+		expect(drained).toBeLessThan(losses.length);
+	});
+
 	it("a dart trap's dart can miss: no damage, trap still consumed", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

@@ -11,18 +11,6 @@ import {
 	PLAYER_MAX_HP,
 } from "../balance.js";
 import { buildArenaGameState } from "../initialState.js";
-import type { Enemy } from "../state.js";
-
-const zombie = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "zombie",
-	hp: 2,
-	maxHp: 2,
-	awake: true,
-	slowedTurnsRemaining: 0,
-	confusedTurnsRemaining: 0,
-});
 
 describe("items/potions", () => {
 	it("using a held potion heals level d4, one consumed from inventory", () => {
@@ -86,7 +74,7 @@ describe("items/potions", () => {
 		]);
 	});
 
-	it("using a held poison potion damages the player and identifies that kind", () => {
+	it("using a held poison potion lowers strength by 1-3 instead of hurting, and identifies that kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			playerHp: PLAYER_MAX_HP,
@@ -99,31 +87,48 @@ describe("items/potions", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.playerHp).toBe(PLAYER_MAX_HP - 4);
+		expect(next.playerHp).toBe(PLAYER_MAX_HP);
+		const strengthLost = state.playerStrength - next.playerStrength;
+		expect(strengthLost).toBeGreaterThanOrEqual(1);
+		expect(strengthLost).toBeLessThanOrEqual(3);
+		expect(next.playerMaxStrength).toBe(state.playerMaxStrength);
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "poison" }]);
 		expect(next.identifiedPotionKinds).toEqual(["poison"]);
 		expect(next.events).toEqual([
-			{ type: "player-poisoned", payload: { damage: 4 } },
+			{ type: "player-poisoned", payload: { strengthLost } },
 		]);
 	});
 
-	it("a fatal poison potion ends the run without a bonus enemy hit the same turn", () => {
+	it("a poison potion ends hallucination, and takes nothing once strength is at its floor", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			playerHp: 3,
+			playerStrength: 3,
+			hallucinatingTurnsRemaining: 20,
 			inventory: [{ itemId: 1, kind: "poison" as const }],
-			enemies: [zombie(5, 1)] /* adjacent to the player at (4,1) */,
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.playerHp).toBe(0);
-		expect(next.status).toBe("dead");
+		expect(next.playerStrength).toBe(3);
+		expect(next.hallucinatingTurnsRemaining).toBe(0);
 		expect(next.events).toEqual([
-			{ type: "player-poisoned", payload: { damage: 4 } },
-			{ type: "player-died", payload: { by: "poison" } },
+			{ type: "player-poisoned", payload: { strengthLost: 0 } },
 		]);
+	});
+
+	it("a poison potion never kills, even at 1 HP", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerHp: 1,
+			inventory: [{ itemId: 1, kind: "poison" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.playerHp).toBe(1);
+		expect(next.status).toBe("playing");
 	});
 
 	it("using a held strength potion permanently raises playerPower and identifies that kind", () => {

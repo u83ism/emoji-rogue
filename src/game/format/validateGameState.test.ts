@@ -1416,8 +1416,8 @@ describe("validateGameState", () => {
 			inventory: [{ itemId: 1, kind: "poison" }],
 			identifiedPotionKinds: ["poison"],
 			events: [
-				{ type: "player-poisoned", payload: { damage: 4 } },
-				{ type: "player-died", payload: { by: "poison" } },
+				{ type: "player-poisoned", payload: { strengthLost: 2 } },
+				{ type: "player-poisoned", payload: { strengthLost: 0 } },
 			],
 		});
 		expect(accepted.ok).toBe(true);
@@ -1432,7 +1432,7 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-poisoned", payload: { damage: 0 } }],
+				events: [{ type: "player-poisoned", payload: { strengthLost: -1 } }],
 			},
 			"events",
 		);

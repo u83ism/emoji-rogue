@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { seedToState } from "../rng.js";
 import { PLAYER_START_STRENGTH } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import {
 	applyStrengthChange,
 	calculateStrengthDamageBonus,
 	calculateStrengthHitBonus,
+	resolvePoisonDrain,
 	STRENGTH_MAX,
 	STRENGTH_MIN,
 } from "./strength.js";
@@ -55,5 +57,27 @@ describe("applyStrengthChange", () => {
 		const maxed = applyStrengthChange(state, 100);
 		expect(maxed.playerStrength).toBe(STRENGTH_MAX);
 		expect(maxed.playerMaxStrength).toBe(STRENGTH_MAX);
+	});
+});
+
+describe("resolvePoisonDrain", () => {
+	const rng = seedToState(1);
+
+	it("a passed save (level high enough to always pass) takes nothing", () => {
+		const drain = resolvePoisonDrain(16, 30, rng);
+		expect(drain.playerStrength).toBe(16);
+		expect(drain.strengthLost).toBe(0);
+		expect(drain.rng).not.toEqual(rng);
+	});
+
+	it("a failed save (level so low it never passes) takes one point, never below 3", () => {
+		expect(resolvePoisonDrain(16, -30, rng)).toMatchObject({
+			playerStrength: 15,
+			strengthLost: 1,
+		});
+		expect(resolvePoisonDrain(3, -30, rng)).toMatchObject({
+			playerStrength: 3,
+			strengthLost: 0,
+		});
 	});
 });

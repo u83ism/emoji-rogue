@@ -63,13 +63,22 @@ export const INVENTORY_CAPACITY = 26;
 export const THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME = 5;
 
 /**
- * Percent chance the player passes a save against magic — original Rogue's
- * `save(VS_MAGIC)`, a d20 that must reach 17 - level/2 (rounded down),
- * restated on this file's percent-roll idiom: 20% at level 1, +5 points per
- * two levels. The only caller so far is the thief's theft/drop size.
+ * Original Rogue's save_throw() as a percent: a d20 that must reach
+ * 14 + `which` - level/2 (rounded down) — +5 points per two levels.
  */
+const calculateSaveChancePercent = (
+	which: number,
+	playerLevel: number,
+): number =>
+	Math.min(100, Math.max(0, (7 - which + Math.floor(playerLevel / 2)) * 5));
+
+/** Percent chance the player passes a save against magic (`save(VS_MAGIC)`, 17 - level/2): 20% at level 1. Decides the thief's theft/drop size. */
 export const calculateMagicSaveChancePercent = (playerLevel: number): number =>
-	(4 + Math.floor(playerLevel / 2)) * 5;
+	calculateSaveChancePercent(3, playerLevel);
+
+/** Percent chance the player passes a save against poison (`save(VS_POISON)`, 14 - level/2): 35% at level 1. A dart trap's dart and a scorpion's sting drain strength only when it fails. */
+export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
+	calculateSaveChancePercent(0, playerLevel);
 
 /** Percentage (floored) of the damage a vampire landed this turn that it heals itself for, capped at its own max HP — see vampireLifesteal.ts. An arrangement: the original vampire steals max HP instead. */
 export const VAMPIRE_LIFESTEAL_PERCENT = 50;
@@ -178,7 +187,8 @@ export const ARMOR_SPAWN_CHANCE_PERCENT = 15;
 export const ARMOR_CURSE_CHANCE_PERCENT = 20;
 export const ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT = 8;
 
-export const POISON_DAMAGE = 4;
+/** Strength a poison potion takes: 1..POISON_POTION_STRENGTH_LOSS_MAX — original Rogue's `chg_str(-(rnd(3) + 1))`. */
+export const POISON_POTION_STRENGTH_LOSS_MAX = 3;
 /** Chance (out of 100), independently rolled per floor, that a poison potion spawns. */
 export const POISON_POTION_SPAWN_CHANCE_PERCENT = 15;
 

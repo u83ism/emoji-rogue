@@ -47,7 +47,7 @@ export interface TrapCatalogEntry {
 export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	dart: {
 		spawn: { type: "guaranteed", countPerFloor: TRAP_COUNT_PER_FLOOR },
-		effect: `矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ`,
+		effect: `矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ。さらに毒へのセーブに失敗すると力が1下がる`,
 	},
 	trapdoor: {
 		spawn: { type: "chance", percent: TRAPDOOR_SPAWN_CHANCE_PERCENT },

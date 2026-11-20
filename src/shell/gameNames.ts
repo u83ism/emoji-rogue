@@ -130,7 +130,6 @@ const NON_ENEMY_DEATH_MESSAGES: Readonly<
 > = {
 	hunger: "空腹のあまり倒れた……",
 	trap: "わなにやられた……",
-	poison: "毒薬を飲んで倒れた……",
 	hypothermia: "凍りついたまま凍え死んだ……",
 };
 

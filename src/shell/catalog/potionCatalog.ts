@@ -15,8 +15,8 @@ import {
 	LIFE_POTION_SPAWN_CHANCE_PERCENT,
 	PARALYSIS_POTION_DURATION,
 	PARALYSIS_POTION_SPAWN_CHANCE_PERCENT,
-	POISON_DAMAGE,
 	POISON_POTION_SPAWN_CHANCE_PERCENT,
+	POISON_POTION_STRENGTH_LOSS_MAX,
 	POTION_COUNT_PER_FLOOR,
 	RAISE_LEVEL_POTION_SPAWN_CHANCE_PERCENT,
 	STRENGTH_POTION_SPAWN_CHANCE_PERCENT,
@@ -41,7 +41,7 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		catalogName: "毒薬",
 		category: "薬",
 		spawn: { type: "chance", percent: POISON_POTION_SPAWN_CHANCE_PERCENT },
-		effect: `${POISON_DAMAGE}ダメージを受ける`,
+		effect: `力が1〜${POISON_POTION_STRENGTH_LOSS_MAX}下がる(ダメージは無い)。幻覚が治る`,
 	},
 	strength: {
 		catalogName: "怪力の薬",

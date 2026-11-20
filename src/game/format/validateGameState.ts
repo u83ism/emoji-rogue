@@ -92,7 +92,7 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 
 const isDeathCause = (value: unknown): value is DeathCause =>
 	isEnemyKind(value) ||
-	isOneOf(["hunger", "trap", "poison", "hypothermia"] as const, value);
+	isOneOf(["hunger", "trap", "hypothermia"] as const, value);
 
 const isEnemyArray = (
 	value: unknown,
@@ -280,7 +280,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	/* any kind can deal 0: the zero-damage kinds always, a dart trap when its dart misses */
 	"trap-triggered": (payload) =>
 		isTrapKind(payload.kind) && isNonNegativeInteger(payload.damage),
-	"player-poisoned": (payload) => isPositiveInteger(payload.damage),
+	"player-poisoned": (payload) => isNonNegativeInteger(payload.strengthLost),
 	"player-teleported": (payload) =>
 		isNonNegativeInteger(payload.x) && isNonNegativeInteger(payload.y),
 	"floor-mapped": emptyPayload,
@@ -301,6 +301,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),
 	"player-frozen": (payload) => isPositiveInteger(payload.turns),
+	"player-strength-drained": (payload) =>
+		isPositiveInteger(payload.strengthLost),
 	"weapon-enchanted": (payload) =>
 		(payload.stat === "hit" || payload.stat === "damage") &&
 		isPositiveInteger(payload.bonus),

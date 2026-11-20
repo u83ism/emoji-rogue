@@ -1,4 +1,7 @@
 import { at } from "../indexing.js";
+import type { RngState } from "../rng.js";
+import { calculatePoisonSaveChancePercent } from "./balance.js";
+import { rollToHit } from "./damage.js";
 import type { GameState } from "./state.js";
 
 /** Strength never leaves this range — original Rogue's add_str(). */
@@ -27,6 +30,40 @@ export const calculateStrengthHitBonus = (strength: number): number =>
 /** What `strength` adds to the player's damage rolls (melee and thrown). */
 export const calculateStrengthDamageBonus = (strength: number): number =>
 	at(STRENGTH_DAMAGE_BONUS, strength);
+
+/** What a poisoned wound did to strength — see resolvePoisonDrain. */
+export interface PoisonDrain {
+	readonly playerStrength: number;
+	/** 0 when the save was passed or strength was already at STRENGTH_MIN. */
+	readonly strengthLost: number;
+	readonly rng: RngState;
+}
+
+/**
+ * A poisoned wound (a dart trap's dart, a scorpion's sting): unless the
+ * player passes a save against poison (calculatePoisonSaveChancePercent),
+ * strength drops by one — original Rogue's `if (!save(VS_POISON))
+ * chg_str(-1)`. The maximum is untouched, as for every drain. Consumes one
+ * rng step either way.
+ */
+export const resolvePoisonDrain = (
+	playerStrength: number,
+	playerLevel: number,
+	rng: RngState,
+): PoisonDrain => {
+	const saveRoll = rollToHit(
+		rng,
+		calculatePoisonSaveChancePercent(playerLevel),
+	);
+	const drained = saveRoll.hit
+		? playerStrength
+		: Math.max(STRENGTH_MIN, playerStrength - 1);
+	return {
+		playerStrength: drained,
+		strengthLost: playerStrength - drained,
+		rng: saveRoll.rng,
+	};
+};
 
 /**
  * Strength raised or lowered by `amount` — original Rogue's chg_str(): kept

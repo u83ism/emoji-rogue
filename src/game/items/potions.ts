@@ -7,16 +7,11 @@ import {
 	LEVITATION_POTION_DURATION,
 	LIFE_POTION_MAX_HP_BONUS,
 	PARALYSIS_POTION_DURATION,
-	POISON_DAMAGE,
+	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../balance.js";
 import { rollDamageDice } from "../damage.js";
-import {
-	buildEventLog,
-	type GameEvent,
-	type ItemKind,
-	type PotionKind,
-} from "../events.js";
+import { buildEventLog, type ItemKind, type PotionKind } from "../events.js";
 import { applyLevelUp } from "../experience.js";
 import type { GameState } from "../state.js";
 import { applyStrengthChange } from "../strength.js";
@@ -73,19 +68,27 @@ export const applyUsePotion = (
 			};
 		}
 		case "poison": {
-			const playerHp = state.playerHp - POISON_DAMAGE;
-			const events: GameEvent[] = [
-				{ type: "player-poisoned", payload: { damage: POISON_DAMAGE } },
-			];
-			if (playerHp <= 0) {
-				events.push({ type: "player-died", payload: { by: "poison" } });
-			}
+			/* original Rogue: strength drops 1-3 and any hallucination ends (come_down) — no HP lost */
+			const lossRoll = rollDamageDice(
+				state.rng,
+				{ count: 1, sides: POISON_POTION_STRENGTH_LOSS_MAX },
+				0,
+				0,
+			);
+			const weakened = applyStrengthChange(state, -lossRoll.damage);
 			return {
-				...state,
-				playerHp: Math.max(0, playerHp),
+				...weakened,
+				hallucinatingTurnsRemaining: 0,
+				rng: lossRoll.rng,
 				identifiedPotionKinds,
-				status: playerHp <= 0 ? "dead" : state.status,
-				events: buildEventLog(state.events, events),
+				events: buildEventLog(state.events, [
+					{
+						type: "player-poisoned",
+						payload: {
+							strengthLost: state.playerStrength - weakened.playerStrength,
+						},
+					},
+				]),
 			};
 		}
 		case "strength": {

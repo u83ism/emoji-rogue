@@ -86,7 +86,9 @@ export const formatEvent = (
 				? `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`
 				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;
 		case "player-poisoned":
-			return `毒薬を飲んでしまった。${event.payload.damage}のダメージを受けた`;
+			return event.payload.strengthLost > 0
+				? `毒薬を飲んでしまった。力が${event.payload.strengthLost}下がった`
+				: "毒薬を飲んでしまった。ひどく気分が悪い";
 		case "player-teleported":
 			return "巻物を読んだ。テレポートした!";
 		case "floor-mapped":
@@ -178,6 +180,8 @@ export const formatEvent = (
 			return `${ENEMY_NAMES.wraith}に生命力を吸われた。最大HPが${event.payload.amount}下がった`;
 		case "player-gazed":
 			return `${ENEMY_NAMES.medusa}の視線を受けた。頭がくらくらする!`;
+		case "player-strength-drained":
+			return `毒が回って力が${event.payload.strengthLost}下がった`;
 		case "player-frozen":
 			return `${ENEMY_NAMES["ice-monster"]}に凍らされた!${event.payload.turns}ターン動けない`;
 		case "player-held":

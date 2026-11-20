@@ -11,6 +11,7 @@ import { descendStairs } from "./floor/transitions.js";
 import { applyArmorRust, canRustEquippedArmor } from "./items/equipment.js";
 import { calculateDartTrapHitChancePercent } from "./items/hitChance.js";
 import type { GameState } from "./state.js";
+import { resolvePoisonDrain } from "./strength.js";
 import { applyRandomTeleport } from "./teleport.js";
 
 /**
@@ -72,6 +73,29 @@ const rollTrapDamage = (
 		: { damage: 0, rng: hitRoll.rng };
 };
 
+/** A dart that hit: its poison may drain a point of strength (resolvePoisonDrain). */
+const applyDartPoison = (state: GameState): GameState => {
+	const drain = resolvePoisonDrain(
+		state.playerStrength,
+		state.playerLevel,
+		state.rng,
+	);
+	return {
+		...state,
+		playerStrength: drain.playerStrength,
+		rng: drain.rng,
+		events:
+			drain.strengthLost > 0
+				? buildEventLog(state.events, [
+						{
+							type: "player-strength-drained",
+							payload: { strengthLost: drain.strengthLost },
+						},
+					])
+				: state.events,
+	};
+};
+
 /**
  * Springs any hidden trap under the player's feet: rollTrapDamage's damage,
  * the trap consumed (one-time — never re-triggers, never becomes visible).
@@ -91,6 +115,9 @@ const rollTrapDamage = (
  * BEAR_TRAP_PARALYSIS_DURATION. A rust trap also deals no damage — instead
  * it degrades the equipped armor's own defenseBonus exactly like an
  * aquator's rust (see TRAP_SIDE_EFFECTS).
+ * A dart trap's dart that hits is poisoned too: it may drain a point of
+ * strength (strength.ts's resolvePoisonDrain), logged as
+ * player-strength-drained when it does.
  * While levitationTurnsRemaining is set, no trap can trigger at all — the
  * player floats over it (any kind alike), and it stays armed underneath.
  */
@@ -124,6 +151,8 @@ export const applyTrapTrigger = (state: GameState): GameState => {
 	if (afterTrap.status !== "playing") {
 		return afterTrap;
 	}
+	const afterPoison =
+		trap.kind === "dart" && damage > 0 ? applyDartPoison(afterTrap) : afterTrap;
 	const sideEffect = TRAP_SIDE_EFFECTS[trap.kind];
-	return sideEffect === undefined ? afterTrap : sideEffect(afterTrap);
+	return sideEffect === undefined ? afterPoison : sideEffect(afterPoison);
 };

@@ -35,6 +35,10 @@ describe("formatEvent", () => {
 				"凍りついたまま凍え死んだ……",
 			],
 			[
+				{ type: "player-strength-drained", payload: { strengthLost: 1 } },
+				"毒が回って力が1下がった",
+			],
+			[
 				{ type: "player-frozen", payload: { turns: 3 } },
 				"アイスモンスターに凍らされた!3ターン動けない",
 			],
@@ -177,12 +181,12 @@ describe("formatEvent", () => {
 				"睡眠ガスのわなを踏んでしまった!",
 			],
 			[
-				{ type: "player-poisoned", payload: { damage: 4 } },
-				"毒薬を飲んでしまった。4のダメージを受けた",
+				{ type: "player-poisoned", payload: { strengthLost: 2 } },
+				"毒薬を飲んでしまった。力が2下がった",
 			],
 			[
-				{ type: "player-died", payload: { by: "poison" } },
-				"毒薬を飲んで倒れた……",
+				{ type: "player-poisoned", payload: { strengthLost: 0 } },
+				"毒薬を飲んでしまった。ひどく気分が悪い",
 			],
 			[
 				{ type: "player-teleported", payload: { x: 5, y: 3 } },

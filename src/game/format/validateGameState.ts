@@ -311,6 +311,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 		isPositiveInteger(payload.bonus),
 	"armor-enchanted": (payload) => isPositiveInteger(payload.bonus),
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
+	"armor-rust-blocked": emptyPayload,
 	"missile-hit": (payload) =>
 		isEnemyKind(payload.target) &&
 		isOneOf(WEAPON_KIND_VALUES, payload.variant) &&

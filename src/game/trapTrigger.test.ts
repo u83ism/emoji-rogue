@@ -313,7 +313,7 @@ describe("applyTrapTrigger", () => {
 		]);
 	});
 
-	it("a rust trap is a no-op beyond the trap-triggered event when the equipped armor is protected", () => {
+	it("a rust trap leaves protected armor as is and logs that the rust was blocked", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
@@ -333,6 +333,7 @@ describe("applyTrapTrigger", () => {
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.events).toEqual([
 			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
+			{ type: "armor-rust-blocked", payload: {} },
 		]);
 	});
 

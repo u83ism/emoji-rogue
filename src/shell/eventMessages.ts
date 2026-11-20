@@ -17,17 +17,17 @@ import { formatSignedBonus } from "./inventoryLabels.js";
  * means swapping this module only — the i18n discipline in docs/tasks/game.md.
  * `identifiedItemKinds` is needed only to decide whether item-picked-up
  * should reveal a potion-family kind's real name. Split out of messages.ts
- * (milestone 98 follow-up) once that file passed the 200-line
- * structure-lint limit — formatEvent's switch was the overwhelming share of
- * it.
+ * (milestone 98 follow-up) to stay under the 200-line structure limit.
  */
 export const formatEvent = (
 	event: GameEvent,
 	identifiedItemKinds: readonly ItemKind[],
 ): string => {
 	switch (event.type) {
-		case "player-hit":
-			return `${ENEMY_NAMES[event.payload.by]}から${event.payload.damage}のダメージを受けた`;
+		case "player-hit" /* 0 only for the aquator, whose attacks just rust */:
+			return event.payload.damage > 0
+				? `${ENEMY_NAMES[event.payload.by]}から${event.payload.damage}のダメージを受けた`
+				: `${ENEMY_NAMES[event.payload.by]}の攻撃が当たった`;
 		case "enemy-hit":
 			return `${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}のダメージを与えた`;
 		case "sneak-attack":
@@ -125,6 +125,8 @@ export const formatEvent = (
 			return `${ITEM_NAMES["enchant-weapon"]}を読んだ。指定した武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;
 		case "armor-enchanted":
 			return `${ITEM_NAMES["enchant-armor"]}を読んだ。指定した防具の防御力が${event.payload.bonus}上がった!`;
+		case "armor-rust-blocked":
+			return "防具に付いた錆はたちまち消えた!";
 		case "armor-rusted":
 			return `装備中の防具が錆びついた!防御力が${event.payload.amount}下がった`;
 		case "missile-hit":

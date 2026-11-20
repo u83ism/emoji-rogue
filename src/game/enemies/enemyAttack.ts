@@ -2,7 +2,7 @@ import type { RngState } from "../../rng.js";
 import { WRAITH_DRAIN_AMOUNT } from "../balance.js";
 import { rollDamageDice, rollToHit } from "../damage.js";
 import type { EnemyKind, GameEvent } from "../events.js";
-import { applyArmorRust, canRustEquippedArmor } from "../items/equipment.js";
+import { resolveArmorRust } from "../items/equipment.js";
 import { calculateEnemyHitChancePercent } from "../items/hitChance.js";
 import type { Enemy, HeldItem } from "../state.js";
 import { resolvePoisonDrain } from "../strength.js";
@@ -45,20 +45,14 @@ const withEvent = (hit: OnHit, event: GameEvent | undefined): OnHit =>
  * (functional-style.md) — converted at the 4th kind, the scorpion.
  */
 const ON_HIT_EFFECTS: Readonly<Partial<Record<EnemyKind, OnHitEffect>>> = {
-	/* rusts the worn armor */
-	aquator: (_enemy, _damage, hit) =>
-		canRustEquippedArmor(hit.target.inventory)
-			? withEvent(
-					{
-						...hit,
-						target: {
-							...hit.target,
-							inventory: applyArmorRust(hit.target.inventory),
-						},
-					},
-					{ type: "armor-rusted", payload: { amount: 1 } },
-				)
-			: hit,
+	/* rusts the worn armor — or logs that its protection blocked the rust */
+	aquator: (_enemy, _damage, hit) => {
+		const rust = resolveArmorRust(hit.target.inventory);
+		return withEvent(
+			{ ...hit, target: { ...hit.target, inventory: rust.inventory } },
+			rust.event,
+		);
+	},
 	/* heals itself for part of the damage — vampireLifesteal.ts */
 	vampire: (enemy, damageDealt, hit) => {
 		const lifesteal = resolveVampireLifesteal(

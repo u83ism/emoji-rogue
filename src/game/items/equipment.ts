@@ -19,35 +19,39 @@ export type { EquippableItem };
 const isEquippableItem = (item: HeldItem): item is EquippableItem =>
 	"equipped" in item;
 
-/**
- * Whether rust (an aquator's hit, a rust trap) has anything to degrade —
- * original Rogue's rust_armor(): an equipped armor that is not leather, not
- * rust-protected, and not already rusted down to RUST_ARMOR_CLASS_LIMIT.
- */
-export const canRustEquippedArmor = (
-	inventory: readonly HeldItem[],
-): boolean => {
-	const equippedArmor = findEquippedArmor(inventory);
-	return (
-		equippedArmor !== undefined &&
-		!equippedArmor.rustProtected &&
-		equippedArmor.armorKind !== RUSTPROOF_ARMOR_KIND &&
-		calculateArmorClass(equippedArmor) < RUST_ARMOR_CLASS_LIMIT
-	);
-};
+/** What one rust attempt did: the (possibly worsened) inventory and the event to log, if any. */
+export interface ArmorRust {
+	readonly inventory: readonly HeldItem[];
+	readonly event: GameEvent | undefined;
+}
 
-/** Worsens the equipped armor by one point (defenseBonus - 1) — a no-op unless canRustEquippedArmor. */
-export const applyArmorRust = (
-	inventory: readonly HeldItem[],
-): readonly HeldItem[] => {
+/**
+ * One rust attempt (an aquator's landed hit, a rust trap), as original
+ * Rogue's rust_armor(): no armor, leather, or armor already rusted down to
+ * RUST_ARMOR_CLASS_LIMIT is silently unaffected; protected armor blocks the
+ * rust and logs armor-rust-blocked ("the rust vanishes instantly");
+ * otherwise the armor loses a point (defenseBonus - 1) and armor-rusted is
+ * logged.
+ */
+export const resolveArmorRust = (inventory: readonly HeldItem[]): ArmorRust => {
 	const equippedArmor = findEquippedArmor(inventory);
-	if (equippedArmor === undefined || !canRustEquippedArmor(inventory)) {
-		return inventory;
+	if (
+		equippedArmor === undefined ||
+		equippedArmor.armorKind === RUSTPROOF_ARMOR_KIND ||
+		calculateArmorClass(equippedArmor) >= RUST_ARMOR_CLASS_LIMIT
+	) {
+		return { inventory, event: undefined };
 	}
-	return replaceHeldItem(inventory, equippedArmor.itemId, {
-		...equippedArmor,
-		defenseBonus: equippedArmor.defenseBonus - 1,
-	});
+	if (equippedArmor.rustProtected) {
+		return { inventory, event: { type: "armor-rust-blocked", payload: {} } };
+	}
+	return {
+		inventory: replaceHeldItem(inventory, equippedArmor.itemId, {
+			...equippedArmor,
+			defenseBonus: equippedArmor.defenseBonus - 1,
+		}),
+		event: { type: "armor-rusted", payload: { amount: 1 } },
+	};
 };
 
 /**

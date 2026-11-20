@@ -8,7 +8,7 @@ import {
 import { rollDamageDice, rollToHit } from "./damage.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
-import { applyArmorRust, canRustEquippedArmor } from "./items/equipment.js";
+import { resolveArmorRust } from "./items/equipment.js";
 import { calculateDartTrapHitChancePercent } from "./items/hitChance.js";
 import type { GameState } from "./state.js";
 import { resolvePoisonDrain } from "./strength.js";
@@ -38,16 +38,14 @@ const TRAP_SIDE_EFFECTS: Readonly<
 	}),
 	/** Same armor-rusted degradation as an aquator's landed hit, but guaranteed on trigger rather than a rolled chance. */
 	rust: (state) => {
-		if (!canRustEquippedArmor(state.inventory)) {
-			return state;
-		}
-		return {
-			...state,
-			inventory: applyArmorRust(state.inventory),
-			events: buildEventLog(state.events, [
-				{ type: "armor-rusted", payload: { amount: 1 } },
-			]),
-		};
+		const rust = resolveArmorRust(state.inventory);
+		return rust.event === undefined
+			? state
+			: {
+					...state,
+					inventory: rust.inventory,
+					events: buildEventLog(state.events, [rust.event]),
+				};
 	},
 };
 

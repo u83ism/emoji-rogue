@@ -259,6 +259,14 @@ describe("formatEvent", () => {
 				"装備中の防具が錆びついた!防御力が1下がった",
 			],
 			[
+				{ type: "armor-rust-blocked", payload: {} },
+				"防具に付いた錆はたちまち消えた!",
+			],
+			[
+				{ type: "player-hit", payload: { by: "aquator", damage: 0 } },
+				"アクエーターの攻撃が当たった",
+			],
+			[
 				{
 					type: "missile-hit",
 					payload: { target: "zombie", variant: "arrow", damage: 4 },

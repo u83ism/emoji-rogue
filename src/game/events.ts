@@ -382,6 +382,11 @@ export type GameEvent =
 			readonly payload: { readonly amount: number };
 	  }
 	| {
+			/** A rust attempt the worn armor's protection (the protect-armor scroll) blocked — equipment.ts's resolveArmorRust. */
+			readonly type: "armor-rust-blocked";
+			readonly payload: Record<string, never>;
+	  }
+	| {
 			/** A thrown weapon that connected — see items/throw.ts. The missile itself is used up. */
 			readonly type: "missile-hit";
 			readonly payload: {

@@ -26,7 +26,12 @@ describe("save file shape guard", () => {
 		 *   2. update the expected shape below.
 		 * (GameEvent payloads are pinned by validateGameState tests instead —
 		 * a fresh state's event log is empty.) */
-		const written = buildSaveFileContent(buildDungeonGameState(20, 12, 42));
+		const dungeon = buildDungeonGameState(20, 12, 42);
+		/* floor 1 is usually trap-free (a 1-in-10 roll), so one is put in to pin its shape */
+		const written = buildSaveFileContent({
+			...dungeon,
+			traps: [{ ...dungeon.player, kind: "dart", seen: false }],
+		});
 		expect(describeShape(JSON.parse(written))).toEqual({
 			formatVersion: "number",
 			state: {
@@ -49,6 +54,7 @@ describe("save file shape guard", () => {
 				hasteTurnsRemaining: "number",
 				hasteMoveSpent: "boolean",
 				seeInvisibleTurnsRemaining: "number",
+				stuckTurnsRemaining: "number",
 				detectMonstersTurnsRemaining: "number",
 				hallucinatingTurnsRemaining: "number",
 				levitationTurnsRemaining: "number",
@@ -83,7 +89,7 @@ describe("save file shape guard", () => {
 				identifiedItemKinds: [],
 				goldPiles: [{ x: "number", y: "number", amount: "number" }],
 				goldCollected: "number",
-				traps: [{ x: "number", y: "number", kind: "string" }],
+				traps: [{ x: "number", y: "number", kind: "string", seen: "boolean" }],
 				floor: "number",
 				deepestFloor: "number",
 				turnsOnCurrentFloor: "number",

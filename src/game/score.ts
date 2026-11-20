@@ -71,6 +71,7 @@ const FLAT_WORTH: Readonly<
 	"haste-self-potion": 190,
 	"see-invisible-potion": 100,
 	"see-invisible-ring": 310,
+	"searching-ring": 420,
 	"slow-wand": 350,
 	"teleport-wand": 340,
 	"magic-missile-wand": 170,

@@ -65,6 +65,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "protection-ring", weight: 9 },
 		{ kind: "add-strength-ring", weight: 9 },
 		{ kind: "sustain-strength-ring", weight: 5 },
+		{ kind: "searching-ring", weight: 10 },
 		{ kind: "see-invisible-ring", weight: 10 },
 		{ kind: "adornment-ring", weight: 1 },
 		{ kind: "aggravate-monster-ring", weight: 10 },

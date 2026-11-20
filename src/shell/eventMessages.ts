@@ -1,30 +1,12 @@
 import type { GameEvent, ItemKind } from "../game/events.js";
+import { formatDungeonEvent } from "./dungeonEventMessages.js";
 import {
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
 	formatDeathMessage,
 	resolveItemDisplayName,
-	TRAP_NAMES,
 } from "./gameNames.js";
 import { formatItemUseEvent } from "./itemEventMessages.js";
-
-/** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
-const STAIRS_REFUSAL_MESSAGES: Readonly<
-	Record<
-		"no-stairs" | "levitating" | "magically-blocked",
-		Readonly<Record<"down" | "up", string>>
-	>
-> = {
-	"no-stairs": { down: "ここに下りる階段はない", up: "ここに上る階段はない" },
-	levitating: {
-		down: "浮いているので階段を使えない",
-		up: "浮いているので階段を使えない",
-	},
-	"magically-blocked": {
-		down: "魔法の力で行く手をはばまれている",
-		up: "魔法の力で行く手をはばまれている(アミュレットが無いと上れない)",
-	},
-};
 
 /**
  * The single place where game events become human-readable text (Japanese
@@ -80,6 +62,12 @@ export const formatEvent = (
 		case "player-detected-monsters":
 		case "player-hallucinated":
 			return formatItemUseEvent(event, identifiedItemKinds);
+		case "stairs-refused":
+		case "trap-triggered":
+		case "trap-found":
+		case "player-stuck":
+		case "trap-mystery":
+			return formatDungeonEvent(event);
 		case "player-died":
 			return formatDeathMessage(event.payload.by);
 		case "floor-descended":
@@ -90,10 +78,6 @@ export const formatEvent = (
 			return "イェンダーの魔除けを手に入れた!";
 		case "game-won":
 			return "イェンダーの魔除けを手に地上に帰還した!";
-		case "stairs-refused":
-			return STAIRS_REFUSAL_MESSAGES[event.payload.reason][
-				event.payload.direction
-			];
 		case "player-hungry":
 			return "空腹を感じてきた";
 		case "player-weak":
@@ -102,13 +86,6 @@ export const formatEvent = (
 			return "空腹で気を失った!";
 		case "gold-collected":
 			return `${event.payload.amount}ゴールドを手に入れた`;
-		case "trap-triggered":
-			if (event.payload.kind === "dart" && event.payload.damage === 0) {
-				return `${TRAP_NAMES.dart}を踏んだが、矢は外れた`;
-			}
-			return event.payload.damage > 0
-				? `${TRAP_NAMES[event.payload.kind]}を踏んでしまった。${event.payload.damage}のダメージを受けた`
-				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;
 		case "player-teleported":
 			/* The trap already logged "テレポートの罠を踏んでしまった!" just before. */
 			return event.payload.source === "teleport-scroll"

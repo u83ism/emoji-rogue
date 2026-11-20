@@ -36,6 +36,7 @@ const INITIAL_RUN_STATE = {
 	playerRunFlag: false,
 	hasteTurnsRemaining: 0,
 	seeInvisibleTurnsRemaining: 0,
+	stuckTurnsRemaining: 0,
 	hasteMoveSpent: false,
 	detectMonstersTurnsRemaining: 0,
 	hallucinatingTurnsRemaining: 0,

@@ -1,4 +1,6 @@
 import {
+	ARROW_TRAP_HIT_BONUS,
+	ARROW_TRAP_LEVEL_BONUS,
 	calculateEnemyLevelBonus,
 	DART_TRAP_HIT_BONUS,
 	DART_TRAP_LEVEL_BONUS,
@@ -57,6 +59,17 @@ export const calculateThrowHitChancePercent = (
 		state.playerLevel,
 		ENEMY_STATS[targetKind].armorClass - calculateEnemyLevelBonus(state.floor),
 		hitBonus + calculateStrengthHitBonus(state.playerStrength),
+	);
+
+/** Percent chance an arrow trap's arrow connects with the player — see ARROW_TRAP_LEVEL_BONUS. */
+export const calculateArrowTrapHitChancePercent = (
+	playerLevel: number,
+	inventory: readonly HeldItem[],
+): number =>
+	calculateHitChancePercent(
+		playerLevel + ARROW_TRAP_LEVEL_BONUS,
+		calculatePlayerArmorClass(inventory),
+		ARROW_TRAP_HIT_BONUS,
 	);
 
 /** Percent chance a dart trap's dart connects with the player — see DART_TRAP_LEVEL_BONUS. */

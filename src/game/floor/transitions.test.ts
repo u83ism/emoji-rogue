@@ -78,10 +78,7 @@ describe("descendStairs", () => {
 					calculateGoldAmountMax(state.floor),
 				);
 			}
-			expect(state.traps.filter((trap) => trap.kind === "dart").length).toBe(2);
-			expect(
-				state.traps.filter((trap) => trap.kind === "trapdoor").length,
-			).toBeLessThanOrEqual(1);
+			expect(state.traps.every((trap) => !trap.seen)).toBe(true);
 			const occupied = new Set([
 				encodePointKey(state.player.x, state.player.y),
 			]);

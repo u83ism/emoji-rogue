@@ -65,6 +65,7 @@ const applyItemEffect = (
 		case "teleportation-ring":
 		case "maintain-armor-ring":
 		case "see-invisible-ring":
+		case "searching-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state);

@@ -109,6 +109,7 @@ export const buildFloorLayout = (
 	} = drawFloorItems(
 		remaining,
 		rng,
+		floor,
 		isWalkAroundTile,
 		nextItemId,
 		floorsWithoutFood,

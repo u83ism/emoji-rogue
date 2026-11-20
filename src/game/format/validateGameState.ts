@@ -251,7 +251,10 @@ const isTrapArray = (
 	Array.isArray(value) &&
 	value.every(
 		(trap) =>
-			isRecord(trap) && standsOnFloor(trap, terrain) && isTrapKind(trap.kind),
+			isRecord(trap) &&
+			standsOnFloor(trap, terrain) &&
+			isTrapKind(trap.kind) &&
+			isBooleanValue(trap.seen),
 	);
 
 type PayloadValidator = (payload: Record<string, unknown>) => boolean;
@@ -330,6 +333,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"haste-faded": emptyPayload,
 	"player-sees-invisible": (payload) => isPositiveInteger(payload.turns),
 	"see-invisible-faded": emptyPayload,
+	"trap-found": (payload) => isTrapKind(payload.kind),
+	"player-stuck": emptyPayload,
+	"trap-mystery": (payload) =>
+		isNonNegativeInteger(payload.variant) && payload.variant < 11,
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&
@@ -513,6 +520,10 @@ export const validateGameState = (
 	if (!isBooleanValue(playerRunFlag)) {
 		return err("playerRunFlag");
 	}
+	const stuckTurnsRemaining = value.stuckTurnsRemaining;
+	if (!isNonNegativeInteger(stuckTurnsRemaining)) {
+		return err("stuckTurnsRemaining");
+	}
 	const seeInvisibleTurnsRemaining = value.seeInvisibleTurnsRemaining;
 	if (!isNonNegativeInteger(seeInvisibleTurnsRemaining)) {
 		return err("seeInvisibleTurnsRemaining");
@@ -657,6 +668,7 @@ export const validateGameState = (
 		hasteTurnsRemaining,
 		hasteMoveSpent,
 		seeInvisibleTurnsRemaining,
+		stuckTurnsRemaining,
 		detectMonstersTurnsRemaining,
 		hallucinatingTurnsRemaining,
 		floor,
@@ -697,6 +709,7 @@ export const validateGameState = (
 				case "teleportation-ring":
 				case "maintain-armor-ring":
 				case "see-invisible-ring":
+				case "searching-ring":
 					return {
 						...position,
 						kind: item.kind,
@@ -736,6 +749,7 @@ export const validateGameState = (
 			x: trap.x,
 			y: trap.y,
 			kind: trap.kind,
+			seen: trap.seen,
 		})),
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },

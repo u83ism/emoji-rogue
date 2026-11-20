@@ -92,6 +92,13 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		effect:
 			"装備している間、アクエーターや錆のわなで鎧が錆びない。満腹度の減りが毎ターン1増える",
 	},
+	"searching-ring": {
+		catalogName: "索敵の指輪",
+		category: "指輪",
+		spawn: itemDrawShare("searching-ring"),
+		effect:
+			"装備している間、毎ターン周りを自動で探す(`s`と同じ)。満腹度の減りは3ターンに1回ほど1増える",
+	},
 	"see-invisible-ring": {
 		catalogName: "透明視の指輪",
 		category: "指輪",

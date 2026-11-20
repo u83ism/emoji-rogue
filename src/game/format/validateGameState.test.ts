@@ -1233,7 +1233,7 @@ describe("validateGameState", () => {
 
 		const accepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "dart" }],
+			traps: [{ ...floorSpot, kind: "dart", seen: false }],
 			events: [
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
 				{ type: "player-died", payload: { by: "trap" } },
@@ -1241,15 +1241,23 @@ describe("validateGameState", () => {
 		});
 		expect(accepted.ok).toBe(true);
 		if (accepted.ok) {
-			expect(accepted.value.traps).toEqual([{ ...floorSpot, kind: "dart" }]);
+			expect(accepted.value.traps).toEqual([
+				{ ...floorSpot, kind: "dart", seen: false },
+			]);
 		}
 
 		expectRejected(
-			{ ...buildValidState(), traps: [{ x: 0, y: 0, kind: "dart" }] },
+			{
+				...buildValidState(),
+				traps: [{ x: 0, y: 0, kind: "dart", seen: false }],
+			},
 			"traps",
 		);
 		expectRejected(
-			{ ...buildValidState(), traps: [{ ...floorSpot, kind: "pit" }] },
+			{
+				...buildValidState(),
+				traps: [{ ...floorSpot, kind: "pit", seen: false }],
+			},
 			"traps",
 		);
 		expectRejected(
@@ -1264,7 +1272,7 @@ describe("validateGameState", () => {
 
 		const trapdoorAccepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "trapdoor" }],
+			traps: [{ ...floorSpot, kind: "trapdoor", seen: false }],
 			events: [
 				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
 			],
@@ -1273,7 +1281,7 @@ describe("validateGameState", () => {
 
 		const teleportTrapAccepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "teleport" }],
+			traps: [{ ...floorSpot, kind: "teleport", seen: false }],
 			events: [
 				{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
 			],
@@ -1291,7 +1299,7 @@ describe("validateGameState", () => {
 
 		const bearTrapAccepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "bear" }],
+			traps: [{ ...floorSpot, kind: "bear", seen: false }],
 			events: [
 				{ type: "trap-triggered", payload: { kind: "bear", damage: 0 } },
 			],
@@ -1309,7 +1317,7 @@ describe("validateGameState", () => {
 
 		const rustTrapAccepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "rust" }],
+			traps: [{ ...floorSpot, kind: "rust", seen: false }],
 			events: [
 				{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
 			],
@@ -1327,7 +1335,7 @@ describe("validateGameState", () => {
 
 		const sleepingGasTrapAccepted = validateGameState({
 			...buildValidState(),
-			traps: [{ ...floorSpot, kind: "sleeping-gas" }],
+			traps: [{ ...floorSpot, kind: "sleeping-gas", seen: false }],
 			events: [
 				{
 					type: "trap-triggered",

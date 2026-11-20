@@ -1,13 +1,9 @@
 import {
-	BEAR_TRAP_PARALYSIS_DURATION,
-	BEAR_TRAP_SPAWN_CHANCE_PERCENT,
+	ARROW_TRAP_DAMAGE_DICE,
+	BEAR_TRAP_STUCK_TURNS,
 	DART_TRAP_DAMAGE_DICE,
-	RUST_TRAP_SPAWN_CHANCE_PERCENT,
+	MAX_TRAPS_PER_FLOOR,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
-	SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT,
-	TELEPORT_TRAP_SPAWN_CHANCE_PERCENT,
-	TRAP_COUNT_PER_FLOOR,
-	TRAPDOOR_SPAWN_CHANCE_PERCENT,
 } from "../../game/balance.js";
 import type { ItemKind, TrapKind } from "../../game/events.js";
 import { calculateItemDrawSharePercent } from "../../game/floor/spawnTable.js";
@@ -52,30 +48,38 @@ export interface TrapCatalogEntry {
 	readonly effect: string;
 }
 
+/** Every trap kind shares one placement rule (floor/traps.ts). */
+const TRAP_SPAWN: SpawnInfo = {
+	type: "described",
+	description: `N階ではN/10の確率でわなが置かれ、その数は1〜N/4個(最大${MAX_TRAPS_PER_FLOOR}個)。8種のどれも同じ確率`,
+};
+
 export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
-	dart: {
-		spawn: { type: "guaranteed", countPerFloor: TRAP_COUNT_PER_FLOOR },
-		effect: `矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ。さらに毒へのセーブに失敗すると力が1下がる`,
-	},
-	trapdoor: {
-		spawn: { type: "chance", percent: TRAPDOOR_SPAWN_CHANCE_PERCENT },
-		effect: "次のフロアへ強制落下する",
-	},
-	teleport: {
-		spawn: { type: "chance", percent: TELEPORT_TRAP_SPAWN_CHANCE_PERCENT },
-		effect: "フロア内のランダムな床へ飛ばされる",
-	},
-	bear: {
-		spawn: { type: "chance", percent: BEAR_TRAP_SPAWN_CHANCE_PERCENT },
-		effect: `ダメージはないが${BEAR_TRAP_PARALYSIS_DURATION}ターン動けなくなる`,
-	},
-	rust: {
-		spawn: { type: "chance", percent: RUST_TRAP_SPAWN_CHANCE_PERCENT },
-		effect:
-			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物で無効化)",
+	trapdoor: { spawn: TRAP_SPAWN, effect: "次のフロアへ強制落下する" },
+	arrow: {
+		spawn: TRAP_SPAWN,
+		effect: `矢が飛んでくる(レベルより1低い相手の攻撃と同じ当たりやすさ)。当たると${ARROW_TRAP_DAMAGE_DICE.count}d${ARROW_TRAP_DAMAGE_DICE.sides}ダメージ、外れると矢が足元に落ちる`,
 	},
 	"sleeping-gas": {
-		spawn: { type: "chance", percent: SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT },
+		spawn: TRAP_SPAWN,
 		effect: `ダメージはないが${SLEEPING_GAS_TRAP_PARALYSIS_DURATION}ターン眠り込んで動けなくなる`,
+	},
+	bear: {
+		spawn: TRAP_SPAWN,
+		effect: `ダメージはないが、${BEAR_TRAP_STUCK_TURNS}回移動しようとするまでその場から動けない(攻撃や持ち物はそのまま使える)`,
+	},
+	teleport: { spawn: TRAP_SPAWN, effect: "フロア内のランダムな床へ飛ばされる" },
+	dart: {
+		spawn: TRAP_SPAWN,
+		effect: `毒矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ。さらに毒へのセーブに失敗すると力が1下がる(持続の指輪で防げる)`,
+	},
+	rust: {
+		spawn: TRAP_SPAWN,
+		effect:
+			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物・鎧の維持の指輪で防げる)",
+	},
+	mysterious: {
+		spawn: TRAP_SPAWN,
+		effect: "不思議な感覚がするだけで、何も起きない",
 	},
 };

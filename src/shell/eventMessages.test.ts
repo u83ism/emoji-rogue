@@ -159,11 +159,11 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
-				"矢のわなを踏んでしまった。2のダメージを受けた",
+				"毒矢のわなを踏んでしまった。2のダメージを受けた",
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
-				"矢のわなを踏んだが、矢は外れた",
+				"毒矢のわなを踏んだが、矢は外れた",
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
@@ -364,6 +364,23 @@ describe("formatEvent", () => {
 				{ type: "player-level-drained", payload: { level: 3 } },
 				"レベルが3に下がった",
 			],
+			[
+				{ type: "trap-found", payload: { kind: "arrow" } },
+				"矢のわなを見つけた",
+			],
+			[{ type: "player-stuck", payload: {} }, "まだ捕獲のわなに捕まっている"],
+			[
+				{ type: "trap-mystery", payload: { variant: 7 } },
+				"急にひどく喉が渇いた",
+			],
+			[
+				{
+					type: "stairs-refused",
+					payload: { direction: "up", reason: "magically-blocked" },
+				},
+				"魔法の力で行く手をはばまれている(アミュレットが無いと上れない)",
+			],
+			[{ type: "ring-hands-full", payload: {} }, "もう両手に指輪をはめている"],
 			[
 				{ type: "player-gazed", payload: { turns: 6 } },
 				"メデューサの視線を受けた。頭がくらくらする!",

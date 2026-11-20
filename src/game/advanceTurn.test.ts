@@ -482,7 +482,12 @@ describe("advanceTurn", () => {
 			...start,
 			floor: AMULET_FLOOR - 1,
 			traps: [
-				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
+				{
+					x: start.player.x + 1,
+					y: start.player.y,
+					kind: "trapdoor" as const,
+					seen: false,
+				},
 			],
 		};
 		const next = advanceTurn(state, move("east"));

@@ -140,6 +140,7 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 		case "teleportation-ring":
 		case "maintain-armor-ring":
 		case "see-invisible-ring":
+		case "searching-ring":
 			return { kind: item.kind, equipped: false, ...item.identity };
 		case "protection-ring":
 		case "add-strength-ring":

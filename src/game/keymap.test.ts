@@ -71,8 +71,9 @@ describe("toAction", () => {
 		expect(toAction(" ", buildKey())).toEqual({ type: "wait" });
 	});
 
-	it("maps s to save", () => {
-		expect(toAction("s", buildKey())).toEqual({ type: "save" });
+	it("maps s to search and S to save, as original Rogue", () => {
+		expect(toAction("s", buildKey())).toEqual({ type: "search" });
+		expect(toAction("S", buildKey())).toEqual({ type: "save" });
 	});
 
 	it("maps q to quit and leaves unbound keys undefined", () => {

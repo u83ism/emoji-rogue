@@ -23,6 +23,7 @@ const isAction = (value: unknown): value is Action => {
 		case "wait":
 		case "descend":
 		case "ascend":
+		case "search":
 		case "save":
 		case "quit":
 			return true;

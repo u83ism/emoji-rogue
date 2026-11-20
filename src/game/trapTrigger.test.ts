@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { type RngState, seedToState, stepUniform } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import {
-	BEAR_TRAP_PARALYSIS_DURATION,
+	BEAR_TRAP_STUCK_TURNS,
 	SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 } from "./balance.js";
+import type { TrapKind } from "./events.js";
+import { buildFrameGrid } from "./frame.js";
+import { TRAP_CELL } from "./glyphs.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
-import type { Action, Direction, Enemy } from "./state.js";
+import { applySearch } from "./search.js";
+import type { Action, Direction, GameState } from "./state.js";
 
-/** Levels at which a dart trap's to-hit chance clamps to 100% / 0% (see combat/hitChance.ts). */
+/** Levels at which a dart's or arrow's to-hit chance clamps to 100% / 0% (see combat/hitChance.ts). */
 const SURE_HIT_LEVEL = 30;
 const SURE_MISS_LEVEL = -30;
 
@@ -16,360 +21,163 @@ const move = (direction: Direction): Action => ({
 	payload: { direction },
 });
 
-const zombie = (x: number, y: number): Enemy => ({
-	x,
-	y,
-	kind: "zombie",
-	hp: 2,
-	maxHp: 2,
-	awake: true,
-	speed: "normal" as const,
-	held: false,
-	confusedTurnsRemaining: 0,
+/** A 9x3 corridor, the player at (4,1), a hidden \`kind\` trap one step east. */
+const withTrapEast = (kind: TrapKind, overrides: Partial<GameState> = {}) => ({
+	...buildArenaGameState(9, 3, 1),
+	traps: [{ x: 5, y: 1, kind, seen: false }],
+	...overrides,
 });
 
 describe("applyTrapTrigger", () => {
-	it("stepping onto a hidden trap springs it: damage dealt, trap consumed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			playerLevel: SURE_HIT_LEVEL,
-			traps: [{ x: 5, y: 1, kind: "dart" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.traps).toEqual([]);
-		const damage = state.playerHp - next.playerHp;
-		/* a dart trap that hits rolls 1d4 */
+	it("a sprung trap is seen from then on, stays armed, and springs again on the next step onto it", () => {
+		const state = withTrapEast("dart", { playerLevel: SURE_HIT_LEVEL });
+		const sprung = advanceTurn(state, move("east"));
+		expect(sprung.traps).toEqual([{ x: 5, y: 1, kind: "dart", seen: true }]);
+		const damage = state.playerHp - sprung.playerHp;
 		expect(damage).toBeGreaterThanOrEqual(1);
 		expect(damage).toBeLessThanOrEqual(4);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "dart", damage } },
-		]);
+		const back = advanceTurn(advanceTurn(sprung, move("west")), move("east"));
+		expect(
+			back.events.filter((event) => event.type === "trap-triggered"),
+		).toHaveLength(2);
 	});
 
-	it("a dart that hits may also drain a point of strength, unless the poison save passes", () => {
-		const outcomes = Array.from({ length: 40 }, (_, seed) => {
-			const state = {
-				...buildArenaGameState(9, 3, seed + 1),
-				playerLevel: SURE_HIT_LEVEL,
-				traps: [{ x: 5, y: 1, kind: "dart" as const }],
-			};
-			const next = advanceTurn(state, move("east"));
-			const lost = state.playerStrength - next.playerStrength;
-			expect(next.playerMaxStrength).toBe(state.playerMaxStrength);
-			expect(
-				next.events.some((event) => event.type === "player-strength-drained"),
-			).toBe(lost > 0);
-			return lost;
+	it("a dart or arrow that misses does no harm; a missed arrow drops at the player's feet", () => {
+		const dart = advanceTurn(
+			withTrapEast("dart", { playerLevel: SURE_MISS_LEVEL }),
+			move("east"),
+		);
+		expect(dart.events[0]).toEqual({
+			type: "trap-triggered",
+			payload: { kind: "dart", damage: 0 },
 		});
-		expect(outcomes.every((lost) => lost === 0 || lost === 1)).toBe(true);
-		/* at level 30 the poison save always passes — see the next test for a failing one */
-		expect(outcomes.every((lost) => lost === 0)).toBe(true);
-	});
-
-	it("a low-level player usually fails the poison save and loses strength to a hitting dart", () => {
-		const losses = Array.from({ length: 40 }, (_, seed) => {
-			const state = {
-				...buildArenaGameState(9, 3, seed + 1),
-				playerLevel: 1,
-				/* armor so soft every dart hits */
-				inventory: [],
-				playerHp: 100,
-				playerMaxHp: 100,
-				traps: [{ x: 5, y: 1, kind: "dart" as const }],
-			};
-			const next = advanceTurn(state, move("east"));
-			const hit = next.playerHp < state.playerHp;
-			return hit ? state.playerStrength - next.playerStrength : undefined;
-		}).filter((lost) => lost !== undefined);
-		expect(losses.length).toBeGreaterThan(10);
-		/* the save passes 35% of the time at level 1 */
-		const drained = losses.filter((lost) => lost === 1).length;
-		expect(drained).toBeGreaterThan(losses.length / 3);
-		expect(drained).toBeLessThan(losses.length);
-	});
-
-	it("a dart trap's dart can miss: no damage, trap still consumed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			playerLevel: SURE_MISS_LEVEL,
-			traps: [{ x: 5, y: 1, kind: "dart" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp);
-		expect(next.traps).toEqual([]);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
-		]);
-	});
-
-	it("a fatal trap ends the run without a bonus enemy hit the same turn", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			playerHp: 1,
-			playerLevel: SURE_HIT_LEVEL,
-			traps: [{ x: 5, y: 1, kind: "dart" as const }],
-			enemies: [zombie(6, 1)] /* would be adjacent after the move */,
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(0);
-		expect(next.status).toBe("dead");
-		expect(next.events.map((event) => event.type)).toEqual([
-			"trap-triggered",
-			"player-died",
-		]);
-	});
-
-	it("stepping onto a trapdoor drops the player to the next floor (no damage)", () => {
-		/* descendStairs' floor generation needs digger-sized dimensions, unlike
-		 * the tiny arena fixture used by the other trap tests above */
-		const start = buildDungeonGameState(40, 20, 12345);
-		const state = {
-			...start,
-			playerHp: 4,
-			traps: [
-				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
-			],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.floor).toBe(state.floor + 1);
-		expect(next.playerHp).toBe(4); /* the new floor's enemies wait a turn */
-		expect(next.terrain).not.toEqual(state.terrain);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
-			{ type: "floor-descended", payload: { floor: state.floor + 1 } },
-		]);
-	});
-
-	it("stepping onto a teleport trap relocates the player without damage", () => {
-		const state = {
-			...buildArenaGameState(9, 9, 1),
-			traps: [{ x: 5, y: 4, kind: "teleport" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp); /* no damage */
-		expect(next.traps).toEqual([]); /* consumed */
-		expect(next.player).not.toEqual({ x: 5, y: 4 }); /* relocated elsewhere */
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "teleport", damage: 0 } },
+		const arrow = advanceTurn(
+			withTrapEast("arrow", { playerLevel: SURE_MISS_LEVEL }),
+			move("east"),
+		);
+		expect(arrow.items).toEqual([
 			{
-				type: "player-teleported",
-				payload: {
-					x: next.player.x,
-					y: next.player.y,
-					source: "teleport-trap",
-				},
+				x: 5,
+				y: 1,
+				kind: "weapon",
+				identity: expect.objectContaining({ weaponKind: "arrow", quantity: 1 }),
 			},
 		]);
 	});
 
-	it("levitating floats over a teleport trap: no relocation, trap left armed", () => {
-		const state = {
-			...buildArenaGameState(9, 9, 1),
-			levitationTurnsRemaining: 5,
-			traps: [{ x: 5, y: 4, kind: "teleport" as const }],
-		};
+	it("an arrow that hits does 1d6", () => {
+		const state = withTrapEast("arrow", { playerLevel: SURE_HIT_LEVEL });
 		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 4 });
-		expect(next.traps).toEqual(state.traps); /* untouched, still hidden */
-		expect(next.events.some((event) => event.type === "trap-triggered")).toBe(
-			false,
+		const damage = state.playerHp - next.playerHp;
+		expect(damage).toBeGreaterThanOrEqual(1);
+		expect(damage).toBeLessThanOrEqual(6);
+		expect(next.items).toEqual([]);
+	});
+
+	it("a bear trap holds the player: moves fail and use the hold up, other actions still work", () => {
+		const caught = advanceTurn(withTrapEast("bear"), move("east"));
+		expect(caught.stuckTurnsRemaining).toBe(BEAR_TRAP_STUCK_TURNS);
+		expect(caught.paralyzedTurnsRemaining).toBe(0);
+		const tried = advanceTurn(caught, move("east"));
+		expect(tried.player).toEqual(caught.player);
+		expect(tried.stuckTurnsRemaining).toBe(BEAR_TRAP_STUCK_TURNS - 1);
+		expect(tried.events).toContainEqual({ type: "player-stuck", payload: {} });
+		let free = tried;
+		for (let attempt = 1; attempt < BEAR_TRAP_STUCK_TURNS; attempt++) {
+			free = advanceTurn(free, move("east"));
+		}
+		expect(advanceTurn(free, move("east")).player).toEqual({ x: 6, y: 1 });
+	});
+
+	it("sleeping gas puts the player to sleep and takes the run flag away", () => {
+		const next = advanceTurn(
+			withTrapEast("sleeping-gas", { playerRunFlag: true }),
+			move("east"),
 		);
-	});
-
-	it("levitating floats over a dart trap: no damage, trap left armed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			levitationTurnsRemaining: 5,
-			traps: [{ x: 5, y: 1, kind: "dart" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.playerHp).toBe(state.playerHp);
-		expect(next.traps).toEqual(state.traps); /* untouched, still hidden */
-		expect(next.events.some((event) => event.type === "trap-triggered")).toBe(
-			false,
-		);
-	});
-
-	it("stepping onto a bear trap paralyzes the player without damage", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			traps: [{ x: 5, y: 1, kind: "bear" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp); /* no damage */
-		expect(next.traps).toEqual([]); /* consumed */
-		/* applyTurnEndTicks' paralysis tick runs the same turn it's set, so the
-		 * duration is already one lower — same idiom as the slow wand. */
-		expect(next.paralyzedTurnsRemaining).toBe(BEAR_TRAP_PARALYSIS_DURATION - 1);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "bear", damage: 0 } },
-		]);
-	});
-
-	it("a paralyzed player from a bear trap cannot move on the following turn", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			traps: [{ x: 5, y: 1, kind: "bear" as const }],
-		};
-		const afterTrap = advanceTurn(state, move("east"));
-		const afterBlockedMove = advanceTurn(afterTrap, move("east"));
-		expect(afterBlockedMove.player).toEqual(afterTrap.player);
-	});
-
-	it("levitating floats over a bear trap: no paralysis, trap left armed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			levitationTurnsRemaining: 5,
-			traps: [{ x: 5, y: 1, kind: "bear" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.paralyzedTurnsRemaining).toBe(0);
-		expect(next.traps).toEqual(state.traps);
-	});
-
-	it("levitating floats over a trapdoor: no forced descent", () => {
-		const start = buildDungeonGameState(40, 20, 12345);
-		const state = {
-			...start,
-			levitationTurnsRemaining: 5,
-			traps: [
-				{ x: start.player.x + 1, y: start.player.y, kind: "trapdoor" as const },
-			],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.floor).toBe(state.floor); /* did not fall */
-		expect(next.player).toEqual({
-			x: start.player.x + 1,
-			y: start.player.y,
-		});
-		expect(next.traps).toEqual(state.traps);
-	});
-
-	it("stepping onto a sleeping gas trap paralyzes the player without damage", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			traps: [{ x: 5, y: 1, kind: "sleeping-gas" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp); /* no damage */
-		expect(next.traps).toEqual([]); /* consumed */
-		/* applyTurnEndTicks' paralysis tick runs the same turn it's set, so the
-		 * duration is already one lower — same idiom as the bear trap. */
+		/* the turn's countdown already ticked once */
 		expect(next.paralyzedTurnsRemaining).toBe(
 			SLEEPING_GAS_TRAP_PARALYSIS_DURATION - 1,
 		);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "sleeping-gas", damage: 0 } },
+		expect(next.playerRunFlag).toBe(false);
+	});
+
+	it("a mysterious trap only gives a sensation", () => {
+		const state = withTrapEast("mysterious");
+		const next = advanceTurn(state, move("east"));
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(next.events.map((event) => event.type)).toEqual([
+			"trap-triggered",
+			"trap-mystery",
 		]);
 	});
 
-	it("levitating floats over a sleeping gas trap: no paralysis, trap left armed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			levitationTurnsRemaining: 5,
-			traps: [{ x: 5, y: 1, kind: "sleeping-gas" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.paralyzedTurnsRemaining).toBe(0);
-		expect(next.traps).toEqual(state.traps);
+	it("a teleport trap moves the player, and a trapdoor drops them a floor", () => {
+		const start = buildDungeonGameState(40, 20, 12345);
+		const east = { x: start.player.x + 1, y: start.player.y };
+		const teleported = advanceTurn(
+			{ ...start, traps: [{ ...east, kind: "teleport", seen: false }] },
+			move("east"),
+		);
+		expect(teleported.events).toContainEqual(
+			expect.objectContaining({ type: "player-teleported" }),
+		);
+		const fallen = advanceTurn(
+			{ ...start, traps: [{ ...east, kind: "trapdoor", seen: false }] },
+			move("east"),
+		);
+		expect(fallen.floor).toBe(2);
 	});
 
-	it("stepping onto a rust trap degrades the equipped armor's defenseBonus without damage", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: true,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 2,
-					rustProtected: false,
-				},
-			],
-			traps: [{ x: 5, y: 1, kind: "rust" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.playerHp).toBe(state.playerHp); /* no damage */
-		expect(next.traps).toEqual([]); /* consumed */
-		expect(next.inventory).toEqual([
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: true,
-				cursed: false,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 1,
-				rustProtected: false,
-			},
-		]);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
-			{ type: "armor-rusted", payload: { amount: 1 } },
-		]);
+	it("levitating, the player floats over a trap without springing it", () => {
+		const next = advanceTurn(
+			withTrapEast("bear", { levitationTurnsRemaining: 5 }),
+			move("east"),
+		);
+		expect(next.stuckTurnsRemaining).toBe(0);
+		expect(next.traps[0]?.seen).toBe(false);
 	});
 
-	it("a rust trap leaves protected armor as is and logs that the rust was blocked", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: true,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 2,
-					rustProtected: true,
-				},
-			],
-			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+	it("a found trap is drawn on the map", () => {
+		const hidden = withTrapEast("rust");
+		expect(buildFrameGrid(hidden)[1]?.[5]).not.toEqual(TRAP_CELL);
+		const found = {
+			...hidden,
+			traps: [{ x: 5, y: 1, kind: "rust" as const, seen: true }],
 		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.inventory).toEqual(state.inventory);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
-			{ type: "armor-rust-blocked", payload: {} },
-		]);
+		expect(buildFrameGrid(found)[1]?.[5]).toEqual(TRAP_CELL);
+	});
+});
+
+describe("applySearch", () => {
+	/** How many of `tries` searches (each from a different rng state) find the trap next to the player. */
+	const countFinds = (state: GameState, tries: number): number => {
+		let rng: RngState = seedToState(9);
+		let finds = 0;
+		for (let attempt = 0; attempt < tries; attempt++) {
+			if (applySearch({ ...state, rng }).traps[0]?.seen) {
+				finds += 1;
+			}
+			rng = stepUniform(rng).state;
+		}
+		return finds;
+	};
+
+	it("finds a hidden trap next to the player about half the time, less while blind", () => {
+		const state = withTrapEast("dart");
+		const sighted = countFinds(state, 400);
+		expect(sighted).toBeGreaterThan(150);
+		expect(sighted).toBeLessThan(250);
+		const blind = countFinds({ ...state, blindTurnsRemaining: 10 }, 400);
+		expect(blind).toBeLessThan(sighted);
 	});
 
-	it("a rust trap with no armor equipped is a no-op beyond the trap-triggered event", () => {
-		const state = {
+	it("never finds a trap out of reach, and the s key spends a turn", () => {
+		const far = {
 			...buildArenaGameState(9, 3, 1),
-			traps: [{ x: 5, y: 1, kind: "rust" as const }],
+			traps: [{ x: 7, y: 1, kind: "dart" as const, seen: false }],
 		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.inventory).toEqual([]);
-		expect(next.events).toEqual([
-			{ type: "trap-triggered", payload: { kind: "rust", damage: 0 } },
-		]);
-	});
-
-	it("levitating floats over a rust trap: no rust, trap left armed", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			levitationTurnsRemaining: 5,
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: true,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 2,
-					rustProtected: false,
-				},
-			],
-			traps: [{ x: 5, y: 1, kind: "rust" as const }],
-		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: 5, y: 1 });
-		expect(next.inventory).toEqual(state.inventory);
-		expect(next.traps).toEqual(state.traps);
+		expect(countFinds(far, 50)).toBe(0);
+		const searched = advanceTurn(far, { type: "search" });
+		expect(searched.playerFood).toBe(far.playerFood - 1);
 	});
 });

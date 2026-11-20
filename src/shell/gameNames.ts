@@ -87,6 +87,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"haste-self-potion": "加速の薬",
 	"see-invisible-potion": "透明視の薬",
 	"see-invisible-ring": "透明視の指輪",
+	"searching-ring": "索敵の指輪",
 };
 
 /** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */
@@ -146,12 +147,14 @@ export const formatDeathMessage = (by: DeathCause): string =>
 		: `${ENEMY_NAMES[by]}にやられた……`;
 
 export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
-	dart: "矢のわな",
 	trapdoor: "落とし穴",
-	teleport: "テレポートの罠",
-	bear: "捕獲のわな",
-	rust: "錆びわな",
+	arrow: "矢のわな",
 	"sleeping-gas": "睡眠ガスのわな",
+	bear: "捕獲のわな",
+	teleport: "テレポートの罠",
+	dart: "毒矢のわな",
+	rust: "錆びわな",
+	mysterious: "謎のわな",
 };
 
 /**

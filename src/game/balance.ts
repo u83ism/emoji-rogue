@@ -7,7 +7,7 @@
 // milestone 15) stays dormant, unrelated to the dice below.
 
 import type { DamageDice } from "./combat/damage.js";
-import type { RingKind, TrapKind } from "./events.js";
+import type { RingKind } from "./events.js";
 
 /** Original Rogue's starting hit points (INIT_STATS). */
 export const PLAYER_MAX_HP = 12;
@@ -272,62 +272,32 @@ export const GOLD_AMOUNT_MIN = 2;
 export const calculateGoldAmountMax = (floor: number): number =>
 	51 + 10 * floor;
 
-export const TRAP_COUNT_PER_FLOOR = 2;
+/** At most this many traps on one floor (original Rogue's MAXTRAPS) — see floor/traps.ts. */
+export const MAX_TRAPS_PER_FLOOR = 10;
 /**
- * A dart trap shoots at the player like an attacker one level above it
- * (original Rogue's T_DART: `swing(level + 1, armor, 1)`, then 1d4) — so
+ * A poison dart trap shoots at the player like an attacker one level above
+ * it (original Rogue's T_DART: `swing(level + 1, armor, 1)`, then 1d4) — so
  * armor makes it miss, and a miss does nothing at all.
  */
 export const DART_TRAP_LEVEL_BONUS = 1;
 export const DART_TRAP_HIT_BONUS = 1;
 export const DART_TRAP_DAMAGE_DICE: DamageDice = { count: 1, sides: 4 };
-/** No damage — the penalty is the forced descent itself, see floor.ts's descendStairs. */
-export const TRAPDOOR_DAMAGE = 0;
-/** Chance (out of 100), independently rolled per floor (never on GOAL_FLOOR), that a trapdoor spawns. */
-export const TRAPDOOR_SPAWN_CHANCE_PERCENT = 15;
-/** No damage — the penalty is being relocated at random, see teleport.ts's applyRandomTeleport. */
-export const TELEPORT_TRAP_DAMAGE = 0;
-/**
- * Chance (out of 100), independently rolled per floor, that a teleport trap
- * spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, but (unlike a
- * trapdoor) allowed on GOAL_FLOOR too, since it only relocates the player
- * within the same floor rather than generating one beyond it.
- */
-export const TELEPORT_TRAP_SPAWN_CHANCE_PERCENT = 20;
-
-/** No damage — the penalty is the paralysis itself, see PARALYZED_TURNS_REMAINING handling in trapTrigger.ts. */
-export const BEAR_TRAP_DAMAGE = 0;
-/** How many turns a bear trap paralyzes the player for — same length as the paralysis potion. */
-export const BEAR_TRAP_PARALYSIS_DURATION = 3;
-/** Chance (out of 100), independently rolled per floor, that a bear trap spawns — same idiom as TRAPDOOR_SPAWN_CHANCE_PERCENT, allowed on GOAL_FLOOR too (it never generates a floor beyond it). */
-export const BEAR_TRAP_SPAWN_CHANCE_PERCENT = 15;
-
-/** No damage — the penalty is the armor degradation itself, see trapTrigger.ts's TRAP_SIDE_EFFECTS. */
-export const RUST_TRAP_DAMAGE = 0;
-/** Chance (out of 100), independently rolled per floor, that a rust trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
-export const RUST_TRAP_SPAWN_CHANCE_PERCENT = 15;
-
-/** No damage — the penalty is the forced sleep itself, see trapTrigger.ts's TRAP_SIDE_EFFECTS. */
-export const SLEEPING_GAS_TRAP_DAMAGE = 0;
-/**
- * How many turns a sleeping gas trap holds the player for — reuses
- * paralyzedTurnsRemaining, same field/tick/status-bar chip as a bear trap
- * (see trapTrigger.ts). Longer than BEAR_TRAP_PARALYSIS_DURATION: original
- * Rogue's sleep trap is the more punishing of the two.
- */
+/** An arrow trap shoots like an attacker one level below the player (T_ARROW: `swing(level - 1, armor, 1)`, then 1d6); a miss drops the arrow at the player's feet. */
+export const ARROW_TRAP_LEVEL_BONUS = -1;
+export const ARROW_TRAP_HIT_BONUS = 1;
+export const ARROW_TRAP_DAMAGE_DICE: DamageDice = { count: 1, sides: 6 };
+/** How many move attempts a bear trap holds the player for (original Rogue's BEARTIME, spread(3) = 3). */
+export const BEAR_TRAP_STUCK_TURNS = 3;
+/** How many turns a sleeping gas trap puts the player to sleep for (SLEEPTIME, spread(5) = 5). */
 export const SLEEPING_GAS_TRAP_PARALYSIS_DURATION = 5;
-/** Chance (out of 100), independently rolled per floor, that a sleeping gas trap spawns — same idiom as the other non-guaranteed traps, allowed on GOAL_FLOOR too. */
-export const SLEEPING_GAS_TRAP_SPAWN_CHANCE_PERCENT = 15;
-
-/** Per-kind lookup table — a new kind is one entry. The dart trap rolls its damage instead (DART_TRAP_DAMAGE_DICE). */
-export const TRAP_DAMAGE: Readonly<Record<Exclude<TrapKind, "dart">, number>> =
-	{
-		trapdoor: TRAPDOOR_DAMAGE,
-		teleport: TELEPORT_TRAP_DAMAGE,
-		bear: BEAR_TRAP_DAMAGE,
-		rust: RUST_TRAP_DAMAGE,
-		"sleeping-gas": SLEEPING_GAS_TRAP_DAMAGE,
-	};
+/**
+ * Searching finds a hidden trap next to the player 1 time in
+ * SEARCH_TRAP_FIND_DENOMINATOR (original Rogue's search(): `rnd(2 +
+ * probinc)`), harder while hallucinating (+3) or blind (+2).
+ */
+export const SEARCH_TRAP_FIND_DENOMINATOR = 2;
+export const SEARCH_HALLUCINATING_PENALTY = 3;
+export const SEARCH_BLIND_PENALTY = 2;
 
 /** HP a worn ring of regeneration heals every turn, as in original Rogue — see turnEnd/regeneration.ts. */
 export const RING_REGEN_AMOUNT = 1;
@@ -368,6 +338,7 @@ export const RING_FOOD_USE: Readonly<Record<RingKind, number>> = {
 	"stealth-ring": 1,
 	"maintain-armor-ring": 1,
 	"see-invisible-ring": -5,
+	"searching-ring": -3,
 };
 /** A worn teleportation ring jumps the player somewhere at random with a 1-in-this chance each turn (original Rogue's command(): `rnd(50) == 0`). */
 export const TELEPORTATION_RING_CHANCE_DENOMINATOR = 50;

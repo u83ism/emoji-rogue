@@ -13,6 +13,7 @@ import {
 	REMEMBERED_WALL_CELL,
 	STAIRS_CELL,
 	TERRAIN_GLYPHS,
+	TRAP_CELL,
 	UNEXPLORED_CELL,
 	WON_PLAYER_CELL,
 } from "./glyphs.js";
@@ -105,6 +106,17 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		const amuletRow = grid[state.amulet.y];
 		if (amuletRow !== undefined) {
 			amuletRow[state.amulet.x] = AMULET_CELL;
+		}
+	}
+
+	/* a found trap stays drawn — in sight or remembered — under whatever stands on it */
+	for (const trap of state.traps) {
+		const known =
+			visiblePoints.has(encodePointKey(trap.x, trap.y)) ||
+			state.explored[trap.x]?.[trap.y] === true;
+		const trapRow = grid[trap.y];
+		if (trap.seen && known && trapRow !== undefined) {
+			trapRow[trap.x] = TRAP_CELL;
 		}
 	}
 

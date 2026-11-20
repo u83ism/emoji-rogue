@@ -59,6 +59,9 @@ const toAction = (key) => {
 	if (key === "." || key === " ") {
 		return { type: "wait" };
 	}
+	if (key === "s") {
+		return { type: "search" };
+	}
 	if (key === ">") {
 		return { type: "descend" };
 	}

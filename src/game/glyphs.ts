@@ -22,6 +22,8 @@ export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
  * as in original Rogue — the down arrow it showed before the up/down split
  * went away, since going down is what it is mostly for. */
 export const STAIRS_CELL: Cell = { glyph: "🔽" };
+/* A found trap (original Rogue's '^'): single-codepoint, Unicode 6.0 — the up-pointing red triangle echoes the caret. The look is to be judged on screen (docs/tasks/game.md). */
+export const TRAP_CELL: Cell = { glyph: "🔺" };
 /* Amulet of Yendor: single-codepoint, Unicode 6.0 — floors from AMULET_FLOOR down only. */
 export const AMULET_CELL: Cell = { glyph: "💎" };
 /* Weapon uses a kitchen knife glyph (single-codepoint, no variation selector
@@ -96,6 +98,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"haste-self-potion": { glyph: "💊" },
 	"see-invisible-potion": { glyph: "💊" },
 	"see-invisible-ring": { glyph: "💍" },
+	"searching-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
 	/* Same scroll glyph as every other scroll kind — see the comment above. */

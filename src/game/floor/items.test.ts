@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng, type Rng } from "../../rng.js";
-import {
-	ITEM_DRAW_ATTEMPTS_PER_FLOOR,
-	TRAP_COUNT_PER_FLOOR,
-} from "../balance.js";
+import { ITEM_DRAW_ATTEMPTS_PER_FLOOR } from "../balance.js";
 import type { Position } from "../state.js";
 import { drawFloorItems } from "./items.js";
 import { ITEM_KIND_WEIGHTS } from "./spawnTable.js";
@@ -23,6 +20,9 @@ const createAlwaysMissRng = (): Rng => ({
 	getUniformInt: (_lowerBound, upperBound) => upperBound,
 });
 
+/** Deep enough that the always-hit rng's trap roll (`rnd(10) < floor`) lands. */
+const DEEP_FLOOR = 12;
+
 const buildPool = (size: number): Position[] =>
 	Array.from({ length: size }, (_, index) => ({ x: index, y: 0 }));
 
@@ -31,6 +31,7 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
+			DEEP_FLOOR,
 			() => true,
 			1,
 			0,
@@ -46,6 +47,7 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysMissRng(),
+			DEEP_FLOOR,
 			() => true,
 			1,
 			0,
@@ -58,6 +60,7 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
+			DEEP_FLOOR,
 			() => true,
 			1,
 			3,
@@ -74,6 +77,7 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
+			DEEP_FLOOR,
 			() => true,
 			1,
 			0,
@@ -88,7 +92,15 @@ describe("drawFloorItems", () => {
 		const counts = new Map<string, number>();
 		let total = 0;
 		for (let floor = 0; floor < 600; floor++) {
-			const drawn = drawFloorItems(buildPool(100), rng, () => true, 1, 0, true);
+			const drawn = drawFloorItems(
+				buildPool(100),
+				rng,
+				DEEP_FLOOR,
+				() => true,
+				1,
+				0,
+				true,
+			);
 			for (const item of drawn.items) {
 				const category = Object.entries(ITEM_KIND_WEIGHTS).find(([, kinds]) =>
 					kinds.some((entry) => entry.kind === item.kind),
@@ -108,15 +120,17 @@ describe("drawFloorItems", () => {
 		const drawn = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
+			DEEP_FLOOR,
 			() => true,
 			1,
 			0,
 			true,
 		);
-		expect(drawn.traps.length).toBeGreaterThanOrEqual(TRAP_COUNT_PER_FLOOR);
+		expect(drawn.traps.length).toBeGreaterThanOrEqual(1);
 		const none = drawFloorItems(
 			buildPool(100),
 			createAlwaysHitRng(),
+			DEEP_FLOOR,
 			() => false,
 			1,
 			0,

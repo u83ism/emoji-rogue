@@ -61,6 +61,7 @@ const drawItemKind = (rng: Rng, floorsWithoutFood: number): ItemKind => {
 export const drawFloorItems = (
 	remaining: Position[],
 	rng: Rng,
+	floor: number,
 	isTrapTileEligible: (position: Position) => boolean,
 	nextItemId: number,
 	previousFloorsWithoutFood: number,
@@ -92,7 +93,7 @@ export const drawFloorItems = (
 		}
 	}
 
-	const traps = drawFloorTraps(remaining, rng, isTrapTileEligible);
+	const traps = drawFloorTraps(remaining, rng, floor, isTrapTileEligible);
 
 	return { items, traps, nextItemId: itemId, floorsWithoutFood };
 };

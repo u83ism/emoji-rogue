@@ -45,6 +45,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 		case "teleportation-ring":
 		case "maintain-armor-ring":
 		case "see-invisible-ring":
+		case "searching-ring":
 			return {
 				...position,
 				kind: item.kind,

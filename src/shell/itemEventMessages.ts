@@ -29,6 +29,7 @@ const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> = {
 	"teleportation-ring": "体がそわそわと落ち着かない",
 	"maintain-armor-ring": "鎧が錆びにくくなった",
 	"see-invisible-ring": "透明なものが見えるようになった",
+	"searching-ring": "まわりの気配に敏感になった",
 };
 
 /** The events about the player's own items — picking up, wearing, drinking, reading, zapping. */

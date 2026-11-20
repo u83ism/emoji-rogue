@@ -25,6 +25,8 @@ export type Action =
 			readonly payload: { readonly direction: Direction };
 	  }
 	| { readonly type: "wait" }
+	/** Look for hidden traps on the eight tiles around (original Rogue's `s`) — see search.ts. */
+	| { readonly type: "search" }
 	/** Take the staircase under the player down (original Rogue's `>`) — see advanceTurn's applyStairs. */
 	| { readonly type: "descend" }
 	/** Take the staircase under the player up, which needs the amulet (`<`). */
@@ -239,6 +241,8 @@ export type Stairs = Position;
  */
 export type Trap = Position & {
 	readonly kind: TrapKind;
+	/** Found (stepped on, or searched out) — drawn on the map from then on, and still armed. */
+	readonly seen: boolean;
 };
 
 /**
@@ -291,6 +295,8 @@ export interface GameState {
 	 * stage changes — see combat/hitChance.ts.
 	 */
 	readonly playerRunFlag: boolean;
+	/** Move attempts left before a bear trap lets go (original Rogue's no_move) — each attempt uses one up. */
+	readonly stuckTurnsRemaining: number;
 	/** Turns left of a see invisible potion — invisible monsters show while it lasts (vision.ts's canSeeInvisible). */
 	readonly seeInvisibleTurnsRemaining: number;
 	/** Turns left of a haste self potion — two player moves to every monster turn (advanceTurn). */

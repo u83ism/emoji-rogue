@@ -79,6 +79,7 @@ export const ITEM_KIND_VALUES = [
 	"haste-self-potion",
 	"see-invisible-potion",
 	"see-invisible-ring",
+	"searching-ring",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -98,6 +99,7 @@ export const RING_KINDS = [
 	"teleportation-ring",
 	"maintain-armor-ring",
 	"see-invisible-ring",
+	"searching-ring",
 ] as const satisfies readonly ItemKind[];
 
 export type RingKind = (typeof RING_KINDS)[number];
@@ -242,16 +244,19 @@ export const IDENTIFIABLE_ITEM_KINDS: readonly ItemKind[] = [
 	...WAND_KIND_VALUES,
 ];
 
+/** Original Rogue's eight traps (T_DOOR … T_MYST), in its own order — floor/traps.ts draws among them evenly. */
 export const TRAP_KIND_VALUES = [
-	"dart",
 	"trapdoor",
-	"teleport",
-	"bear",
-	"rust",
+	"arrow",
 	"sleeping-gas",
+	"bear",
+	"teleport",
+	"dart",
+	"rust",
+	"mysterious",
 ] as const;
 
-/** Hidden until stepped on — see trapTrigger.ts. */
+/** Hidden until stepped on or searched out, then shown for good — see trapTrigger.ts and search.ts. */
 export type TrapKind = (typeof TRAP_KIND_VALUES)[number];
 
 /** What killed the player — an enemy kind, starvation, a trap, or being frozen too long (an ice monster's freeze piled up). */
@@ -416,6 +421,21 @@ export type GameEvent =
 			/** A haste self potion drunk while already hasted: fainting for `turns` (original Rogue's add_haste()). */
 			readonly type: "player-exhausted";
 			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Searching (the `s` key, or a worn searching ring) turned up a hidden trap next to the player — see search.ts. */
+			readonly type: "trap-found";
+			readonly payload: { readonly kind: TrapKind };
+	  }
+	| {
+			/** A move tried while held by a bear trap (original Rogue's no_move): it fails and the turn passes. */
+			readonly type: "player-stuck";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A mysterious trap's harmless sensation — `variant` picks which of original Rogue's eleven messages. */
+			readonly type: "trap-mystery";
+			readonly payload: { readonly variant: number };
 	  }
 	| {
 			/** A see invisible potion — invisible monsters show for `turns` (turnEnd/statusCountdowns.ts). */

@@ -15,6 +15,7 @@ import {
 	applyItemPickup,
 } from "./items/pickups.js";
 import { applyUseItem } from "./items/use.js";
+import { applySearch, applySearchingRingTick } from "./search.js";
 import type { Action, Direction, Enemy, GameState } from "./state.js";
 import { applyThrowItem } from "./throw.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
@@ -136,11 +137,13 @@ const applyFloorTurnCounterTick = (state: GameState): GameState =>
  * a no-op unless its own field/condition is active.
  */
 const applyTurnEndTicks = (state: GameState): GameState =>
-	applyTeleportationRingTick(
-		applyFloorTurnCounterTick(
-			applyWandererTick(
-				applyStatusCountdownTicks(
-					applyRegenerationTick(applyHungerTick(state)),
+	applySearchingRingTick(
+		applyTeleportationRingTick(
+			applyFloorTurnCounterTick(
+				applyWandererTick(
+					applyStatusCountdownTicks(
+						applyRegenerationTick(applyHungerTick(state)),
+					),
 				),
 			),
 		),
@@ -228,6 +231,16 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 				 * passes and enemies still act — same as a wait. */
 				return endPlayerTurn(state);
 			}
+			if (state.stuckTurnsRemaining > 0) {
+				/* held by a bear trap (original Rogue's no_move): the move fails, the turn passes */
+				return endPlayerTurn({
+					...state,
+					stuckTurnsRemaining: state.stuckTurnsRemaining - 1,
+					events: buildEventLog(state.events, [
+						{ type: "player-stuck", payload: {} },
+					]),
+				});
+			}
 			const afterPlayer = applyMove(state, action.payload.direction);
 			if (afterPlayer === state) {
 				return state; /* bumping a wall consumes no turn */
@@ -246,6 +259,12 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			return applyStairs(state, "down");
 		case "ascend":
 			return applyStairs(state, "up");
+		case "search":
+			return state.status === "playing"
+				? endPlayerTurn(
+						state.paralyzedTurnsRemaining > 0 ? state : applySearch(state),
+					)
+				: state;
 		case "wait":
 			/* Stand still for one turn; enemies still act. Without this a
 			 * cornered player would soft-lock: bumps consume no turn, so the

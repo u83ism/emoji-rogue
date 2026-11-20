@@ -69,6 +69,8 @@ const FLAT_WORTH: Readonly<
 	"restore-strength-potion": 130,
 	"extra-healing-potion": 200,
 	"haste-self-potion": 190,
+	"see-invisible-potion": 100,
+	"see-invisible-ring": 310,
 	"slow-wand": 350,
 	"teleport-wand": 340,
 	"magic-missile-wand": 170,

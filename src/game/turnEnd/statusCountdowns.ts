@@ -1,9 +1,11 @@
+import { createRng } from "../../rng.js";
 import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
 	DETECT_MONSTER_POTION_DURATION,
 	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
+	SEE_INVISIBLE_POTION_DURATION,
 } from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState } from "../state.js";
@@ -24,6 +26,7 @@ const COUNTDOWN_FIELDS = [
 	"detectMonstersTurnsRemaining",
 	"hallucinatingTurnsRemaining",
 	"hasteTurnsRemaining",
+	"seeInvisibleTurnsRemaining",
 ] as const;
 
 type CountdownField = (typeof COUNTDOWN_FIELDS)[number];
@@ -37,6 +40,7 @@ const FADED_EVENTS: Readonly<Record<CountdownField, GameEvent>> = {
 	detectMonstersTurnsRemaining: { type: "detect-monsters-faded", payload: {} },
 	hallucinatingTurnsRemaining: { type: "hallucination-faded", payload: {} },
 	hasteTurnsRemaining: { type: "haste-faded", payload: {} },
+	seeInvisibleTurnsRemaining: { type: "see-invisible-faded", payload: {} },
 };
 
 const applyCountdownTick = (
@@ -101,16 +105,45 @@ const TIMED_POTIONS = {
 		turns: HALLUCINATION_POTION_DURATION,
 		event: "player-hallucinated",
 	},
+	"see-invisible-potion": {
+		field: "seeInvisibleTurnsRemaining",
+		turns: SEE_INVISIBLE_POTION_DURATION,
+		event: "player-sees-invisible",
+	},
 } as const;
 
+/** The potions whose time original Rogue's do_pot() spreads (spread()); the detect monster potion's fuse is exact. */
+const SPREAD_POTIONS: ReadonlySet<keyof typeof TIMED_POTIONS> = new Set([
+	"confusion",
+	"levitation",
+	"blindness",
+	"hallucination",
+	"see-invisible-potion",
+]);
+
+/**
+ * Starting one of TIMED_POTIONS' statuses, as original Rogue's do_pot(): the
+ * time is spread(base) — base - base/20 + rnd(base/10) — for the spread
+ * potions, and a status already running is lengthened by that much
+ * instead of restarted (lengthen()).
+ */
 export const applyTimedPotion = (
 	state: GameState,
 	kind: keyof typeof TIMED_POTIONS,
 ): GameState => {
-	const { field, turns, event } = TIMED_POTIONS[kind];
+	const { field, turns: base, event } = TIMED_POTIONS[kind];
+	const rng = createRng(1).setState(state.rng);
+	const turns = SPREAD_POTIONS.has(kind)
+		? base -
+			Math.floor(base / 20) +
+			(Math.floor(base / 10) > 0
+				? rng.getUniformInt(0, Math.floor(base / 10) - 1)
+				: 0)
+		: base;
 	return {
 		...state,
-		[field]: turns,
+		[field]: state[field] + turns,
+		rng: rng.getState(),
 		events: buildEventLog(state.events, [{ type: event, payload: { turns } }]),
 	};
 };

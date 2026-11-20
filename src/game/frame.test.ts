@@ -410,7 +410,7 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(state)[2]?.[20]?.glyph).not.toBe("🫥");
 	});
 
-	it("an adjacent phantom is drawn", () => {
+	it("an adjacent phantom stays unseen — only seeing invisible shows it (original Rogue's see_monst())", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const phantom = {
 			kind: "phantom",
@@ -424,7 +424,21 @@ describe("buildFrameGrid", () => {
 			y: 2,
 		} as const; /* distance 1 from player at (15,2) */
 		const state = { ...wide, enemies: [phantom] };
-		expect(buildFrameGrid(state)[2]?.[16]?.glyph).toBe("🫥");
+		expect(buildFrameGrid(state)[2]?.[16]?.glyph).not.toBe("🫥");
+		const seeing = { ...state, seeInvisibleTurnsRemaining: 10 };
+		expect(buildFrameGrid(seeing)[2]?.[16]?.glyph).toBe("🫥");
+		const ringed = {
+			...state,
+			inventory: [
+				{
+					itemId: 1,
+					kind: "see-invisible-ring" as const,
+					equipped: true,
+					cursed: false,
+				},
+			],
+		};
+		expect(buildFrameGrid(ringed)[2]?.[16]?.glyph).toBe("🫥");
 	});
 
 	it("a detected phantom is drawn even without adjacency", () => {

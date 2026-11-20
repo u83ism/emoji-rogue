@@ -64,6 +64,7 @@ const applyItemEffect = (
 		case "increase-damage-ring":
 		case "teleportation-ring":
 		case "maintain-armor-ring":
+		case "see-invisible-ring":
 			return applyToggleRingEquip(state, item);
 		case "enchant-weapon":
 			return applyUseEnchantWeaponScroll(state);
@@ -103,6 +104,7 @@ const applyItemEffect = (
 		case "restore-strength-potion":
 		case "extra-healing-potion":
 		case "haste-self-potion":
+		case "see-invisible-potion":
 			return applyUsePotion(state, item.kind);
 	}
 };

@@ -1,6 +1,5 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell } from "../renderer/index.js";
-import { isAdjacent } from "./combat/combat.js";
 import { ENEMY_GLYPHS } from "./enemyGlyphs.js";
 import {
 	AMULET_CELL,
@@ -18,7 +17,11 @@ import {
 	WON_PLAYER_CELL,
 } from "./glyphs.js";
 import type { Enemy, GameState, GameStatus } from "./state.js";
-import { computeVisiblePoints, resolveViewRadius } from "./vision.js";
+import {
+	canSeeInvisible,
+	computeVisiblePoints,
+	resolveViewRadius,
+} from "./vision.js";
 
 /** Fixed iteration order (object literal insertion order) — deterministic across calls. */
 const ENEMY_GLYPH_VALUES: readonly Cell[] = Object.values(ENEMY_GLYPHS);
@@ -155,16 +158,15 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	}
 
 	/* enemies are drawn while visible, or unconditionally while detected
-	 * (the detect monster potion's timed effect) —
-	 * except a phantom, which plain FOV visibility never reveals: only
-	 * detection or standing adjacent to it does. */
+	 * (the detect monster potion's timed effect) — except a phantom, which
+	 * only shows to a player who can see invisible (original Rogue's
+	 * see_monst()), even right next to it — detection shows it too. */
 	const detectingMonsters = state.detectMonstersTurnsRemaining > 0;
 	const hallucinating = state.hallucinatingTurnsRemaining > 0;
+	const seesInvisible = canSeeInvisible(state);
 	for (const enemy of state.enemies) {
 		const isHiddenPhantom =
-			enemy.kind === "phantom" &&
-			!detectingMonsters &&
-			!isAdjacent(enemy, state.player);
+			enemy.kind === "phantom" && !detectingMonsters && !seesInvisible;
 		if (isHiddenPhantom) {
 			continue;
 		}

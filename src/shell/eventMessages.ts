@@ -60,6 +60,7 @@ export const formatEvent = (
 		case "ring-hands-full":
 		case "strength-restored":
 		case "player-hasted":
+		case "player-sees-invisible":
 		case "player-exhausted":
 		case "wand-empty":
 		case "scroll-wasted":
@@ -143,6 +144,8 @@ export const formatEvent = (
 			return "目が見えるようになった";
 		case "player-leveled-up":
 			return `レベルが上がった!(Lv.${event.payload.level})`;
+		case "see-invisible-faded":
+			return "透明なものが見えなくなった";
 		case "haste-faded":
 			return "動きが元の速さに戻った";
 		case "paralysis-faded":

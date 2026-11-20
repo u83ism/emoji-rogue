@@ -328,6 +328,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-hasted": (payload) => isPositiveInteger(payload.turns),
 	"player-exhausted": (payload) => isNonNegativeInteger(payload.turns),
 	"haste-faded": emptyPayload,
+	"player-sees-invisible": (payload) => isPositiveInteger(payload.turns),
+	"see-invisible-faded": emptyPayload,
 	"ring-equipped": (payload) => isItemKind(payload.kind),
 	"player-drained": (payload) =>
 		(payload.by === "vampire" || payload.by === "wraith") &&
@@ -511,6 +513,10 @@ export const validateGameState = (
 	if (!isBooleanValue(playerRunFlag)) {
 		return err("playerRunFlag");
 	}
+	const seeInvisibleTurnsRemaining = value.seeInvisibleTurnsRemaining;
+	if (!isNonNegativeInteger(seeInvisibleTurnsRemaining)) {
+		return err("seeInvisibleTurnsRemaining");
+	}
 	const hasteTurnsRemaining = value.hasteTurnsRemaining;
 	if (!isNonNegativeInteger(hasteTurnsRemaining)) {
 		return err("hasteTurnsRemaining");
@@ -650,6 +656,7 @@ export const validateGameState = (
 		playerRunFlag,
 		hasteTurnsRemaining,
 		hasteMoveSpent,
+		seeInvisibleTurnsRemaining,
 		detectMonstersTurnsRemaining,
 		hallucinatingTurnsRemaining,
 		floor,
@@ -689,6 +696,7 @@ export const validateGameState = (
 				case "adornment-ring":
 				case "teleportation-ring":
 				case "maintain-armor-ring":
+				case "see-invisible-ring":
 					return {
 						...position,
 						kind: item.kind,

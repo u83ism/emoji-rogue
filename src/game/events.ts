@@ -77,6 +77,8 @@ export const ITEM_KIND_VALUES = [
 	"restore-strength-potion",
 	"extra-healing-potion",
 	"haste-self-potion",
+	"see-invisible-potion",
+	"see-invisible-ring",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -95,6 +97,7 @@ export const RING_KINDS = [
 	"increase-damage-ring",
 	"teleportation-ring",
 	"maintain-armor-ring",
+	"see-invisible-ring",
 ] as const satisfies readonly ItemKind[];
 
 export type RingKind = (typeof RING_KINDS)[number];
@@ -214,6 +217,7 @@ const POTION_KIND_VALUES = [
 	"restore-strength-potion",
 	"extra-healing-potion",
 	"haste-self-potion",
+	"see-invisible-potion",
 ] as const satisfies readonly ItemKind[];
 
 /** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
@@ -412,6 +416,16 @@ export type GameEvent =
 			/** A haste self potion drunk while already hasted: fainting for `turns` (original Rogue's add_haste()). */
 			readonly type: "player-exhausted";
 			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** A see invisible potion — invisible monsters show for `turns` (turnEnd/statusCountdowns.ts). */
+			readonly type: "player-sees-invisible";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** Fired the turn seeInvisibleTurnsRemaining reaches 0. */
+			readonly type: "see-invisible-faded";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** Fired the turn hasteTurnsRemaining reaches 0 — see turnEnd/statusCountdowns.ts. */

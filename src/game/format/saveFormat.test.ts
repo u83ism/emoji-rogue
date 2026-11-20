@@ -48,6 +48,7 @@ describe("save file shape guard", () => {
 				playerRunFlag: "boolean",
 				hasteTurnsRemaining: "number",
 				hasteMoveSpent: "boolean",
+				seeInvisibleTurnsRemaining: "number",
 				detectMonstersTurnsRemaining: "number",
 				hallucinatingTurnsRemaining: "number",
 				levitationTurnsRemaining: "number",

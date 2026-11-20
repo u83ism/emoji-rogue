@@ -367,6 +367,7 @@ export const RING_FOOD_USE: Readonly<Record<RingKind, number>> = {
 	"teleportation-ring": 0,
 	"stealth-ring": 1,
 	"maintain-armor-ring": 1,
+	"see-invisible-ring": -5,
 };
 /** A worn teleportation ring jumps the player somewhere at random with a 1-in-this chance each turn (original Rogue's command(): `rnd(50) == 0`). */
 export const TELEPORTATION_RING_CHANCE_DENOMINATOR = 50;
@@ -394,23 +395,25 @@ export const MAGIC_MISSILE_DAMAGE_BONUS = 1;
 export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
 
 /** How many turns a hallucination potion swaps displayed enemy glyphs for decoys — purely cosmetic, see frame.ts. */
-export const HALLUCINATION_POTION_DURATION = 20;
+export const HALLUCINATION_POTION_DURATION = 850;
 
 /** How near (in tiles, either axis) a monster must be for a hold monster scroll to stop it — original Rogue's read_scroll(): hero.x - 2 .. hero.x + 2. */
 export const HOLD_MONSTER_SCROLL_RANGE = 2;
 
 /** How many turns a confusion potion randomizes movement for. */
-export const CONFUSION_POTION_DURATION = 10;
+export const CONFUSION_POTION_DURATION = 20;
 
 /** A wand's charges when found — original Rogue's fix_stick(): `rnd(5) + 3` (the wand of light's 10-19 is not in this game). */
 export const WAND_CHARGES_MIN = 3;
 export const WAND_CHARGES_MAX = 7;
 
 /** How many turns a levitation potion floats the player over traps for. */
-export const LEVITATION_POTION_DURATION = 15;
+export const LEVITATION_POTION_DURATION = 30;
 
 /** How many turns a blindness potion shrinks the player's field of view for. */
-export const BLIND_POTION_DURATION = 20;
+export const BLIND_POTION_DURATION = 850;
+/** How long a see invisible potion lets the player see invisible monsters (original Rogue's SEEDURATION, spread like the others). */
+export const SEE_INVISIBLE_POTION_DURATION = 850;
 /** Field of view radius while blind — adjacent tiles only. */
 export const BLIND_VIEW_RADIUS = 1;
 

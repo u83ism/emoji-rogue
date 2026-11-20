@@ -99,3 +99,14 @@ export const findNearestVisibleEnemy = (
 		return candidateDistance < closestDistance ? candidate : closest;
 	}, undefined);
 };
+
+/**
+ * Whether invisible monsters (the phantom — original Rogue's ISINVIS) show:
+ * only with a see invisible potion running or the ring worn (CANSEE).
+ * Detecting monsters shows them regardless (frame.ts).
+ */
+export const canSeeInvisible = (state: GameState): boolean =>
+	state.seeInvisibleTurnsRemaining > 0 ||
+	state.inventory.some(
+		(item) => item.kind === "see-invisible-ring" && item.equipped,
+	);

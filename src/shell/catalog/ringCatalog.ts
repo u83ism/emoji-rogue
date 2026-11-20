@@ -92,4 +92,11 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		effect:
 			"装備している間、アクエーターや錆のわなで鎧が錆びない。満腹度の減りが毎ターン1増える",
 	},
+	"see-invisible-ring": {
+		catalogName: "透明視の指輪",
+		category: "指輪",
+		spawn: itemDrawShare("see-invisible-ring"),
+		effect:
+			"装備している間、透明な敵(ファントム)が見える。満腹度の減りは5ターンに1回ほど1増える",
+	},
 };

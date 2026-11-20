@@ -11,6 +11,15 @@ import {
 import { buildArenaGameState } from "../initialState.js";
 import type { GameState } from "../state.js";
 
+/** original Rogue's spread(base): base - base/20 + rnd(base/10). */
+const isInSpread = (turns: number, base: number): boolean => {
+	const low = base - Math.floor(base / 20);
+	return turns >= low && turns <= low + Math.max(0, Math.floor(base / 10) - 1);
+};
+const expectSpread = (turns: number, base: number): void => {
+	expect(isInSpread(turns, base)).toBe(true);
+};
+
 describe("items/potions", () => {
 	it("using a held potion heals level d4, one consumed from inventory", () => {
 		const state = {
@@ -163,13 +172,13 @@ describe("items/potions", () => {
 		});
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action, so
 		 * the drinking turn itself already counts as the first tick */
-		expect(next.confusedTurnsRemaining).toBe(CONFUSION_POTION_DURATION - 1);
+		expectSpread(next.confusedTurnsRemaining + 1, CONFUSION_POTION_DURATION);
 		expect(next.inventory).toEqual([]);
 		expect(
 			next.events.some(
 				(event) =>
 					event.type === "player-confused" &&
-					event.payload.turns === CONFUSION_POTION_DURATION,
+					isInSpread(event.payload.turns, CONFUSION_POTION_DURATION),
 			),
 		).toBe(true);
 	});
@@ -184,13 +193,13 @@ describe("items/potions", () => {
 			payload: { itemId: 1 },
 		});
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
-		expect(next.levitationTurnsRemaining).toBe(LEVITATION_POTION_DURATION - 1);
+		expectSpread(next.levitationTurnsRemaining + 1, LEVITATION_POTION_DURATION);
 		expect(next.inventory).toEqual([]);
 		expect(
 			next.events.some(
 				(event) =>
 					event.type === "player-levitated" &&
-					event.payload.turns === LEVITATION_POTION_DURATION,
+					isInSpread(event.payload.turns, LEVITATION_POTION_DURATION),
 			),
 		).toBe(true);
 	});
@@ -205,13 +214,13 @@ describe("items/potions", () => {
 			payload: { itemId: 1 },
 		});
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
-		expect(next.blindTurnsRemaining).toBe(BLIND_POTION_DURATION - 1);
+		expectSpread(next.blindTurnsRemaining + 1, BLIND_POTION_DURATION);
 		expect(next.inventory).toEqual([]);
 		expect(
 			next.events.some(
 				(event) =>
 					event.type === "player-blinded" &&
-					event.payload.turns === BLIND_POTION_DURATION,
+					isInSpread(event.payload.turns, BLIND_POTION_DURATION),
 			),
 		).toBe(true);
 	});
@@ -269,15 +278,16 @@ describe("items/potions", () => {
 			payload: { itemId: 1 },
 		});
 		/* applyStatusCountdownTicks runs as part of the same turn-consuming action */
-		expect(next.hallucinatingTurnsRemaining).toBe(
-			HALLUCINATION_POTION_DURATION - 1,
+		expectSpread(
+			next.hallucinatingTurnsRemaining + 1,
+			HALLUCINATION_POTION_DURATION,
 		);
 		expect(next.inventory).toEqual([]);
 		expect(
 			next.events.some(
 				(event) =>
 					event.type === "player-hallucinated" &&
-					event.payload.turns === HALLUCINATION_POTION_DURATION,
+					isInSpread(event.payload.turns, HALLUCINATION_POTION_DURATION),
 			),
 		).toBe(true);
 	});

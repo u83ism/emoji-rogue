@@ -28,6 +28,7 @@ const RING_EQUIPPED_EFFECT: Readonly<Partial<Record<ItemKind, string>>> = {
 	"increase-damage-ring": "一撃に重みが乗った",
 	"teleportation-ring": "体がそわそわと落ち着かない",
 	"maintain-armor-ring": "鎧が錆びにくくなった",
+	"see-invisible-ring": "透明なものが見えるようになった",
 };
 
 /** The events about the player's own items — picking up, wearing, drinking, reading, zapping. */
@@ -48,6 +49,7 @@ export type ItemUseEvent = Extract<
 			| "ring-hands-full"
 			| "strength-restored"
 			| "player-hasted"
+			| "player-sees-invisible"
 			| "player-exhausted"
 			| "scroll-wasted"
 			| "items-decursed"
@@ -102,6 +104,8 @@ export const formatItemUseEvent = (
 			return `${ITEM_NAMES["restore-strength-potion"]}を飲んだ。体じゅうが温かい(力${event.payload.strength})`;
 		case "player-hasted":
 			return `${ITEM_NAMES["haste-self-potion"]}を飲んだ。体が軽い!${event.payload.turns}ターン素早く動ける`;
+		case "player-sees-invisible":
+			return `${ITEM_NAMES["see-invisible-potion"]}を飲んだ。透明なものが見えるようになった`;
 		case "player-exhausted":
 			return `${ITEM_NAMES["haste-self-potion"]}を重ねて飲み、疲れ果てて気を失った!`;
 		case "ring-hands-full":

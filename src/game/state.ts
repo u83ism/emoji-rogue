@@ -291,6 +291,8 @@ export interface GameState {
 	 * stage changes — see combat/hitChance.ts.
 	 */
 	readonly playerRunFlag: boolean;
+	/** Turns left of a see invisible potion — invisible monsters show while it lasts (vision.ts's canSeeInvisible). */
+	readonly seeInvisibleTurnsRemaining: number;
 	/** Turns left of a haste self potion — two player moves to every monster turn (advanceTurn). */
 	readonly hasteTurnsRemaining: number;
 	/** While hasted: the first of this turn's two moves is spent, so the next one ends the turn. */

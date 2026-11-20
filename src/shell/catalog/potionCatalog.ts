@@ -11,6 +11,7 @@ import {
 	HEAL_POTION_DICE_SIDES,
 	LEVITATION_POTION_DURATION,
 	POISON_POTION_STRENGTH_LOSS_MAX,
+	SEE_INVISIBLE_POTION_DURATION,
 	STRENGTH_POTION_STRENGTH_GAIN,
 } from "../../game/balance.js";
 import type { PotionKind } from "../../game/events.js";
@@ -94,5 +95,11 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		category: "薬",
 		spawn: itemDrawShare("haste-self-potion"),
 		effect: `${HASTE_POTION_TURNS_MIN}〜${HASTE_POTION_TURNS_MAX}ターンの間、敵1回の行動につき2回動ける。加速中にもう1本飲むと疲れ果てて0〜${HASTE_EXHAUSTION_TURNS_MAX}ターン気を失い、加速も切れる`,
+	},
+	"see-invisible-potion": {
+		catalogName: "透明視の薬",
+		category: "薬",
+		spawn: itemDrawShare("see-invisible-potion"),
+		effect: `約${SEE_INVISIBLE_POTION_DURATION}ターンの間、透明な敵(ファントム)が見えるようになる。重ねて飲むと時間が延びる`,
 	},
 };

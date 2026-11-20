@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { buildArenaGameState } from "../initialState.js";
 import type { GameState } from "../state.js";
-import { applyStatusCountdownTicks } from "./statusCountdowns.js";
+import {
+	applyStatusCountdownTicks,
+	applyTimedPotion,
+} from "./statusCountdowns.js";
 
 const COUNTDOWNS = [
 	["confusedTurnsRemaining", "confusion-faded"],
@@ -11,6 +14,23 @@ const COUNTDOWNS = [
 	["detectMonstersTurnsRemaining", "detect-monsters-faded"],
 	["hallucinatingTurnsRemaining", "hallucination-faded"],
 ] as const;
+
+describe("applyTimedPotion", () => {
+	it("a status already running is lengthened, not restarted (original Rogue's lengthen())", () => {
+		const confused = {
+			...buildArenaGameState(5, 5, 1),
+			confusedTurnsRemaining: 7,
+		};
+		const next = applyTimedPotion(confused, "confusion");
+		const [event] = next.events;
+		if (event?.type !== "player-confused") {
+			throw new Error("expected player-confused");
+		}
+		expect(next.confusedTurnsRemaining).toBe(7 + event.payload.turns);
+		/* spread(20): 19 or 20 */
+		expect([19, 20]).toContain(event.payload.turns);
+	});
+});
 
 describe("applyStatusCountdownTicks", () => {
 	it("a paralysis wearing off turns the player's run flag on (original Rogue's \"you can move again\")", () => {

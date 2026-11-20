@@ -191,6 +191,7 @@ export const applyUsePotion = (
 		case "blindness":
 		case "detect-monster":
 		case "hallucination":
+		case "see-invisible-potion":
 			return applyTimedPotion(state, kind);
 		case "raise-level":
 			return applyLevelUp(state);

@@ -85,6 +85,8 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"restore-strength-potion": "力の回復の薬",
 	"extra-healing-potion": "超回復の薬",
 	"haste-self-potion": "加速の薬",
+	"see-invisible-potion": "透明視の薬",
+	"see-invisible-ring": "透明視の指輪",
 };
 
 /** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */

@@ -62,7 +62,7 @@ export type ItemUseEvent = Extract<
 			| "player-ate"
 			| "player-poisoned"
 			| "floor-mapped"
-			| "potion-identified"
+			| "item-kind-identified"
 			| "player-strengthened"
 			| "ring-equipped"
 			| "weapon-enchanted"
@@ -146,7 +146,7 @@ export const formatItemUseEvent = (
 				: "毒薬を飲んでしまった。ひどく気分が悪い";
 		case "floor-mapped":
 			return "地図の巻物を読んだ。フロア全体が明らかになった!";
-		case "potion-identified":
+		case "item-kind-identified":
 			/* Identification is per-kind and run-global, not per held item — the
 			 * wording must not imply an item in the inventory transformed
 			 * (2026-07-18 playtest: "見破った!" read as if a held potion changed,

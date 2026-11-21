@@ -1443,19 +1443,19 @@ describe("validateGameState", () => {
 		expect(accepted.ok).toBe(true);
 	});
 
-	it("accepts an identify item kind and a potion-identified event, rejects broken ones", () => {
+	it("accepts an identify item kind and a item-kind-identified event, rejects broken ones", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
 			inventory: [{ itemId: 1, kind: "identify-potion-scroll" }],
-			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
+			events: [{ type: "item-kind-identified", payload: { kind: "poison" } }],
 		});
 		expect(accepted.ok).toBe(true);
 
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "potion-identified", payload: { kind: "amulet" } }],
+				events: [{ type: "item-kind-identified", payload: { kind: "amulet" } }],
 			},
 			"events",
 		);

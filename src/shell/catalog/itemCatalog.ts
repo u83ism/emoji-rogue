@@ -70,6 +70,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		effect:
 			"周り8マスのどこかに、その階の敵が1体現れる(空きが無ければ何も起きない)",
 	},
+	"identify-scroll-scroll": {
+		catalogName: "巻物識別の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("identify-scroll-scroll"),
+		effect: `読むと持っている巻物を1つ選び、その種類の正体が分かる(巻物を持っていなければ無駄になる)`,
+	},
 	"aggravate-monsters-scroll": {
 		catalogName: "警報の巻物",
 		category: "巻物",

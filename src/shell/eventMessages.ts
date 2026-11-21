@@ -61,7 +61,7 @@ export const formatEvent = (
 		case "player-ate":
 		case "player-poisoned":
 		case "floor-mapped":
-		case "potion-identified":
+		case "item-kind-identified":
 		case "player-strengthened":
 		case "ring-equipped":
 		case "weapon-enchanted":

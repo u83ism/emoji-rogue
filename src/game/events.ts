@@ -100,6 +100,7 @@ export const ITEM_KIND_VALUES = [
 	"invisibility-wand",
 	"cancellation-wand",
 	"polymorph-wand",
+	"identify-scroll-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -284,6 +285,7 @@ export const SCROLL_KIND_VALUES = [
 	"sleep-scroll",
 	"create-monster-scroll",
 	"aggravate-monsters-scroll",
+	"identify-scroll-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];
@@ -458,7 +460,7 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			readonly type: "potion-identified";
+			readonly type: "item-kind-identified";
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {

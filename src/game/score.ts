@@ -58,6 +58,7 @@ const FLAT_WORTH: Readonly<
 	"sleep-scroll": 5,
 	"create-monster-scroll": 75,
 	"aggravate-monsters-scroll": 20,
+	"identify-scroll-scroll": 80,
 	"regeneration-ring": 460,
 	"sustenance-ring": 240,
 	"stealth-ring": 470,

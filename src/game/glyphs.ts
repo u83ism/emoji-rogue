@@ -118,6 +118,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"sleep-scroll": { glyph: "📜" },
 	"create-monster-scroll": { glyph: "📜" },
 	"aggravate-monsters-scroll": { glyph: "📜" },
+	"identify-scroll-scroll": { glyph: "📜" },
 };
 /* Money bag: single-codepoint, Unicode 6.0. */
 export const GOLD_CELL: Cell = { glyph: "💰" };

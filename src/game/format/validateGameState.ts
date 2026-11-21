@@ -355,7 +355,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			payload.source === "teleport-trap" ||
 			payload.source === "teleportation-ring"),
 	"floor-mapped": emptyPayload,
-	"potion-identified": (payload) => isItemKind(payload.kind),
+	"item-kind-identified": (payload) => isItemKind(payload.kind),
 	"player-strengthened": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&

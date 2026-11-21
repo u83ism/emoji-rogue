@@ -1,5 +1,9 @@
 import { at } from "../indexing.js";
-import { type ItemKind, isWandKind, POTION_KINDS } from "./events.js";
+import { type ItemKind, isWandKind } from "./events.js";
+import {
+	IDENTIFY_SCROLL_TARGETS,
+	isIdentifyScrollKind,
+} from "./items/scrolls/identifyScrolls.js";
 import type { Action, Direction, HeldItem } from "./state.js";
 
 /**
@@ -44,8 +48,8 @@ export const filterScrollTargets = (
 	kind: ItemKind,
 	inventory: readonly HeldItem[],
 ): readonly HeldItem[] | undefined =>
-	kind === "identify-potion-scroll"
-		? inventory.filter((item) => POTION_KINDS.includes(item.kind))
+	isIdentifyScrollKind(kind)
+		? inventory.filter((item) => IDENTIFY_SCROLL_TARGETS[kind](item.kind))
 		: undefined;
 
 /** Whether the verb prompt offers "throw" for `item`: any weapon except the one currently wielded (original Rogue refuses to throw that one too). */

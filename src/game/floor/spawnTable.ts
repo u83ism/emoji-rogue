@@ -57,6 +57,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "create-monster-scroll", weight: 4 },
 		{ kind: "remove-curse-scroll", weight: 7 },
 		{ kind: "aggravate-monsters-scroll", weight: 3 },
+		{ kind: "identify-scroll-scroll", weight: 10 },
 		{ kind: "protect-armor", weight: 2 },
 	],
 	/* the original's slime mold (1 in 10) is not in this game: every food is a ration */

@@ -4,7 +4,7 @@ import {
 	SLEEP_SCROLL_TURNS_MAX,
 	SLEEP_SCROLL_TURNS_MIN,
 } from "../../balance.js";
-import { buildEventLog, type GameEvent, POTION_KINDS } from "../../events.js";
+import { buildEventLog, type GameEvent } from "../../events.js";
 import {
 	buildSpawnedEnemy,
 	drawEnemyKindForFloor,
@@ -29,35 +29,6 @@ export const applyUseMappingScroll = (state: GameState): GameState => ({
 	explored: state.terrain.map((column) => column.map(() => true)),
 	events: buildEventLog(state.events, [{ type: "floor-mapped", payload: {} }]),
 });
-
-/**
- * An identify scroll (original Rogue's identify potion scroll, whatis())
- * reveals the kind of the held potion `targetItemId` points at — the
- * player picks it (inventoryKeymap.ts's filterScrollTargets). With no
- * potion pointed at, the scroll is wasted, as the original's "you don't
- * have anything appropriate to identify". Picking one already identified
- * still uses the scroll up.
- */
-export const applyUseIdentifyScroll = (
-	state: GameState,
-	targetItemId: number | undefined,
-): GameState => {
-	const target = state.inventory.find(
-		(item) => item.itemId === targetItemId && POTION_KINDS.includes(item.kind),
-	);
-	if (target === undefined) {
-		return applyScrollWasted(state, "identify-potion-scroll");
-	}
-	return {
-		...state,
-		identifiedItemKinds: state.identifiedItemKinds.includes(target.kind)
-			? state.identifiedItemKinds
-			: [...state.identifiedItemKinds, target.kind],
-		events: buildEventLog(state.events, [
-			{ type: "potion-identified", payload: { kind: target.kind } },
-		]),
-	};
-};
 
 /**
  * A confuse monster scroll, as original Rogue's read_scroll(): the player's

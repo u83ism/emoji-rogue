@@ -93,6 +93,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"sleep-scroll": "眠りの巻物",
 	"create-monster-scroll": "召喚の巻物",
 	"aggravate-monsters-scroll": "警報の巻物",
+	"identify-scroll-scroll": "巻物識別の巻物",
 	"aggravate-monster-ring": "警報の指輪",
 	"protection-ring": "守りの指輪",
 	"add-strength-ring": "怪力の指輪",

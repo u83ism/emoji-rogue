@@ -72,7 +72,7 @@ describe("items/scrolls", () => {
 			"identify-potion-scroll",
 		]);
 		expect(next.events).toEqual([
-			{ type: "potion-identified", payload: { kind: "blindness" } },
+			{ type: "item-kind-identified", payload: { kind: "blindness" } },
 		]);
 	});
 

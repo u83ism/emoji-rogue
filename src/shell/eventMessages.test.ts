@@ -211,7 +211,7 @@ describe("formatEvent", () => {
 				"地図の巻物を読んだ。フロア全体が明らかになった!",
 			],
 			[
-				{ type: "potion-identified", payload: { kind: "poison" } },
+				{ type: "item-kind-identified", payload: { kind: "poison" } },
 				"毒薬がどれか判明した。以後この種類は実名で表示される",
 			],
 			[

@@ -12,12 +12,12 @@ import {
 import { applyUseFood } from "./food.js";
 import { applyUsePotion } from "./potions/potions.js";
 import { applyToggleRingEquip } from "./rings/rings.js";
+import { applyUseIdentifyScroll } from "./scrolls/identifyScrolls.js";
 import {
 	applyUseAggravateMonstersScroll,
 	applyUseConfuseMonsterScroll,
 	applyUseCreateMonsterScroll,
 	applyUseHoldMonsterScroll,
-	applyUseIdentifyScroll,
 	applyUseMappingScroll,
 	applyUseSleepScroll,
 	applyUseTeleportScroll,
@@ -94,7 +94,11 @@ export const applyItemEffect = (
 		case "mapping-scroll":
 			return applyUseMappingScroll(state);
 		case "identify-potion-scroll":
-			return applyUseIdentifyScroll(state, targetItemId);
+			return applyUseIdentifyScroll(
+				state,
+				"identify-potion-scroll",
+				targetItemId,
+			);
 		case "confuse-monster-scroll":
 			return applyUseConfuseMonsterScroll(state);
 		case "hold-monster-scroll":
@@ -103,6 +107,12 @@ export const applyItemEffect = (
 			return applyUseSleepScroll(state);
 		case "create-monster-scroll":
 			return applyUseCreateMonsterScroll(state);
+		case "identify-scroll-scroll":
+			return applyUseIdentifyScroll(
+				state,
+				"identify-scroll-scroll",
+				targetItemId,
+			);
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food":

@@ -91,6 +91,7 @@ export const ITEM_KIND_VALUES = [
 	"aggravate-monsters-scroll",
 	"haste-monster-wand",
 	"teleport-to-wand",
+	"nothing-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -155,6 +156,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"nothing-wand",
 	"teleport-to-wand",
 	"haste-monster-wand",
 	"slow-wand",

@@ -279,3 +279,22 @@ describe("the haste monster wand", () => {
 		expect(unslowed.events[0]?.type).toBe("enemy-unslowed");
 	});
 });
+
+describe("the wand of nothing", () => {
+	it("only spends a charge, and stays unknown", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(7, 1)],
+			inventory: [{ itemId: 1, kind: "nothing-wand" as const, charges: 5 }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1, direction: "east" },
+		});
+		expect(next.inventory).toEqual([
+			{ itemId: 1, kind: "nothing-wand", charges: 4 },
+		]);
+		expect(next.enemies[0]?.speed).toBe("normal");
+		expect(next.identifiedItemKinds).toEqual([]);
+	});
+});

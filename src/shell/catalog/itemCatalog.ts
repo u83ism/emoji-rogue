@@ -142,6 +142,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("teleport-to-wand"),
 		effect: `選んだ方向へ振り、最初に当たった敵をその方向のプレイヤーの隣まで引き寄せる(敵は起きて向かってくる)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
 	},
+	"nothing-wand": {
+		catalogName: "無の杖",
+		category: "杖",
+		spawn: itemDrawShare("nothing-wand"),
+		effect: `振っても何も起きない(使用回数だけ減る)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
+	},
 	weapon: {
 		catalogName: "武器",
 		category: "装備",

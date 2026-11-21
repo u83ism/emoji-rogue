@@ -515,6 +515,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "nothing-wand":
 		case "teleport-to-wand":
 		case "haste-monster-wand":
 			return {

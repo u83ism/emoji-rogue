@@ -29,6 +29,7 @@ import {
 import {
 	applyUseHasteMonsterWand,
 	applyUseMagicMissileWand,
+	applyUseNothingWand,
 	applyUseSlowWand,
 } from "./wands/wands.js";
 
@@ -102,6 +103,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "nothing-wand":
+			return applyUseNothingWand(state, direction);
 		case "teleport-to-wand":
 			return applyUseTeleportToWand(state, direction);
 		case "haste-monster-wand":

@@ -167,3 +167,9 @@ export const applyUseHasteMonsterWand = (
 		]),
 	};
 };
+
+/** A wand of nothing (original Rogue's WS_NOP): zapped any way, it only spends a charge — and stays unknown. */
+export const applyUseNothingWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => (direction === undefined ? state : { ...state });

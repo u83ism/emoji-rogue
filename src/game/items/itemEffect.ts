@@ -17,6 +17,7 @@ import {
 	applyUseAggravateMonstersScroll,
 	applyUseConfuseMonsterScroll,
 	applyUseCreateMonsterScroll,
+	applyUseFoodDetectionScroll,
 	applyUseHoldMonsterScroll,
 	applyUseMappingScroll,
 	applyUseSleepScroll,
@@ -131,6 +132,8 @@ export const applyItemEffect = (
 				"identify-armor-scroll",
 				targetItemId,
 			);
+		case "food-detection-scroll":
+			return applyUseFoodDetectionScroll(state);
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food":

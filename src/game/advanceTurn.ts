@@ -344,8 +344,12 @@ const reduceAction = (state: GameState, action: Action): GameState => {
  * before the next command).
  */
 export const advanceTurn = (state: GameState, action: Action): GameState => {
-	const next = reduceAction(state, action);
-	return next === state || next.status !== "playing"
-		? next
-		: applyLookWake(next);
+	/* a detection's flash lasts until the next command that does something */
+	const cleared =
+		state.sensedItems.length === 0 ? state : { ...state, sensedItems: [] };
+	const next = reduceAction(cleared, action);
+	if (next === cleared) {
+		return state;
+	}
+	return next.status !== "playing" ? next : applyLookWake(next);
 };

@@ -46,6 +46,7 @@ const INITIAL_RUN_STATE = {
 	nextItemId: 1,
 	identifiedItemKinds: [],
 	knownItemIds: [],
+	sensedItems: [],
 	goldCollected: 0,
 	floor: 1,
 	deepestFloor: 1,

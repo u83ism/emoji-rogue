@@ -357,6 +357,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"floor-mapped": emptyPayload,
 	"item-kind-identified": (payload) => isItemKind(payload.kind),
 	"item-numbers-known": (payload) => isPositiveInteger(payload.itemId),
+	"food-detected": (payload) => isNonNegativeInteger(payload.count),
 	"player-strengthened": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&
@@ -823,6 +824,19 @@ export const validateGameState = (
 	if (!isItemKindArray(identifiedItemKinds)) {
 		return err("identifiedItemKinds");
 	}
+	const sensedItems = value.sensedItems;
+	if (
+		!Array.isArray(sensedItems) ||
+		!sensedItems.every(
+			(tile) =>
+				isRecord(tile) &&
+				Number.isInteger(tile.x) &&
+				Number.isInteger(tile.y) &&
+				(tile.kind === "food" || tile.kind === "magic"),
+		)
+	) {
+		return err("sensedItems");
+	}
 	const knownItemIds = value.knownItemIds;
 	if (
 		!Array.isArray(knownItemIds) ||
@@ -926,6 +940,8 @@ export const validateGameState = (
 		nextItemId,
 		identifiedItemKinds: [...identifiedItemKinds],
 		knownItemIds: knownItemIds.filter((itemId) => isPositiveInteger(itemId)),
+		/* a detection's flash does not outlive the turn it was saved on */
+		sensedItems: [],
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,
 			y: pile.y,

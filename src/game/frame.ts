@@ -7,6 +7,7 @@ import {
 	FALLBACK_CELL,
 	GOLD_CELL,
 	ITEM_GLYPHS,
+	MAGIC_CELL,
 	PLAYER_CELL,
 	REMEMBERED_FLOOR_CELL,
 	REMEMBERED_STAIRS_CELL,
@@ -109,6 +110,15 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		const trapRow = grid[trap.y];
 		if (trap.seen && known && trapRow !== undefined) {
 			trapRow[trap.x] = TRAP_CELL;
+		}
+	}
+
+	/* what a detection sensed this turn shows wherever it is */
+	for (const sensed of state.sensedItems) {
+		const sensedRow = grid[sensed.y];
+		if (sensedRow !== undefined) {
+			sensedRow[sensed.x] =
+				sensed.kind === "food" ? ITEM_GLYPHS.food : MAGIC_CELL;
 		}
 	}
 

@@ -24,6 +24,8 @@ export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
 export const STAIRS_CELL: Cell = { glyph: "🔽" };
 /* A found trap (original Rogue's '^'): single-codepoint, Unicode 6.0 — the up-pointing red triangle echoes the caret. The look is to be judged on screen (docs/tasks/game.md). */
 export const TRAP_CELL: Cell = { glyph: "🔺" };
+/** Something magic a magic detection potion sensed (original Rogue's MAGIC) — provisional, to be judged on screen. */
+export const MAGIC_CELL: Cell = { glyph: "✨" };
 /* Amulet of Yendor: single-codepoint, Unicode 6.0 — floors from AMULET_FLOOR down only. */
 export const AMULET_CELL: Cell = { glyph: "💎" };
 /* Weapon uses a kitchen knife glyph (single-codepoint, no variation selector
@@ -118,6 +120,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"sleep-scroll": { glyph: "📜" },
 	"create-monster-scroll": { glyph: "📜" },
 	"aggravate-monsters-scroll": { glyph: "📜" },
+	"food-detection-scroll": { glyph: "📜" },
 	"identify-armor-scroll": { glyph: "📜" },
 	"identify-weapon-scroll": { glyph: "📜" },
 	"identify-ring-wand-scroll": { glyph: "📜" },

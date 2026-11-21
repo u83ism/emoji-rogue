@@ -288,3 +288,37 @@ describe("items/scrolls", () => {
 		);
 	});
 });
+
+describe("the food detection scroll", () => {
+	it("shows every ration for the turn, then the flash goes with the next command", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [{ x: 7, y: 1, kind: "food" as const }],
+			inventory: [{ itemId: 1, kind: "food-detection-scroll" as const }],
+		};
+		const read = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(read.sensedItems).toEqual([{ x: 7, y: 1, kind: "food" }]);
+		expect(read.identifiedItemKinds).toContain("food-detection-scroll");
+		expect(advanceTurn(read, { type: "wait" }).sensedItems).toEqual([]);
+		/* a bump into a wall spends nothing: the flash stays */
+		expect(
+			advanceTurn(read, { type: "move", payload: { direction: "north" } }),
+		).toBe(read);
+	});
+
+	it("only tingles with no food on the floor, staying unknown", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ itemId: 1, kind: "food-detection-scroll" as const }],
+		};
+		const read = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(read.sensedItems).toEqual([]);
+		expect(read.identifiedItemKinds).toEqual([]);
+	});
+});

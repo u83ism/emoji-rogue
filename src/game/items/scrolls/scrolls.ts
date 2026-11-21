@@ -147,3 +147,19 @@ export const applyUseAggravateMonstersScroll = (
 		{ type: "monsters-aggravated", payload: {} },
 	]),
 });
+
+/**
+ * A food detection scroll, as original Rogue's read_scroll() (S_FDET):
+ * every ration on the floor shows for the turn (sensedItems) — known then
+ * — or only the nose tingles.
+ */
+export const applyUseFoodDetectionScroll = (state: GameState): GameState => {
+	const food = state.items.filter((item) => item.kind === "food");
+	return {
+		...state,
+		sensedItems: food.map((item) => ({ x: item.x, y: item.y, kind: "food" })),
+		events: buildEventLog(state.events, [
+			{ type: "food-detected", payload: { count: food.length } },
+		]),
+	};
+};

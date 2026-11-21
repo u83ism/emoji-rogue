@@ -104,6 +104,7 @@ export const ITEM_KIND_VALUES = [
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
 	"identify-armor-scroll",
+	"food-detection-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -292,6 +293,7 @@ export const SCROLL_KIND_VALUES = [
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
 	"identify-armor-scroll",
+	"food-detection-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];
@@ -468,6 +470,11 @@ export type GameEvent =
 	| {
 			readonly type: "item-kind-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A food detection scroll: how many rations it showed (none — only a tingle). */
+			readonly type: "food-detected";
+			readonly payload: { readonly count: number };
 	  }
 	| {
 			/** An identify scroll told a weapon's or armor's own numbers (ISKNOW). */

@@ -285,6 +285,9 @@ export type Trap = Position & {
 	readonly seen: boolean;
 };
 
+/** A tile a detection shows for the turn (food detection, magic detection) — original Rogue's show_win(), gone at the next command. */
+export type SensedItem = Position & { readonly kind: "food" | "magic" };
+
 /** A secret door or passage (original Rogue's tile without F_REAL): wall in `terrain` until searched out — see search.ts. */
 export type HiddenTile = Position & {
 	readonly kind: "door" | "passage";
@@ -373,6 +376,8 @@ export interface GameState {
 	readonly identifiedItemKinds: readonly ItemKind[];
 	/** The items (by itemId) whose own numbers the player knows — original Rogue's ISKNOW: a ring's bonus, a wand's charges, set by an identify scroll (items/scrolls/identifyScrolls.ts). */
 	readonly knownItemIds: readonly number[];
+	/** What a detection showed this turn (SensedItem) — drawn over the map until the next command (advanceTurn clears it). */
+	readonly sensedItems: readonly SensedItem[];
 	readonly goldPiles: readonly GoldPile[];
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;

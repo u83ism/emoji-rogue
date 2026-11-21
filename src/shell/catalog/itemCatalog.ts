@@ -94,6 +94,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("identify-armor-scroll"),
 		effect: `読むと持っている防具を1つ選び、その防御力が分かる(装備していなくても持ち物欄に出る。防具を持っていなければ無駄になる)`,
 	},
+	"food-detection-scroll": {
+		catalogName: "食料感知の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("food-detection-scroll"),
+		effect: `読むとその階の食料の場所がそのターンだけ地図に出る(食料が無ければ鼻がむずむずするだけ)。食料があったときだけ正体が分かる`,
+	},
 	"aggravate-monsters-scroll": {
 		catalogName: "警報の巻物",
 		category: "巻物",

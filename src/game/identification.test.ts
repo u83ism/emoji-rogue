@@ -21,7 +21,7 @@ const zombie = (x: number, y: number, held = false): Enemy => ({
 	carried: [],
 	mean: true,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 describe("revealsItemKind", () => {

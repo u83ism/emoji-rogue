@@ -19,7 +19,7 @@ const awake = (
 	carried: [],
 	mean: false,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 /** 15x3 corridor, the player at (7,1). */

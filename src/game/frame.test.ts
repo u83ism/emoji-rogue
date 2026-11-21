@@ -44,7 +44,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		} as const;
 		const seen = {
 			...wide,
@@ -73,7 +73,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		} as const;
 		const detecting = {
 			...wide,
@@ -95,7 +95,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
@@ -113,7 +113,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
@@ -271,7 +271,7 @@ describe("buildFrameGrid", () => {
 					carried: [],
 					mean: false,
 					gazeUsed: false,
-					confusedTurnsRemaining: 0,
+					confused: false,
 				},
 			],
 		};
@@ -324,7 +324,7 @@ describe("buildFrameGrid", () => {
 					carried: [],
 					mean: false,
 					gazeUsed: false,
-					confusedTurnsRemaining: 0,
+					confused: false,
 				},
 			],
 		};
@@ -370,7 +370,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -390,7 +390,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -416,7 +416,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -442,7 +442,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const; /* distance 5 — visible FOV, but not adjacent */
@@ -462,7 +462,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 16,
 			y: 2,
 		} as const; /* distance 1 from player at (15,2) */
@@ -496,7 +496,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 27,
 			y: 2,
 		} as const; /* distance 12, normally hidden even for a non-phantom */
@@ -520,7 +520,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -540,7 +540,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -560,7 +560,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -584,7 +584,7 @@ describe("buildFrameGrid", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 			x: 20,
 			y: 2,
 		} as const;

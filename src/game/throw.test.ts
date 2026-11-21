@@ -45,7 +45,7 @@ const enemyOf = (
 	carried: [],
 	mean: false,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 /** A player level that makes every throw land (see combat.test.ts's SURE_HIT_LEVEL). */

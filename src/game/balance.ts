@@ -350,9 +350,6 @@ export const MAGIC_MISSILE_DAMAGE_DICE = { count: 1, sides: 4 } as const;
 /** Added to every magic missile's roll — the bolt's own `o_dplus` of 1, before the player's strength and wielded-weapon bonuses. */
 export const MAGIC_MISSILE_DAMAGE_BONUS = 1;
 
-/** How many turns a confuse monster scroll makes an enemy wander instead of pathfinding toward the player (adjacent attacks still land). */
-export const CONFUSE_MONSTER_SCROLL_DURATION = 8;
-
 /** How many turns a hallucination potion swaps displayed enemy glyphs for decoys — purely cosmetic, see frame.ts. */
 export const HALLUCINATION_POTION_DURATION = 850;
 

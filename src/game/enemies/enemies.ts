@@ -65,24 +65,15 @@ export const advanceEnemies = (state: GameState): GameState => {
 			continue;
 		}
 
-		/* Decided from this turn's still-undecremented value — the scroll's
-		 * own application turn already wanders instead of chasing. */
-		const confused = enemy.confusedTurnsRemaining > 0;
-		const confusedTurnsRemaining = Math.max(
-			0,
-			enemy.confusedTurnsRemaining - 1,
-		);
-
 		if (progress.died) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
-			nextEnemies.push({ ...enemy, confusedTurnsRemaining });
+			nextEnemies.push(enemy);
 			continue;
 		}
 		const result = resolveEnemyTurnActions(
 			state,
 			enemy,
 			progress,
-			confused,
 			visiblePoints,
 			occupied,
 		);
@@ -101,7 +92,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			hp: actor.hp,
 			awake: true,
 			speed: result.speed,
-			confusedTurnsRemaining,
+			confused: actor.confused,
 		});
 	}
 

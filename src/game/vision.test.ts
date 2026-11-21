@@ -151,6 +151,7 @@ describe("deriveExploredState", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			playerRunFlag: false,
+			nextHitConfuses: false,
 			hasteTurnsRemaining: 0,
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
@@ -210,6 +211,7 @@ describe("deriveExploredState", () => {
 			blindTurnsRemaining: 5,
 			paralyzedTurnsRemaining: 0,
 			playerRunFlag: false,
+			nextHitConfuses: false,
 			hasteTurnsRemaining: 0,
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
@@ -263,7 +265,7 @@ describe("findVisibleEnemies", () => {
 		carried: [],
 		mean: false,
 		gazeUsed: false,
-		confusedTurnsRemaining: 0,
+		confused: false,
 	});
 
 	it("returns every enemy inside the player's field of view", () => {

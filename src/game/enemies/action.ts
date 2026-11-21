@@ -37,6 +37,8 @@ export interface EnemyActor {
 	readonly position: Position;
 	readonly hp: number;
 	readonly fled: boolean;
+	/** Enemy.confused as it stands now — a stumble may clear it mid-turn. */
+	readonly confused: boolean;
 }
 
 export interface EnemyActionResult {
@@ -45,7 +47,9 @@ export interface EnemyActionResult {
 }
 
 /**
- * One action of one awake, unfrozen enemy. A kind listed in
+ * One action of one awake, unfrozen enemy. A confused one (original
+ * Rogue's chase() with ISHUH) stumbles one random step four times in five,
+ * and each stumble has a one-in-twenty chance to clear its confusion. A kind listed in
  * ERRATIC_MOVE_CHANCE_PERCENT (bat, phantom) first rolls that chance to
  * flutter one random step instead — even away from a player it stands next
  * to, which is what makes a bat so hard to pin down.
@@ -60,11 +64,32 @@ export const resolveEnemyAction = (
 	state: GameState,
 	enemy: Enemy,
 	actor: EnemyActor,
-	progress: EnemyTurnProgress,
-	confused: boolean,
+	turnProgress: EnemyTurnProgress,
 	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
+	let progress = turnProgress;
+	if (actor.confused) {
+		const stagger = stepUniform(progress.rng);
+		if (Math.floor(stagger.value * 5) !== 0) {
+			const stumbled = stepWandering(
+				state,
+				actor.position,
+				occupied,
+				stagger.state,
+			);
+			const recovery = stepUniform(stumbled.rng);
+			return {
+				actor: {
+					...actor,
+					position: stumbled.position,
+					confused: Math.floor(recovery.value * 20) !== 0,
+				},
+				progress: { ...progress, rng: recovery.state },
+			};
+		}
+		progress = { ...progress, rng: stagger.state };
+	}
 	const erraticChancePercent = ERRATIC_MOVE_CHANCE_PERCENT[enemy.kind];
 	if (erraticChancePercent === undefined) {
 		return resolveIntendedAction(
@@ -72,7 +97,6 @@ export const resolveEnemyAction = (
 			enemy,
 			actor,
 			progress,
-			confused,
 			visiblePoints,
 			occupied,
 		);
@@ -84,7 +108,6 @@ export const resolveEnemyAction = (
 			enemy,
 			actor,
 			{ ...progress, rng: erraticRoll.state },
-			confused,
 			visiblePoints,
 			occupied,
 		);
@@ -107,7 +130,6 @@ const resolveIntendedAction = (
 	enemy: Enemy,
 	actor: EnemyActor,
 	progress: EnemyTurnProgress,
-	confused: boolean,
 	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
@@ -118,7 +140,6 @@ const resolveIntendedAction = (
 			actor.position,
 			occupied,
 			visiblePoints,
-			confused,
 			progress.rng,
 		);
 		return {

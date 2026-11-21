@@ -108,51 +108,18 @@ describe("items/scrolls", () => {
 		}
 	});
 
-	it("using a held confuse monster scroll sets the nearest visible (non-adjacent) enemy's confusedTurnsRemaining and logs enemy-confused", () => {
-		const target = {
-			x: 7,
-			y: 1,
-			kind: "zombie" as const,
-			hp: 2,
-			maxHp: 2,
-			awake: true,
-			speed: "normal" as const,
-			held: false,
-			carried: [],
-			mean: false,
-			gazeUsed: false,
-			confusedTurnsRemaining: 0,
-		};
+	it("a confuse monster scroll makes the hands glow, used up even with no monster around", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			enemies: [target],
 			inventory: [{ itemId: 1, kind: "confuse-monster-scroll" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.player).toEqual(state.player);
 		expect(next.inventory).toEqual([]);
-		expect(
-			next.events.some(
-				(event) =>
-					event.type === "enemy-confused" && event.payload.target === "zombie",
-			),
-		).toBe(true);
-		expect(next.enemies[0]?.confusedTurnsRemaining).toBeGreaterThan(0);
-	});
-
-	it("using a held confuse monster scroll with no visible enemy is a no-op (same reference, not consumed)", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "confuse-monster-scroll" as const }],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 1 },
-		});
-		expect(next).toBe(state);
+		expect(next.nextHitConfuses).toBe(true);
+		expect(next.events.map((event) => event.type)).toContain("hands-glowing");
 	});
 
 	it("a hold monster scroll stops every awake monster within 2 tiles, and only those", () => {
@@ -168,7 +135,7 @@ describe("items/scrolls", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const far = {
 			x: 7,
@@ -182,7 +149,7 @@ describe("items/scrolls", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 9, 1),
@@ -286,7 +253,7 @@ describe("items/scrolls", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),

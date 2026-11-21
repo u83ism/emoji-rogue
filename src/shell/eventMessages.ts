@@ -47,6 +47,7 @@ export const formatEvent = (
 		case "player-fell-asleep":
 		case "monster-created":
 		case "monsters-aggravated":
+		case "hands-glowing":
 		case "player-sees-invisible":
 		case "player-exhausted":
 		case "wand-empty":
@@ -141,7 +142,9 @@ export const formatEvent = (
 		case "enemy-teleported":
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
 		case "enemy-confused":
-			return `${resolveItemDisplayName("confuse-monster-scroll", identifiedItemKinds, undefined, appearances)}を読んだ。${ENEMY_NAMES[event.payload.target]}が混乱した!`;
+			return `${ENEMY_NAMES[event.payload.target]}は混乱したようだ`;
+		case "hands-stopped-glowing":
+			return "両手の赤い光が消えた";
 		case "hallucination-faded":
 			return "幻覚がおさまった";
 		case "enemy-held":

@@ -51,7 +51,7 @@ describe("teleport wand", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),

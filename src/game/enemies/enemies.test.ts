@@ -61,7 +61,7 @@ const enemyOf = (
 	carried: [],
 	mean: false,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 const zombie = (x: number, y: number, awake = true): Enemy =>
@@ -226,6 +226,7 @@ describe("advanceEnemies", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			playerRunFlag: false,
+			nextHitConfuses: false,
 			hasteTurnsRemaining: 0,
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
@@ -740,6 +741,7 @@ describe("advanceEnemies", () => {
 			blindTurnsRemaining: 0,
 			paralyzedTurnsRemaining: 0,
 			playerRunFlag: false,
+			nextHitConfuses: false,
 			hasteTurnsRemaining: 0,
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
@@ -788,13 +790,33 @@ describe("advanceEnemies", () => {
 		expect(next.events).toEqual([]);
 	});
 
-	it("a confused visible enemy wanders (consuming rng) instead of chasing via A*", () => {
-		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 3 };
-		const state = buildCorridorState([confused]);
-		const next = advanceEnemies(state);
-		/* A* pursuit would step to (6,1) deterministically, consuming no rng —
-		 * wandering instead consumes rng and may or may not land there. */
-		expect(next.rng).not.toEqual(state.rng);
+	it("a confused enemy stumbles at random four moves in five, sometimes coming to its senses", () => {
+		/* a 9x9 room, the player at (4,4), a confused zombie at (7,4) */
+		const base = {
+			...buildArenaGameState(9, 9, 1),
+			enemies: [{ ...zombie(7, 4), confused: true }],
+		};
+		let rng = base.rng;
+		let chased = 0;
+		let recovered = 0;
+		for (let i = 0; i < 400; i++) {
+			const next = advanceEnemies({ ...base, rng });
+			expect(next.rng).not.toEqual(rng); /* the stagger roll, every time */
+			const moved = next.enemies[0];
+			if (moved?.x === 6 && moved.y === 4 && moved.confused) {
+				chased++; /* A*'s step — or a stumble landing there by chance */
+			}
+			if (moved?.confused === false) {
+				recovered++;
+			}
+			rng = stepUniform(rng).state;
+		}
+		/* one in five chases, and about one in eight of the stumbles lands there too */
+		expect(chased).toBeGreaterThan(80);
+		expect(chased).toBeLessThan(160);
+		/* four in five stumble, and a stumble clears it one time in twenty */
+		expect(recovered).toBeGreaterThan(5);
+		expect(recovered).toBeLessThan(35);
 	});
 
 	it("attacks diagonally too, but not across a corner of rock", () => {
@@ -815,23 +837,7 @@ describe("advanceEnemies", () => {
 		expect(advanceEnemies(cornered).playerHp).toBe(200);
 	});
 
-	it("a confused enemy still attacks when adjacent", () => {
-		const confused = { ...zombie(5, 1), confusedTurnsRemaining: 3 };
-		const state = buildExposedState([confused]);
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([{ ...confused, confusedTurnsRemaining: 2 }]);
-		expect(next.playerHp).toBeLessThan(state.playerHp);
-		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
-	});
-
-	it("confusedTurnsRemaining ticks down by one per turn and stops at zero", () => {
-		const confused = { ...zombie(7, 1), confusedTurnsRemaining: 1 };
-		const state = buildCorridorState([confused]);
-		const next = advanceEnemies(state);
-		expect(next.enemies[0]?.confusedTurnsRemaining).toBe(0);
-	});
-
-	it("an unconfused enemy still chases deterministically (confusedTurnsRemaining at 0 is a no-op)", () => {
+	it("an unconfused enemy still chases deterministically", () => {
 		const state = buildCorridorState([zombie(7, 1)]);
 		const next = advanceEnemies(state);
 		expect(next.enemies).toEqual([zombie(6, 1)]);

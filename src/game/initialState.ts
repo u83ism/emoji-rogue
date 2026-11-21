@@ -35,6 +35,7 @@ const INITIAL_RUN_STATE = {
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
 	playerRunFlag: false,
+	nextHitConfuses: false,
 	hasteTurnsRemaining: 0,
 	seeInvisibleTurnsRemaining: 0,
 	stuckTurnsRemaining: 0,

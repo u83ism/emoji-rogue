@@ -116,8 +116,8 @@ export interface EnemyMovementResult {
 
 /**
  * What a non-adjacent, awake enemy does this action: venus-flytrap is
- * stationary and never moves; any other kind chases via A* while visible
- * and not confused, or wanders otherwise. (A medusa's gaze is not a move of
+ * stationary and never moves; any other kind chases via A* while visible,
+ * or wanders otherwise (a confused one's stumbles are action.ts's). (A medusa's gaze is not a move of
  * its own — see medusaGaze.ts.)
  */
 export const resolveEnemyMovement = (
@@ -126,13 +126,12 @@ export const resolveEnemyMovement = (
 	next: Position,
 	occupied: ReadonlySet<string>,
 	visiblePoints: ReadonlySet<string>,
-	confused: boolean,
 	rng: RngState,
 ): EnemyMovementResult => {
 	if (enemy.kind === "venus-flytrap") {
 		return { position: next, rng };
 	}
-	if (!confused && visiblePoints.has(encodePointKey(next.x, next.y))) {
+	if (visiblePoints.has(encodePointKey(next.x, next.y))) {
 		const step = stepTowardPlayer(state, next, occupied);
 		return { position: step ?? next, rng };
 	}

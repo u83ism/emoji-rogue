@@ -51,6 +51,7 @@ describe("save file shape guard", () => {
 				blindTurnsRemaining: "number",
 				paralyzedTurnsRemaining: "number",
 				playerRunFlag: "boolean",
+				nextHitConfuses: "boolean",
 				/* one index per kind — pinned as families here, their values by validateGameState */
 				appearances: {
 					potionColors: expect.any(Object),
@@ -78,7 +79,7 @@ describe("save file shape guard", () => {
 						carried: [],
 						mean: "boolean",
 						gazeUsed: "boolean",
-						confusedTurnsRemaining: "number",
+						confused: "boolean",
 					},
 				],
 				items: [{ x: "number", y: "number", kind: "string" }],

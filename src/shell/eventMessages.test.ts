@@ -337,9 +337,14 @@ describe("formatEvent", () => {
 				"隠密の指輪を身につけた。足音が忍びやかになった!",
 			],
 			[
-				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
-				"混乱の巻物を読んだ。ゾンビが混乱した!",
+				{ type: "enemy-confused", payload: { target: "zombie" } },
+				"ゾンビは混乱したようだ",
 			],
+			[
+				{ type: "hands-glowing", payload: {} },
+				"混乱の巻物を読んだ。両手が赤く光りはじめた",
+			],
+			[{ type: "hands-stopped-glowing", payload: {} }, "両手の赤い光が消えた"],
 			[
 				{ type: "player-hallucinated", payload: { turns: 20 } },
 				"幻覚の薬を飲んだ。景色が歪んで見える!",
@@ -400,17 +405,11 @@ describe("formatEvent", () => {
 		expect(
 			formatEvent({ type: "strength-restored", payload: { strength: 16 } }, []),
 		).toBe("未鑑定の薬を飲んだ。体じゅうが温かい(力16)");
+		expect(formatEvent({ type: "hands-glowing", payload: {} }, [])).toMatch(
+			/^.+を読んだ。両手が赤く光りはじめた$/,
+		);
 		expect(
-			formatEvent(
-				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
-				[],
-			),
-		).toMatch(/^.+を読んだ。ゾンビが混乱した!$/);
-		expect(
-			formatEvent(
-				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
-				[],
-			),
+			formatEvent({ type: "hands-glowing", payload: {} }, []),
 		).not.toContain("混乱の巻物");
 	});
 

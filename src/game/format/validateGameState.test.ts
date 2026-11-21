@@ -188,7 +188,7 @@ describe("validateGameState", () => {
 			"enemies",
 		);
 		expectRejected(
-			{ ...valid, enemies: [{ ...enemies[0], confusedTurnsRemaining: -1 }] },
+			{ ...valid, enemies: [{ ...enemies[0], confused: 1 }] },
 			"enemies",
 		);
 		expectRejected(

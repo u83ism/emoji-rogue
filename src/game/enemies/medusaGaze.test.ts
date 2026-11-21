@@ -16,7 +16,7 @@ const medusa = (x: number, y: number): Enemy => ({
 	carried: [],
 	mean: true,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 /* a 9x5 arena — one lit room — the player at (4,2) */

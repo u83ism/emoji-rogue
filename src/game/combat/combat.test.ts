@@ -39,7 +39,7 @@ const enemyOf = (
 	carried: [],
 	mean: false,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 const zombie = (
@@ -370,7 +370,7 @@ describe("dragon", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.playerExperience).toBe(
@@ -379,5 +379,38 @@ describe("dragon", () => {
 		expect(calculateEnemyExperienceReward("dragon", 1)).toBeGreaterThan(
 			calculateEnemyExperienceReward("aquator", 1),
 		);
+	});
+});
+
+describe("applyEnemyHit with glowing hands", () => {
+	it("confuses a monster that lives through the hit, and the glow is spent", () => {
+		const target = zombie(5, 4);
+		const state = {
+			...buildArenaGameState(9, 9, 1),
+			enemies: [target],
+			nextHitConfuses: true,
+		};
+		const hit = applyEnemyHit(state, target, 1, {
+			type: "enemy-hit",
+			payload: { target: "zombie", damage: 1 },
+		});
+		expect(hit.nextHitConfuses).toBe(false);
+		expect(hit.enemies[0]?.confused).toBe(true);
+		expect(hit.events.map((event) => event.type)).toEqual([
+			"enemy-hit",
+			"hands-stopped-glowing",
+			"enemy-confused",
+		]);
+		/* without the glow nothing of the kind */
+		const plain = applyEnemyHit(
+			{ ...state, nextHitConfuses: false },
+			target,
+			1,
+			{
+				type: "enemy-hit",
+				payload: { target: "zombie", damage: 1 },
+			},
+		);
+		expect(plain.enemies[0]?.confused).toBe(false);
 	});
 });

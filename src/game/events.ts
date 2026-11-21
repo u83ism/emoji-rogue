@@ -678,9 +678,19 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** A confuse monster scroll — see advanceEnemies's confusedTurnsRemaining handling. */
+			/** A monster hit while the player's hands glowed is confused (Enemy.confused) — see combat/combat.ts's applyEnemyHit. */
 			readonly type: "enemy-confused";
-			readonly payload: { readonly target: EnemyKind; readonly turns: number };
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** Reading a confuse monster scroll: the player's hands glow until they next hit something (GameState.nextHitConfuses). */
+			readonly type: "hands-glowing";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** The glow passing into the monster just hit. */
+			readonly type: "hands-stopped-glowing";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** Drinking a hallucination potion — see turnEnd/statusCountdowns.ts. Cosmetic only, no mechanical effect. */

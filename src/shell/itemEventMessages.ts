@@ -54,6 +54,7 @@ export type ItemUseEvent = Extract<
 			| "player-fell-asleep"
 			| "monster-created"
 			| "monsters-aggravated"
+			| "hands-glowing"
 			| "player-sees-invisible"
 			| "player-exhausted"
 			| "scroll-wasted"
@@ -121,6 +122,8 @@ export const formatItemUseEvent = (
 			return event.payload.target === undefined
 				? `${nameOf("create-monster-scroll")}を読んだ。遠くでかすかな悲鳴が聞こえた`
 				: `${nameOf("create-monster-scroll")}を読んだ。${ENEMY_NAMES[event.payload.target]}が現れた!`;
+		case "hands-glowing":
+			return `${nameOf("confuse-monster-scroll")}を読んだ。両手が赤く光りはじめた`;
 		case "monsters-aggravated":
 			return `${nameOf("aggravate-monsters-scroll")}を読んだ。かん高い音が鳴り響いた`;
 		case "player-exhausted":

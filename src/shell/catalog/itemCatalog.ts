@@ -1,7 +1,6 @@
 import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
-	CONFUSE_MONSTER_SCROLL_DURATION,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
 	FOOD_DROUGHT_FLOOR_LIMIT,
@@ -60,7 +59,8 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "混乱の巻物",
 		category: "巻物",
 		spawn: itemDrawShare("confuse-monster-scroll"),
-		effect: `視界内の最も近い敵を${CONFUSE_MONSTER_SCROLL_DURATION}ターン混乱させる(以後は視界内でも追跡してこず徘徊するようになる。隣接時の攻撃は変わらず行う)`,
+		effect:
+			"読むと両手が赤く光り、次に攻撃(投げ物・魔法の矢も)を当てた敵を混乱させる。混乱した敵は5回に4回でたらめに動き、そのたびに1/20の確率で正気に戻る",
 	},
 	"sleep-scroll": {
 		catalogName: "眠りの巻物",

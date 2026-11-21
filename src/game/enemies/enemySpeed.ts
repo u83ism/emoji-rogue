@@ -43,7 +43,6 @@ export const resolveEnemyTurnActions = (
 	state: GameState,
 	enemy: Enemy,
 	progress: EnemyTurnProgress,
-	confused: boolean,
 	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyTurnResult => {
@@ -53,7 +52,6 @@ export const resolveEnemyTurnActions = (
 			enemy,
 			from.actor,
 			from.progress,
-			confused,
 			visiblePoints,
 			occupied,
 		);
@@ -63,7 +61,12 @@ export const resolveEnemyTurnActions = (
 			from.speed === "hasted" && !isTurnOver(first) ? act(first) : first;
 		return { ...second, speed: toggleSlowedTurn(from.speed) };
 	};
-	const start: EnemyActor = { position: enemy, hp: enemy.hp, fled: false };
+	const start: EnemyActor = {
+		position: enemy,
+		hp: enemy.hp,
+		fled: false,
+		confused: enemy.confused,
+	};
 	const firstMove = move({ actor: start, progress, speed: enemy.speed });
 	return !isTurnOver(firstMove) &&
 		canFlyAgain(enemy.kind, firstMove.actor.position, state.player)

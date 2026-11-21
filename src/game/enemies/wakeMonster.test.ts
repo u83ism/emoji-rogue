@@ -21,7 +21,7 @@ const sleeper = (kind: EnemyKind, x: number, y: number): Enemy => ({
 	carried: [],
 	mean: ENEMY_IS_MEAN[kind],
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 /* a 9x5 arena — one lit room (1..7, 1..3) — the player at (4,2) */

@@ -65,7 +65,9 @@ export const isAdjacent = (left: Position, right: Position): boolean =>
  * The shared back half of every player-sourced hit: `damage` applied to
  * `target`, `hitEvent` logged, a kill removing the enemy (with enemy-defeated
  * and experience) or a survivor waking up, and the quiet turns natural
- * healing waits on reset either way. Only how the damage and the event are produced differs between
+ * healing waits on reset either way. With the player's hands glowing
+ * (nextHitConfuses, original Rogue's CANHUH) the glow passes into the
+ * target, confusing it if it lives — said only while the player can see. Only how the damage and the event are produced differs between
  * melee, wand (the callers below) and a thrown weapon (items/throw.ts).
  */
 export const applyEnemyHit = (
@@ -75,9 +77,15 @@ export const applyEnemyHit = (
 	hitEvent: GameEvent,
 ): GameState => {
 	const remainingHp = target.hp - damage;
+	const confuses = state.nextHitConfuses;
 	const events: GameEvent[] = [hitEvent];
+	if (confuses) {
+		events.push({ type: "hands-stopped-glowing", payload: {} });
+	}
 	if (remainingHp <= 0) {
 		events.push({ type: "enemy-defeated", payload: { target: target.kind } });
+	} else if (confuses && state.blindTurnsRemaining === 0) {
+		events.push({ type: "enemy-confused", payload: { target: target.kind } });
 	}
 
 	const enemies =
@@ -85,11 +93,18 @@ export const applyEnemyHit = (
 			? state.enemies.filter((enemy) => enemy !== target)
 			: state.enemies.map((enemy) =>
 					enemy === target
-						? { ...enemy, hp: remainingHp, awake: true, held: false }
+						? {
+								...enemy,
+								hp: remainingHp,
+								awake: true,
+								held: false,
+								confused: enemy.confused || confuses,
+							}
 						: enemy,
 				);
 	const next: GameState = {
 		...state,
+		nextHitConfuses: false,
 		enemies,
 		quietTurns: 0,
 		events: buildEventLog(state.events, events),

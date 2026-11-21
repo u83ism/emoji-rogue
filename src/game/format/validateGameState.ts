@@ -133,7 +133,7 @@ const isEnemyArray = (
 			isItemArray(enemy.carried, terrain) &&
 			isBooleanValue(enemy.mean) &&
 			isBooleanValue(enemy.gazeUsed) &&
-			isNonNegativeInteger(enemy.confusedTurnsRemaining),
+			isBooleanValue(enemy.confused),
 	);
 
 export const isItemKind = (value: unknown): value is ItemKind =>
@@ -404,8 +404,9 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-gold-drop": (payload) =>
 		isEnemyKind(payload.by) && isPositiveInteger(payload.amount),
 	"enemy-teleported": (payload) => isEnemyKind(payload.target),
-	"enemy-confused": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.turns),
+	"enemy-confused": (payload) => isEnemyKind(payload.target),
+	"hands-glowing": emptyPayload,
+	"hands-stopped-glowing": emptyPayload,
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) => isEnemyKind(payload.target),
@@ -649,6 +650,10 @@ export const validateGameState = (
 	if (!isBooleanValue(playerRunFlag)) {
 		return err("playerRunFlag");
 	}
+	const nextHitConfuses = value.nextHitConfuses;
+	if (!isBooleanValue(nextHitConfuses)) {
+		return err("nextHitConfuses");
+	}
 	const stuckTurnsRemaining = value.stuckTurnsRemaining;
 	if (!isNonNegativeInteger(stuckTurnsRemaining)) {
 		return err("stuckTurnsRemaining");
@@ -794,6 +799,7 @@ export const validateGameState = (
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		playerRunFlag,
+		nextHitConfuses,
 		appearances,
 		rooms: rooms.map((room) => ({
 			x1: room.x1,
@@ -831,7 +837,7 @@ export const validateGameState = (
 			carried: enemy.carried.map(rebuildItem),
 			mean: enemy.mean,
 			gazeUsed: enemy.gazeUsed,
-			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
+			confused: enemy.confused,
 		})),
 		items: items.map(rebuildItem),
 		inventory: [...inventory],

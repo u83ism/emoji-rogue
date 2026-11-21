@@ -1,6 +1,5 @@
 import { createRng } from "../../rng.js";
 import {
-	CONFUSE_MONSTER_SCROLL_DURATION,
 	HOLD_MONSTER_SCROLL_RANGE,
 	SLEEP_SCROLL_TURNS_MAX,
 	SLEEP_SCROLL_TURNS_MIN,
@@ -9,7 +8,6 @@ import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "../floor/enemies.js";
 import type { GameState, Position } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
-import { findNearestVisibleEnemy } from "../vision.js";
 import { applyScrollWasted } from "./equipmentScrolls.js";
 
 // The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
@@ -59,36 +57,15 @@ export const applyUseIdentifyScroll = (
 };
 
 /**
- * A confuse monster scroll sets the nearest visible enemy's
- * confusedTurnsRemaining — see advanceEnemies for what that does to its
- * chase decision. Same no-visible-target no-op as the wands.
+ * A confuse monster scroll, as original Rogue's read_scroll(): the player's
+ * hands begin to glow (CANHUH), and the next monster they hit is confused
+ * — see combat/combat.ts's applyEnemyHit. Always used up.
  */
-export const applyUseConfuseMonsterScroll = (state: GameState): GameState => {
-	const target = findNearestVisibleEnemy(state);
-	if (target === undefined) {
-		return state;
-	}
-	return {
-		...state,
-		enemies: state.enemies.map((enemy) =>
-			enemy === target
-				? {
-						...enemy,
-						confusedTurnsRemaining: CONFUSE_MONSTER_SCROLL_DURATION,
-					}
-				: enemy,
-		),
-		events: buildEventLog(state.events, [
-			{
-				type: "enemy-confused",
-				payload: {
-					target: target.kind,
-					turns: CONFUSE_MONSTER_SCROLL_DURATION,
-				},
-			},
-		]),
-	};
-};
+export const applyUseConfuseMonsterScroll = (state: GameState): GameState => ({
+	...state,
+	nextHitConfuses: true,
+	events: buildEventLog(state.events, [{ type: "hands-glowing", payload: {} }]),
+});
 
 /**
  * A hold monster scroll, as original Rogue's read_scroll(): every awake

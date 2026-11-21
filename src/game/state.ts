@@ -113,8 +113,8 @@ export type Enemy = Position & {
 	readonly mean: boolean;
 	/** Original Rogue's ISFOUND on a medusa: its one gaze is spent (enemies/medusaGaze.ts). */
 	readonly gazeUsed: boolean;
-	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
-	readonly confusedTurnsRemaining: number;
+	/** Original Rogue's ISHUH: four moves in five go a random way, and each such stumble may clear it (one in twenty) — enemies/action.ts. A hit while the player's hands glow (nextHitConfuses) sets it. */
+	readonly confused: boolean;
 };
 
 /**
@@ -327,6 +327,8 @@ export interface GameState {
 	 * stage changes — see combat/hitChance.ts.
 	 */
 	readonly playerRunFlag: boolean;
+	/** Original Rogue's CANHUH: the player's hands glow from a confuse monster scroll, and the next monster they hit is confused (combat/combat.ts's applyEnemyHit). */
+	readonly nextHitConfuses: boolean;
 	/** Move attempts left before a bear trap lets go (original Rogue's no_move) — each attempt uses one up. */
 	readonly stuckTurnsRemaining: number;
 	/** Turns left of a see invisible potion — invisible monsters show while it lasts (vision.ts's canSeeInvisible). */

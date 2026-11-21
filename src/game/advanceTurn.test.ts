@@ -39,7 +39,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	carried: [],
 	mean: false,
 	gazeUsed: false,
-	confusedTurnsRemaining: 0,
+	confused: false,
 });
 
 describe("advanceTurn", () => {
@@ -569,7 +569,7 @@ describe("advanceTurn", () => {
 					carried: [],
 					mean: false,
 					gazeUsed: false,
-					confusedTurnsRemaining: 0,
+					confused: false,
 				},
 			],
 			playerLevel: SURE_HIT_LEVEL,
@@ -592,7 +592,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...buildArenaGameState(5, 5, 1),
@@ -624,7 +624,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: true,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
 		expect(advanceTurn(state, move("west")).player).toEqual({ x: 1, y: 2 });
@@ -643,7 +643,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...buildArenaGameState(5, 5, 1),
@@ -671,7 +671,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
 		const next = advanceTurn(state, move("north"));
@@ -691,7 +691,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		/* player at (2,2) in a 3x3 arena: every direction but toward the
 		 * flytrap (south) is a wall */
@@ -713,7 +713,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const state = {
 			...start,
@@ -745,7 +745,7 @@ describe("advanceTurn", () => {
 			carried: [],
 			mean: false,
 			gazeUsed: false,
-			confusedTurnsRemaining: 0,
+			confused: false,
 		};
 		const held = {
 			...buildArenaGameState(5, 5, 1),

@@ -1,14 +1,17 @@
 import { encodePointKey } from "../pointkey.js";
 import type { Cell } from "../renderer/index.js";
 import { resolveEnemyCell } from "./enemyCells.js";
+import { findRoomExits } from "./floor/passages.js";
 import {
 	AMULET_CELL,
 	DEAD_PLAYER_CELL,
+	DOOR_CELL,
 	FALLBACK_CELL,
 	GOLD_CELL,
 	ITEM_GLYPHS,
 	MAGIC_CELL,
 	PLAYER_CELL,
+	REMEMBERED_DOOR_CELL,
 	REMEMBERED_FLOOR_CELL,
 	REMEMBERED_STAIRS_CELL,
 	REMEMBERED_WALL_CELL,
@@ -24,23 +27,37 @@ import { canSeeInvisible, computePlayerVisiblePoints } from "./vision.js";
 const toCell = (
 	state: GameState,
 	visiblePoints: ReadonlySet<string>,
+	doors: ReadonlySet<string>,
 	x: number,
 	y: number,
 ): Cell => {
 	const value = state.terrain[x]?.[y];
+	const isDoor = doors.has(encodePointKey(x, y));
 	if (visiblePoints.has(encodePointKey(x, y))) {
-		return (
-			(value !== undefined ? TERRAIN_GLYPHS[value] : undefined) ?? FALLBACK_CELL
-		);
+		return isDoor
+			? DOOR_CELL
+			: ((value !== undefined ? TERRAIN_GLYPHS[value] : undefined) ??
+					FALLBACK_CELL);
 	}
 	if (state.explored[x]?.[y]) {
 		if (x === state.stairs.x && y === state.stairs.y) {
 			return REMEMBERED_STAIRS_CELL;
 		}
+		if (isDoor) {
+			return REMEMBERED_DOOR_CELL;
+		}
 		return value === 1 ? REMEMBERED_WALL_CELL : REMEMBERED_FLOOR_CELL;
 	}
 	return UNEXPLORED_CELL;
 };
+
+/** Every doorway of the floor (original Rogue's '+'): the open tiles of each room's wall ring. A secret door, still wall, is none. */
+const collectDoors = (state: GameState): ReadonlySet<string> =>
+	new Set(
+		state.rooms.flatMap((room) =>
+			findRoomExits(state, room).map((door) => encodePointKey(door.x, door.y)),
+		),
+	);
 
 /** Which glyph stands on the player's own tile, by run outcome. */
 const resolvePlayerCell = (status: GameStatus): Cell => {
@@ -61,12 +78,13 @@ const resolvePlayerCell = (status: GameStatus): Cell => {
  */
 export const buildFrameGrid = (state: GameState): Cell[][] => {
 	const visiblePoints = computePlayerVisiblePoints(state);
+	const doors = collectDoors(state);
 
 	const grid: Cell[][] = [];
 	for (let y = 0; y < state.height; y++) {
 		const row: Cell[] = [];
 		for (let x = 0; x < state.width; x++) {
-			row.push(toCell(state, visiblePoints, x, y));
+			row.push(toCell(state, visiblePoints, doors, x, y));
 		}
 		grid.push(row);
 	}

@@ -632,3 +632,25 @@ describe("buildFrameGrid", () => {
 		expect(first).not.toBe(second);
 	});
 });
+
+describe("doors", () => {
+	it("draws a room's doorway as 🚪 in sight, and a brown silhouette remembered", () => {
+		/* a 9x5 arena — one room (1..7, 1..3) — with its west wall opened at (0,2) */
+		const arena = buildArenaGameState(9, 5, 1);
+		const terrain = arena.terrain.map((column, x) =>
+			column.map((tile, y) => (x === 0 && y === 2 ? 0 : tile)),
+		);
+		const state = { ...arena, terrain };
+		expect(buildFrameGrid(state)[2]?.[0]).toEqual({ glyph: "🚪" });
+		/* the remembered door, out of sight in a dark room */
+		const dark = {
+			...state,
+			player: { x: 6, y: 2 },
+			rooms: [{ x1: 1, y1: 1, x2: 7, y2: 3, dark: true }],
+		};
+		expect(buildFrameGrid(dark)[2]?.[0]).toEqual({
+			glyph: "　",
+			bg: "#5a3a1a",
+		});
+	});
+});

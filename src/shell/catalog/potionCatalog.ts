@@ -101,4 +101,11 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("see-invisible-potion"),
 		effect: `約${SEE_INVISIBLE_POTION_DURATION}ターンの間、透明な敵(ファントム)が見えるようになる。重ねて飲むと時間が延びる`,
 	},
+	"magic-detection-potion": {
+		catalogName: "魔法感知の薬",
+		category: "薬",
+		spawn: itemDrawShare("magic-detection-potion"),
+		effect:
+			"飲むとその階の魔法の品(薬・巻物・指輪・杖・魔除け・補正のある武器と防具)と、それを持つ敵の場所がそのターンだけ地図に出る。何も無ければ一瞬妙な感じがするだけ。見つかったときだけ正体が分かる",
+	},
 };

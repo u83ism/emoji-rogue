@@ -105,6 +105,7 @@ export const ITEM_KIND_VALUES = [
 	"identify-weapon-scroll",
 	"identify-armor-scroll",
 	"food-detection-scroll",
+	"magic-detection-potion",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -256,6 +257,7 @@ export const POTION_KIND_VALUES = [
 	"extra-healing-potion",
 	"haste-self-potion",
 	"see-invisible-potion",
+	"magic-detection-potion",
 ] as const satisfies readonly ItemKind[];
 
 /** The potion subset of ItemKind — lets items/potions/potions.ts switch exhaustively. */
@@ -470,6 +472,11 @@ export type GameEvent =
 	| {
 			readonly type: "item-kind-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A magic detection potion: how many magic things it showed (none — only a strange feeling). */
+			readonly type: "magic-detected";
+			readonly payload: { readonly count: number };
 	  }
 	| {
 			/** A food detection scroll: how many rations it showed (none — only a tingle). */

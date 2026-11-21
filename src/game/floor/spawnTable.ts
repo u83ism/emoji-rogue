@@ -36,6 +36,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "poison", weight: 8 },
 		{ kind: "strength", weight: 13 },
 		{ kind: "see-invisible-potion", weight: 3 },
+		{ kind: "magic-detection-potion", weight: 6 },
 		{ kind: "heal-potion", weight: 13 },
 		{ kind: "detect-monster", weight: 6 },
 		{ kind: "raise-level", weight: 2 },

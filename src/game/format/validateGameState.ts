@@ -358,6 +358,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"item-kind-identified": (payload) => isItemKind(payload.kind),
 	"item-numbers-known": (payload) => isPositiveInteger(payload.itemId),
 	"food-detected": (payload) => isNonNegativeInteger(payload.count),
+	"magic-detected": (payload) => isNonNegativeInteger(payload.count),
 	"player-strengthened": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&

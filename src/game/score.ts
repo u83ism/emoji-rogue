@@ -79,6 +79,7 @@ const FLAT_WORTH: Readonly<
 	"extra-healing-potion": 200,
 	"haste-self-potion": 190,
 	"see-invisible-potion": 100,
+	"magic-detection-potion": 105,
 	"see-invisible-ring": 310,
 	"searching-ring": 420,
 	"slow-wand": 350,

@@ -111,6 +111,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"extra-healing-potion": "超回復の薬",
 	"haste-self-potion": "加速の薬",
 	"see-invisible-potion": "透明視の薬",
+	"magic-detection-potion": "魔法感知の薬",
 	"see-invisible-ring": "透明視の指輪",
 	"searching-ring": "索敵の指輪",
 };

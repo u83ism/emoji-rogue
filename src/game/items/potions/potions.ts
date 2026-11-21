@@ -20,6 +20,7 @@ import {
 import type { GameState } from "../../state.js";
 import { applyTimedPotion } from "../../turnEnd/statusCountdowns.js";
 import { applyHealingPotion } from "./healing.js";
+import { applyMagicDetectionPotion } from "./magicDetection.js";
 
 const withEvents = (state: GameState, events: readonly GameEvent[]) => ({
 	...state,
@@ -143,5 +144,7 @@ export const applyUsePotion = (
 			return applyTimedPotion(state, kind);
 		case "raise-level":
 			return applyLevelUp(state);
+		case "magic-detection-potion":
+			return applyMagicDetectionPotion(state);
 	}
 };

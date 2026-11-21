@@ -43,6 +43,7 @@ const DUNGEON_EVENT_TYPES = [
 	"tingling",
 	"item-numbers-known",
 	"food-detected",
+	"magic-detected",
 	"room-lit",
 	"corridor-glowed",
 	"life-drained",
@@ -87,6 +88,10 @@ export const formatDungeonEvent = (event: DungeonEvent): string => {
 			return "部屋がぱっと明るくなった!";
 		case "corridor-glowed":
 			return "通路が光り、すぐに消えた";
+		case "magic-detected":
+			return event.payload.count > 0
+				? "薬を飲んだ。この階に魔法の気配を感じる!"
+				: "薬を飲んだ。一瞬妙な感じがしたが、すぐに消えた";
 		case "food-detected":
 			return event.payload.count > 0
 				? "鼻がむずむずし、食べ物の匂いがした!"

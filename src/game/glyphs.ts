@@ -99,6 +99,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"extra-healing-potion": { glyph: "💊" },
 	"haste-self-potion": { glyph: "💊" },
 	"see-invisible-potion": { glyph: "💊" },
+	"magic-detection-potion": { glyph: "💊" },
 	"see-invisible-ring": { glyph: "💍" },
 	"searching-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */

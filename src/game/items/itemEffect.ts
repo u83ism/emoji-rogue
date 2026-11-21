@@ -179,6 +179,7 @@ export const applyItemEffect = (
 		case "extra-healing-potion":
 		case "haste-self-potion":
 		case "see-invisible-potion":
+		case "magic-detection-potion":
 			return applyUsePotion(state, item.kind);
 	}
 };

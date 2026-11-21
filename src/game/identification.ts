@@ -47,6 +47,7 @@ const ITEM_REVEALS: Readonly<Record<PotionKind | ScrollKind, Reveal>> = {
 	"extra-healing-potion": always,
 	"haste-self-potion": always,
 	"see-invisible-potion": never,
+	"magic-detection-potion": (_before, after) => after.sensedItems.length > 0,
 	"teleport-scroll": (before, after) =>
 		findPlayerRoom(before) !== findPlayerRoom(after),
 	"mapping-scroll": always,

@@ -1,10 +1,13 @@
 import { encodePointKey } from "../pointkey.js";
 import {
 	type ItemKind,
+	isRingKind,
+	isWandKind,
 	POTION_KIND_VALUES,
 	type PotionKind,
 	SCROLL_KIND_VALUES,
 	type ScrollKind,
+	type WandKind,
 } from "./events.js";
 import type { GameState } from "./state.js";
 import { computePlayerVisiblePoints, findPlayerRoom } from "./vision.js";
@@ -60,16 +63,38 @@ const ITEM_REVEALS: Readonly<Record<PotionKind | ScrollKind, Reveal>> = {
 	"aggravate-monsters-scroll": never,
 };
 
+/**
+ * Zapping names a wand only when what it does shows, as original Rogue's
+ * do_zap() sets oi_know: the magic missile's bolt does; slowing or
+ * teleporting a monster does not.
+ */
+const WAND_REVEALS: Readonly<Record<WandKind, Reveal>> = {
+	"slow-wand": never,
+	"teleport-wand": never,
+	"magic-missile-wand": always,
+};
+
 const isPotionOrScrollKind = (
 	kind: ItemKind,
 ): kind is PotionKind | ScrollKind =>
 	POTION_KIND_VALUES.some((potion) => potion === kind) ||
 	SCROLL_KIND_VALUES.some((scroll) => scroll === kind);
 
-/** Whether using a `kind` (the state `before` and `after` the use) names it for the rest of the run — always, for kinds other than potions and scrolls. */
+/**
+ * Whether using a `kind` (the state `before` and `after` the use) names
+ * it for the rest of the run. A ring never does — original Rogue's
+ * ring_on() leaves it unknown; kinds without a hidden name always do.
+ */
 export const revealsItemKind = (
 	kind: ItemKind,
 	before: GameState,
 	after: GameState,
-): boolean =>
-	isPotionOrScrollKind(kind) ? ITEM_REVEALS[kind](before, after) : true;
+): boolean => {
+	if (isPotionOrScrollKind(kind)) {
+		return ITEM_REVEALS[kind](before, after);
+	}
+	if (isWandKind(kind)) {
+		return WAND_REVEALS[kind](before, after);
+	}
+	return !isRingKind(kind);
+};

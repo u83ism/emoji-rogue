@@ -161,7 +161,10 @@ export const formatItemUseEvent = (
 					`unreachable: ring-equipped fired for non-ring kind ${event.payload.kind}`,
 				);
 			}
-			return `${nameOf(event.payload.kind)}を身につけた。${effect}`;
+			/* original Rogue only says "you are now wearing" it — the effect line would give away an unknown ring */
+			return identifiedItemKinds.includes(event.payload.kind)
+				? `${nameOf(event.payload.kind)}を身につけた。${effect}`
+				: `${nameOf(event.payload.kind)}を身につけた`;
 		}
 		case "weapon-enchanted":
 			return `${nameOf("enchant-weapon")}を読んだ。装備中の武器の${event.payload.stat === "hit" ? "命中" : "ダメージ"}が${event.payload.bonus}上がった!`;

@@ -401,6 +401,15 @@ describe("formatEvent", () => {
 		}
 	});
 
+	it("says only that an unknown ring was put on", () => {
+		expect(
+			formatEvent(
+				{ type: "ring-equipped", payload: { kind: "stealth-ring" } },
+				[],
+			),
+		).toMatch(/^.+を身につけた$/);
+	});
+
 	it("calls a monster the player cannot see 何か", () => {
 		expect(
 			formatEvent(

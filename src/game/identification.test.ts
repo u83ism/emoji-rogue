@@ -67,8 +67,12 @@ describe("revealsItemKind", () => {
 		expect(revealsItemKind("teleport-scroll", before, corridor)).toBe(true);
 	});
 
-	it("names every other kind when used", () => {
+	it("names a wand only when its effect shows, a ring never, and kinds without a hidden name always", () => {
 		const state = arena();
-		expect(revealsItemKind("slow-wand", state, state)).toBe(true);
+		expect(revealsItemKind("magic-missile-wand", state, state)).toBe(true);
+		expect(revealsItemKind("slow-wand", state, state)).toBe(false);
+		expect(revealsItemKind("teleport-wand", state, state)).toBe(false);
+		expect(revealsItemKind("stealth-ring", state, state)).toBe(false);
+		expect(revealsItemKind("food", state, state)).toBe(true);
 	});
 });

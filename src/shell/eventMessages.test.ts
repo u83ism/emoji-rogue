@@ -405,6 +405,12 @@ describe("formatEvent", () => {
 		expect(
 			formatEvent({ type: "player-flamed", payload: { damage: 20 } }, []),
 		).toBe("ドラゴンの炎を浴びた!20のダメージを受けた");
+		expect(
+			formatEvent(
+				{ type: "enemy-flamed", payload: { target: "zombie", damage: 15 } },
+				[],
+			),
+		).toBe("炎がゾンビに当たった!15のダメージ");
 		expect(formatEvent({ type: "flame-dodged", payload: {} }, [])).toBe(
 			"ドラゴンの炎をかわした",
 		);

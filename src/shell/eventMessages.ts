@@ -147,6 +147,8 @@ export const formatEvent = (
 			return `${formatEnemyName(event.payload.target)}は混乱したようだ`;
 		case "player-flamed":
 			return `${ENEMY_NAMES.dragon}の炎を浴びた!${event.payload.damage}のダメージを受けた`;
+		case "enemy-flamed":
+			return `炎が${formatEnemyName(event.payload.target)}に当たった!${event.payload.damage}のダメージ`;
 		case "flame-dodged":
 			return `${ENEMY_NAMES.dragon}の炎をかわした`;
 		case "hands-stopped-glowing":

@@ -704,6 +704,11 @@ export type GameEvent =
 			readonly payload: { readonly damage: number };
 	  }
 	| {
+			/** A dragon's bounced flame struck a monster — the player's hit, as original Rogue counts it. */
+			readonly type: "enemy-flamed";
+			readonly payload: { readonly target: EnemyName; readonly damage: number };
+	  }
+	| {
 			/** A dragon's flame the player dodged with a save against magic. */
 			readonly type: "flame-dodged";
 			readonly payload: Record<string, never>;

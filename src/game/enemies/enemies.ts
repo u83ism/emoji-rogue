@@ -1,9 +1,10 @@
 import { encodePointKey } from "../../pointkey.js";
 import { createRng } from "../../rng.js";
+import { applyEnemyHit } from "../combat/combat.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
 import { findRoomAt } from "../vision.js";
-import type { EnemyTurnProgress } from "./action.js";
+import type { EnemyTurnProgress, FlameStrike } from "./action.js";
 import { applyEnemyPickups, findItemGoal } from "./enemyPack.js";
 import { resolveEnemyTurnActions } from "./enemySpeed.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
@@ -50,25 +51,32 @@ export const advanceEnemies = (state: GameState): GameState => {
 		inventory: state.inventory,
 		events: [],
 		died: false,
+		flameStrikes: [],
 	};
 	const nextEnemies: Enemy[] = [];
+	/* which enemy of the turn's start each entry of nextEnemies came from */
+	const sources: Enemy[] = [];
+	const keep = (source: Enemy, next: Enemy): void => {
+		nextEnemies.push(next);
+		sources.push(source);
+	};
 	for (const enemy of state.enemies) {
 		if (enemy.held) {
 			/* a hold monster scroll's hold: nothing at all until attacked or zapped */
-			nextEnemies.push(enemy);
+			keep(enemy, enemy);
 			continue;
 		}
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
 		if (!enemy.awake) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
-			nextEnemies.push(enemy);
+			keep(enemy, enemy);
 			continue;
 		}
 
 		if (progress.died) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
-			nextEnemies.push(enemy);
+			keep(enemy, enemy);
 			continue;
 		}
 		const result = resolveEnemyTurnActions(state, enemy, progress, occupied);
@@ -91,7 +99,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		};
 		/* original Rogue's relocate(): into another room, it picks a new destination */
 		if (findRoomAt(state.rooms, enemy) === findRoomAt(state.rooms, next)) {
-			nextEnemies.push(moved);
+			keep(enemy, moved);
 			continue;
 		}
 		const rng = createRng(1).setState(progress.rng);
@@ -102,32 +110,70 @@ export const advanceEnemies = (state: GameState): GameState => {
 			rng,
 		);
 		progress = { ...progress, rng: rng.getState() };
-		nextEnemies.push(
+		keep(
+			enemy,
 			goal === undefined ? headingForPlayer : { ...headingForPlayer, goal },
 		);
 	}
 
-	return applyEnemyPickups({
-		...state,
-		playerHp: Math.max(0, progress.playerHp),
-		playerMaxHp: progress.playerMaxHp,
-		playerStrength: progress.playerStrength,
-		playerLevel: progress.playerLevel,
-		playerExperience: progress.playerExperience,
-		/* an attack on the player, landed or not, ends the quiet natural healing waits for */
-		quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
-		confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
-		paralyzedTurnsRemaining: progress.playerParalyzedTurnsRemaining,
-		playerRunFlag: progress.playerRunFlag,
-		/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
-		flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)
-			? progress.flytrapHoldDamage
-			: 0,
-		goldCollected: progress.goldCollected,
-		inventory: progress.inventory,
-		enemies: nextEnemies,
-		events: buildEventLog(state.events, progress.events),
-		rng: progress.rng,
-		status: progress.died ? "dead" : state.status,
-	});
+	return applyEnemyPickups(
+		applyFlameStrikes(
+			{
+				...state,
+				playerHp: Math.max(0, progress.playerHp),
+				playerMaxHp: progress.playerMaxHp,
+				playerStrength: progress.playerStrength,
+				playerLevel: progress.playerLevel,
+				playerExperience: progress.playerExperience,
+				/* an attack on the player, landed or not, ends the quiet natural healing waits for */
+				quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
+				confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
+				paralyzedTurnsRemaining: progress.playerParalyzedTurnsRemaining,
+				playerRunFlag: progress.playerRunFlag,
+				/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
+				flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)
+					? progress.flytrapHoldDamage
+					: 0,
+				goldCollected: progress.goldCollected,
+				inventory: progress.inventory,
+				enemies: nextEnemies,
+				events: buildEventLog(state.events, progress.events),
+				rng: progress.rng,
+				status: progress.died ? "dead" : state.status,
+			},
+			progress.flameStrikes,
+			sources,
+		),
+	);
+};
+
+/**
+ * The monsters a dragon's flame struck this turn take their 6d6 as a hit
+ * of the player's (original Rogue's hit_monster() — experience, drops, the
+ * glowing hands and all; combat.ts's applyEnemyHit). `sources` lines up
+ * with the enemies after the loop; a struck one that fled is spared.
+ */
+const applyFlameStrikes = (
+	state: GameState,
+	strikes: readonly FlameStrike[],
+	sources: readonly Enemy[],
+): GameState => {
+	let current = state;
+	const slots = [...sources];
+	for (const strike of strikes) {
+		const index = slots.indexOf(strike.target);
+		const target = current.enemies[index];
+		if (index < 0 || target === undefined || current.status !== "playing") {
+			continue;
+		}
+		const before = current.enemies.length;
+		current = applyEnemyHit(current, target, strike.damage, {
+			type: "enemy-flamed",
+			payload: { target: strike.name, damage: strike.damage },
+		});
+		if (current.enemies.length < before) {
+			slots.splice(index, 1);
+		}
+	}
+	return current;
 };

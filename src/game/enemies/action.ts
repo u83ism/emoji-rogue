@@ -1,7 +1,7 @@
 import { type RngState, stepUniform } from "../../rng.js";
 import { isWithinReach } from "../directions.js";
 import { resolveDragonFlame } from "../dragonFlame.js";
-import type { GameEvent } from "../events.js";
+import type { EnemyName, GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
@@ -35,6 +35,15 @@ export interface EnemyTurnProgress {
 	readonly inventory: readonly HeldItem[];
 	readonly events: readonly GameEvent[];
 	readonly died: boolean;
+	/** Monsters a dragon's bounced flame struck (dragonFlame.ts), dealt to after every monster has moved — the hit counts as the player's (enemies.ts). */
+	readonly flameStrikes: readonly FlameStrike[];
+}
+
+/** One monster a flame struck, as it stood when the turn began. */
+export interface FlameStrike {
+	readonly target: Enemy;
+	readonly name: EnemyName;
+	readonly damage: number;
 }
 
 /** The acting enemy's own running state. `fled` removes it from the floor for good (thief/nymph). */

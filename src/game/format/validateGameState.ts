@@ -434,6 +434,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"secret-door-found": emptyPayload,
 	"player-flamed": (payload) => isPositiveInteger(payload.damage),
 	"flame-dodged": emptyPayload,
+	"enemy-flamed": (payload) =>
+		isEnemyName(payload.target) && isPositiveInteger(payload.damage),
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) => isEnemyKind(payload.target),

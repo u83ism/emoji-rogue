@@ -2,6 +2,7 @@ import type { ItemAppearances } from "../game/appearances.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import { formatDungeonEvent } from "./dungeonEventMessages.js";
 import {
+	BOLT_NAMES,
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
 	formatDeathMessage,
@@ -123,6 +124,16 @@ export const formatEvent = (
 			return "混乱がおさまった";
 		case "enemy-slowed":
 			return `杖の力で${formatEnemyName(event.payload.target)}の動きが鈍くなった!`;
+		case "bolt-hit":
+			return `${BOLT_NAMES[event.payload.kind]}が${formatEnemyName(event.payload.target)}に当たった!${event.payload.damage}のダメージ`;
+		case "bolt-missed":
+			return `${BOLT_NAMES[event.payload.kind]}は${formatEnemyName(event.payload.target)}をかすめて飛んだ`;
+		case "bolt-deflected":
+			return "炎はドラゴンに当たってそれた";
+		case "bolt-dodged":
+			return `跳ね返った${BOLT_NAMES[event.payload.kind]}をかわした`;
+		case "player-bolted":
+			return `跳ね返った${BOLT_NAMES[event.payload.kind]}を浴びた!${event.payload.damage}のダメージを受けた`;
 		case "room-lit":
 			return "部屋がぱっと明るくなった!";
 		case "corridor-glowed":

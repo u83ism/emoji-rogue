@@ -1,5 +1,6 @@
 import type { ItemAppearances } from "../game/appearances.js";
 import {
+	type BoltKind,
 	type DeathCause,
 	type EnemyKind,
 	type EnemyName,
@@ -74,6 +75,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"teleport-wand": "テレポートの杖",
 	"stealth-ring": "隠密の指輪",
 	"magic-missile-wand": "魔法の矢の杖",
+	"fire-wand": "炎の杖",
 	"light-wand": "光の杖",
 	"nothing-wand": "無の杖",
 	"teleport-to-wand": "引き寄せの杖",
@@ -123,6 +125,13 @@ export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
 	"plate-mail": "プレートメイル",
 };
 
+/** The three bolts as the log names them. */
+export const BOLT_NAMES: Readonly<Record<BoltKind, string>> = {
+	bolt: "電撃",
+	flame: "炎",
+	ice: "冷気",
+};
+
 /** How a death by something other than an enemy reads in the log. */
 const NON_ENEMY_DEATH_MESSAGES: Readonly<
 	Record<Exclude<DeathCause, EnemyKind>, string>
@@ -130,6 +139,7 @@ const NON_ENEMY_DEATH_MESSAGES: Readonly<
 	hunger: "空腹のあまり倒れた……",
 	trap: "わなにやられた……",
 	hypothermia: "凍りついたまま凍え死んだ……",
+	bolt: "跳ね返った自分の杖の光線に倒れた……",
 };
 
 const isNonEnemyDeathCause = (

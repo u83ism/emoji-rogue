@@ -156,6 +156,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("light-wand"),
 		effect: `振ると今いる部屋が明るくなり、以後ずっと全体が見える(部屋の敵は部屋に入ったときと同じく目を覚ますことがある)。通路では光ってすぐ消える。振ると正体が分かる。使える回数は${LIGHT_WAND_CHARGES_MIN}〜${LIGHT_WAND_CHARGES_MAX}回`,
 	},
+	"fire-wand": {
+		catalogName: "炎の杖",
+		category: "杖",
+		spawn: itemDrawShare("fire-wand"),
+		effect: `選んだ方向へ炎を放つ。炎は6マス飛んで壁で跳ね返り、当たった敵(魔法への抵抗で外れる)に6d6+力のボーナス。ドラゴンには効かない。跳ね返った炎は自分にも当たる(抵抗でかわせる、6d6)。振ると正体が分かる。${WAND_CHARGES_TEXT}`,
+	},
 	weapon: {
 		catalogName: "武器",
 		category: "装備",

@@ -93,6 +93,7 @@ export const ITEM_KIND_VALUES = [
 	"teleport-to-wand",
 	"nothing-wand",
 	"light-wand",
+	"fire-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -157,6 +158,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"fire-wand",
 	"light-wand",
 	"nothing-wand",
 	"teleport-to-wand",
@@ -297,7 +299,10 @@ export const TRAP_KIND_VALUES = [
 export type TrapKind = (typeof TRAP_KIND_VALUES)[number];
 
 /** What killed the player — an enemy kind, starvation, a trap, or being frozen too long (an ice monster's freeze piled up). */
-export type DeathCause = EnemyKind | "hunger" | "trap" | "hypothermia";
+export type DeathCause = EnemyKind | "hunger" | "trap" | "hypothermia" | "bolt";
+
+/** The three bolts a wand fires (original Rogue's fire_bolt() names): lightning, fire, cold. */
+export type BoltKind = "bolt" | "flame" | "ice";
 
 /**
  * What happened inside the game world during a turn (diegetic events only —
@@ -615,6 +620,35 @@ export type GameEvent =
 			/** A wand of slow monster that only took away its hasted target's haste — see items/wands/wands.ts. */
 			readonly type: "enemy-slowed-removed";
 			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A wand's bolt struck a monster — the player's hit (items/wands/boltWands.ts). */
+			readonly type: "bolt-hit";
+			readonly payload: {
+				readonly kind: BoltKind;
+				readonly target: EnemyName;
+				readonly damage: number;
+			};
+	  }
+	| {
+			/** A wand's bolt whizzed past a monster that saved against magic. */
+			readonly type: "bolt-missed";
+			readonly payload: { readonly kind: BoltKind; readonly target: EnemyName };
+	  }
+	| {
+			/** A flame bolt turned aside by a dragon. */
+			readonly type: "bolt-deflected";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** The player's own bolt, bounced back, dodged with a save against magic. */
+			readonly type: "bolt-dodged";
+			readonly payload: { readonly kind: BoltKind };
+	  }
+	| {
+			/** The player's own bolt, bounced back, struck them for 6d6. */
+			readonly type: "player-bolted";
+			readonly payload: { readonly kind: BoltKind; readonly damage: number };
 	  }
 	| {
 			/** A wand of light lit the player's room for good. */

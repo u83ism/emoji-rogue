@@ -113,7 +113,7 @@ export const isEnemyKind = (value: unknown): value is EnemyKind =>
 
 const isDeathCause = (value: unknown): value is DeathCause =>
 	isEnemyKind(value) ||
-	isOneOf(["hunger", "trap", "hypothermia"] as const, value);
+	isOneOf(["hunger", "trap", "hypothermia", "bolt"] as const, value);
 
 const isEnemyArray = (
 	value: unknown,
@@ -140,6 +140,9 @@ const isEnemyArray = (
 					Number.isInteger(enemy.goal.x) &&
 					Number.isInteger(enemy.goal.y))),
 	);
+
+const isBoltKind = (value: unknown): boolean =>
+	value === "bolt" || value === "flame" || value === "ice";
 
 const isEnemyName = (value: unknown): boolean =>
 	value === "something" || isEnemyKind(value);
@@ -415,6 +418,16 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-hasted": (payload) => isEnemyKind(payload.target),
 	"enemy-pulled": (payload) => isEnemyKind(payload.target),
 	"room-lit": emptyPayload,
+	"bolt-hit": (payload) =>
+		isBoltKind(payload.kind) &&
+		isEnemyName(payload.target) &&
+		isPositiveInteger(payload.damage),
+	"bolt-missed": (payload) =>
+		isBoltKind(payload.kind) && isEnemyName(payload.target),
+	"bolt-deflected": emptyPayload,
+	"bolt-dodged": (payload) => isBoltKind(payload.kind),
+	"player-bolted": (payload) =>
+		isBoltKind(payload.kind) && isPositiveInteger(payload.damage),
 	"corridor-glowed": emptyPayload,
 	"enemy-unslowed": (payload) => isEnemyKind(payload.target),
 	"player-levitated": (payload) => isPositiveInteger(payload.turns),
@@ -517,6 +530,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "fire-wand":
 		case "light-wand":
 		case "nothing-wand":
 		case "teleport-to-wand":

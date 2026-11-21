@@ -81,6 +81,12 @@ const calculateSaveChancePercent = (
 export const calculateMagicSaveChancePercent = (level: number): number =>
 	calculateSaveChancePercent(3, level);
 
+/** The player's own save against magic (original Rogue's save(VS_MAGIC)): calculateMagicSaveChancePercent, each point of worn ring of protection bonus making it 5 percent easier. */
+export const calculatePlayerMagicSaveChancePercent = (
+	playerLevel: number,
+	protectionBonus: number,
+): number => calculateSaveChancePercent(3 - protectionBonus, playerLevel);
+
 /** Percent chance the player passes a save against poison (`save(VS_POISON)`, 14 - level/2): 35% at level 1. A dart trap's dart and a scorpion's sting drain strength only when it fails. */
 export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
 	calculateSaveChancePercent(0, playerLevel);

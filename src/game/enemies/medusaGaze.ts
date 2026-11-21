@@ -1,9 +1,10 @@
 import { stepUniform } from "../../rng.js";
 import {
 	CONFUSION_POTION_DURATION,
-	calculateMagicSaveChancePercent,
+	calculatePlayerMagicSaveChancePercent,
 } from "../balance.js";
 import { buildEventLog } from "../events.js";
+import { sumRingBonus } from "../items/equipmentStats.js";
 import type { Enemy, GameState } from "../state.js";
 import { findPlayerRoom } from "../vision.js";
 
@@ -41,7 +42,13 @@ export const applyMedusaGaze = (state: GameState, enemy: Enemy): GazeResult => {
 	}
 	const looked = { ...enemy, gazeUsed: true };
 	const save = stepUniform(state.rng);
-	if (save.value * 100 < calculateMagicSaveChancePercent(state.playerLevel)) {
+	if (
+		save.value * 100 <
+		calculatePlayerMagicSaveChancePercent(
+			state.playerLevel,
+			sumRingBonus(state.inventory, "protection-ring"),
+		)
+	) {
 		return { state: { ...state, rng: save.state }, enemy: looked };
 	}
 	/* spread(HUHDURATION): 20 - 20/20 + rnd(20/10) */

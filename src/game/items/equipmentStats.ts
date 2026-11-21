@@ -54,7 +54,7 @@ export const calculatePlayerStrengthBonus = (state: GameState): number =>
  * through items/rings.ts, which builds on combat/strength.ts and so cannot
  * be imported from this module.
  */
-const sumRingBonus = (
+export const sumRingBonus = (
 	inventory: readonly HeldItem[],
 	kind: "protection-ring" | "dexterity-ring" | "increase-damage-ring",
 ): number =>

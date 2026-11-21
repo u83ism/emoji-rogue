@@ -3,6 +3,7 @@ import {
 	AMULET_FLOOR,
 	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
+	calculatePlayerMagicSaveChancePercent,
 	LEVEL_EXPERIENCE_THRESHOLDS,
 } from "./balance.js";
 
@@ -22,6 +23,14 @@ describe("calculateMagicSaveChancePercent", () => {
 		expect(calculateMagicSaveChancePercent(3)).toBe(25);
 		expect(calculateMagicSaveChancePercent(4)).toBe(30);
 		expect(calculateMagicSaveChancePercent(10)).toBe(45);
+	});
+});
+
+describe("calculatePlayerMagicSaveChancePercent", () => {
+	it("adds 5 points per point of worn ring of protection, as original Rogue's save()", () => {
+		expect(calculatePlayerMagicSaveChancePercent(1, 0)).toBe(20);
+		expect(calculatePlayerMagicSaveChancePercent(1, 2)).toBe(30);
+		expect(calculatePlayerMagicSaveChancePercent(1, -1)).toBe(15);
 	});
 });
 

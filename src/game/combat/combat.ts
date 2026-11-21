@@ -2,7 +2,7 @@ import type { RngState } from "../../rng.js";
 import { createRng } from "../../rng.js";
 import {
 	calculateEnemyLevelBonus,
-	calculateMagicSaveChancePercent,
+	calculatePlayerMagicSaveChancePercent,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
 import { applyCarriedItemsDrop } from "../enemies/enemyPack.js";
@@ -13,6 +13,7 @@ import {
 	calculatePlayerDamageBonus,
 	calculatePlayerDamageDice,
 	calculateRingMeleeDamageBonus,
+	sumRingBonus,
 } from "../items/equipmentStats.js";
 import type { Enemy, GameState, Position } from "../state.js";
 import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
@@ -37,7 +38,10 @@ const applyThiefGoldDrop = (state: GameState): GameState => {
 	const rng = createRng(1).setState(state.rng);
 	const savedAgainstMagic =
 		rng.getUniformInt(0, 99) <
-		calculateMagicSaveChancePercent(state.playerLevel);
+		calculatePlayerMagicSaveChancePercent(
+			state.playerLevel,
+			sumRingBonus(state.inventory, "protection-ring"),
+		);
 	const pileCount = savedAgainstMagic ? THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME : 1;
 	let amount = 0;
 	for (let i = 0; i < pileCount; i++) {

@@ -2,12 +2,13 @@ import type { RngState } from "../../rng.js";
 import { stepUniform } from "../../rng.js";
 import {
 	calculateGoldAmountMax,
-	calculateMagicSaveChancePercent,
+	calculatePlayerMagicSaveChancePercent,
 	GOLD_AMOUNT_MIN,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
 import type { GameEvent } from "../events.js";
 import { toItemEventPayload } from "../items/equipmentKinds.js";
+import { sumRingBonus } from "../items/equipmentStats.js";
 import { removeHeldItemAtIndex } from "../items/inventory.js";
 import type { HeldItem } from "../state.js";
 
@@ -73,8 +74,8 @@ const rollGoldPileAmount = (
  * A thief (original Rogue's leprechaun) steals one gold pile's worth at
  * this `floor`'s rate (deeper floors cost more) — or
  * THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME piles' worth when the player fails a
- * magic save (calculateMagicSaveChancePercent, easier at higher
- * playerLevel) — capped at what the player carries; with no gold at all it
+ * magic save (calculatePlayerMagicSaveChancePercent, easier at higher
+ * playerLevel and with a ring of protection) — capped at what the player carries; with no gold at all it
  * takes nothing and consumes no rng, but still vanishes. A nymph steals one
  * random *unequipped* magic item (isMagicItem; one off a bundle of
  * weapons). With none she takes nothing and stays (event undefined), as in
@@ -100,7 +101,11 @@ export const resolveFleeingTheft = (
 		}
 		const saveRoll = stepUniform(rng);
 		const savedAgainstMagic =
-			saveRoll.value * 100 < calculateMagicSaveChancePercent(playerLevel);
+			saveRoll.value * 100 <
+			calculatePlayerMagicSaveChancePercent(
+				playerLevel,
+				sumRingBonus(inventory, "protection-ring"),
+			);
 		const pileCount = savedAgainstMagic ? 1 : THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME;
 		let wanted = 0;
 		let nextRng = saveRoll.state;

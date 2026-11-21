@@ -1,5 +1,6 @@
 import { type RngState, stepUniform } from "../../rng.js";
 import { isWithinReach } from "../directions.js";
+import { resolveDragonFlame } from "../dragonFlame.js";
 import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
@@ -140,6 +141,24 @@ const resolveIntendedAction = (
 			progress: { ...progress, rng: step.rng },
 		};
 	}
+	if (enemy.kind === "dragon") {
+		const flame = resolveDragonFlame(state, actor.position, progress);
+		if (flame.breathed) {
+			return { actor, progress: flame.progress };
+		}
+		return resolveChaseOrBite(state, enemy, actor, flame.progress, occupied);
+	}
+	return resolveChaseOrBite(state, enemy, actor, progress, occupied);
+};
+
+/** Chase the player while out of reach, else act next to them. */
+const resolveChaseOrBite = (
+	state: GameState,
+	enemy: Enemy,
+	actor: EnemyActor,
+	progress: EnemyTurnProgress,
+	occupied: ReadonlySet<string>,
+): EnemyActionResult => {
 	if (!isWithinReach(state.terrain, actor.position, state.player)) {
 		const movement = resolveEnemyMovement(
 			state,

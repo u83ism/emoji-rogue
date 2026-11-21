@@ -401,6 +401,15 @@ describe("formatEvent", () => {
 		}
 	});
 
+	it("tells of a dragon's flame, landed or dodged", () => {
+		expect(
+			formatEvent({ type: "player-flamed", payload: { damage: 20 } }, []),
+		).toBe("ドラゴンの炎を浴びた!20のダメージを受けた");
+		expect(formatEvent({ type: "flame-dodged", payload: {} }, [])).toBe(
+			"ドラゴンの炎をかわした",
+		);
+	});
+
 	it("says only that an unknown ring was put on", () => {
 		expect(
 			formatEvent(

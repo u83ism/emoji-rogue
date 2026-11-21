@@ -699,6 +699,16 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
+			/** A dragon's flame struck the player (original Rogue's fire_bolt(), 6d6) — see dragonFlame.ts. */
+			readonly type: "player-flamed";
+			readonly payload: { readonly damage: number };
+	  }
+	| {
+			/** A dragon's flame the player dodged with a save against magic. */
+			readonly type: "flame-dodged";
+			readonly payload: Record<string, never>;
+	  }
+	| {
 			/** The glow passing into the monster just hit. */
 			readonly type: "hands-stopped-glowing";
 			readonly payload: Record<string, never>;

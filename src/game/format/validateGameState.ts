@@ -432,6 +432,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"hands-glowing": emptyPayload,
 	"hands-stopped-glowing": emptyPayload,
 	"secret-door-found": emptyPayload,
+	"player-flamed": (payload) => isPositiveInteger(payload.damage),
+	"flame-dodged": emptyPayload,
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) => isEnemyKind(payload.target),

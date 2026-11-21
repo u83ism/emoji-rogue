@@ -145,6 +145,10 @@ export const formatEvent = (
 			return `杖の力で${formatEnemyName(event.payload.target)}をどこかへ飛ばした!`;
 		case "enemy-confused":
 			return `${formatEnemyName(event.payload.target)}は混乱したようだ`;
+		case "player-flamed":
+			return `${ENEMY_NAMES.dragon}の炎を浴びた!${event.payload.damage}のダメージを受けた`;
+		case "flame-dodged":
+			return `${ENEMY_NAMES.dragon}の炎をかわした`;
 		case "hands-stopped-glowing":
 			return "両手の赤い光が消えた";
 		case "hallucination-faded":

@@ -11,6 +11,7 @@ import {
 import { removeHeldItem, replaceHeldItem } from "./items/inventory.js";
 import { applyMissileLanding } from "./missileLanding.js";
 import type { Direction, Enemy, GameState, Position } from "./state.js";
+import { nameEnemy } from "./vision.js";
 
 const FLIGHT_STEPS = DIRECTION_VECTORS;
 
@@ -113,7 +114,7 @@ export const applyThrowItem = (
 			{
 				type: "missile-hit",
 				payload: {
-					target: target.kind,
+					target: nameEnemy(state, target),
 					variant: item.weaponKind,
 					damage: damageRoll.damage,
 				},

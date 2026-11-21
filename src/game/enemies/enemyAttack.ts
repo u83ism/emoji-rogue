@@ -2,7 +2,7 @@ import type { RngState } from "../../rng.js";
 import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import { isStrengthSustained, resolvePoisonDrain } from "../combat/strength.js";
-import type { EnemyKind, GameEvent } from "../events.js";
+import type { EnemyKind, EnemyName, GameEvent } from "../events.js";
 import { resolveArmorRust } from "../items/equipment.js";
 import type { Enemy, HeldItem } from "../state.js";
 import { ENEMY_STATS } from "./enemyStats.js";
@@ -24,6 +24,8 @@ export interface AttackTarget {
 	readonly levelBonus?: number;
 	/** GameState.playerRunFlag — off, every attack gets NOT_RUNNING_HIT_BONUS. Absent counts as on. */
 	readonly playerRunFlag?: boolean;
+	/** How the log names the attacker (vision.ts's nameEnemy). Absent, by its kind. */
+	readonly attackerName?: EnemyName;
 }
 
 /** Everything one enemy's attacks on the player change in a turn — see adjacentAction.ts. */
@@ -154,9 +156,15 @@ export const resolveEnemyAttack = (
 		landed
 			? {
 					type: "player-hit",
-					payload: { by: enemy.kind, damage: damageDealt },
+					payload: {
+						by: target.attackerName ?? enemy.kind,
+						damage: damageDealt,
+					},
 				}
-			: { type: "enemy-attack-missed", payload: { by: enemy.kind } },
+			: {
+					type: "enemy-attack-missed",
+					payload: { by: target.attackerName ?? enemy.kind },
+				},
 	);
 
 	const afterDice: OnHit = {

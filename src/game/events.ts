@@ -37,6 +37,12 @@ export const ENEMY_KIND_VALUES = [
 /** Events carry it so the shell can name the attacker. */
 export type EnemyKind = (typeof ENEMY_KIND_VALUES)[number];
 
+/**
+ * How a log line names a monster — its kind, or "something" when the player
+ * cannot see it (original Rogue's set_mname(); vision.ts's nameEnemy).
+ */
+export type EnemyName = EnemyKind | "something";
+
 export const ITEM_KIND_VALUES = [
 	"heal-potion",
 	"weapon",
@@ -303,15 +309,15 @@ export type GameEvent =
 	| {
 			/** One adjacent enemy's whole attack turn that landed at least once — damage is the sum over its dice (enemyAttack.ts). */
 			readonly type: "player-hit";
-			readonly payload: { readonly by: EnemyKind; readonly damage: number };
+			readonly payload: { readonly by: EnemyName; readonly damage: number };
 	  }
 	| {
 			readonly type: "enemy-hit";
-			readonly payload: { readonly target: EnemyKind; readonly damage: number };
+			readonly payload: { readonly target: EnemyName; readonly damage: number };
 	  }
 	| {
 			readonly type: "enemy-defeated";
-			readonly payload: { readonly target: EnemyKind };
+			readonly payload: { readonly target: EnemyName };
 	  }
 	| {
 			readonly type: "player-died";
@@ -559,7 +565,7 @@ export type GameEvent =
 			/** A thrown weapon that connected — see items/throw.ts. The missile itself is used up. */
 			readonly type: "missile-hit";
 			readonly payload: {
-				readonly target: EnemyKind;
+				readonly target: EnemyName;
 				readonly variant: WeaponKind;
 				readonly damage: number;
 			};
@@ -568,19 +574,19 @@ export type GameEvent =
 			/** A thrown weapon that missed — it lands near the target (or is lost if there is nowhere for it to fall). */
 			readonly type: "missile-missed";
 			readonly payload: {
-				readonly target: EnemyKind;
+				readonly target: EnemyName;
 				readonly variant: WeaponKind;
 			};
 	  }
 	| {
 			/** A magic missile that landed — same shape as enemy-hit, kept separate for its own flavor text. See items/wands.ts's applyMagicMissileWandStrike. */
 			readonly type: "wand-struck";
-			readonly payload: { readonly target: EnemyKind; readonly damage: number };
+			readonly payload: { readonly target: EnemyName; readonly damage: number };
 	  }
 	| {
 			/** A magic missile the target saved against — it vanishes, no damage. See items/wands.ts's applyMagicMissileWandStrike. */
 			readonly type: "magic-missile-vanished";
-			readonly payload: { readonly target: EnemyKind };
+			readonly payload: { readonly target: EnemyName };
 	  }
 	| {
 			/** Drinking a confusion potion — see applyStatusCountdownTicks and applyMove. */
@@ -680,7 +686,7 @@ export type GameEvent =
 	| {
 			/** A monster hit while the player's hands glowed is confused (Enemy.confused) — see combat/combat.ts's applyEnemyHit. */
 			readonly type: "enemy-confused";
-			readonly payload: { readonly target: EnemyKind };
+			readonly payload: { readonly target: EnemyName };
 	  }
 	| {
 			/** Reading a confuse monster scroll: the player's hands glow until they next hit something (GameState.nextHitConfuses). */
@@ -748,12 +754,12 @@ export type GameEvent =
 	| {
 			/** A player melee attack that failed its to-hit roll — no damage, no side effects. See combat.ts's applyPlayerAttack. */
 			readonly type: "player-attack-missed";
-			readonly payload: { readonly target: EnemyKind };
+			readonly payload: { readonly target: EnemyName };
 	  }
 	| {
 			/** An adjacent enemy's whole attack turn in which every die failed its to-hit roll — no damage, no per-kind side effect (rust/lifesteal/drain). See enemyAttack.ts. */
 			readonly type: "enemy-attack-missed";
-			readonly payload: { readonly by: EnemyKind };
+			readonly payload: { readonly by: EnemyName };
 	  };
 
 /**

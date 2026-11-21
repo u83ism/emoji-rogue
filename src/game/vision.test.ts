@@ -10,6 +10,7 @@ import {
 	computeVisiblePoints,
 	deriveExploredState,
 	findVisibleEnemies,
+	nameEnemy,
 	VIEW_RADIUS,
 } from "./vision.js";
 
@@ -280,5 +281,51 @@ describe("findVisibleEnemies", () => {
 	it("returns an empty array when no enemies are visible", () => {
 		const state = buildArenaGameState(9, 9, 1);
 		expect(findVisibleEnemies(state)).toEqual([]);
+	});
+});
+
+describe("nameEnemy", () => {
+	const monster = (kind: Enemy["kind"], x: number, y: number): Enemy => ({
+		x,
+		y,
+		kind,
+		hp: 5,
+		maxHp: 5,
+		awake: true,
+		speed: "normal",
+		held: false,
+		carried: [],
+		mean: false,
+		gazeUsed: false,
+		confused: false,
+	});
+
+	it("names a monster in sight by its kind, and one out of sight, a phantom or anything while blind as something", () => {
+		/* a 9x5 arena — one lit room — the player at (4,2) */
+		const lit = buildArenaGameState(9, 5, 1);
+		expect(nameEnemy(lit, monster("zombie", 7, 3))).toBe("zombie");
+		expect(nameEnemy(lit, monster("phantom", 5, 2))).toBe("something");
+		expect(
+			nameEnemy(
+				{ ...lit, seeInvisibleTurnsRemaining: 5 },
+				monster("phantom", 5, 2),
+			),
+		).toBe("phantom");
+		expect(
+			nameEnemy({ ...lit, blindTurnsRemaining: 5 }, monster("zombie", 5, 2)),
+		).toBe("something");
+		const dark = {
+			...lit,
+			rooms: [{ ...lit.rooms[0], x1: 1, y1: 1, x2: 7, y2: 3, dark: true }],
+		};
+		expect(nameEnemy(dark, monster("zombie", 7, 3))).toBe("something");
+		expect(nameEnemy(dark, monster("zombie", 5, 3))).toBe("zombie");
+		/* detecting monsters names them all */
+		expect(
+			nameEnemy(
+				{ ...dark, detectMonstersTurnsRemaining: 5 },
+				monster("zombie", 7, 3),
+			),
+		).toBe("zombie");
 	});
 });

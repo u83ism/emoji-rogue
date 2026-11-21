@@ -5,6 +5,7 @@ import {
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
 	formatDeathMessage,
+	formatEnemyName,
 	resolveItemDisplayName,
 } from "./gameNames.js";
 import { formatItemUseEvent } from "./itemEventMessages.js";
@@ -26,12 +27,12 @@ export const formatEvent = (
 	switch (event.type) {
 		case "player-hit" /* 0 for the aquator (its attacks just rust) and the nymph (0d0) */:
 			return event.payload.damage > 0
-				? `${ENEMY_NAMES[event.payload.by]}から${event.payload.damage}のダメージを受けた`
-				: `${ENEMY_NAMES[event.payload.by]}の攻撃が当たった`;
+				? `${formatEnemyName(event.payload.by)}から${event.payload.damage}のダメージを受けた`
+				: `${formatEnemyName(event.payload.by)}の攻撃が当たった`;
 		case "enemy-hit":
-			return `${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}のダメージを与えた`;
+			return `${formatEnemyName(event.payload.target)}に${event.payload.damage}のダメージを与えた`;
 		case "enemy-defeated":
-			return `${ENEMY_NAMES[event.payload.target]}をたおした!`;
+			return `${formatEnemyName(event.payload.target)}をたおした!`;
 		case "player-healed":
 		case "item-picked-up":
 		case "inventory-full":
@@ -109,21 +110,21 @@ export const formatEvent = (
 		case "armor-rusted":
 			return `装備中の防具が錆びついた!防御力が${event.payload.amount}下がった`;
 		case "missile-hit":
-			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げた。${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}ダメージ`;
+			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げた。${formatEnemyName(event.payload.target)}に${event.payload.damage}ダメージ`;
 		case "missile-landed":
 			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、何にも当たらなかった`;
 		case "missile-missed":
-			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、${ENEMY_NAMES[event.payload.target]}に当たらなかった`;
+			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、${formatEnemyName(event.payload.target)}に当たらなかった`;
 		case "wand-struck":
-			return `杖から放たれた魔法の矢が${ENEMY_NAMES[event.payload.target]}を貫いた!${event.payload.damage}のダメージを与えた!`;
+			return `杖から放たれた魔法の矢が${formatEnemyName(event.payload.target)}を貫いた!${event.payload.damage}のダメージを与えた!`;
 		case "magic-missile-vanished":
-			return `魔法の矢は${ENEMY_NAMES[event.payload.target]}に届く前に煙となって消えた`;
+			return `魔法の矢は${formatEnemyName(event.payload.target)}に届く前に煙となって消えた`;
 		case "confusion-faded":
 			return "混乱がおさまった";
 		case "enemy-slowed":
-			return `杖の力で${ENEMY_NAMES[event.payload.target]}の動きが鈍くなった!`;
+			return `杖の力で${formatEnemyName(event.payload.target)}の動きが鈍くなった!`;
 		case "enemy-slowed-removed":
-			return `杖の力で${ENEMY_NAMES[event.payload.target]}の素早さが元に戻った`;
+			return `杖の力で${formatEnemyName(event.payload.target)}の素早さが元に戻った`;
 		case "levitation-faded":
 			return "浮遊の効果が切れた";
 		case "blindness-faded":
@@ -139,19 +140,19 @@ export const formatEvent = (
 		case "detect-monsters-faded":
 			return "敵の気配を感じられなくなった";
 		case "enemy-gold-drop":
-			return `${ENEMY_NAMES[event.payload.by]}が金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
+			return `${formatEnemyName(event.payload.by)}が金貨を落とした!${event.payload.amount}ゴールド手に入れた`;
 		case "enemy-teleported":
-			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
+			return `杖の力で${formatEnemyName(event.payload.target)}をどこかへ飛ばした!`;
 		case "enemy-confused":
-			return `${ENEMY_NAMES[event.payload.target]}は混乱したようだ`;
+			return `${formatEnemyName(event.payload.target)}は混乱したようだ`;
 		case "hands-stopped-glowing":
 			return "両手の赤い光が消えた";
 		case "hallucination-faded":
 			return "幻覚がおさまった";
 		case "enemy-held":
-			return `${resolveItemDisplayName("hold-monster-scroll", identifiedItemKinds, undefined, appearances)}を読んだ。${ENEMY_NAMES[event.payload.target]}が動きを止めた!`;
+			return `${resolveItemDisplayName("hold-monster-scroll", identifiedItemKinds, undefined, appearances)}を読んだ。${formatEnemyName(event.payload.target)}が動きを止めた!`;
 		case "player-drained":
-			return `${ENEMY_NAMES[event.payload.by]}に生命力を吸われ、急に体が弱った。最大HPが${event.payload.maxHpLost}下がった`;
+			return `${formatEnemyName(event.payload.by)}に生命力を吸われ、急に体が弱った。最大HPが${event.payload.maxHpLost}下がった`;
 		case "player-level-drained":
 			return `レベルが${event.payload.level}に下がった`;
 		case "player-gazed":
@@ -161,10 +162,10 @@ export const formatEvent = (
 		case "player-frozen":
 			return `${ENEMY_NAMES["ice-monster"]}に凍らされた!${event.payload.turns}ターン動けない`;
 		case "player-held":
-			return `${ENEMY_NAMES[event.payload.by]}に捕まっていて動けない!`;
+			return `${formatEnemyName(event.payload.by)}に捕まっていて動けない!`;
 		case "player-attack-missed":
-			return `${ENEMY_NAMES[event.payload.target]}への攻撃は外れた`;
+			return `${formatEnemyName(event.payload.target)}への攻撃は外れた`;
 		case "enemy-attack-missed":
-			return `${ENEMY_NAMES[event.payload.by]}の攻撃は外れた`;
+			return `${formatEnemyName(event.payload.by)}の攻撃は外れた`;
 	}
 };

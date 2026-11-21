@@ -2,6 +2,7 @@ import { calculateEnemyLevelBonus } from "../balance.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
+import { nameEnemy } from "../vision.js";
 import type {
 	EnemyActionResult,
 	EnemyActor,
@@ -140,6 +141,7 @@ const attackWithDice = (
 		rng: progress.rng,
 		levelBonus: calculateEnemyLevelBonus(state.floor),
 		playerRunFlag: progress.playerRunFlag,
+		attackerName: nameEnemy(state, { ...enemy, ...actor.position }),
 	});
 	return {
 		actor: { ...actor, hp: hit.enemyHp },

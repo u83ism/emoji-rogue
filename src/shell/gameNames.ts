@@ -2,6 +2,7 @@ import type { ItemAppearances } from "../game/appearances.js";
 import {
 	type DeathCause,
 	type EnemyKind,
+	type EnemyName,
 	type EquipmentVariant,
 	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
@@ -41,6 +42,10 @@ export const ENEMY_NAMES: Readonly<Record<EnemyKind, string>> = {
 	wraith: "レイス",
 	xeroc: "ゼロック",
 };
+
+/** A monster as a log line names it — "something" (one the player cannot see) is 「何か」, as original Rogue's set_mname(). */
+export const formatEnemyName = (name: EnemyName): string =>
+	name === "something" ? "何か" : ENEMY_NAMES[name];
 
 export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"heal-potion": "回復薬",

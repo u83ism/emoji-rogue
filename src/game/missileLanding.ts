@@ -2,6 +2,7 @@ import { createRng } from "../rng.js";
 import { buildEventLog } from "./events.js";
 import type { WeaponItem } from "./items/equipmentStats.js";
 import type { Enemy, GameState, Item, Position } from "./state.js";
+import { nameEnemy } from "./vision.js";
 
 // Where a thrown weapon that hit nothing comes to rest — split out of
 // throw.ts once aiming (milestone 119) pushed that file past the 200-line
@@ -85,7 +86,10 @@ export const applyMissileLanding = (
 				? { type: "missile-landed", payload: { variant: item.weaponKind } }
 				: {
 						type: "missile-missed",
-						payload: { target: target.kind, variant: item.weaponKind },
+						payload: {
+							target: nameEnemy(thrown, target),
+							variant: item.weaponKind,
+						},
 					},
 		]),
 	};

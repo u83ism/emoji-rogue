@@ -16,6 +16,7 @@ import {
 	sumRingBonus,
 } from "../items/equipmentStats.js";
 import type { Enemy, GameState, Position } from "../state.js";
+import { nameEnemy } from "../vision.js";
 import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";
 import { applyExperienceGain } from "./experience.js";
 import { calculatePlayerHitChancePercent } from "./hitChance.js";
@@ -83,9 +84,15 @@ export const applyEnemyHit = (
 		events.push({ type: "hands-stopped-glowing", payload: {} });
 	}
 	if (remainingHp <= 0) {
-		events.push({ type: "enemy-defeated", payload: { target: target.kind } });
+		events.push({
+			type: "enemy-defeated",
+			payload: { target: nameEnemy(state, target) },
+		});
 	} else if (confuses && state.blindTurnsRemaining === 0) {
-		events.push({ type: "enemy-confused", payload: { target: target.kind } });
+		events.push({
+			type: "enemy-confused",
+			payload: { target: nameEnemy(state, target) },
+		});
 	}
 
 	const enemies =
@@ -165,7 +172,10 @@ export const applyPlayerAttack = (
 			rng: hitRoll.rng,
 			quietTurns: 0,
 			events: buildEventLog(state.events, [
-				{ type: "player-attack-missed", payload: { target: target.kind } },
+				{
+					type: "player-attack-missed",
+					payload: { target: nameEnemy(state, target) },
+				},
 			]),
 		};
 	}
@@ -176,7 +186,7 @@ export const applyPlayerAttack = (
 		diceRoll.damage,
 		{
 			type: "enemy-hit",
-			payload: { target: target.kind, damage: diceRoll.damage },
+			payload: { target: nameEnemy(state, target), damage: diceRoll.damage },
 		},
 	);
 };

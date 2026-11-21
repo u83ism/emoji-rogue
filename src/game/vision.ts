@@ -1,5 +1,6 @@
 import { createPreciseShadowcastingFov } from "../fov/index.js";
 import { encodePointKey } from "../pointkey.js";
+import type { EnemyName } from "./events.js";
 import type { DungeonRoom, Enemy, GameState } from "./state.js";
 
 /** How far floor generation looks from the player's start (spawnPool.ts) when keeping monsters out of the first view — generation only. */
@@ -144,3 +145,20 @@ export const canSeeInvisible = (state: GameState): boolean =>
 	state.inventory.some(
 		(item) => item.kind === "see-invisible-ring" && item.equipped,
 	);
+
+/**
+ * How the log names `enemy`, as original Rogue's set_mname(): by its kind
+ * when the player can see it (in sight, and a phantom only with see
+ * invisible) or monsters are being detected — "something" otherwise, as
+ * when blind.
+ */
+export const nameEnemy = (state: GameState, enemy: Enemy): EnemyName => {
+	if (state.detectMonstersTurnsRemaining > 0) {
+		return enemy.kind;
+	}
+	const inSight = computePlayerVisiblePoints(state).has(
+		encodePointKey(enemy.x, enemy.y),
+	);
+	const shows = enemy.kind !== "phantom" || canSeeInvisible(state);
+	return inSight && shows ? enemy.kind : "something";
+};

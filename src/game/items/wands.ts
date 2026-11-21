@@ -11,6 +11,7 @@ import { buildEventLog } from "../events.js";
 import type { Direction, Enemy, GameState } from "../state.js";
 import { applyEnemyTeleport } from "../teleport.js";
 import { traceFlight } from "../throw.js";
+import { nameEnemy } from "../vision.js";
 import { calculatePlayerDamageBonus } from "./equipmentStats.js";
 
 /**
@@ -103,7 +104,10 @@ export const applyMagicMissileWandStrike = (
 			...state,
 			rng: save.rng,
 			events: buildEventLog(state.events, [
-				{ type: "magic-missile-vanished", payload: { target: target.kind } },
+				{
+					type: "magic-missile-vanished",
+					payload: { target: nameEnemy(state, target) },
+				},
 			]),
 		};
 	}
@@ -119,7 +123,7 @@ export const applyMagicMissileWandStrike = (
 		diceRoll.damage,
 		{
 			type: "wand-struck",
-			payload: { target: target.kind, damage: diceRoll.damage },
+			payload: { target: nameEnemy(state, target), damage: diceRoll.damage },
 		},
 	);
 };

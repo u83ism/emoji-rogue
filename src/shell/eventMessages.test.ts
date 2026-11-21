@@ -401,6 +401,15 @@ describe("formatEvent", () => {
 		}
 	});
 
+	it("calls a monster the player cannot see 何か", () => {
+		expect(
+			formatEvent(
+				{ type: "player-hit", payload: { by: "something", damage: 3 } },
+				[],
+			),
+		).toBe("何かから3のダメージを受けた");
+	});
+
 	it("names a used potion or scroll by its look while it is still unidentified", () => {
 		expect(
 			formatEvent({ type: "strength-restored", payload: { strength: 16 } }, []),

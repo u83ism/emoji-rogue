@@ -137,6 +137,9 @@ const isEnemyArray = (
 			isBooleanValue(enemy.confused),
 	);
 
+const isEnemyName = (value: unknown): boolean =>
+	value === "something" || isEnemyKind(value);
+
 export const isItemKind = (value: unknown): value is ItemKind =>
 	isOneOf(ITEM_KIND_VALUES, value);
 
@@ -306,10 +309,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 > = {
 	/* 0 is a real outcome on the original's scale: an aquator's hit only rusts, and a cursed weapon's penalty can cancel a low roll */
 	"player-hit": (payload) =>
-		isEnemyKind(payload.by) && isNonNegativeInteger(payload.damage),
+		isEnemyName(payload.by) && isNonNegativeInteger(payload.damage),
 	"enemy-hit": (payload) =>
-		isEnemyKind(payload.target) && isNonNegativeInteger(payload.damage),
-	"enemy-defeated": (payload) => isEnemyKind(payload.target),
+		isEnemyName(payload.target) && isNonNegativeInteger(payload.damage),
+	"enemy-defeated": (payload) => isEnemyName(payload.target),
 	"player-died": (payload) => isDeathCause(payload.by),
 	"floor-descended": (payload) => isPositiveInteger(payload.floor),
 	"floor-ascended": (payload) => isPositiveInteger(payload.floor),
@@ -393,14 +396,14 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"armor-rusted": (payload) => isPositiveInteger(payload.amount),
 	"armor-rust-blocked": emptyPayload,
 	"missile-hit": (payload) =>
-		isEnemyKind(payload.target) &&
+		isEnemyName(payload.target) &&
 		isOneOf(WEAPON_KIND_VALUES, payload.variant) &&
 		isNonNegativeInteger(payload.damage),
 	"missile-missed": (payload) =>
-		isEnemyKind(payload.target) && isOneOf(WEAPON_KIND_VALUES, payload.variant),
+		isEnemyName(payload.target) && isOneOf(WEAPON_KIND_VALUES, payload.variant),
 	"wand-struck": (payload) =>
-		isEnemyKind(payload.target) && isPositiveInteger(payload.damage),
-	"magic-missile-vanished": (payload) => isEnemyKind(payload.target),
+		isEnemyName(payload.target) && isPositiveInteger(payload.damage),
+	"magic-missile-vanished": (payload) => isEnemyName(payload.target),
 	"player-confused": (payload) => isPositiveInteger(payload.turns),
 	"confusion-faded": emptyPayload,
 	"enemy-slowed": (payload) => isEnemyKind(payload.target),
@@ -421,15 +424,15 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-gold-drop": (payload) =>
 		isEnemyKind(payload.by) && isPositiveInteger(payload.amount),
 	"enemy-teleported": (payload) => isEnemyKind(payload.target),
-	"enemy-confused": (payload) => isEnemyKind(payload.target),
+	"enemy-confused": (payload) => isEnemyName(payload.target),
 	"hands-glowing": emptyPayload,
 	"hands-stopped-glowing": emptyPayload,
 	"secret-door-found": emptyPayload,
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) => isEnemyKind(payload.target),
-	"player-attack-missed": (payload) => isEnemyKind(payload.target),
-	"enemy-attack-missed": (payload) => isEnemyKind(payload.by),
+	"player-attack-missed": (payload) => isEnemyName(payload.target),
+	"enemy-attack-missed": (payload) => isEnemyName(payload.by),
 };
 
 /** The same table widened for lookup by an untrusted string key. */

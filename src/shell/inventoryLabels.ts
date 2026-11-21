@@ -57,7 +57,9 @@ export const formatHeldItemLabel = (
 				? `(${formatSignedBonus(item.bonus)})`
 				: item.kind === "weapon"
 					? `(命中${formatSignedBonus(item.hitBonus)}・ダメージ${formatSignedBonus(item.damageBonus)})`
-					: "";
+					: item.kind === "armor"
+						? `(防御${UNARMORED_ARMOR_CLASS - calculateArmorClass(item)})`
+						: "";
 	if (!("equipped" in item) || !item.equipped) {
 		return `${name}${known}`;
 	}

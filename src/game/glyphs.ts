@@ -118,6 +118,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"sleep-scroll": { glyph: "📜" },
 	"create-monster-scroll": { glyph: "📜" },
 	"aggravate-monsters-scroll": { glyph: "📜" },
+	"identify-armor-scroll": { glyph: "📜" },
 	"identify-weapon-scroll": { glyph: "📜" },
 	"identify-ring-wand-scroll": { glyph: "📜" },
 	"identify-scroll-scroll": { glyph: "📜" },

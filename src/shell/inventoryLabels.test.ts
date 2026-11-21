@@ -151,6 +151,18 @@ describe("an item whose numbers are known", () => {
 		expect(formatHeldItemLabel(sword, [], undefined, [4])).toBe(
 			"長剣(命中+1・ダメージ+2)",
 		);
+		const mail: HeldItem = {
+			itemId: 6,
+			kind: "armor",
+			armorKind: "ring-mail",
+			equipped: false,
+			cursed: false,
+			defenseBonus: 1,
+			rustProtected: false,
+		};
+		expect(formatHeldItemLabel(mail, [], undefined, [6])).toBe(
+			"リングメイル(防御4)",
+		);
 	});
 });
 

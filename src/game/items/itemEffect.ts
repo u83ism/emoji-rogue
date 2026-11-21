@@ -125,6 +125,12 @@ export const applyItemEffect = (
 				"identify-weapon-scroll",
 				targetItemId,
 			);
+		case "identify-armor-scroll":
+			return applyUseIdentifyScroll(
+				state,
+				"identify-armor-scroll",
+				targetItemId,
+			);
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food":

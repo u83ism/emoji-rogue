@@ -16,6 +16,7 @@ export const IDENTIFY_SCROLL_KINDS = [
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
+	"identify-armor-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type IdentifyScrollKind = (typeof IDENTIFY_SCROLL_KINDS)[number];
@@ -36,12 +37,14 @@ export const IDENTIFY_SCROLL_TARGETS: Readonly<
 		SCROLL_KIND_VALUES.some((scroll) => scroll === kind),
 	"identify-ring-wand-scroll": (kind) => isRingKind(kind) || isWandKind(kind),
 	"identify-weapon-scroll": (kind) => kind === "weapon",
+	"identify-armor-scroll": (kind) => kind === "armor",
 };
 
 /** The identify scrolls that tell the very item's numbers (ISKNOW), not only its kind. */
 const TELLS_NUMBERS: ReadonlySet<IdentifyScrollKind> = new Set([
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
+	"identify-armor-scroll",
 ]);
 
 /**

@@ -58,6 +58,7 @@ const FLAT_WORTH: Readonly<
 	"sleep-scroll": 5,
 	"create-monster-scroll": 75,
 	"aggravate-monsters-scroll": 20,
+	"identify-armor-scroll": 100,
 	"identify-weapon-scroll": 80,
 	"identify-ring-wand-scroll": 115,
 	"identify-scroll-scroll": 80,

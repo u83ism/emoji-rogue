@@ -103,6 +103,7 @@ export const ITEM_KIND_VALUES = [
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
+	"identify-armor-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -290,6 +291,7 @@ export const SCROLL_KIND_VALUES = [
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
 	"identify-weapon-scroll",
+	"identify-armor-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];

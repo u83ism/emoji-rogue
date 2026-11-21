@@ -57,6 +57,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "create-monster-scroll", weight: 4 },
 		{ kind: "remove-curse-scroll", weight: 7 },
 		{ kind: "aggravate-monsters-scroll", weight: 3 },
+		{ kind: "identify-armor-scroll", weight: 7 },
 		{ kind: "identify-weapon-scroll", weight: 6 },
 		{ kind: "identify-ring-wand-scroll", weight: 10 },
 		{ kind: "identify-scroll-scroll", weight: 10 },

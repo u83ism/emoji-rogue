@@ -88,6 +88,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("identify-weapon-scroll"),
 		effect: `読むと持っている武器を1つ選び、その命中・ダメージの補正が分かる(装備していなくても持ち物欄に出る。武器を持っていなければ無駄になる)`,
 	},
+	"identify-armor-scroll": {
+		catalogName: "防具識別の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("identify-armor-scroll"),
+		effect: `読むと持っている防具を1つ選び、その防御力が分かる(装備していなくても持ち物欄に出る。防具を持っていなければ無駄になる)`,
+	},
 	"aggravate-monsters-scroll": {
 		catalogName: "警報の巻物",
 		category: "巻物",

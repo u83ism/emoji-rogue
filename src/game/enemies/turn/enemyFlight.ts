@@ -1,5 +1,5 @@
-import type { EnemyKind } from "../events.js";
-import type { Position } from "../state.js";
+import type { EnemyKind } from "../../events.js";
+import type { Position } from "../../state.js";
 
 /**
  * Percent chance, rolled on every action, that a kind lurches one step in a

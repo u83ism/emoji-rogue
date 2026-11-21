@@ -16,7 +16,7 @@ import { calculatePlayerDamageBonus } from "../equipment/equipmentStats.js";
 /**
  * A wand of slow monster on the nearest visible enemy, as original Rogue's
  * do_zap(): a hasted one only loses its haste, any other is slowed for good
- * — acting every other move, starting with the next (enemies/enemySpeed.ts).
+ * — acting every other move, starting with the next (enemies/turn/enemySpeed.ts).
  * Either way the zap wakes it and breaks a hold (runto()). The bolt flies
  * `direction` (original Rogue's do_zap()) to the first monster or wall
  * (throw.ts's traceFlight); meeting no monster, the charge is spent for

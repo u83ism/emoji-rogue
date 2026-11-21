@@ -1,14 +1,14 @@
-import { encodePointKey } from "../../pointkey.js";
-import type { RngState } from "../../rng.js";
-import { stepUniform } from "../../rng.js";
-import { canStepBetween, DIRECTION_VECTORS } from "../directions.js";
+import { encodePointKey } from "../../../pointkey.js";
+import type { RngState } from "../../../rng.js";
+import { stepUniform } from "../../../rng.js";
+import { canStepBetween, DIRECTION_VECTORS } from "../../directions.js";
 import {
 	buildPassageMap,
 	findArea,
 	findAreaExits,
 	isSameArea,
-} from "../floor/passages.js";
-import type { Enemy, GameState, Position } from "../state.js";
+} from "../../floor/passages.js";
+import type { Enemy, GameState, Position } from "../../state.js";
 
 /** Enemies move like the player: eight directions, floor only, no corner cutting. */
 const ENEMY_DIRECTIONS: readonly (readonly [number, number])[] =

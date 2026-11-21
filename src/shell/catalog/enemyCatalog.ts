@@ -7,7 +7,7 @@ import {
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 	VITALITY_DRAIN_CHANCE_PERCENT,
 } from "../../game/balance.js";
-import { ERRATIC_MOVE_CHANCE_PERCENT } from "../../game/enemies/enemyFlight.js";
+import { ERRATIC_MOVE_CHANCE_PERCENT } from "../../game/enemies/turn/enemyFlight.js";
 import type { EnemyKind } from "../../game/events.js";
 
 // The enemy half of docs/catalog.md's prose data — split out of

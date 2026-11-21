@@ -1,8 +1,8 @@
-import { type RngState, stepUniform } from "../../rng.js";
-import { isWithinReach } from "../directions.js";
-import type { EnemyName, GameEvent } from "../events.js";
-import type { Enemy, GameState, HeldItem, Position } from "../state.js";
-import { resolveDragonFlame } from "./abilities/dragonFlame.js";
+import { type RngState, stepUniform } from "../../../rng.js";
+import { isWithinReach } from "../../directions.js";
+import type { EnemyName, GameEvent } from "../../events.js";
+import type { Enemy, GameState, HeldItem, Position } from "../../state.js";
+import { resolveDragonFlame } from "../abilities/dragonFlame.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
 import {

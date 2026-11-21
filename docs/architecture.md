@@ -28,7 +28,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
      └→ advanceTurn(state, action)         src/game/advanceTurn.ts
          ├→ applyMove → 攻撃/階段/拾得/罠    combat/combat.ts, floor/, items/inventory/pickups.ts, trapTrigger.ts
          ├→ applyUseItem(網羅switch)          items/use.ts → 各カテゴリモジュール
-         ├→ advanceEnemies(敵の1ターン)       enemies/enemies.ts → enemies/action.ts
+         ├→ advanceEnemies(敵の1ターン)       enemies/enemies.ts → enemies/turn/action.ts
          └→ applyTurnEndTicks(状態異常等)     turnEnd/hunger.ts, turnEnd/statusCountdowns.ts, ...
              └→ buildFrameGrid(state)      src/game/frame.ts + glyphs.ts
                  └→ <GameScreen>           src/renderer/ (Inkが端末に描画)
@@ -46,7 +46,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `throw.ts` | 武器を投げる(`throw-item`アクション)。視界内の最も近い敵への自動照準、命中判定、外れた武器の落下。命中・ダメージの式は`combat/`から使う |
 | `startingInventory.ts` | 新規開始時の持ち物(本家の初期装備) |
 | `combat/` | 戦闘の解決と、その数値の式(2026-11-21の構造監査で`src/game/`直下と`items/`から集約)。`combat.ts`(プレイヤー側の攻撃解決、共通コア`applyEnemyHit`)・`hitChance.ts`(プレイヤー・投擲・矢の罠・敵の命中率)・`damage.ts`(`rollToHit`/`rollDamageDice`)・`strength.ts`(力と、その命中・ダメージ補正、毒による低下)・`experience.ts`(経験値とレベルアップ) |
-| `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結。1ターン1行動、飛ぶ敵だけ離れている間は2行動)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。隣接したときの行動は`adjacentAction.ts`(種類ごとの特別な行動の表——盗賊・ニンフの盗み、ハエトリソウの拘束、アイスモンスターの凍結`iceMonsterFreeze.ts`——と、それ以外の通常攻撃)。通常攻撃は`enemyAttack.ts`(攻撃ダイス1個ごとの命中判定とダメージ。ヴァンパイア・レイスの最大HP(とレイスはレベル)を奪う`vitalityDrain.ts`を内包)。能力値は`enemyStats.ts`(原作Rogue 5.4の`monsters[]`表と出現順)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・メデューサの視線攻撃)、コウモリ・ファントムのでたらめな動きと飛ぶ敵の2回行動の判定は`enemyFlight.ts`、1ターンの行動回数(30階以降の加速と飛ぶ敵の追加の移動)をまとめるのは`enemySpeed.ts`、ハエトリソウの拘束ダメージ(捕まっている間1ずつ増える)は`flytrapHold.ts`。出現(階に応じた種類の窓)は`floor/enemies.ts`、部屋ごとの抽選は`floor/rooms.ts`、グリフは`enemyGlyphs.ts`で別物 |
+| `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ。アイテムを拾う・炎の当たりはループの後)・`wakeMonster.ts`(本家の`wake_monster()`: 部屋に入ったとき・隣にいるときの目覚め)・`enemyAttack.ts`(攻撃ダイスごとの命中とダメージ、種類ごとの命中時の効果)・`enemyPack.ts`(持ち物・床のアイテムへ向かう`find_dest()`)・`enemyStats.ts`(本家5.4の`monsters[]`表)。`turn/`は1体の行動の決め方(2026-11-21本人裁可で分割): `action.ts`(1行動。混乱・でたらめな動き・アイテムへ向かう・ドラゴンの炎・隣なら`adjacentAction.ts`、離れていれば`enemyMovement.ts`の本家どおりの`chase()`)・`enemySpeed.ts`(加速・鈍足・飛ぶ敵の1ターンの行動回数)・`enemyFlight.ts`。`abilities/`は種類ごとの特殊能力(同日分割): 盗んで逃げる`enemyFlee.ts`・ハエトリソウの拘束`flytrapHold.ts`・凍結`iceMonsterFreeze.ts`・メデューサの視線`medusaGaze.ts`・吸収`vitalityDrain.ts`・ドラゴンの炎`dragonFlame.ts`。出現(階に応じた種類の窓)は`floor/enemies.ts`、部屋ごとの抽選は`floor/rooms.ts`、グリフは`enemyGlyphs.ts`で別物 |
 | `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`rooms.ts`(部屋ごとの金貨と敵。本家の`do_rooms()`)・`enemies.ts`(敵の種類と生成)/`items.ts`(アイテムと罠の配置)+`spawnTable.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(自然回復と再生の指輪)・`wanderer.ts`(徘徊モンスターの追加出現)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |

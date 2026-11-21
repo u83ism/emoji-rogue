@@ -1,4 +1,4 @@
-import type { Enemy, EnemySpeed, GameState } from "../state.js";
+import type { Enemy, EnemySpeed, GameState } from "../../state.js";
 import {
 	type EnemyActionResult,
 	type EnemyActor,

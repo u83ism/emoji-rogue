@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildArenaGameState } from "../initialState.js";
-import type { Enemy, EnemySpeed, GameState } from "../state.js";
-import { advanceEnemies } from "./enemies.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { Enemy, EnemySpeed, GameState } from "../../state.js";
+import { advanceEnemies } from "../enemies.js";
 
 const awake = (
 	kind: Enemy["kind"],

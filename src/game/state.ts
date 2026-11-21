@@ -100,7 +100,7 @@ export type Enemy = Position & {
 	/** Sleeping enemies take no action at all until woken — see advanceEnemies. */
 	readonly awake: boolean;
 	/**
-	 * How often it acts (original Rogue's ISHASTE/ISSLOW, enemies/enemySpeed.ts):
+	 * How often it acts (original Rogue's ISHASTE/ISSLOW, enemies/turn/enemySpeed.ts):
 	 * "hasted" twice per move (every monster born from HASTED_ENEMY_FLOOR down),
 	 * a slowed one (the slow monster wand) every other move — "slowed-acting"
 	 * on the move it acts (the original's t_turn), "slowed-resting" on the one
@@ -117,7 +117,7 @@ export type Enemy = Position & {
 	readonly gazeUsed: boolean;
 	/** Where it heads instead of the player — original Rogue's t_dest: an item it means to pick up, or the gold an orc guards (enemies/enemyPack.ts). Absent, it is after the player. */
 	readonly goal?: Position;
-	/** Original Rogue's ISHUH: four moves in five go a random way, and each such stumble may clear it (one in twenty) — enemies/action.ts. A hit while the player's hands glow (nextHitConfuses) sets it. */
+	/** Original Rogue's ISHUH: four moves in five go a random way, and each such stumble may clear it (one in twenty) — enemies/turn/action.ts. A hit while the player's hands glow (nextHitConfuses) sets it. */
 	readonly confused: boolean;
 	/** Original Rogue's ISCANC (a wand of cancellation): no special attack, gaze, flame or disguise any more. */
 	readonly cancelled: boolean;

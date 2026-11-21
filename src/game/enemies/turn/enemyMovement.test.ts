@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../../rng.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { GameState, Position } from "../state.js";
+import { seedToState } from "../../../rng.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { GameState, Position } from "../../state.js";
 import { stepChase } from "./enemyMovement.js";
 
 /**

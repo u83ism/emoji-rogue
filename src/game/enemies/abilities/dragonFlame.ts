@@ -10,8 +10,8 @@ import { buildPassageMap, findArea, isSameArea } from "../../floor/passages.js";
 import { sumRingBonus } from "../../items/equipment/equipmentStats.js";
 import type { GameState, Position } from "../../state.js";
 import { nameEnemy } from "../../vision.js";
-import type { EnemyTurnProgress } from "../action.js";
 import { ENEMY_STATS } from "../enemyStats.js";
+import type { EnemyTurnProgress } from "../turn/action.js";
 
 /** Original Rogue's BOLT_LENGTH: how many tiles a bolt flies, and how far (squared) a dragon breathes from. */
 const BOLT_LENGTH = 6;

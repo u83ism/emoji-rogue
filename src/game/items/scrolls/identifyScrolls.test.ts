@@ -28,3 +28,21 @@ describe("applyUseIdentifyScroll", () => {
 		});
 	});
 });
+
+describe("the identify ring, wand or staff scroll", () => {
+	it("names the kind and tells that very item's numbers", () => {
+		const wand: HeldItem = { itemId: 5, kind: "slow-wand", charges: 4 };
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [...held, wand],
+		};
+		const read = applyUseIdentifyScroll(state, "identify-ring-wand-scroll", 5);
+		expect(read.identifiedItemKinds).toEqual(["slow-wand"]);
+		expect(read.knownItemIds).toEqual([5]);
+		/* a potion is not its business */
+		expect(
+			applyUseIdentifyScroll(state, "identify-ring-wand-scroll", 1)
+				.knownItemIds,
+		).toEqual([]);
+	});
+});

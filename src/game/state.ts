@@ -371,6 +371,8 @@ export interface GameState {
 	readonly appearances: ItemAppearances;
 	/** Item kinds identified this run — by using one (drinking a potion, wearing a ring, zapping a wand; see items/use.ts) or by an identify scroll. The shell shows a potion/ring/wand by its real name only once its kind is here. */
 	readonly identifiedItemKinds: readonly ItemKind[];
+	/** The items (by itemId) whose own numbers the player knows — original Rogue's ISKNOW: a ring's bonus, a wand's charges, set by an identify scroll (items/scrolls/identifyScrolls.ts). */
+	readonly knownItemIds: readonly number[];
 	readonly goldPiles: readonly GoldPile[];
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;

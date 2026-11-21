@@ -269,7 +269,7 @@ const renderLog = () => {
 
 const appendHeldItemRow = (item, index) => {
 	const row = document.createElement("div");
-	row.textContent = `${toInventoryLetter(index)}) ${formatHeldItemLabel(item, state.identifiedItemKinds, state.appearances)}`;
+	row.textContent = `${toInventoryLetter(index)}) ${formatHeldItemLabel(item, state.identifiedItemKinds, state.appearances, state.knownItemIds)}`;
 	inventoryElement.appendChild(row);
 };
 
@@ -305,6 +305,7 @@ const renderInventory = () => {
 			selectedItem,
 			state.identifiedItemKinds,
 			state.appearances,
+			state.knownItemIds,
 		);
 		inventoryElement.appendChild(selected);
 		const prompt = document.createElement("div");

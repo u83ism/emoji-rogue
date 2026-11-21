@@ -121,6 +121,26 @@ describe("formatHeldItemLabel", () => {
 	});
 });
 
+describe("an item whose numbers are known", () => {
+	it("shows a wand's charges and a ring's bonus once identified (ISKNOW)", () => {
+		const wand: HeldItem = { itemId: 2, kind: "slow-wand", charges: 3 };
+		expect(formatHeldItemLabel(wand, ["slow-wand"], undefined, [2])).toBe(
+			"鈍足の杖(残り3回)",
+		);
+		const ring: HeldItem = {
+			itemId: 3,
+			kind: "protection-ring",
+			equipped: true,
+			cursed: false,
+			bonus: 2,
+		};
+		expect(formatHeldItemLabel(ring, ["protection-ring"], undefined, [3])).toBe(
+			"✅ 守りの指輪(+2)",
+		);
+		expect(formatHeldItemLabel(wand, ["slow-wand"])).toBe("鈍足の杖");
+	});
+});
+
 describe("resolveItemVerbPrompt", () => {
 	it("reads つかう for a consumable", () => {
 		const potion: HeldItem = { itemId: 1, kind: "heal-potion" };

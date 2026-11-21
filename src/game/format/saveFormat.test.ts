@@ -101,6 +101,7 @@ describe("save file shape guard", () => {
 				],
 				nextItemId: "number",
 				identifiedItemKinds: [],
+				knownItemIds: [],
 				goldPiles: [{ x: "number", y: "number", amount: "number" }],
 				goldCollected: "number",
 				traps: [{ x: "number", y: "number", kind: "string", seen: "boolean" }],

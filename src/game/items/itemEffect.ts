@@ -113,6 +113,12 @@ export const applyItemEffect = (
 				"identify-scroll-scroll",
 				targetItemId,
 			);
+		case "identify-ring-wand-scroll":
+			return applyUseIdentifyScroll(
+				state,
+				"identify-ring-wand-scroll",
+				targetItemId,
+			);
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food":

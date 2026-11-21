@@ -23,15 +23,17 @@ const HeldItemRow = ({
 	item,
 	identifiedItemKinds,
 	appearances,
+	knownItemIds,
 }: {
 	readonly index: number;
 	readonly item: HeldItem;
 	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
 	readonly appearances: GameState["appearances"];
+	readonly knownItemIds: GameState["knownItemIds"];
 }) => (
 	<Text>
 		{toInventoryLetter(index)}){" "}
-		{formatHeldItemLabel(item, identifiedItemKinds, appearances)}
+		{formatHeldItemLabel(item, identifiedItemKinds, appearances, knownItemIds)}
 	</Text>
 );
 
@@ -47,10 +49,12 @@ const HeldItemRowList = ({
 	items,
 	identifiedItemKinds,
 	appearances,
+	knownItemIds,
 }: {
 	readonly items: readonly HeldItem[];
 	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
 	readonly appearances: GameState["appearances"];
+	readonly knownItemIds: GameState["knownItemIds"];
 }) => (
 	<Box flexDirection="row">
 		{[0, ROWS_PER_COLUMN].map((columnStart) => (
@@ -64,6 +68,7 @@ const HeldItemRowList = ({
 							item={item}
 							identifiedItemKinds={identifiedItemKinds}
 							appearances={appearances}
+							knownItemIds={knownItemIds}
 						/>
 					))}
 			</Box>
@@ -98,6 +103,7 @@ export const InventoryOverlay = ({
 						pendingDirectionFor,
 						state.identifiedItemKinds,
 						state.appearances,
+						state.knownItemIds,
 					)}
 				</Text>
 				<Text>
@@ -118,6 +124,7 @@ export const InventoryOverlay = ({
 					items={candidates}
 					identifiedItemKinds={state.identifiedItemKinds}
 					appearances={state.appearances}
+					knownItemIds={state.knownItemIds}
 				/>
 			</Box>
 		);
@@ -133,6 +140,7 @@ export const InventoryOverlay = ({
 							selectedItem,
 							state.identifiedItemKinds,
 							state.appearances,
+							state.knownItemIds,
 						)}
 					</Text>
 					<Text>{resolveItemVerbPrompt(selectedItem)}</Text>
@@ -144,6 +152,7 @@ export const InventoryOverlay = ({
 					items={state.inventory}
 					identifiedItemKinds={state.identifiedItemKinds}
 					appearances={state.appearances}
+					knownItemIds={state.knownItemIds}
 				/>
 			)}
 		</Box>

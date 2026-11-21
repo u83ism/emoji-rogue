@@ -1,6 +1,8 @@
 import {
 	buildEventLog,
 	type ItemKind,
+	isRingKind,
+	isWandKind,
 	POTION_KIND_VALUES,
 	SCROLL_KIND_VALUES,
 } from "../../events.js";
@@ -11,6 +13,7 @@ import { applyScrollWasted } from "../equipment/equipmentScrolls.js";
 export const IDENTIFY_SCROLL_KINDS = [
 	"identify-potion-scroll",
 	"identify-scroll-scroll",
+	"identify-ring-wand-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type IdentifyScrollKind = (typeof IDENTIFY_SCROLL_KINDS)[number];
@@ -29,6 +32,7 @@ export const IDENTIFY_SCROLL_TARGETS: Readonly<
 		POTION_KIND_VALUES.some((potion) => potion === kind),
 	"identify-scroll-scroll": (kind) =>
 		SCROLL_KIND_VALUES.some((scroll) => scroll === kind),
+	"identify-ring-wand-scroll": (kind) => isRingKind(kind) || isWandKind(kind),
 };
 
 /**
@@ -37,7 +41,9 @@ export const IDENTIFY_SCROLL_TARGETS: Readonly<
  * the scroll identifies (IDENTIFY_SCROLL_TARGETS) — the player picks it
  * (inventoryKeymap.ts's filterScrollTargets). Pointed at nothing fitting,
  * the scroll is wasted ("you don't have anything appropriate to
- * identify"). Picking one already known still uses the scroll up.
+ * identify"). Picking one already known still uses the scroll up. The
+ * scroll for rings and wands also tells that very one's numbers — its
+ * bonus or charges (ISKNOW, GameState.knownItemIds).
  */
 export const applyUseIdentifyScroll = (
 	state: GameState,
@@ -52,8 +58,14 @@ export const applyUseIdentifyScroll = (
 	if (target === undefined) {
 		return applyScrollWasted(state, scroll);
 	}
+	const knowsNumbers =
+		scroll === "identify-ring-wand-scroll" &&
+		!state.knownItemIds.includes(target.itemId);
 	return {
 		...state,
+		knownItemIds: knowsNumbers
+			? [...state.knownItemIds, target.itemId]
+			: state.knownItemIds,
 		identifiedItemKinds: state.identifiedItemKinds.includes(target.kind)
 			? state.identifiedItemKinds
 			: [...state.identifiedItemKinds, target.kind],

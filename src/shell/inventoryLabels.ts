@@ -35,6 +35,7 @@ export const formatHeldItemLabel = (
 	item: HeldItem,
 	identifiedItemKinds: readonly ItemKind[],
 	appearances?: ItemAppearances,
+	knownItemIds: readonly number[] = [],
 ): string => {
 	const name =
 		item.kind === "weapon"
@@ -47,8 +48,16 @@ export const formatHeldItemLabel = (
 						undefined,
 						appearances,
 					);
+	/* a ring's bonus or a wand's charges, once identified (ISKNOW) */
+	const known = !knownItemIds.includes(item.itemId)
+		? ""
+		: "charges" in item
+			? `(残り${item.charges}回)`
+			: "bonus" in item
+				? `(${formatSignedBonus(item.bonus)})`
+				: "";
 	if (!("equipped" in item) || !item.equipped) {
-		return name;
+		return `${name}${known}`;
 	}
 	const bonus =
 		item.kind === "weapon"
@@ -56,9 +65,10 @@ export const formatHeldItemLabel = (
 			: item.kind === "armor"
 				? `防御${UNARMORED_ARMOR_CLASS - calculateArmorClass(item)}`
 				: undefined;
-	const tags = [bonus, item.cursed ? "呪い" : undefined].filter(
-		(tag): tag is string => tag !== undefined,
-	);
+	const tags = [
+		bonus ?? (known === "" ? undefined : known.slice(1, -1)),
+		item.cursed ? "呪い" : undefined,
+	].filter((tag): tag is string => tag !== undefined);
 	const suffix = tags.length > 0 ? `(${tags.join("・")})` : "";
 	return `${EQUIPPED_GLYPH} ${name}${suffix}`;
 };

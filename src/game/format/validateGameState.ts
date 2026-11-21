@@ -822,6 +822,13 @@ export const validateGameState = (
 	if (!isItemKindArray(identifiedItemKinds)) {
 		return err("identifiedItemKinds");
 	}
+	const knownItemIds = value.knownItemIds;
+	if (
+		!Array.isArray(knownItemIds) ||
+		!knownItemIds.every((itemId) => isPositiveInteger(itemId))
+	) {
+		return err("knownItemIds");
+	}
 	const goldPiles = value.goldPiles;
 	if (!isGoldPileArray(goldPiles, terrain)) {
 		return err("goldPiles");
@@ -917,6 +924,7 @@ export const validateGameState = (
 		inventory: [...inventory],
 		nextItemId,
 		identifiedItemKinds: [...identifiedItemKinds],
+		knownItemIds: knownItemIds.filter((itemId) => isPositiveInteger(itemId)),
 		goldPiles: goldPiles.map((pile) => ({
 			x: pile.x,
 			y: pile.y,

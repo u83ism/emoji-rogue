@@ -26,7 +26,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 キー入力 (useInput)                        src/main.tsx
  └→ toAction / toUseItemAction             src/game/keymap.ts, inventoryKeymap.ts
      └→ advanceTurn(state, action)         src/game/advanceTurn.ts
-         ├→ applyMove → 攻撃/階段/拾得/わな    combat/combat.ts, floor/, items/inventory/pickups.ts, trapTrigger.ts
+         ├→ applyMove → 攻撃/階段/拾得/罠    combat/combat.ts, floor/, items/inventory/pickups.ts, trapTrigger.ts
          ├→ applyUseItem(網羅switch)          items/use.ts → 各カテゴリモジュール
          ├→ advanceEnemies(敵の1ターン)       enemies/enemies.ts → enemies/action.ts
          └→ applyTurnEndTicks(状態異常等)     turnEnd/hunger.ts, turnEnd/statusCountdowns.ts, ...
@@ -41,21 +41,21 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | 場所 | 中身 |
 |---|---|
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
-| `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
+| `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(罠)・`teleport.ts`(ランダム転移)が脇を固める |
 | `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/`・`potions/`・`scrolls/`・`wands/`・`rings/`(種別ごとのフォルダ、同日分割)と`food.ts`へ分配。`equipment/`は武器・防具の着脱と数値、装備に効く巻物(2026-11-21本人裁可で分割)。`inventory/`は持ち物の出し入れ(`inventory.ts`・拾得`pickups.ts`・`drop.ts`・拾った物を持ち物にする`heldItemFactory.ts`。同日分割) |
 | `throw.ts` | 武器を投げる(`throw-item`アクション)。視界内の最も近い敵への自動照準、命中判定、外れた武器の落下。命中・ダメージの式は`combat/`から使う |
 | `startingInventory.ts` | 新規開始時の持ち物(本家の初期装備) |
-| `combat/` | 戦闘の解決と、その数値の式(2026-11-21の構造監査で`src/game/`直下と`items/`から集約)。`combat.ts`(プレイヤー側の攻撃解決、共通コア`applyEnemyHit`)・`hitChance.ts`(プレイヤー・投擲・矢のわな・敵の命中率)・`damage.ts`(`rollToHit`/`rollDamageDice`)・`strength.ts`(力と、その命中・ダメージ補正、毒による低下)・`experience.ts`(経験値とレベルアップ) |
+| `combat/` | 戦闘の解決と、その数値の式(2026-11-21の構造監査で`src/game/`直下と`items/`から集約)。`combat.ts`(プレイヤー側の攻撃解決、共通コア`applyEnemyHit`)・`hitChance.ts`(プレイヤー・投擲・矢の罠・敵の命中率)・`damage.ts`(`rollToHit`/`rollDamageDice`)・`strength.ts`(力と、その命中・ダメージ補正、毒による低下)・`experience.ts`(経験値とレベルアップ) |
 | `enemies/` | 敵の1ターン。`enemies.ts`(全敵を回すループ — 起床判定・凍結。1ターン1行動、飛ぶ敵だけ離れている間は2行動)が`action.ts`(敵1体の1行動 — 隣接なら盗みか攻撃、離れていれば移動)を呼ぶ。隣接したときの行動は`adjacentAction.ts`(種類ごとの特別な行動の表——盗賊・ニンフの盗み、ハエトリソウの拘束、アイスモンスターの凍結`iceMonsterFreeze.ts`——と、それ以外の通常攻撃)。通常攻撃は`enemyAttack.ts`(攻撃ダイス1個ごとの命中判定とダメージ。ヴァンパイア・レイスの最大HP(とレイスはレベル)を奪う`vitalityDrain.ts`を内包)。能力値は`enemyStats.ts`(原作Rogue 5.4の`monsters[]`表と出現順)、盗んで逃げるのは`enemyFlee.ts`、移動は`enemyMovement.ts`(A*追跡・徘徊+`resolveEnemyMovement`: ハエトリソウの非移動・メデューサの視線攻撃)、コウモリ・ファントムのでたらめな動きと飛ぶ敵の2回行動の判定は`enemyFlight.ts`、1ターンの行動回数(30階以降の加速と飛ぶ敵の追加の移動)をまとめるのは`enemySpeed.ts`、ハエトリソウの拘束ダメージ(捕まっている間1ずつ増える)は`flytrapHold.ts`。出現(階に応じた種類の窓)は`floor/enemies.ts`、部屋ごとの抽選は`floor/rooms.ts`、グリフは`enemyGlyphs.ts`で別物 |
 | `enemyGlyphs.ts` | 敵26種のグリフ+選定理由コメント(`glyphs.ts`から分離——26種分のコメントで200行超過のため) |
-| `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`rooms.ts`(部屋ごとの金貨と敵。本家の`do_rooms()`)・`enemies.ts`(敵の種類と生成)/`items.ts`(アイテムとわなの配置)+`spawnTable.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
+| `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`rooms.ts`(部屋ごとの金貨と敵。本家の`do_rooms()`)・`enemies.ts`(敵の種類と生成)/`items.ts`(アイテムと罠の配置)+`spawnTable.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(自然回復と再生の指輪)・`wanderer.ts`(徘徊モンスターの追加出現)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
 | `vision.ts` / `frame.ts` / `glyphs.ts` | 本家どおりの見え方の導出(明るい部屋は部屋全体、暗い部屋と通路は周囲1マス。可視集合は保存せず毎回導出、既踏破のみ状態。暗い部屋は出ると床の記憶が消える) / フレーム構築 / 絵文字辞書 |
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `initialState.ts` / `columns.ts` | キー変換 / スコア / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 
-シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体。持ち物を使う系の文言は`itemEventMessages.ts`)+`messages.ts`(スコアの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(わな+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
+シェル層 `src/shell/`: `statusBar.tsx`・`inventoryOverlay.tsx`(chrome部品) / `eventMessages.ts`(`formatEvent`本体。持ち物を使う系の文言は`itemEventMessages.ts`)+`messages.ts`(スコアの短い文言)+`gameNames.ts`(イベント→日本語。ロケール差し替え点) / `systemMessages.ts`(ですます調のシステム通知 — ログとは別物) / `saveFile.ts`・`replayFile.ts`(ファイルI/O) / `cliArgs.ts` / `catalog/`(`docs/catalog.md`生成の一式: `catalog.ts`・`catalogData.ts`(罠+共有型)・`enemyCatalog.ts`・`itemCatalog.ts`・`potionCatalog.ts`・`ringCatalog.ts`)。エントリポイント`src/main.tsx`(入力ループ+セッション)だけはビルド設定の都合でルート直下。
 
 BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関数。ドライバは`scripts/run-bot.ts`でJSONLログを`~/.emoji-rogue/bot-logs/`へ出す。出荷するゲームの一部ではない)。
 
@@ -77,7 +77,7 @@ BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関
 
 `docs/design.md` の核心制約「**絵文字の実行時幅計測を信用しない**」をInk採用と両立させるためのハイブリッド:
 
-- セル単位の `<Box>` は使わない(Inkの過去の絵文字幅バグ ink#733 の震源地。修正済みだが防御的に避ける)
+- セル単位の `<Box>` は使罠い(Inkの過去の絵文字幅バグ ink#733 の震源地。修正済みだが防御的に避ける)
 - 代わりに `groupIntoRuns()` で同色連続セルを文字列に事前結合し、1行 = `<Box flexDirection="row">` 内の少数の `<Text>` として描画
 - `TILE_W = 2`(1論理セル=1絵文字=2カラム)は設計判断の明文化であって、実測はしない
 - **端末ごとの幅の表**(`terminalProfile.ts`): VS Codeの内蔵ターミナル(xterm.js)は幅の表がUnicode 12.1までなので、13.0以降の絵文字を1カラムと数える。`main.tsx`が起動時に`TERM_PROGRAM`から`TerminalProfile`を決め、`groupIntoRuns`がその絵文字の後ろに空白を1つ足す。これも実測ではなく、端末ごとの既知の挙動の決め打ち(`docs/emoji-policy.md`の2026-11-20のADR)
@@ -92,7 +92,7 @@ BOT層 `src/bot/`: バランス統計用の全踏破プレイBOT(方策は純関
 - **Result vs throw**: 「正常系の失敗」はResult、型が正しければ到達不能な箇所はthrow(`throw new Error("unreachable: ...")`)
 - **unionの分岐はlookupテーブルか網羅switch**(`balance.ts`の`ENEMY_MAX_HP`イディオム / `items/use.ts`のdefaultなしswitch)。3分岐超のif連鎖は禁止
 - **union要素名は文脈なしで自己記述的に**(`"teleport-scroll"`。カテゴリ1号が汎用名を占拠しない)
-- **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使わない)
+- **`noUncheckedIndexedAccess` 対応**: 範囲内が証明済みの添字アクセスは `src/indexing.ts` の `at()`(素の `!` や `as` は使罠い)
 - **座標キー**: `src/pointkey.ts` の `encodePointKey/decodePointKey`(`"x,y"`形式)。直書き禁止
 - **構造lint(正当化ベース)**: `scripts/check-structure.ts` が`npm run lint`で、ファイル200行(目安150)とフォルダ15ファイル(目安10、非テスト)を強制。hint→error→justifiedの3段で、超過の容認は**人間裁可の正当化**(ファイル=先頭の`file-size-exception:`コメント、フォルダ=`scripts/structure-exceptions.json`)のみ。フォルダ分割=ドメインモデリングはAIが提案し人間が命名を裁可する(`.claude/rules/file-structure.md`)
 - **構造lintの逆方向(監査hint)**: 上記2チェックは肥大化→分割の一方向にしか反応しない。軸の切り直し・過剰分割の集約はサイズでは検出できないため、`scripts/structure-audit-state.json`の最終監査コミットからの差分規模(ファイル数/行数)に応じてhintのみを出す第3チェックがある(常にhint止まり、errorには昇格しない)。hint発火時や依頼時は`structure-audit`スキルで人間主導のレビューを行う(`.claude/rules/file-structure.md`「The reverse direction」節)

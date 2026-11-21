@@ -57,7 +57,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		category: "指輪",
 		spawn: itemDrawShare("sustain-strength-ring"),
 		effect:
-			"装備している間、毒の薬・サソリ・矢のわなで力が下がらない。満腹度の減りが毎ターン1増える",
+			"装備している間、毒の薬・サソリ・矢の罠で力が下がらない。満腹度の減りが毎ターン1増える",
 	},
 	"adornment-ring": {
 		catalogName: "飾りの指輪",
@@ -88,10 +88,10 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		category: "指輪",
 		spawn: itemDrawShare("maintain-armor-ring"),
 		effect:
-			"装備している間、アクエーターや錆のわなで鎧が錆びない。満腹度の減りが毎ターン1増える",
+			"装備している間、アクエーターや錆の罠で鎧が錆びない。満腹度の減りが毎ターン1増える",
 	},
 	"searching-ring": {
-		catalogName: "索敵の指輪",
+		catalogName: "探索の指輪",
 		category: "指輪",
 		spawn: itemDrawShare("searching-ring"),
 		effect:

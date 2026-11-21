@@ -51,7 +51,7 @@ export interface TrapCatalogEntry {
 /** Every trap kind shares one placement rule (floor/traps.ts). */
 const TRAP_SPAWN: SpawnInfo = {
 	type: "described",
-	description: `N階ではN/10の確率でわなが置かれ、その数は1〜N/4個(最大${MAX_TRAPS_PER_FLOOR}個)。8種のどれも同じ確率`,
+	description: `N階ではN/10の確率で罠が置かれ、その数は1〜N/4個(最大${MAX_TRAPS_PER_FLOOR}個)。8種のどれも同じ確率`,
 };
 
 export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {

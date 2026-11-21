@@ -50,7 +50,7 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		catalogName: "浮遊の薬",
 		category: "薬",
 		spawn: itemDrawShare("levitation"),
-		effect: `${LEVITATION_POTION_DURATION}ターンの間、わなを踏まなくなる`,
+		effect: `${LEVITATION_POTION_DURATION}ターンの間、罠を踏まなくなる`,
 	},
 	blindness: {
 		catalogName: "盲目の薬",

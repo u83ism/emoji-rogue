@@ -3,13 +3,13 @@ import type { GameEvent, TrapKind } from "../game/events.js";
 /** The eight traps as the log and the catalog name them. */
 export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
 	trapdoor: "落とし穴",
-	arrow: "矢のわな",
-	"sleeping-gas": "睡眠ガスのわな",
-	bear: "捕獲のわな",
+	arrow: "矢の罠",
+	"sleeping-gas": "睡眠ガスの罠",
+	bear: "捕獲の罠",
 	teleport: "テレポートの罠",
-	dart: "毒矢のわな",
-	rust: "錆びわな",
-	mysterious: "謎のわな",
+	dart: "毒矢の罠",
+	rust: "錆び罠",
+	mysterious: "謎の罠",
 };
 
 import { formatEnemyName } from "./gameNames.js";
@@ -126,7 +126,7 @@ export const formatDungeonEvent = (event: DungeonEvent): string => {
 		case "secret-door-found":
 			return "隠し扉を見つけた!";
 		case "player-stuck":
-			return "まだ捕獲のわなに捕まっている";
+			return "まだ捕獲の罠に捕まっている";
 		case "trap-mystery":
 			return MYSTERY_MESSAGES[event.payload.variant] ?? "不思議な感覚がした";
 	}

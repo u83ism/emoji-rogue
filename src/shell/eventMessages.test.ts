@@ -25,7 +25,7 @@ describe("formatEvent", () => {
 				{ type: "player-died", payload: { by: "hunger" } },
 				"空腹のあまり倒れた……",
 			],
-			[{ type: "player-died", payload: { by: "trap" } }, "わなにやられた……"],
+			[{ type: "player-died", payload: { by: "trap" } }, "罠にやられた……"],
 			[
 				{ type: "player-died", payload: { by: "hypothermia" } },
 				"凍りついたまま凍え死んだ……",
@@ -159,11 +159,11 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 2 } },
-				"毒矢のわなを踏んでしまった。2のダメージを受けた",
+				"毒矢の罠を踏んでしまった。2のダメージを受けた",
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "dart", damage: 0 } },
-				"毒矢のわなを踏んだが、矢は外れた",
+				"毒矢の罠を踏んだが、矢は外れた",
 			],
 			[
 				{ type: "trap-triggered", payload: { kind: "trapdoor", damage: 0 } },
@@ -178,7 +178,7 @@ describe("formatEvent", () => {
 					type: "trap-triggered",
 					payload: { kind: "sleeping-gas", damage: 0 },
 				},
-				"睡眠ガスのわなを踏んでしまった!",
+				"睡眠ガスの罠を踏んでしまった!",
 			],
 			[
 				{ type: "player-poisoned", payload: { strengthLost: 2 } },
@@ -204,7 +204,7 @@ describe("formatEvent", () => {
 			],
 			[
 				{ type: "item-picked-up", payload: { kind: "teleport-scroll" } },
-				"巻物を拾った",
+				"テレポートの巻物を拾った",
 			],
 			[
 				{ type: "floor-mapped", payload: {} },
@@ -369,11 +369,8 @@ describe("formatEvent", () => {
 				{ type: "player-level-drained", payload: { level: 3 } },
 				"レベルが3に下がった",
 			],
-			[
-				{ type: "trap-found", payload: { kind: "arrow" } },
-				"矢のわなを見つけた",
-			],
-			[{ type: "player-stuck", payload: {} }, "まだ捕獲のわなに捕まっている"],
+			[{ type: "trap-found", payload: { kind: "arrow" } }, "矢の罠を見つけた"],
+			[{ type: "player-stuck", payload: {} }, "まだ捕獲の罠に捕まっている"],
 			[
 				{ type: "trap-mystery", payload: { variant: 7 } },
 				"急にひどく喉が渇いた",

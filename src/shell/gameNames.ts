@@ -54,7 +54,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	armor: "防具",
 	food: "食料",
 	poison: "毒薬",
-	"teleport-scroll": "巻物",
+	"teleport-scroll": "テレポートの巻物",
 	"mapping-scroll": "地図の巻物",
 	"identify-potion-scroll": "薬識別の巻物",
 	strength: "怪力の薬",
@@ -84,7 +84,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"light-wand": "光の杖",
 	"nothing-wand": "無の杖",
 	"teleport-to-wand": "引き寄せの杖",
-	"haste-monster-wand": "加速の杖",
+	"haste-monster-wand": "敵加速の杖",
 	/* Scrolls show their real name immediately, unlike potions/rings/wands — no generic placeholder. */
 	"confuse-monster-scroll": "混乱の巻物",
 	hallucination: "幻覚の薬",
@@ -113,7 +113,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"see-invisible-potion": "透明視の薬",
 	"magic-detection-potion": "魔法感知の薬",
 	"see-invisible-ring": "透明視の指輪",
-	"searching-ring": "索敵の指輪",
+	"searching-ring": "探索の指輪",
 };
 
 /** What each weapon and armor kind is called — one table for both, since an event only says which EquipmentVariant an item is. */
@@ -149,7 +149,7 @@ const NON_ENEMY_DEATH_MESSAGES: Readonly<
 	Record<Exclude<DeathCause, EnemyKind>, string>
 > = {
 	hunger: "空腹のあまり倒れた……",
-	trap: "わなにやられた……",
+	trap: "罠にやられた……",
 	hypothermia: "凍りついたまま凍え死んだ……",
 	bolt: "跳ね返った自分の杖の光線に倒れた……",
 };

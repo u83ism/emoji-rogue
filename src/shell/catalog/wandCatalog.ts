@@ -33,7 +33,7 @@ export const WAND_CATALOG: Readonly<Record<WandKind, ItemCatalogEntry>> = {
 		effect: `選んだ方向へ撃ち、最初に当たった敵に${MAGIC_MISSILE_DAMAGE_DICE.count}d${MAGIC_MISSILE_DAMAGE_DICE.sides}+${MAGIC_MISSILE_DAMAGE_BONUS}(+力と装備中の武器のダメージ補正)の必中ダメージ。敵が魔法へのセーブに成功すると消える。${WAND_CHARGES_TEXT}`,
 	},
 	"haste-monster-wand": {
-		catalogName: "加速の杖",
+		catalogName: "敵加速の杖",
 		category: "杖",
 		spawn: itemDrawShare("haste-monster-wand"),
 		effect: `選んだ方向へ振り、最初に当たった敵を加速させる(1ターンに2回動く)。鈍足の敵なら鈍足を解くだけ。振っても正体は分からない。${WAND_CHARGES_TEXT}`,

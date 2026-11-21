@@ -112,11 +112,9 @@ export const findVisibleEnemies = (state: GameState): readonly Enemy[] => {
 
 /**
  * The closest (Manhattan distance) enemy currently in the player's field of
- * view, or undefined if none are visible — a wand's automatic aim, standing
- * in for a manual targeting UI this project deliberately doesn't have
- * (docs/design.md's single-key interaction rule). Shared by items/wands.ts
- * and items/scrolls.ts (moved here from wands.ts once scrolls needed it too
- * — a visibility computation belongs with the rest of vision.ts's logic).
+ * view, or undefined if none are visible — what the bot aims its missiles at
+ * (bot/combatPolicy.ts). The player's own wands and missiles are aimed by
+ * direction (throw.ts's traceFlight).
  */
 export const findNearestVisibleEnemy = (
 	state: GameState,

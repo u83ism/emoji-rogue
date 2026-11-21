@@ -58,7 +58,7 @@ describe("items/scrolls", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
-				{ itemId: 1, kind: "identify-scroll" as const },
+				{ itemId: 1, kind: "identify-potion-scroll" as const },
 				{ itemId: 2, kind: "blindness" as const },
 			],
 		};
@@ -67,7 +67,10 @@ describe("items/scrolls", () => {
 			payload: { itemId: 1, targetItemId: 2 },
 		});
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "blindness" }]);
-		expect(next.identifiedItemKinds).toEqual(["blindness", "identify-scroll"]);
+		expect(next.identifiedItemKinds).toEqual([
+			"blindness",
+			"identify-potion-scroll",
+		]);
 		expect(next.events).toEqual([
 			{ type: "potion-identified", payload: { kind: "blindness" } },
 		]);
@@ -78,7 +81,7 @@ describe("items/scrolls", () => {
 			...buildArenaGameState(9, 3, 1),
 			identifiedItemKinds: ["blindness"] as const,
 			inventory: [
-				{ itemId: 1, kind: "identify-scroll" as const },
+				{ itemId: 1, kind: "identify-potion-scroll" as const },
 				{ itemId: 2, kind: "blindness" as const },
 			],
 		};
@@ -87,7 +90,10 @@ describe("items/scrolls", () => {
 			payload: { itemId: 1, targetItemId: 2 },
 		});
 		expect(next.inventory).toEqual([{ itemId: 2, kind: "blindness" }]);
-		expect(next.identifiedItemKinds).toEqual(["blindness", "identify-scroll"]);
+		expect(next.identifiedItemKinds).toEqual([
+			"blindness",
+			"identify-potion-scroll",
+		]);
 	});
 
 	it("an identify scroll with no potion pointed at is wasted", () => {
@@ -95,7 +101,7 @@ describe("items/scrolls", () => {
 			const state = {
 				...buildArenaGameState(9, 3, 1),
 				inventory: [
-					{ itemId: 1, kind: "identify-scroll" as const },
+					{ itemId: 1, kind: "identify-potion-scroll" as const },
 					{ itemId: 3, kind: "food" as const },
 				],
 			};
@@ -104,9 +110,9 @@ describe("items/scrolls", () => {
 				payload,
 			});
 			expect(next.inventory).toEqual([{ itemId: 3, kind: "food" }]);
-			expect(next.identifiedItemKinds).toEqual(["identify-scroll"]);
+			expect(next.identifiedItemKinds).toEqual(["identify-potion-scroll"]);
 			expect(next.events).toEqual([
-				{ type: "scroll-wasted", payload: { kind: "identify-scroll" } },
+				{ type: "scroll-wasted", payload: { kind: "identify-potion-scroll" } },
 			]);
 		}
 	});

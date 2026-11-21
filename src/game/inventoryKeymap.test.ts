@@ -68,7 +68,7 @@ describe("toSelectedHeldItem", () => {
 			},
 			{ itemId: 6, kind: "teleport-scroll" },
 			{ itemId: 7, kind: "mapping-scroll" },
-			{ itemId: 8, kind: "identify-scroll" },
+			{ itemId: 8, kind: "identify-potion-scroll" },
 			{ itemId: 9, kind: "slow-wand", charges: 5 },
 		];
 		expect(toSelectedHeldItem("i", nineItems)?.kind).toBe("slow-wand");
@@ -84,11 +84,13 @@ describe("filterScrollTargets", () => {
 			{ itemId: 3, kind: "blindness" },
 			{ itemId: 4, kind: "food" },
 		];
-		expect(filterScrollTargets("identify-scroll", held)).toEqual([
+		expect(filterScrollTargets("identify-potion-scroll", held)).toEqual([
 			potion(1),
 			{ itemId: 3, kind: "blindness" },
 		]);
-		expect(filterScrollTargets("identify-scroll", [weapon(2)])).toEqual([]);
+		expect(filterScrollTargets("identify-potion-scroll", [weapon(2)])).toEqual(
+			[],
+		);
 	});
 
 	it("returns undefined for a kind that takes no target — the enchant scrolls act on what is worn", () => {
@@ -126,7 +128,7 @@ describe("toItemVerbAction", () => {
 
 describe("toTargetedUseAction", () => {
 	it("builds a use-item action carrying both the source and target itemIds", () => {
-		const scroll: HeldItem = { itemId: 10, kind: "identify-scroll" };
+		const scroll: HeldItem = { itemId: 10, kind: "identify-potion-scroll" };
 		expect(toTargetedUseAction(scroll, potion(4))).toEqual({
 			type: "use-item",
 			payload: { itemId: 10, targetItemId: 4 },

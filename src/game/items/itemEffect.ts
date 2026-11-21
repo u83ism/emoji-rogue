@@ -93,7 +93,7 @@ export const applyItemEffect = (
 			return applyUseTeleportScroll(state);
 		case "mapping-scroll":
 			return applyUseMappingScroll(state);
-		case "identify-scroll":
+		case "identify-potion-scroll":
 			return applyUseIdentifyScroll(state, targetItemId);
 		case "confuse-monster-scroll":
 			return applyUseConfuseMonsterScroll(state);

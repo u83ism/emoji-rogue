@@ -48,7 +48,7 @@ const FLAT_WORTH: Readonly<
 	hallucination: 5,
 	"teleport-scroll": 165,
 	"mapping-scroll": 150,
-	"identify-scroll": 80,
+	"identify-potion-scroll": 80,
 	"enchant-weapon": 150,
 	"enchant-armor": 160,
 	"protect-armor": 250,

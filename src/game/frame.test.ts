@@ -230,7 +230,7 @@ describe("buildFrameGrid", () => {
 		const identify = {
 			x: 12,
 			y: 2,
-			kind: "identify-scroll" as const,
+			kind: "identify-potion-scroll" as const,
 		};
 		expect(buildFrameGrid({ ...wide, items: [mapping] })[2]?.[12]?.glyph).toBe(
 			"📜",

@@ -43,10 +43,10 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("mapping-scroll"),
 		effect: "フロア全体の地形が既踏破になる",
 	},
-	"identify-scroll": {
-		catalogName: "識別の巻物",
+	"identify-potion-scroll": {
+		catalogName: "薬識別の巻物",
 		category: "巻物",
-		spawn: itemDrawShare("identify-scroll"),
+		spawn: itemDrawShare("identify-potion-scroll"),
 		effect:
 			"持っている薬を1つ選び、その種類の正体が判明する(本家の「薬の識別」の巻物。薬を持っていなければ何も起きずに無くなる)",
 	},

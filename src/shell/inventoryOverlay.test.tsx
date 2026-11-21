@@ -142,7 +142,7 @@ describe("InventoryOverlay", () => {
 	});
 
 	it("shows a filtered target row list, prompt only, while pendingTargetFor is set", () => {
-		const scroll: HeldItem = { itemId: 1, kind: "identify-scroll" };
+		const scroll: HeldItem = { itemId: 1, kind: "identify-potion-scroll" };
 		const potion: HeldItem = { itemId: 2, kind: "heal-potion" };
 		const armor: HeldItem = {
 			itemId: 3,

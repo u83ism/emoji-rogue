@@ -44,7 +44,7 @@ export const filterScrollTargets = (
 	kind: ItemKind,
 	inventory: readonly HeldItem[],
 ): readonly HeldItem[] | undefined =>
-	kind === "identify-scroll"
+	kind === "identify-potion-scroll"
 		? inventory.filter((item) => POTION_KINDS.includes(item.kind))
 		: undefined;
 

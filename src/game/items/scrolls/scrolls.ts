@@ -46,7 +46,7 @@ export const applyUseIdentifyScroll = (
 		(item) => item.itemId === targetItemId && POTION_KINDS.includes(item.kind),
 	);
 	if (target === undefined) {
-		return applyScrollWasted(state, "identify-scroll");
+		return applyScrollWasted(state, "identify-potion-scroll");
 	}
 	return {
 		...state,

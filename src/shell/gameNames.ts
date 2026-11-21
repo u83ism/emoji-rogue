@@ -57,7 +57,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	poison: "毒薬",
 	"teleport-scroll": "巻物",
 	"mapping-scroll": "地図の巻物",
-	"identify-scroll": "識別の巻物",
+	"identify-potion-scroll": "薬識別の巻物",
 	strength: "怪力の薬",
 	/* Rings and wands are real names too — resolveItemDisplayName hides them behind 指輪/杖 until worn or zapped. */
 	"regeneration-ring": "再生の指輪",

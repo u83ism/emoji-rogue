@@ -50,7 +50,7 @@ const ITEM_REVEALS: Readonly<Record<PotionKind | ScrollKind, Reveal>> = {
 	"teleport-scroll": (before, after) =>
 		findPlayerRoom(before) !== findPlayerRoom(after),
 	"mapping-scroll": always,
-	"identify-scroll": always,
+	"identify-potion-scroll": always,
 	"enchant-weapon": never,
 	"enchant-armor": never,
 	"protect-armor": never,

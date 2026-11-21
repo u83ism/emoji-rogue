@@ -51,7 +51,7 @@ export const ITEM_KIND_VALUES = [
 	"poison",
 	"teleport-scroll",
 	"mapping-scroll",
-	"identify-scroll",
+	"identify-potion-scroll",
 	"strength",
 	"regeneration-ring",
 	"sustenance-ring",
@@ -274,7 +274,7 @@ export const POTION_KINDS: readonly ItemKind[] = [...POTION_KIND_VALUES];
 export const SCROLL_KIND_VALUES = [
 	"teleport-scroll",
 	"mapping-scroll",
-	"identify-scroll",
+	"identify-potion-scroll",
 	"enchant-weapon",
 	"enchant-armor",
 	"protect-armor",

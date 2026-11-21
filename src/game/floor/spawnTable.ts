@@ -51,8 +51,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "hold-monster-scroll", weight: 2 },
 		{ kind: "sleep-scroll", weight: 3 },
 		{ kind: "enchant-armor", weight: 7 },
-		/* the original's identify potion scroll — see items/scrolls/scrolls.ts */
-		{ kind: "identify-scroll", weight: 10 },
+		{ kind: "identify-potion-scroll", weight: 10 },
 		{ kind: "teleport-scroll", weight: 5 },
 		{ kind: "enchant-weapon", weight: 8 },
 		{ kind: "create-monster-scroll", weight: 4 },

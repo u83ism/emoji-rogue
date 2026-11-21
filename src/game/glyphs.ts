@@ -66,7 +66,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"protect-armor": { glyph: "📜" },
 	"teleport-scroll": { glyph: "📜" },
 	"mapping-scroll": { glyph: "📜" },
-	"identify-scroll": { glyph: "📜" },
+	"identify-potion-scroll": { glyph: "📜" },
 	"enchant-weapon": { glyph: "📜" },
 	"enchant-armor": { glyph: "📜" },
 	"remove-curse-scroll": { glyph: "📜" },

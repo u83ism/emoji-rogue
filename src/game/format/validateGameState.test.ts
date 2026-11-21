@@ -1447,7 +1447,7 @@ describe("validateGameState", () => {
 		const accepted = validateGameState({
 			...buildValidState(),
 			items: [],
-			inventory: [{ itemId: 1, kind: "identify-scroll" }],
+			inventory: [{ itemId: 1, kind: "identify-potion-scroll" }],
 			events: [{ type: "potion-identified", payload: { kind: "poison" } }],
 		});
 		expect(accepted.ok).toBe(true);

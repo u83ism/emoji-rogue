@@ -81,6 +81,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "maintain-armor-ring", weight: 5 },
 	],
 	wand: [
+		{ kind: "light-wand", weight: 12 },
 		{ kind: "nothing-wand", weight: 1 },
 		{ kind: "teleport-to-wand", weight: 6 },
 		{ kind: "haste-monster-wand", weight: 10 },

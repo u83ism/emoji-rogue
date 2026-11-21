@@ -9,6 +9,8 @@ import {
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
 	HOLD_MONSTER_SCROLL_RANGE,
+	LIGHT_WAND_CHARGES_MAX,
+	LIGHT_WAND_CHARGES_MIN,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	MAGIC_MISSILE_DAMAGE_DICE,
 	PLAYER_MAX_FOOD,
@@ -147,6 +149,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "杖",
 		spawn: itemDrawShare("nothing-wand"),
 		effect: `振っても何も起きない(使用回数だけ減る)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
+	},
+	"light-wand": {
+		catalogName: "光の杖",
+		category: "杖",
+		spawn: itemDrawShare("light-wand"),
+		effect: `振ると今いる部屋が明るくなり、以後ずっと全体が見える(部屋の敵は部屋に入ったときと同じく目を覚ますことがある)。通路では光ってすぐ消える。振ると正体が分かる。使える回数は${LIGHT_WAND_CHARGES_MIN}〜${LIGHT_WAND_CHARGES_MAX}回`,
 	},
 	weapon: {
 		catalogName: "武器",

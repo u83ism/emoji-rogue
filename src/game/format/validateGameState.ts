@@ -414,6 +414,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-slowed-removed": (payload) => isEnemyKind(payload.target),
 	"enemy-hasted": (payload) => isEnemyKind(payload.target),
 	"enemy-pulled": (payload) => isEnemyKind(payload.target),
+	"room-lit": emptyPayload,
+	"corridor-glowed": emptyPayload,
 	"enemy-unslowed": (payload) => isEnemyKind(payload.target),
 	"player-levitated": (payload) => isPositiveInteger(payload.turns),
 	"levitation-faded": emptyPayload,
@@ -515,6 +517,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "light-wand":
 		case "nothing-wand":
 		case "teleport-to-wand":
 		case "haste-monster-wand":

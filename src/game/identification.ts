@@ -72,6 +72,7 @@ const WAND_REVEALS: Readonly<Record<WandKind, Reveal>> = {
 	"slow-wand": never,
 	"teleport-wand": never,
 	"magic-missile-wand": always,
+	"light-wand": always,
 	"nothing-wand": never,
 	"teleport-to-wand": never,
 	"haste-monster-wand": never,

@@ -92,6 +92,7 @@ export const ITEM_KIND_VALUES = [
 	"haste-monster-wand",
 	"teleport-to-wand",
 	"nothing-wand",
+	"light-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -156,6 +157,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"light-wand",
 	"nothing-wand",
 	"teleport-to-wand",
 	"haste-monster-wand",
@@ -613,6 +615,16 @@ export type GameEvent =
 			/** A wand of slow monster that only took away its hasted target's haste — see items/wands/wands.ts. */
 			readonly type: "enemy-slowed-removed";
 			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A wand of light lit the player's room for good. */
+			readonly type: "room-lit";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A wand of light zapped in a corridor: it only glows and fades. */
+			readonly type: "corridor-glowed";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** A teleport to wand's bolt brought a monster next to the player. */

@@ -2,6 +2,8 @@ import type { Rng } from "../../../rng.js";
 import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
+	LIGHT_WAND_CHARGES_MAX,
+	LIGHT_WAND_CHARGES_MIN,
 	WAND_CHARGES_MAX,
 	WAND_CHARGES_MIN,
 	WEAPON_CURSE_CHANCE_PERCENT,
@@ -61,6 +63,7 @@ export const buildFloorItem = (
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "light-wand":
 		case "nothing-wand":
 		case "teleport-to-wand":
 		case "haste-monster-wand":
@@ -69,7 +72,13 @@ export const buildFloorItem = (
 				kind,
 				identity: {
 					itemId,
-					charges: rng.getUniformInt(WAND_CHARGES_MIN, WAND_CHARGES_MAX),
+					charges:
+						kind === "light-wand"
+							? rng.getUniformInt(
+									LIGHT_WAND_CHARGES_MIN,
+									LIGHT_WAND_CHARGES_MAX,
+								)
+							: rng.getUniformInt(WAND_CHARGES_MIN, WAND_CHARGES_MAX),
 				},
 			};
 		case "weapon": {
@@ -153,6 +162,7 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "light-wand":
 		case "nothing-wand":
 		case "teleport-to-wand":
 		case "haste-monster-wand":

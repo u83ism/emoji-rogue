@@ -368,6 +368,9 @@ export const CONFUSION_POTION_DURATION = 20;
 /** A wand's charges when found — original Rogue's fix_stick(): `rnd(5) + 3` (the wand of light's 10-19 is not in this game). */
 export const WAND_CHARGES_MIN = 3;
 export const WAND_CHARGES_MAX = 7;
+/** A wand of light's charges instead — original Rogue's fix_stick() `rnd(10) + 10`. */
+export const LIGHT_WAND_CHARGES_MIN = 10;
+export const LIGHT_WAND_CHARGES_MAX = 19;
 
 /** How many turns a levitation potion floats the player over traps for. */
 export const LEVITATION_POTION_DURATION = 30;

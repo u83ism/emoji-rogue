@@ -44,7 +44,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		catalogName: "守りの指輪",
 		category: "指輪",
 		spawn: itemDrawShare("protection-ring"),
-		effect: `装備している間、その値だけACが良くなる(敵の攻撃が当たりにくい)。${VALUED_RING_NOTE}。満腹度の減りが毎ターン1増える`,
+		effect: `装備している間、その値だけACが良くなり(敵の攻撃が当たりにくい)、魔法への抵抗も値1につき5%しやすくなる。${VALUED_RING_NOTE}。満腹度の減りが毎ターン1増える`,
 	},
 	"add-strength-ring": {
 		catalogName: "怪力の指輪",

@@ -79,3 +79,22 @@ describe("applyBolt", () => {
 		expect(counts["player-bolted"]).toBeGreaterThan(counts["bolt-dodged"] ?? 0);
 	});
 });
+
+describe("applyUseColdWand", () => {
+	it("fires a ice bolt the chosen way, spending a charge for nothing with no direction", async () => {
+		const { applyUseColdWand } = await import("./boltWands.js");
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [monster("zombie", 6, 1)],
+		};
+		expect(applyUseColdWand(state, undefined)).toBe(state);
+		const zapped = applyUseColdWand(state, "east");
+		expect(
+			zapped.events.some(
+				(event) =>
+					(event.type === "bolt-hit" || event.type === "bolt-missed") &&
+					event.payload.kind === "ice",
+			),
+		).toBe(true);
+	});
+});

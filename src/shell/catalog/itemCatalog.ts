@@ -162,6 +162,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("fire-wand"),
 		effect: `選んだ方向へ炎を放つ。炎は6マス飛んで壁で跳ね返り、当たった敵(魔法への抵抗で外れる)に6d6+力のボーナス。ドラゴンには効かない。跳ね返った炎は自分にも当たる(抵抗でかわせる、6d6)。振ると正体が分かる。${WAND_CHARGES_TEXT}`,
 	},
+	"cold-wand": {
+		catalogName: "冷気の杖",
+		category: "杖",
+		spawn: itemDrawShare("cold-wand"),
+		effect: `選んだ方向へ冷気を放つ。6マス飛んで壁で跳ね返り、当たった敵(魔法への抵抗で外れる)に6d6+力のボーナス。跳ね返った冷気は自分にも当たる(抵抗でかわせる、6d6)。振ると正体が分かる。${WAND_CHARGES_TEXT}`,
+	},
 	weapon: {
 		catalogName: "武器",
 		category: "装備",

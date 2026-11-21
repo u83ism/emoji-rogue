@@ -40,6 +40,7 @@ const enemyOf = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 const zombie = (
@@ -371,6 +372,7 @@ describe("dragon", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);
 		expect(next.playerExperience).toBe(

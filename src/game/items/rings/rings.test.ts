@@ -227,6 +227,7 @@ describe("items/rings", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const asleepB = {
 			x: 7,
@@ -241,6 +242,7 @@ describe("items/rings", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -281,6 +283,7 @@ describe("items/rings", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const item = {
 			itemId: 1,

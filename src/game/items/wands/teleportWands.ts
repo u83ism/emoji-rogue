@@ -5,6 +5,8 @@ import { applyEnemyTeleport } from "../../teleport.js";
 import { traceFlight } from "../../throw.js";
 
 /**
+ * The wands that move a monster or hide it.
+ *
  * A teleport wand forcibly relocates the first monster its bolt meets to a
  * random floor tile and wakes it — aimed like the slow wand.
  */
@@ -55,5 +57,26 @@ export const applyUseTeleportToWand = (
 		events: buildEventLog(state.events, [
 			{ type: "enemy-pulled", payload: { target: target.kind } },
 		]),
+	};
+};
+
+/**
+ * A wand of invisibility, as original Rogue's do_zap() (WS_INVIS): the
+ * monster its bolt meets turns invisible — unseen from now on without see
+ * invisible. It is not woken. Aimed like the slow wand.
+ */
+export const applyUseInvisibilityWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
+		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target ? { ...enemy, invisible: true } : enemy,
+		),
 	};
 };

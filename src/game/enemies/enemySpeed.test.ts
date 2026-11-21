@@ -20,6 +20,7 @@ const awake = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 /** 15x3 corridor, the player at (7,1). */

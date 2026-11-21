@@ -62,6 +62,7 @@ const enemyOf = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 const zombie = (x: number, y: number, awake = true): Enemy =>

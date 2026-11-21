@@ -111,5 +111,6 @@ export const buildSpawnedEnemy = (
 		mean: ENEMY_IS_MEAN[kind],
 		gazeUsed: false,
 		confused: false,
+		invisible: kind === "phantom",
 	};
 };

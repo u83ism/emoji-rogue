@@ -135,6 +135,7 @@ const isEnemyArray = (
 			isBooleanValue(enemy.mean) &&
 			isBooleanValue(enemy.gazeUsed) &&
 			isBooleanValue(enemy.confused) &&
+			isBooleanValue(enemy.invisible) &&
 			(enemy.goal === undefined ||
 				(isRecord(enemy.goal) &&
 					Number.isInteger(enemy.goal.x) &&
@@ -534,6 +535,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "invisibility-wand":
 		case "drain-life-wand":
 		case "lightning-wand":
 		case "cold-wand":
@@ -901,6 +903,7 @@ export const validateGameState = (
 			mean: enemy.mean,
 			gazeUsed: enemy.gazeUsed,
 			confused: enemy.confused,
+			invisible: enemy.invisible,
 			...(enemy.goal === undefined
 				? {}
 				: { goal: { x: enemy.goal.x, y: enemy.goal.y } }),

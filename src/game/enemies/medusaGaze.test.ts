@@ -17,6 +17,7 @@ const medusa = (x: number, y: number): Enemy => ({
 	mean: true,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 /* a 9x5 arena — one lit room — the player at (4,2) */

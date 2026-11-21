@@ -80,4 +80,10 @@ export const WAND_CATALOG: Readonly<Record<WandKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("drain-life-wand"),
 		effect: `振ると自分のHPの半分を失い、その分を同じ部屋(通路)の敵みんなで分けて受けさせる(倒れた敵は自分が倒したことになる)。敵がいなければ何も起きない。HPが2未満だと使えない。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
 	},
+	"invisibility-wand": {
+		catalogName: "透明化の杖",
+		category: "杖",
+		spawn: itemDrawShare("invisibility-wand"),
+		effect: `選んだ方向へ振り、最初に当たった敵を透明にする(透明視がないと見えなくなる。起こしはしない)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
+	},
 };

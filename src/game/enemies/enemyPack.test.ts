@@ -17,6 +17,7 @@ const monster = (kind: Enemy["kind"], x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 const potion = (x: number, y: number): Item => ({ x, y, kind: "heal-potion" });

@@ -119,6 +119,8 @@ export type Enemy = Position & {
 	readonly goal?: Position;
 	/** Original Rogue's ISHUH: four moves in five go a random way, and each such stumble may clear it (one in twenty) — enemies/action.ts. A hit while the player's hands glow (nextHitConfuses) sets it. */
 	readonly confused: boolean;
+	/** Original Rogue's ISINVIS: unseen without see invisible (vision.ts's canSeeEnemy) — a phantom from birth, any monster a wand of invisibility hits. */
+	readonly invisible: boolean;
 };
 
 /**

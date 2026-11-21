@@ -40,6 +40,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 describe("advanceTurn", () => {
@@ -570,6 +571,7 @@ describe("advanceTurn", () => {
 					mean: false,
 					gazeUsed: false,
 					confused: false,
+					invisible: false,
 				},
 			],
 			playerLevel: SURE_HIT_LEVEL,
@@ -593,6 +595,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...buildArenaGameState(5, 5, 1),
@@ -625,6 +628,7 @@ describe("advanceTurn", () => {
 			mean: true,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
 		expect(advanceTurn(state, move("west")).player).toEqual({ x: 1, y: 2 });
@@ -644,6 +648,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...buildArenaGameState(5, 5, 1),
@@ -672,6 +677,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
 		const next = advanceTurn(state, move("north"));
@@ -692,6 +698,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		/* player at (2,2) in a 3x3 arena: every direction but toward the
 		 * flytrap (south) is a wall */
@@ -714,6 +721,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...start,
@@ -746,6 +754,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const held = {
 			...buildArenaGameState(5, 5, 1),

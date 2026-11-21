@@ -17,6 +17,7 @@ const monster = (kind: Enemy["kind"], x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 /** Every event type of 300 bolts east, each off its own rng state. */

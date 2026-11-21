@@ -139,6 +139,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const far = {
 			x: 7,
@@ -153,6 +154,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 9, 1),
@@ -257,6 +259,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		};
 		const state = {
 			...buildArenaGameState(9, 3, 1),

@@ -31,6 +31,7 @@ const zombie = (x: number, y: number, hp = 2, awake = true): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 /** 60 consecutive rng states — enough spread to see both outcomes of a percent roll. */

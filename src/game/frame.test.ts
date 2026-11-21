@@ -45,6 +45,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		} as const;
 		const seen = {
 			...wide,
@@ -74,6 +75,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		} as const;
 		const detecting = {
 			...wide,
@@ -96,6 +98,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...bat, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🦇");
@@ -114,6 +117,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 		} as const;
 		const seen = { ...wide, enemies: [{ ...thief, x: 20, y: 2 }] };
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("👺");
@@ -272,6 +276,7 @@ describe("buildFrameGrid", () => {
 					mean: false,
 					gazeUsed: false,
 					confused: false,
+					invisible: false,
 				},
 			],
 		};
@@ -325,6 +330,7 @@ describe("buildFrameGrid", () => {
 					mean: false,
 					gazeUsed: false,
 					confused: false,
+					invisible: false,
 				},
 			],
 		};
@@ -371,6 +377,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -391,6 +398,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -417,6 +425,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -443,6 +452,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: true,
 			x: 20,
 			y: 2,
 		} as const; /* distance 5 — visible FOV, but not adjacent */
@@ -463,6 +473,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: true,
 			x: 16,
 			y: 2,
 		} as const; /* distance 1 from player at (15,2) */
@@ -497,6 +508,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: true,
 			x: 27,
 			y: 2,
 		} as const; /* distance 12, normally hidden even for a non-phantom */
@@ -521,6 +533,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -541,6 +554,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -561,6 +575,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;
@@ -585,6 +600,7 @@ describe("buildFrameGrid", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			invisible: false,
 			x: 20,
 			y: 2,
 		} as const;

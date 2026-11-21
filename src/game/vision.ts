@@ -167,4 +167,4 @@ export const nameEnemy = (state: GameState, enemy: Enemy): EnemyName =>
 /** Whether the player sees `enemy` — original Rogue's see_monst(): in sight, and a phantom only with see invisible. */
 export const canSeeEnemy = (state: GameState, enemy: Enemy): boolean =>
 	computePlayerVisiblePoints(state).has(encodePointKey(enemy.x, enemy.y)) &&
-	(enemy.kind !== "phantom" || canSeeInvisible(state));
+	(!enemy.invisible || canSeeInvisible(state));

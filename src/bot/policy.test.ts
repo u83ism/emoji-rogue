@@ -19,6 +19,7 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 const weaponAt = (x: number, y: number): Item => ({

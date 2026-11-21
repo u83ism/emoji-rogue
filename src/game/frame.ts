@@ -129,7 +129,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 	const seesInvisible = canSeeInvisible(state);
 	for (const enemy of state.enemies) {
 		const isHiddenPhantom =
-			enemy.kind === "phantom" && !detectingMonsters && !seesInvisible;
+			enemy.invisible && !detectingMonsters && !seesInvisible;
 		if (isHiddenPhantom) {
 			continue;
 		}

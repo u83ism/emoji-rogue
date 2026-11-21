@@ -269,6 +269,7 @@ describe("findVisibleEnemies", () => {
 		mean: false,
 		gazeUsed: false,
 		confused: false,
+		invisible: false,
 	});
 
 	it("returns every enemy inside the player's field of view", () => {
@@ -298,6 +299,7 @@ describe("nameEnemy", () => {
 		mean: false,
 		gazeUsed: false,
 		confused: false,
+		invisible: kind === "phantom",
 	});
 
 	it("names a monster in sight by its kind, and one out of sight, a phantom or anything while blind as something", () => {

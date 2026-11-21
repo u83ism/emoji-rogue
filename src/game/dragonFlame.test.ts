@@ -17,6 +17,7 @@ const dragon = (x: number, y: number): Enemy => ({
 	mean: true,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 /* a 20x5 arena — one lit room — the player moved to (4,2), with HP to spare */

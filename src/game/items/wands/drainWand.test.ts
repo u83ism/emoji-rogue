@@ -16,6 +16,7 @@ const zombie = (x: number, y: number, hp: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	invisible: false,
 });
 
 describe("applyUseDrainLifeWand", () => {

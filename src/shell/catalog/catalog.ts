@@ -20,7 +20,10 @@ import {
 } from "../../game/events.js";
 import { calculateEnemyFloorRange } from "../../game/floor/enemies.js";
 import { ITEM_GLYPHS } from "../../game/glyphs.js";
-import { ARMOR_STATS, WEAPON_STATS } from "../../game/items/equipmentKinds.js";
+import {
+	ARMOR_STATS,
+	WEAPON_STATS,
+} from "../../game/items/equipment/equipmentKinds.js";
 import {
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,

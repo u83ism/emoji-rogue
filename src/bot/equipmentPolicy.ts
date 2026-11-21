@@ -1,6 +1,6 @@
 import { type ItemKind, isRingKind, type RingKind } from "../game/events.js";
-import { WEAPON_STATS } from "../game/items/equipmentKinds.js";
-import { calculateArmorClass } from "../game/items/equipmentStats.js";
+import { WEAPON_STATS } from "../game/items/equipment/equipmentKinds.js";
+import { calculateArmorClass } from "../game/items/equipment/equipmentStats.js";
 import type { GameState, HeldItem } from "../game/state.js";
 
 type WeaponItem = Extract<HeldItem, { kind: "weapon" }>;

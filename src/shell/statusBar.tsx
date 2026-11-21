@@ -11,7 +11,7 @@ import {
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
 } from "../game/glyphs.js";
-import { calculatePlayerDefense } from "../game/items/equipmentStats.js";
+import { calculatePlayerDefense } from "../game/items/equipment/equipmentStats.js";
 import type { GameState } from "../game/state.js";
 import { formatPlayerStrength } from "./inventoryLabels.js";
 

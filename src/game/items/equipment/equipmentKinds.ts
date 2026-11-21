@@ -1,11 +1,11 @@
-import type { DamageDice } from "../combat/damage.js";
+import type { DamageDice } from "../../combat/damage.js";
 import type {
 	ArmorKind,
 	EquipmentVariant,
 	ItemKind,
 	WeaponKind,
-} from "../events.js";
-import type { HeldItem } from "../state.js";
+} from "../../events.js";
+import type { HeldItem } from "../../state.js";
 
 // Original Rogue 5.4's weapon and armor tables (extern.c's weap_info,
 // weapons.c's init_dam and extern.c's arm_info/a_class), kept apart from

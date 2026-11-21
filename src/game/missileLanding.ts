@@ -1,6 +1,6 @@
 import { createRng } from "../rng.js";
 import { buildEventLog } from "./events.js";
-import type { WeaponItem } from "./items/equipmentStats.js";
+import type { WeaponItem } from "./items/equipment/equipmentStats.js";
 import type { Enemy, GameState, Item, Position } from "./state.js";
 import { nameEnemy } from "./vision.js";
 

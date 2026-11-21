@@ -1,7 +1,7 @@
-import { UNARMED_DAMAGE_DICE, UNARMORED_ARMOR_CLASS } from "../balance.js";
-import type { DamageDice } from "../combat/damage.js";
-import { calculateStrengthDamageBonus } from "../combat/strength.js";
-import type { GameState, HeldItem } from "../state.js";
+import { UNARMED_DAMAGE_DICE, UNARMORED_ARMOR_CLASS } from "../../balance.js";
+import type { DamageDice } from "../../combat/damage.js";
+import { calculateStrengthDamageBonus } from "../../combat/strength.js";
+import type { GameState, HeldItem } from "../../state.js";
 import { ARMOR_STATS, WEAPON_STATS } from "./equipmentKinds.js";
 
 // What the player's worn items add up to in combat — pure derivations from

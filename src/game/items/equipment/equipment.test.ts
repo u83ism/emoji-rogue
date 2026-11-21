@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { advanceTurn } from "../advanceTurn.js";
-import { PLAYER_WEAK_THRESHOLD } from "../balance.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { HeldItem } from "../state.js";
+import { advanceTurn } from "../../advanceTurn.js";
+import { PLAYER_WEAK_THRESHOLD } from "../../balance.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { HeldItem } from "../../state.js";
 import { resolveArmorRust } from "./equipment.js";
 import {
 	calculatePlayerDamageBonus as calculatePlayerAttackDamage,

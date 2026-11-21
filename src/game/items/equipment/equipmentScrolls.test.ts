@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { advanceTurn } from "../advanceTurn.js";
-import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
-import type { ItemKind } from "../events.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { HeldItem } from "../state.js";
+import { advanceTurn } from "../../advanceTurn.js";
+import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../../balance.js";
+import type { ItemKind } from "../../events.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { HeldItem } from "../../state.js";
 
 const sword = (equipped: boolean, cursed = false): HeldItem => ({
 	itemId: 1,

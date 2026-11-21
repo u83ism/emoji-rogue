@@ -15,7 +15,7 @@ import {
 	WEAPON_KIND_VALUES,
 } from "../events.js";
 import type { HeldItem, Item, Position } from "../state.js";
-import { ARMOR_STATS, WEAPON_STATS } from "./equipmentKinds.js";
+import { ARMOR_STATS, WEAPON_STATS } from "./equipment/equipmentKinds.js";
 import {
 	buildFloorRing,
 	drawWeightedKind,

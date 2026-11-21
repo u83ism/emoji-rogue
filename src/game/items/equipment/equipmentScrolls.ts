@@ -1,8 +1,8 @@
-import { stepUniform } from "../../rng.js";
-import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../balance.js";
-import { buildEventLog, type ItemKind } from "../events.js";
-import type { GameState, HeldItem } from "../state.js";
-import { replaceHeldItem } from "./inventory.js";
+import { stepUniform } from "../../../rng.js";
+import { ENCHANT_ARMOR_BONUS, ENCHANT_WEAPON_BONUS } from "../../balance.js";
+import { buildEventLog, type ItemKind } from "../../events.js";
+import type { GameState, HeldItem } from "../../state.js";
+import { replaceHeldItem } from "../inventory.js";
 
 // The scroll kinds that work on the worn weapon/armor (or every worn cursed
 // item), split out of scrolls.ts (milestone 94 follow-up) once that file

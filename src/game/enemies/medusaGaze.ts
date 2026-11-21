@@ -4,7 +4,7 @@ import {
 	calculatePlayerMagicSaveChancePercent,
 } from "../balance.js";
 import { buildEventLog } from "../events.js";
-import { sumRingBonus } from "../items/equipmentStats.js";
+import { sumRingBonus } from "../items/equipment/equipmentStats.js";
 import type { Enemy, GameState } from "../state.js";
 import { findPlayerRoom } from "../vision.js";
 

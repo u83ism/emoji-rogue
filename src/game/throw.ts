@@ -2,12 +2,12 @@ import { applyEnemyHit } from "./combat/combat.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
 import { DIRECTION_VECTORS } from "./directions.js";
-import { WEAPON_STATS } from "./items/equipmentKinds.js";
+import { WEAPON_STATS } from "./items/equipment/equipmentKinds.js";
 import {
 	calculatePlayerStrengthBonus,
 	findEquippedWeapon,
 	type WeaponItem,
-} from "./items/equipmentStats.js";
+} from "./items/equipment/equipmentStats.js";
 import { removeHeldItem, replaceHeldItem } from "./items/inventory.js";
 import { applyMissileLanding } from "./missileLanding.js";
 import type { Direction, Enemy, GameState, Position } from "./state.js";

@@ -7,13 +7,16 @@ import {
 } from "../events.js";
 import { revealsItemKind } from "../identification.js";
 import type { Direction, GameState, HeldItem } from "../state.js";
-import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
+import {
+	applyToggleArmorEquip,
+	applyToggleWeaponEquip,
+} from "./equipment/equipment.js";
 import {
 	applyUseEnchantArmorScroll,
 	applyUseEnchantWeaponScroll,
 	applyUseProtectArmorScroll,
 	applyUseRemoveCurseScroll,
-} from "./equipmentScrolls.js";
+} from "./equipment/equipmentScrolls.js";
 import { applyUseFood } from "./food.js";
 import { removeHeldItem, replaceHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";

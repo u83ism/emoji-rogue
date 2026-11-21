@@ -15,7 +15,7 @@ import {
 } from "../balance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import { buildArenaGameState } from "../initialState.js";
-import { calculatePlayerDefense } from "../items/equipmentStats.js";
+import { calculatePlayerDefense } from "../items/equipment/equipmentStats.js";
 import type { Enemy, GameState, HeldItem } from "../state.js";
 import { advanceEnemies } from "./enemies.js";
 

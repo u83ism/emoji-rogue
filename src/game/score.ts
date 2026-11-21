@@ -1,7 +1,7 @@
 import { type ItemAppearances, RING_STONE_VALUES } from "./appearances.js";
 import type { ArmorKind, ItemKind, WeaponKind } from "./events.js";
 import { IDENTIFIABLE_ITEM_KINDS, isRingKind } from "./events.js";
-import { calculateArmorClass } from "./items/equipmentStats.js";
+import { calculateArmorClass } from "./items/equipment/equipmentStats.js";
 import type { GameState, HeldItem } from "./state.js";
 
 // Original Rogue's score is the purse alone (rip.c): a death costs a tenth

@@ -13,7 +13,7 @@ import {
 import { isStrengthSustained, resolvePoisonDrain } from "./combat/strength.js";
 import { buildEventLog, type GameEvent, type TrapKind } from "./events.js";
 import { descendStairs } from "./floor/transitions.js";
-import { resolveArmorRust } from "./items/equipment.js";
+import { resolveArmorRust } from "./items/equipment/equipment.js";
 import type { GameState, Item } from "./state.js";
 import { applyRandomTeleport } from "./teleport.js";
 

@@ -59,7 +59,7 @@ export {
 	toSelectedHeldItem,
 	toTargetedUseAction,
 } from "./inventoryKeymap.js";
-export { calculatePlayerDefense } from "./items/equipmentStats.js";
+export { calculatePlayerDefense } from "./items/equipment/equipmentStats.js";
 export { calculateScore } from "./score.js";
 export type {
 	Action,

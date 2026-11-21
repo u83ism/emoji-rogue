@@ -9,7 +9,7 @@ import type { EnemyTurnProgress } from "./enemies/action.js";
 import { ENEMY_STATS } from "./enemies/enemyStats.js";
 import type { GameEvent } from "./events.js";
 import { buildPassageMap, findArea, isSameArea } from "./floor/passages.js";
-import { sumRingBonus } from "./items/equipmentStats.js";
+import { sumRingBonus } from "./items/equipment/equipmentStats.js";
 import type { GameState, Position } from "./state.js";
 import { nameEnemy } from "./vision.js";
 

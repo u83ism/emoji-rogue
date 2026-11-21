@@ -1,6 +1,6 @@
 import { buildEventLog } from "../events.js";
 import type { GameState, HeldItem, Item, Position } from "../state.js";
-import { toItemEventPayload } from "./equipmentKinds.js";
+import { toItemEventPayload } from "./equipment/equipmentKinds.js";
 import { removeHeldItem } from "./inventory.js";
 
 /**

@@ -42,7 +42,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 |---|---|
 | `state.ts` / `events.ts` / `balance.ts` | 型定義(GameState/Action) / イベントunion+kindカタログ(値配列が正、型は導出) / 全調整ノブ |
 | `advanceTurn.ts` | リデューサ本体。`trapTrigger.ts`(わな)・`teleport.ts`(ランダム転移)が脇を固める |
-| `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
+| `items/` | アイテムドメイン: `use.ts`のdefaultなし網羅switch(**kind追加時のハンドラ書き忘れはコンパイルエラー**)が`equipment/potions/scrolls/wands/rings/food`へ分配。`equipment/`は武器・防具の着脱と数値、装備に効く巻物(2026-11-21本人裁可で分割)。持ち物操作`inventory.ts`・拾得`pickups.ts`もここ |
 | `throw.ts` | 武器を投げる(`throw-item`アクション)。視界内の最も近い敵への自動照準、命中判定、外れた武器の落下。命中・ダメージの式は`combat/`から使う |
 | `startingInventory.ts` | 新規開始時の持ち物(本家の初期装備) |
 | `combat/` | 戦闘の解決と、その数値の式(2026-11-21の構造監査で`src/game/`直下と`items/`から集約)。`combat.ts`(プレイヤー側の攻撃解決、共通コア`applyEnemyHit`)・`hitChance.ts`(プレイヤー・投擲・矢のわな・敵の命中率)・`damage.ts`(`rollToHit`/`rollDamageDice`)・`strength.ts`(力と、その命中・ダメージ補正、毒による低下)・`experience.ts`(経験値とレベルアップ) |

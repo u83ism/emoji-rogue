@@ -14,7 +14,7 @@ import {
 	calculatePlayerDamageDice,
 	calculateRingMeleeDamageBonus,
 	sumRingBonus,
-} from "../items/equipmentStats.js";
+} from "../items/equipment/equipmentStats.js";
 import type { Enemy, GameState, Position } from "../state.js";
 import { nameEnemy } from "../vision.js";
 import { type DamageRoll, rollDamageDice, rollToHit } from "./damage.js";

@@ -122,7 +122,7 @@
 | banded mail | 10 | 90 | 4 |
 | plate mail | 5 | 150 | 3 |
 
-emoji-rogueもマイルストーン111でこの8種を実装した(`src/game/items/equipmentKinds.ts`)。錆び(`rust_armor()`)は本家どおり革鎧には効かず、ACが9に達すると止まる。
+emoji-rogueもマイルストーン111でこの8種を実装した(`src/game/items/equipment/equipmentKinds.ts`)。錆び(`rust_armor()`)は本家どおり革鎧には効かず、ACが9に達すると止まる。
 
 ### 武器9種(`weap_info`+`init_dam`、ダメージは装備時/投擲時)
 

@@ -3,7 +3,7 @@ import { INVENTORY_CAPACITY, UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { ItemKind } from "../game/events.js";
 import { EQUIPPED_GLYPH } from "../game/glyphs.js";
 import { canThrowItem } from "../game/inventoryKeymap.js";
-import { calculateArmorClass } from "../game/items/equipmentStats.js";
+import { calculateArmorClass } from "../game/items/equipment/equipmentStats.js";
 import type { GameState, HeldItem } from "../game/state.js";
 import { EQUIPMENT_NAMES, resolveItemDisplayName } from "./gameNames.js";
 import { INVENTORY_TITLE } from "./systemMessages.js";

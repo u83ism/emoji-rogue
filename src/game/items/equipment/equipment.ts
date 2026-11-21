@@ -1,5 +1,6 @@
-import { buildEventLog, type GameEvent } from "../events.js";
-import type { GameState, HeldItem } from "../state.js";
+import { buildEventLog, type GameEvent } from "../../events.js";
+import type { GameState, HeldItem } from "../../state.js";
+import { replaceHeldItem } from "../inventory.js";
 import {
 	RUST_ARMOR_CLASS_LIMIT,
 	RUSTPROOF_ARMOR_KIND,
@@ -10,7 +11,6 @@ import {
 	findEquippedArmor,
 	type WeaponItem,
 } from "./equipmentStats.js";
-import { replaceHeldItem } from "./inventory.js";
 
 type EquippableItem = Extract<HeldItem, { equipped: boolean }>;
 

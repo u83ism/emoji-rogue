@@ -12,7 +12,7 @@ import type { EnemyKind } from "../events.js";
 import {
 	calculatePlayerArmorClass,
 	calculatePlayerHitBonus,
-} from "../items/equipmentStats.js";
+} from "../items/equipment/equipmentStats.js";
 import type { GameState, HeldItem } from "../state.js";
 import { calculateStrengthHitBonus } from "./strength.js";
 

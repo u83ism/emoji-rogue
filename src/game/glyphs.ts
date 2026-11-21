@@ -24,7 +24,7 @@ export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
 export const STAIRS_CELL: Cell = { glyph: "🔽" };
 /* A found trap (original Rogue's '^'): the mouse trap, single-codepoint, Unicode 13.0 (registered in renderer/terminalProfile.ts). Chosen on screen by the developer over 🔺/⛔/💢 (2026-11-21). */
 export const TRAP_CELL: Cell = { glyph: "🪤" };
-/** Something magic a magic detection potion sensed (original Rogue's MAGIC) — provisional, to be judged on screen. */
+/** Something magic a magic detection potion sensed (original Rogue's MAGIC): sparkles, single-codepoint, Unicode 6.0 — kept by the developer over 🔮/🌟/🎇/🌀 (2026-11-21). */
 export const MAGIC_CELL: Cell = { glyph: "✨" };
 /* Amulet of Yendor: single-codepoint, Unicode 6.0 — floors from AMULET_FLOOR down only. */
 export const AMULET_CELL: Cell = { glyph: "💎" };

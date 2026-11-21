@@ -1,4 +1,4 @@
-import type { Rng } from "../../rng.js";
+import type { Rng } from "../../../rng.js";
 import {
 	ARMOR_CURSE_CHANCE_PERCENT,
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
@@ -6,25 +6,25 @@ import {
 	WAND_CHARGES_MIN,
 	WEAPON_CURSE_CHANCE_PERCENT,
 	WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT,
-} from "../balance.js";
+} from "../../balance.js";
 import {
 	ARMOR_KIND_VALUES,
 	hasItemIdentity,
 	type ItemKind,
 	isRingKind,
 	WEAPON_KIND_VALUES,
-} from "../events.js";
-import type { HeldItem, Item, Position } from "../state.js";
-import { ARMOR_STATS, WEAPON_STATS } from "./equipment/equipmentKinds.js";
+} from "../../events.js";
+import type { HeldItem, Item, Position } from "../../state.js";
+import { ARMOR_STATS, WEAPON_STATS } from "../equipment/equipmentKinds.js";
 import {
 	buildFloorRing,
 	drawWeightedKind,
 	rollFoundBonus,
-} from "./identityRolls.js";
+} from "../identityRolls.js";
 
 /**
  * How a weapon/armor/ring's identity is rolled and how a floor Item becomes
- * a HeldItem — split out of items/pickups.ts (milestone 81 follow-up) once
+ * a HeldItem — split out of items/inventory/pickups.ts (milestone 81 follow-up) once
  * that file grew past the 200-line structure-lint limit. Identity (which
  * weapon/armor it is, curse, bonus, itemId) is rolled once, at floor
  * generation — see buildFloorItem — never re-rolled afterward; picking one
@@ -36,14 +36,14 @@ import {
  * The floor Item a weapon/armor/ring spawn becomes: its identity rolled
  * here, at generation time, consuming `rng` directly — a live, mutating Rng
  * (see rng.ts), matching floor generation's existing idiom (unlike the
- * RngState-wrapping pattern items/equipment.ts and turnEnd/ use for rolls
+ * RngState-wrapping pattern items/equipment/equipment.ts and turnEnd/ use for rolls
  * that happen mid-run). A weapon or armor first draws which kind it is
- * (weighted, see items/equipmentKinds.ts) — a bundled weapon kind also how
+ * (weighted, see items/equipment/equipmentKinds.ts) — a bundled weapon kind also how
  * many — then its found bonus — which for
  * a weapon moves the to-hit bonus only, as in original Rogue. A consumable
  * kind is returned as-is; it has no identity concept and never consumes
  * `rng` here (its itemId is assigned lazily, at pickup — see
- * items/pickups.ts). Rings are buildFloorRing's.
+ * items/inventory/pickups.ts). Rings are buildFloorRing's.
  */
 export const buildFloorItem = (
 	kind: ItemKind,
@@ -122,7 +122,7 @@ export const buildFloorItem = (
  * The HeldItem a picked-up floor Item becomes: for a weapon/armor/ring, its
  * already-rolled `identity` verbatim (plus `equipped: false` — meaningless
  * on the ground); for a consumable, which has no identity concept, a fresh
- * `freshItemId` (items/pickups.ts passes state.nextItemId, and only bumps
+ * `freshItemId` (items/inventory/pickups.ts passes state.nextItemId, and only bumps
  * its own counter when this branch actually runs).
  */
 export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {

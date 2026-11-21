@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildArenaGameState } from "../initialState.js";
+import { buildArenaGameState } from "../../initialState.js";
 import { applyItemDrop } from "./drop.js";
 
 describe("applyItemDrop", () => {

@@ -48,7 +48,7 @@ const scoreArmor = (armor: ArmorItem): number => -calculateArmorClass(armor);
  * The itemId of a weapon worth equipping this turn, if any: the best-scoring
  * held-but-unequipped weapon, only when it beats (or nothing beats) whatever
  * weapon is currently equipped — weapons/armor/rings toggle equip state rather
- * than being consumed (see items/equipment.ts), so blindly re-using an
+ * than being consumed (see items/equipment/equipment.ts), so blindly re-using an
  * already-equipped one would unequip it instead of helping.
  */
 export const decideWeaponToEquip = (

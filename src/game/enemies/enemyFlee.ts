@@ -9,7 +9,7 @@ import {
 import type { GameEvent } from "../events.js";
 import { toItemEventPayload } from "../items/equipment/equipmentKinds.js";
 import { sumRingBonus } from "../items/equipment/equipmentStats.js";
-import { removeHeldItemAtIndex } from "../items/inventory.js";
+import { removeHeldItemAtIndex } from "../items/inventory/inventory.js";
 import type { HeldItem } from "../state.js";
 
 /**

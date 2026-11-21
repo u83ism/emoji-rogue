@@ -11,7 +11,7 @@ import {
 
 /*
  * Whether a weapon/armor is cursed, and how far the curse drags its bonus
- * down, is rolled once at floor generation (see items/heldItemFactory.ts)
+ * down, is rolled once at floor generation (see items/inventory/heldItemFactory.ts)
  * and carried on the HeldItem — these tests build already-picked-up
  * HeldItem fixtures directly with explicit `cursed`/bonus values, so both
  * the ordinary and cursed cases are exercised unconditionally instead of

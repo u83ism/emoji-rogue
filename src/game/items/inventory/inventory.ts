@@ -1,5 +1,5 @@
-import type { HeldItem } from "../state.js";
-import { isStackableWeaponKind } from "./equipment/equipmentKinds.js";
+import type { HeldItem } from "../../state.js";
+import { isStackableWeaponKind } from "../equipment/equipmentKinds.js";
 
 /**
  * The held stack a picked-up `item` joins instead of taking a slot of its

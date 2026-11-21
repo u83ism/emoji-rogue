@@ -158,7 +158,7 @@ export const HASTE_EXHAUSTION_TURNS_MAX = 7;
 
 /**
  * Original Rogue 5.4's new_thing() roll for a found weapon/armor, decided
- * once at floor generation (items/heldItemFactory.ts) and hidden until the
+ * once at floor generation (items/inventory/heldItemFactory.ts) and hidden until the
  * item is equipped: a weapon is cursed WEAPON_CURSE_CHANCE_PERCENT of the
  * time, found already enchanted WEAPON_FOUND_ENCHANTED_CHANCE_PERCENT of the
  * time, ordinary otherwise. A cursed one cannot be unequipped until a
@@ -337,7 +337,7 @@ export const TELEPORTATION_RING_CHANCE_DENOMINATOR = 50;
 /**
  * Permanent boost per scroll read to a targeted weapon's hitBonus or
  * damageBonus — a coin flip picks which, as in original Rogue — also
- * lifting its curse (see items/equipmentScrolls.ts — the player picks which
+ * lifting its curse (see items/equipment/equipmentScrolls.ts — the player picks which
  * held weapon, equipped or not; no-op with no weapon held).
  */
 export const ENCHANT_WEAPON_BONUS = 1;

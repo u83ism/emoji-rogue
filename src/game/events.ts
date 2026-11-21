@@ -177,7 +177,7 @@ export const hasItemIdentity = (
 ): kind is EquipmentItemKind | WandKind =>
 	isEquipmentItemKind(kind) || isWandKind(kind);
 
-/** The nine weapons of original Rogue 5.4, in its own table order — which one a held/floor "weapon" item is. Stats live in items/equipmentKinds.ts. */
+/** The nine weapons of original Rogue 5.4, in its own table order — which one a held/floor "weapon" item is. Stats live in items/equipment/equipmentKinds.ts. */
 export const WEAPON_KIND_VALUES = [
 	"mace",
 	"long-sword",
@@ -192,7 +192,7 @@ export const WEAPON_KIND_VALUES = [
 
 export type WeaponKind = (typeof WEAPON_KIND_VALUES)[number];
 
-/** The eight armors of original Rogue 5.4 — which one a held/floor "armor" item is. Stats live in items/equipmentKinds.ts. */
+/** The eight armors of original Rogue 5.4 — which one a held/floor "armor" item is. Stats live in items/equipment/equipmentKinds.ts. */
 export const ARMOR_KIND_VALUES = [
 	"leather-armor",
 	"ring-mail",
@@ -209,7 +209,7 @@ export type ArmorKind = (typeof ARMOR_KIND_VALUES)[number];
 /** Which weapon or armor an event's "weapon"/"armor" item is — absent for every other ItemKind. */
 export type EquipmentVariant = WeaponKind | ArmorKind;
 
-/** How an event names one item: see items/equipmentKinds.ts's toItemEventPayload. */
+/** How an event names one item: see items/equipment/equipmentKinds.ts's toItemEventPayload. */
 interface ItemEventPayload {
 	readonly kind: ItemKind;
 	readonly variant?: EquipmentVariant;
@@ -512,7 +512,7 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** A scroll read with nothing to work on (no weapon/armor worn, nothing cursed, no potion picked) — still used up. See items/equipmentScrolls.ts's applyScrollWasted. */
+			/** A scroll read with nothing to work on (no weapon/armor worn, nothing cursed, no potion picked) — still used up. See items/equipment/equipmentScrolls.ts's applyScrollWasted. */
 			readonly type: "scroll-wasted";
 			readonly payload: { readonly kind: ItemKind };
 	  }
@@ -659,12 +659,12 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** Trying to unequip a cursed weapon/armor/ring — no-op, see items/equipment.ts and items/rings.ts. */
+			/** Trying to unequip a cursed weapon/armor/ring — no-op, see items/equipment/equipment.ts and items/rings.ts. */
 			readonly type: "equip-blocked-cursed";
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** A curse revealed the moment an item is equipped — rolled at pickup, only shown now. See items/pickups.ts. */
+			/** A curse revealed the moment an item is equipped — rolled at pickup, only shown now. See items/inventory/pickups.ts. */
 			readonly type: "curse-revealed";
 			readonly payload: { readonly kind: ItemKind };
 	  }

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createRng } from "../../rng.js";
+import { createRng } from "../../../rng.js";
 import {
 	FOUND_BONUS_ADJUSTMENT_MAX,
 	FOUND_BONUS_ADJUSTMENT_MIN,
 	WAND_CHARGES_MAX,
 	WAND_CHARGES_MIN,
-} from "../balance.js";
-import { ARMOR_KIND_VALUES, WEAPON_KIND_VALUES } from "../events.js";
+} from "../../balance.js";
+import { ARMOR_KIND_VALUES, WEAPON_KIND_VALUES } from "../../events.js";
 import { buildFloorItem, toHeldItem } from "./heldItemFactory.js";
 
 const rollWeaponIdentities = (count: number) => {

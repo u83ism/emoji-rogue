@@ -44,7 +44,7 @@ const hasCursedEquipped = (state: GameState): boolean =>
 /**
  * An equipment scroll's decision: read it once something it works on is
  * worn (`isEligible` over the equipped items — these scrolls act on what
- * is worn, items/equipmentScrolls.ts), or hold onto it (undefined) rather
+ * is worn, items/equipment/equipmentScrolls.ts), or hold onto it (undefined) rather
  * than waste it.
  */
 const decideEquipmentScrollUse = (

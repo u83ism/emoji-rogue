@@ -1,6 +1,6 @@
 import { buildEventLog, type GameEvent } from "../../events.js";
 import type { GameState, HeldItem } from "../../state.js";
-import { replaceHeldItem } from "../inventory.js";
+import { replaceHeldItem } from "../inventory/inventory.js";
 import {
 	RUST_ARMOR_CLASS_LIMIT,
 	RUSTPROOF_ARMOR_KIND,
@@ -87,7 +87,7 @@ export const unequipOthers = (
 
 /**
  * Toggles a held weapon's equip state. Equipping unequips any other held
- * weapon first and reveals the curse rolled at pickup (see items/pickups.ts).
+ * weapon first and reveals the curse rolled at pickup (see items/inventory/pickups.ts).
  * Unequipping a cursed weapon is refused (logs equip-blocked-cursed, no
  * other state change).
  */

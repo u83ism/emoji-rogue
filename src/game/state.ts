@@ -184,7 +184,7 @@ export type Item = Position &
  * at floor generation and stays hidden from the player until the item is
  * equipped, so it can be true even while `equipped` is false. `weaponKind`/
  * `armorKind` say which of original Rogue's weapons/armors it is (see
- * items/equipmentKinds.ts). `hitBonus`/`damageBonus`/
+ * items/equipment/equipmentKinds.ts). `hitBonus`/`damageBonus`/
  * `defenseBonus`/`rustProtected` are intrinsic to that specific item (raised
  * by enchant scrolls, degraded by rust, negative on a cursed find) and
  * persist whether or not the item is currently worn — swapping equipment
@@ -211,7 +211,7 @@ export type HeldItem =
 			readonly hitBonus: number;
 			/** Added to the damage roll. */
 			readonly damageBonus: number;
-			/** How many this one slot holds — above 1 only for the kinds that come in bundles (arrows, darts, shuriken, daggers; see items/equipmentKinds.ts). Throwing takes one off. */
+			/** How many this one slot holds — above 1 only for the kinds that come in bundles (arrows, darts, shuriken, daggers; see items/equipment/equipmentKinds.ts). Throwing takes one off. */
 			readonly quantity: number;
 	  }
 	| {

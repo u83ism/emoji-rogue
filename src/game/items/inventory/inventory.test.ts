@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { HeldItem } from "../state.js";
+import type { HeldItem } from "../../state.js";
 import {
 	addToInventory,
 	findStackTarget,

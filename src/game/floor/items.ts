@@ -5,7 +5,7 @@ import {
 	ITEM_DRAW_CHANCE_PERCENT,
 } from "../balance.js";
 import { hasItemIdentity, type ItemKind } from "../events.js";
-import { buildFloorItem } from "../items/heldItemFactory.js";
+import { buildFloorItem } from "../items/inventory/heldItemFactory.js";
 import type { Item, Position, Trap } from "../state.js";
 import { drawSpawnTile } from "./spawnPool.js";
 import {

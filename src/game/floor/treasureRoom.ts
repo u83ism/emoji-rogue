@@ -7,7 +7,7 @@ import {
 } from "../balance.js";
 import { rollsCarriedItem } from "../enemies/enemyPack.js";
 import { hasItemIdentity } from "../events.js";
-import { buildFloorItem } from "../items/heldItemFactory.js";
+import { buildFloorItem } from "../items/inventory/heldItemFactory.js";
 import type { Enemy, Item, Position } from "../state.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "./enemies.js";
 import { drawItemKind } from "./items.js";

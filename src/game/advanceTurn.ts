@@ -10,12 +10,12 @@ import {
 	descendStairs,
 	resolveStairsRefusal,
 } from "./floor/transitions.js";
-import { applyItemDrop } from "./items/drop.js";
+import { applyItemDrop } from "./items/inventory/drop.js";
 import {
 	applyAmuletPickup,
 	applyGoldPickup,
 	applyItemPickup,
-} from "./items/pickups.js";
+} from "./items/inventory/pickups.js";
 import { applyUseItem } from "./items/use.js";
 import { applySearch, applySearchingRingTick } from "./search.js";
 import type { Action, Direction, Enemy, GameState, Position } from "./state.js";

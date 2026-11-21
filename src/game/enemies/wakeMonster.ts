@@ -3,6 +3,7 @@ import type { EnemyKind } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { findPlayerRoom } from "../vision.js";
+import { applyMedusaGaze } from "./medusaGaze.js";
 
 /**
  * Original Rogue's ISMEAN flag per kind: a mean monster may start chasing
@@ -70,7 +71,7 @@ const rollWake = (enemy: Enemy, rng: RngState, quiet: boolean): WakeRoll => {
 	return { enemy, rng };
 };
 
-/** `calls` wake_monster() calls on every enemy `isNear` picks, in array order. */
+/** `calls` wake_monster() calls on every enemy `isNear` picks, in array order — each one also the medusa's chance to gaze (medusaGaze.ts). */
 const applyWakeRolls = (
 	state: GameState,
 	isNear: (enemy: Enemy) => boolean,
@@ -79,22 +80,27 @@ const applyWakeRolls = (
 	const quiet =
 		hasEquippedRing(state.inventory, "stealth-ring") ||
 		state.levitationTurnsRemaining > 0;
-	let rng = state.rng;
-	let changed = false;
+	let running = state;
 	const enemies = state.enemies.map((enemy) => {
-		if (enemy.awake || !isNear(enemy)) {
+		if (!isNear(enemy)) {
 			return enemy;
 		}
 		let current = enemy;
 		for (let i = 0; i < calls; i++) {
-			const result = rollWake(current, rng, quiet);
-			current = result.enemy;
-			rng = result.rng;
+			const woken = rollWake(current, running.rng, quiet);
+			const gazed = applyMedusaGaze(
+				woken.rng === running.rng ? running : { ...running, rng: woken.rng },
+				woken.enemy,
+			);
+			current = gazed.enemy;
+			running = gazed.state;
 		}
-		changed = changed || current !== enemy || rng !== state.rng;
 		return current;
 	});
-	return changed ? { ...state, enemies, rng } : state;
+	return running === state &&
+		enemies.every((enemy, index) => enemy === state.enemies[index])
+		? state
+		: { ...running, enemies };
 };
 
 /**

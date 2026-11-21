@@ -9,7 +9,6 @@ import { rollItemAppearances } from "../appearances.js";
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
-	MEDUSA_GAZE_CONFUSE_DURATION,
 	PLAYER_MAX_HP,
 	PLAYER_START_STRENGTH,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
@@ -61,6 +60,7 @@ const enemyOf = (
 	held: false,
 	carried: [],
 	mean: false,
+	gazeUsed: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -959,34 +959,11 @@ describe("advanceEnemies", () => {
 		expect(advanceEnemies(held).flytrapHoldDamage).toBe(7);
 	});
 
-	/*
-	 * A medusa's gaze is a MEDUSA_GAZE_CHANCE_PERCENT chance, rolled once per
-	 * turn while visible and not adjacent (see balance.ts) — seed 1's first
-	 * roll succeeds, seed 678's fails (same two seeds the wake-roll tests
-	 * above already rely on for the same reason).
-	 */
-	it("a visible, non-adjacent medusa may gaze and confuse the player, without moving", () => {
+	it("a visible, non-adjacent medusa chases like any monster — its gaze is medusaGaze.ts's", () => {
 		const state = buildCorridorState([medusa(7, 1)]);
 		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([medusa(7, 1)]); /* stays put either way */
-		expect(next.confusedTurnsRemaining).toBe(MEDUSA_GAZE_CONFUSE_DURATION);
-		expect(next.events).toEqual([
-			{
-				type: "player-gazed",
-				payload: { turns: MEDUSA_GAZE_CONFUSE_DURATION },
-			},
-		]);
-	});
-
-	it("a medusa's failed gaze roll still leaves it standing still, doing nothing", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 678),
-			enemies: [medusa(7, 1)],
-		};
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([medusa(7, 1)]);
+		expect(next.enemies).toEqual([medusa(6, 1)]);
 		expect(next.confusedTurnsRemaining).toBe(0);
-		expect(next.events).toEqual([]);
 	});
 
 	it("an adjacent medusa attacks instead of gazing", () => {

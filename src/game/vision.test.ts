@@ -262,6 +262,7 @@ describe("findVisibleEnemies", () => {
 		held: false,
 		carried: [],
 		mean: false,
+		gazeUsed: false,
 		confusedTurnsRemaining: 0,
 	});
 

@@ -2,7 +2,7 @@ import { type RngState, stepUniform } from "../../rng.js";
 import { isAdjacent } from "../combat/combat.js";
 import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
-import { resolveAdjacentAction, withEvents } from "./adjacentAction.js";
+import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
 import { resolveEnemyMovement, stepWandering } from "./enemyMovement.js";
 
@@ -123,16 +123,7 @@ const resolveIntendedAction = (
 		);
 		return {
 			actor: { ...actor, position: movement.position },
-			progress: withEvents(
-				{
-					...progress,
-					rng: movement.rng,
-					playerConfusedTurnsRemaining:
-						movement.playerConfusedTurnsRemaining ??
-						progress.playerConfusedTurnsRemaining,
-				},
-				movement.event === undefined ? [] : [movement.event],
-			),
+			progress: { ...progress, rng: movement.rng },
 		};
 	}
 	return resolveAdjacentAction(state, enemy, actor, progress);

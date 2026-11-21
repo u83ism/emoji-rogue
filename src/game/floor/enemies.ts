@@ -109,6 +109,7 @@ export const buildSpawnedEnemy = (
 		held: false,
 		carried: [],
 		mean: ENEMY_IS_MEAN[kind],
+		gazeUsed: false,
 		confusedTurnsRemaining: 0,
 	};
 };

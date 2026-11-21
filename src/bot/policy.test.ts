@@ -17,6 +17,7 @@ const enemyAt = (x: number, y: number): Enemy => ({
 	held: false,
 	carried: [],
 	mean: false,
+	gazeUsed: false,
 	confusedTurnsRemaining: 0,
 });
 

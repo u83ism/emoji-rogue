@@ -120,6 +120,7 @@ describe("items/scrolls", () => {
 			held: false,
 			carried: [],
 			mean: false,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -166,6 +167,7 @@ describe("items/scrolls", () => {
 			held: false,
 			carried: [],
 			mean: false,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
 		const far = {
@@ -179,6 +181,7 @@ describe("items/scrolls", () => {
 			held: false,
 			carried: [],
 			mean: false,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -282,6 +285,7 @@ describe("items/scrolls", () => {
 			held: true,
 			carried: [],
 			mean: false,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {

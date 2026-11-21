@@ -105,6 +105,7 @@ describe("buildSpawnedEnemy", () => {
 			held: false,
 			carried: [],
 			mean: true /* original Rogue's ISMEAN */,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		});
 		const sturdiest = buildSpawnedEnemy(

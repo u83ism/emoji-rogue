@@ -20,6 +20,7 @@ const sleeper = (kind: EnemyKind, x: number, y: number): Enemy => ({
 	held: false,
 	carried: [],
 	mean: ENEMY_IS_MEAN[kind],
+	gazeUsed: false,
 	confusedTurnsRemaining: 0,
 });
 

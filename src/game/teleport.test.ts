@@ -50,6 +50,7 @@ describe("teleport wand", () => {
 			held: false,
 			carried: [],
 			mean: false,
+			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {

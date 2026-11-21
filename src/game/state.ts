@@ -103,6 +103,8 @@ export type Enemy = Position & {
 	readonly carried: readonly Item[];
 	/** Original Rogue's ISMEAN — may wake when the player comes close (enemies/wakeMonster.ts). From its kind (ENEMY_IS_MEAN), or set for a treasure room's monsters. */
 	readonly mean: boolean;
+	/** Original Rogue's ISFOUND on a medusa: its one gaze is spent (enemies/medusaGaze.ts). */
+	readonly gazeUsed: boolean;
 	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
 	readonly confusedTurnsRemaining: number;
 };

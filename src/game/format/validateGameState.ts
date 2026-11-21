@@ -132,6 +132,7 @@ const isEnemyArray = (
 			isBooleanValue(enemy.held) &&
 			isItemArray(enemy.carried, terrain) &&
 			isBooleanValue(enemy.mean) &&
+			isBooleanValue(enemy.gazeUsed) &&
 			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
@@ -829,6 +830,7 @@ export const validateGameState = (
 			held: enemy.held,
 			carried: enemy.carried.map(rebuildItem),
 			mean: enemy.mean,
+			gazeUsed: enemy.gazeUsed,
 			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
 		items: items.map(rebuildItem),

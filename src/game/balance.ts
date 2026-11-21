@@ -97,11 +97,6 @@ export const VITALITY_DRAIN_DICE: Readonly<
 	>
 > = { vampire: { count: 1, sides: 3 }, wraith: { count: 1, sides: 10 } };
 
-/** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands. */
-export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
-/** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */
-export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
-
 /**
  * An ice monster's hit freezes the player for MIN..MAX turns (original
  * Rogue's `rnd(2) + 2`), added onto any paralysis already left; once the
@@ -361,7 +356,7 @@ export const HOLD_MONSTER_SCROLL_RANGE = 2;
 export const SLEEP_SCROLL_TURNS_MIN = 4;
 export const SLEEP_SCROLL_TURNS_MAX = 8;
 
-/** How many turns a confusion potion randomizes movement for. */
+/** How many turns a confusion potion (and a medusa's gaze) randomizes movement for — original Rogue's HUHDURATION, spread. */
 export const CONFUSION_POTION_DURATION = 20;
 
 /** A wand's charges when found — original Rogue's fix_stick(): `rnd(5) + 3` (the wand of light's 10-19 is not in this game). */

@@ -2,11 +2,6 @@ import { createAStarPath } from "../../path/index.js";
 import { encodePointKey } from "../../pointkey.js";
 import type { RngState } from "../../rng.js";
 import { stepUniform } from "../../rng.js";
-import {
-	MEDUSA_GAZE_CHANCE_PERCENT,
-	MEDUSA_GAZE_CONFUSE_DURATION,
-} from "../balance.js";
-import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, Position } from "../state.js";
 
 /** Enemies move like the player: 4 directions, floor only. */
@@ -106,21 +101,17 @@ export const stepWandering = (
 	return { position: picked ?? enemy, rng: step.state };
 };
 
-/** What a non-adjacent enemy's turn changes beyond its own position — see enemies.ts's advanceEnemies. */
+/** Where a non-adjacent enemy's move takes it, and the rng after — see enemies.ts's advanceEnemies. */
 export interface EnemyMovementResult {
 	readonly position: Position;
 	readonly rng: RngState;
-	/** Set only when a medusa's gaze lands — the new value for the player's own confusedTurnsRemaining. */
-	readonly playerConfusedTurnsRemaining?: number;
-	readonly event?: GameEvent;
 }
 
 /**
  * What a non-adjacent, awake enemy does this action: venus-flytrap is
- * stationary and never moves; medusa gazes instead of chasing while visible
- * and not confused (MEDUSA_GAZE_CHANCE_PERCENT to confuse the player at
- * range — see player-gazed); any other kind chases via A* while visible and
- * not confused, or wanders otherwise.
+ * stationary and never moves; any other kind chases via A* while visible
+ * and not confused, or wanders otherwise. (A medusa's gaze is not a move of
+ * its own — see medusaGaze.ts.)
  */
 export const resolveEnemyMovement = (
 	state: GameState,
@@ -133,25 +124,6 @@ export const resolveEnemyMovement = (
 ): EnemyMovementResult => {
 	if (enemy.kind === "venus-flytrap") {
 		return { position: next, rng };
-	}
-	if (
-		enemy.kind === "medusa" &&
-		!confused &&
-		visiblePoints.has(encodePointKey(next.x, next.y))
-	) {
-		const gazeRoll = stepUniform(rng);
-		if (gazeRoll.value < MEDUSA_GAZE_CHANCE_PERCENT / 100) {
-			return {
-				position: next,
-				rng: gazeRoll.state,
-				playerConfusedTurnsRemaining: MEDUSA_GAZE_CONFUSE_DURATION,
-				event: {
-					type: "player-gazed",
-					payload: { turns: MEDUSA_GAZE_CONFUSE_DURATION },
-				},
-			};
-		}
-		return { position: next, rng: gazeRoll.state };
 	}
 	if (!confused && visiblePoints.has(encodePointKey(next.x, next.y))) {
 		const step = stepTowardPlayer(state, next, occupied);

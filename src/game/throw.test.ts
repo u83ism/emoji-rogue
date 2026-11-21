@@ -44,6 +44,7 @@ const enemyOf = (
 	held: false,
 	carried: [],
 	mean: false,
+	gazeUsed: false,
 	confusedTurnsRemaining: 0,
 });
 

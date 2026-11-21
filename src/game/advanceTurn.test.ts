@@ -598,6 +598,7 @@ describe("advanceTurn", () => {
 			...buildArenaGameState(5, 5, 1),
 			inventory: [EXPOSING_ARMOR],
 			enemies: [flytrap],
+			flytrapHoldDamage: 1 /* it has bitten once */,
 		};
 		/* even (2,1), still next to the flytrap at (3,2) */
 		const next = advanceTurn(state, move("north"));
@@ -605,9 +606,28 @@ describe("advanceTurn", () => {
 		expect(next.playerFood).toBe(state.playerFood - 1); /* the turn was spent */
 		expect(next.events).toEqual([
 			{ type: "player-held", payload: { by: "venus-flytrap" } },
-			/* still adjacent and awake, the flytrap gets its own bite (1d1) in too */
-			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 1 } },
+			/* still adjacent and awake, the flytrap squeezes again — its second bite costs 2 */
+			{ type: "player-hit", payload: { by: "venus-flytrap", damage: 2 } },
 		]);
+	});
+
+	it("an awake venus-flytrap that has not bitten yet does not hold the player", () => {
+		const flytrap: Enemy = {
+			x: 3,
+			y: 2,
+			kind: "venus-flytrap",
+			hp: 3,
+			maxHp: 3,
+			awake: true,
+			speed: "normal" as const,
+			held: false,
+			carried: [],
+			mean: true,
+			gazeUsed: false,
+			confusedTurnsRemaining: 0,
+		};
+		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		expect(advanceTurn(state, move("west")).player).toEqual({ x: 1, y: 2 });
 	});
 
 	it("attacking the holding venus-flytrap itself is unaffected by the hold", () => {
@@ -699,6 +719,7 @@ describe("advanceTurn", () => {
 			...start,
 			stairs: { x: start.player.x + 1, y: start.player.y },
 			enemies: [{ ...flytrap, x: start.player.x, y: start.player.y + 1 }],
+			flytrapHoldDamage: 1,
 		};
 		/* the flytrap sits south of the player, the stairs east — held, the step is blocked */
 		const next = advanceTurn(state, move("east"));
@@ -726,7 +747,11 @@ describe("advanceTurn", () => {
 			gazeUsed: false,
 			confusedTurnsRemaining: 0,
 		};
-		const held = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
+		const held = {
+			...buildArenaGameState(5, 5, 1),
+			enemies: [flytrap],
+			flytrapHoldDamage: 1,
+		};
 		expect(advanceTurn(held, move("north")).player).toEqual(held.player);
 
 		const freed = { ...held, enemies: [] }; /* the flytrap has been slain */

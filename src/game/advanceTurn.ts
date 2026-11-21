@@ -39,14 +39,20 @@ const findEnemyAt = (
 const isFloor = (state: GameState, x: number, y: number): boolean =>
 	state.terrain[x]?.[y] === 0;
 
-/** Awake venus-flytraps currently adjacent to the player — the ones capable of holding it in place this turn. */
-const findHoldingFlytraps = (state: GameState): readonly Enemy[] =>
-	state.enemies.filter(
-		(enemy) =>
-			enemy.kind === "venus-flytrap" &&
-			enemy.awake &&
-			isAdjacent(enemy, state.player),
-	);
+/**
+ * The venus-flytrap holding the player, if any: original Rogue's ISHELD
+ * comes with its first landed bite (flytrapHoldDamage above 0 — see
+ * enemies/flytrapHold.ts) and lasts while it stays awake next to them.
+ */
+const findHoldingFlytrap = (state: GameState): Enemy | undefined =>
+	state.flytrapHoldDamage > 0
+		? state.enemies.find(
+				(enemy) =>
+					enemy.kind === "venus-flytrap" &&
+					enemy.awake &&
+					isAdjacent(enemy, state.player),
+			)
+		: undefined;
 
 /** A move's result: the next state, and whether it spent the turn (a bump into rock does not). */
 interface MoveOutcome {
@@ -83,7 +89,7 @@ const pickConfusedStep = (
  * any item, gold or the amulet lying there). Bumping a wall, or a diagonal
  * step cutting a corner (original Rogue's diag_ok()), spends no turn.
  *
- * An awake venus-flytrap holds the player in place while adjacent: every
+ * A venus-flytrap that has bitten holds the player in place (findHoldingFlytrap): every
  * open-floor walk is blocked — logged as player-held — but still spends the
  * turn (original Rogue's "you are being held"). Attacking the flytrap (or
  * anything else) is unaffected, since that resolves as the bump-attack
@@ -126,7 +132,7 @@ const applyMove = (state: GameState, direction: Direction): MoveOutcome => {
 	if (!isFloor(stateWithRng, x, y)) {
 		return { state: stateWithRng, spent: false };
 	}
-	const holdingFlytrap = findHoldingFlytraps(stateWithRng)[0];
+	const holdingFlytrap = findHoldingFlytrap(stateWithRng);
 	if (holdingFlytrap !== undefined) {
 		return {
 			state: {

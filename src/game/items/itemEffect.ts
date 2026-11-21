@@ -22,7 +22,11 @@ import {
 	applyUseSleepScroll,
 	applyUseTeleportScroll,
 } from "./scrolls/scrolls.js";
-import { applyUseColdWand, applyUseFireWand } from "./wands/boltWands.js";
+import {
+	applyUseColdWand,
+	applyUseFireWand,
+	applyUseLightningWand,
+} from "./wands/boltWands.js";
 import { applyUseLightWand } from "./wands/lightWand.js";
 import {
 	applyUseTeleportToWand,
@@ -105,6 +109,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "lightning-wand":
+			return applyUseLightningWand(state, direction);
 		case "cold-wand":
 			return applyUseColdWand(state, direction);
 		case "fire-wand":

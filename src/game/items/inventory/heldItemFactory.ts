@@ -63,6 +63,7 @@ export const buildFloorItem = (
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "lightning-wand":
 		case "cold-wand":
 		case "fire-wand":
 		case "light-wand":
@@ -164,6 +165,7 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "lightning-wand":
 		case "cold-wand":
 		case "fire-wand":
 		case "light-wand":

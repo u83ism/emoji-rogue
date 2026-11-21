@@ -157,3 +157,10 @@ export const applyUseColdWand = (
 	direction: Direction | undefined,
 ): GameState =>
 	direction === undefined ? state : { ...applyBolt(state, direction, "ice") };
+
+/** A wand of lightning: a bolt bolt `direction` (applyBolt). Zapping it names it. */
+export const applyUseLightningWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState =>
+	direction === undefined ? state : { ...applyBolt(state, direction, "bolt") };

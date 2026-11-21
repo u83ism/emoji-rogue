@@ -101,6 +101,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	"searching-ring": { glyph: "💍" },
 	/* Same glyph again — every wand is just "a wand" on the ground. */
 	"magic-missile-wand": { glyph: "🪄" },
+	"lightning-wand": { glyph: "🪄" },
 	"cold-wand": { glyph: "🪄" },
 	"fire-wand": { glyph: "🪄" },
 	"light-wand": { glyph: "🪄" },

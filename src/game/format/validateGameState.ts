@@ -530,6 +530,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "lightning-wand":
 		case "cold-wand":
 		case "fire-wand":
 		case "light-wand":

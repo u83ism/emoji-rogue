@@ -98,3 +98,22 @@ describe("applyUseColdWand", () => {
 		).toBe(true);
 	});
 });
+
+describe("applyUseLightningWand", () => {
+	it("fires a bolt bolt the chosen way, spending a charge for nothing with no direction", async () => {
+		const { applyUseLightningWand } = await import("./boltWands.js");
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [monster("zombie", 6, 1)],
+		};
+		expect(applyUseLightningWand(state, undefined)).toBe(state);
+		const zapped = applyUseLightningWand(state, "east");
+		expect(
+			zapped.events.some(
+				(event) =>
+					(event.type === "bolt-hit" || event.type === "bolt-missed") &&
+					event.payload.kind === "bolt",
+			),
+		).toBe(true);
+	});
+});

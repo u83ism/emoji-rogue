@@ -419,6 +419,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-slowed-removed": (payload) => isEnemyKind(payload.target),
 	"enemy-hasted": (payload) => isEnemyKind(payload.target),
 	"enemy-pulled": (payload) => isEnemyKind(payload.target),
+	"enemy-polymorphed": (payload) => isEnemyKind(payload.target),
 	"room-lit": emptyPayload,
 	tingling: emptyPayload,
 	"life-drained": (payload) => isPositiveInteger(payload.lost),
@@ -536,6 +537,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "polymorph-wand":
 		case "cancellation-wand":
 		case "invisibility-wand":
 		case "drain-life-wand":

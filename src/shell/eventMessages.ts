@@ -1,6 +1,6 @@
 import type { ItemAppearances } from "../game/appearances.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
-import { formatDungeonEvent } from "./dungeonEventMessages.js";
+import { formatDungeonEvent, isDungeonEvent } from "./dungeonEventMessages.js";
 import {
 	BOLT_NAMES,
 	ENEMY_NAMES,
@@ -25,6 +25,9 @@ export const formatEvent = (
 	identifiedItemKinds: readonly ItemKind[],
 	appearances?: ItemAppearances,
 ): string => {
+	if (isDungeonEvent(event)) {
+		return formatDungeonEvent(event);
+	}
 	switch (event.type) {
 		case "player-hit" /* 0 for the aquator (its attacks just rust) and the nymph (0d0) */:
 			return event.payload.damage > 0
@@ -70,18 +73,6 @@ export const formatEvent = (
 		case "player-detected-monsters":
 		case "player-hallucinated":
 			return formatItemUseEvent(event, identifiedItemKinds, appearances);
-		case "stairs-refused":
-		case "trap-triggered":
-		case "trap-found":
-		case "secret-door-found":
-		case "room-lit":
-		case "corridor-glowed":
-		case "tingling":
-		case "life-drained":
-		case "enemy-drained":
-		case "player-stuck":
-		case "trap-mystery":
-			return formatDungeonEvent(event);
 		case "player-died":
 			return formatDeathMessage(event.payload.by);
 		case "floor-descended":
@@ -139,6 +130,8 @@ export const formatEvent = (
 			return `跳ね返った${BOLT_NAMES[event.payload.kind]}をかわした`;
 		case "player-bolted":
 			return `跳ね返った${BOLT_NAMES[event.payload.kind]}を浴びた!${event.payload.damage}のダメージを受けた`;
+		case "enemy-polymorphed":
+			return `杖の光を浴びた敵が${formatEnemyName(event.payload.target)}に姿を変えた!`;
 		case "enemy-pulled":
 			return `杖の力で${formatEnemyName(event.payload.target)}が目の前に引き寄せられた!`;
 		case "enemy-hasted":

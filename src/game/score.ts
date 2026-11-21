@@ -79,6 +79,7 @@ const FLAT_WORTH: Readonly<
 	"slow-wand": 350,
 	"teleport-wand": 340,
 	"magic-missile-wand": 170,
+	"polymorph-wand": 310,
 	"cancellation-wand": 280,
 	"invisibility-wand": 5,
 	"drain-life-wand": 300,

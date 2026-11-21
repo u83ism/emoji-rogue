@@ -92,4 +92,10 @@ export const WAND_CATALOG: Readonly<Record<WandKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("cancellation-wand"),
 		effect: `選んだ方向へ振り、最初に当たった敵の特殊能力をすべて消す(特殊な攻撃・視線・炎・擬態・透明)。起こしはしない。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
 	},
+	"polymorph-wand": {
+		catalogName: "変身の杖",
+		category: "杖",
+		spawn: itemDrawShare("polymorph-wand"),
+		effect: `選んだ方向へ振り、最初に当たった敵を26種のどれかにでたらめに変える(その階の強さで生まれ直し、眠った状態になる。持ち物はそのまま)。変わるところが見えれば正体が分かる。${WAND_CHARGES_TEXT}`,
+	},
 };

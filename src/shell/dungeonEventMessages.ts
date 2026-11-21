@@ -34,24 +34,29 @@ const MYSTERY_MESSAGES: readonly string[] = [
 	"持ち物の色が変わった!",
 ];
 
-/** The events about the dungeon itself — its traps and its staircase. */
-export type DungeonEvent = Extract<
+/** The events about the dungeon itself — its traps, staircase, secret doors and light — and the drain life wand's. */
+const DUNGEON_EVENT_TYPES = [
+	"stairs-refused",
+	"trap-triggered",
+	"trap-found",
+	"secret-door-found",
+	"tingling",
+	"room-lit",
+	"corridor-glowed",
+	"life-drained",
+	"enemy-drained",
+	"player-stuck",
+	"trap-mystery",
+] as const satisfies readonly GameEvent["type"][];
+
+type DungeonEvent = Extract<
 	GameEvent,
-	{
-		type:
-			| "stairs-refused"
-			| "trap-triggered"
-			| "trap-found"
-			| "secret-door-found"
-			| "tingling"
-			| "room-lit"
-			| "corridor-glowed"
-			| "life-drained"
-			| "enemy-drained"
-			| "player-stuck"
-			| "trap-mystery";
-	}
+	{ type: (typeof DUNGEON_EVENT_TYPES)[number] }
 >;
+
+/** Whether formatDungeonEvent writes `event`'s line — eventMessages.ts's formatEvent hands those over before its own switch. */
+export const isDungeonEvent = (event: GameEvent): event is DungeonEvent =>
+	DUNGEON_EVENT_TYPES.some((type) => type === event.type);
 
 /**
  * The log line for a DungeonEvent — split out of eventMessages.ts's

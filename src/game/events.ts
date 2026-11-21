@@ -99,6 +99,7 @@ export const ITEM_KIND_VALUES = [
 	"drain-life-wand",
 	"invisibility-wand",
 	"cancellation-wand",
+	"polymorph-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -163,6 +164,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"polymorph-wand",
 	"cancellation-wand",
 	"invisibility-wand",
 	"drain-life-wand",
@@ -684,6 +686,11 @@ export type GameEvent =
 			/** A wand of light zapped in a corridor: it only glows and fades. */
 			readonly type: "corridor-glowed";
 			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A wand of polymorph turned a monster, in sight, into another kind. */
+			readonly type: "enemy-polymorphed";
+			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
 			/** A teleport to wand's bolt brought a monster next to the player. */

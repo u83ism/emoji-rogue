@@ -29,6 +29,7 @@ import {
 } from "./wands/boltWands.js";
 import { applyUseDrainLifeWand } from "./wands/drainWand.js";
 import { applyUseLightWand } from "./wands/lightWand.js";
+import { applyUsePolymorphWand } from "./wands/polymorphWand.js";
 import {
 	applyUseCancellationWand,
 	applyUseInvisibilityWand,
@@ -112,6 +113,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "polymorph-wand":
+			return applyUsePolymorphWand(state, direction);
 		case "cancellation-wand":
 			return applyUseCancellationWand(state, direction);
 		case "invisibility-wand":

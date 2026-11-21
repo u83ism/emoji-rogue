@@ -81,6 +81,7 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "maintain-armor-ring", weight: 5 },
 	],
 	wand: [
+		{ kind: "polymorph-wand", weight: 15 },
 		{ kind: "cancellation-wand", weight: 5 },
 		{ kind: "invisibility-wand", weight: 6 },
 		{ kind: "drain-life-wand", weight: 9 },

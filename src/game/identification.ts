@@ -72,6 +72,9 @@ const WAND_REVEALS: Readonly<Record<WandKind, Reveal>> = {
 	"slow-wand": never,
 	"teleport-wand": never,
 	"magic-missile-wand": always,
+	/* do_zap(): oi_know |= see_monst() — named when the change was seen */
+	"polymorph-wand": (_before, after) =>
+		after.events.at(-1)?.type === "enemy-polymorphed",
 	"cancellation-wand": never,
 	"invisibility-wand": never,
 	"drain-life-wand": never,

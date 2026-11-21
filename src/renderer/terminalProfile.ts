@@ -22,6 +22,7 @@ const UNICODE_13_PLUS_GLYPHS: ReadonlySet<string> = new Set([
 	"🦤", // dodo, 13.0
 	"🪙", // coin, 13.0
 	"🪄", // magic wand, 13.0
+	"🪤", // mouse trap, 13.0
 	"🧌", // troll, 14.0
 	"🫥", // dotted line face, 14.0
 ]);

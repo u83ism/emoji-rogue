@@ -22,8 +22,8 @@ export const WON_PLAYER_CELL: Cell = { glyph: "🎉" };
  * as in original Rogue — the down arrow it showed before the up/down split
  * went away, since going down is what it is mostly for. */
 export const STAIRS_CELL: Cell = { glyph: "🔽" };
-/* A found trap (original Rogue's '^'): single-codepoint, Unicode 6.0 — the up-pointing red triangle echoes the caret. The look is to be judged on screen (docs/tasks/game.md). */
-export const TRAP_CELL: Cell = { glyph: "🔺" };
+/* A found trap (original Rogue's '^'): the mouse trap, single-codepoint, Unicode 13.0 (registered in renderer/terminalProfile.ts). Chosen on screen by the developer over 🔺/⛔/💢 (2026-11-21). */
+export const TRAP_CELL: Cell = { glyph: "🪤" };
 /** Something magic a magic detection potion sensed (original Rogue's MAGIC) — provisional, to be judged on screen. */
 export const MAGIC_CELL: Cell = { glyph: "✨" };
 /* Amulet of Yendor: single-codepoint, Unicode 6.0 — floors from AMULET_FLOOR down only. */

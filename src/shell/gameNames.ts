@@ -1,13 +1,13 @@
+import type { ItemAppearances } from "../game/appearances.js";
 import {
 	type DeathCause,
 	type EnemyKind,
 	type EquipmentVariant,
 	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
-	POTION_KINDS,
-	RING_KINDS,
 	type TrapKind,
 } from "../game/events.js";
+import { resolveUnidentifiedName } from "./appearanceNames.js";
 
 // The name dictionaries behind eventMessages.ts / messages.ts — same i18n discipline: the
 // core never produces strings, and a locale swap touches this pair of files
@@ -114,21 +114,6 @@ export const EQUIPMENT_NAMES: Readonly<Record<EquipmentVariant, string>> = {
 	"plate-mail": "プレートメイル",
 };
 
-const UNIDENTIFIED_RING_NAME = "指輪";
-const UNIDENTIFIED_WAND_NAME = "杖";
-
-/**
- * The shared generic name each IDENTIFIABLE_ITEM_KINDS kind hides behind
- * until identified this run (see GameState.identifiedItemKinds) — every other
- * kind (scrolls, food, weapon, armor) always shows its real name.
- */
-const resolveUnidentifiedName = (kind: ItemKind): string =>
-	POTION_KINDS.includes(kind)
-		? "未鑑定の薬"
-		: RING_KINDS.some((ringKind) => ringKind === kind)
-			? UNIDENTIFIED_RING_NAME
-			: UNIDENTIFIED_WAND_NAME;
-
 /** How a death by something other than an enemy reads in the log. */
 const NON_ENEMY_DEATH_MESSAGES: Readonly<
 	Record<Exclude<DeathCause, EnemyKind>, string>
@@ -171,12 +156,13 @@ export const resolveItemDisplayName = (
 	kind: ItemKind,
 	identifiedItemKinds: readonly ItemKind[],
 	variant?: EquipmentVariant,
+	appearances?: ItemAppearances,
 ): string => {
 	if (variant !== undefined) {
 		return EQUIPMENT_NAMES[variant];
 	}
 	return IDENTIFIABLE_ITEM_KINDS.includes(kind) &&
 		!identifiedItemKinds.includes(kind)
-		? resolveUnidentifiedName(kind)
+		? resolveUnidentifiedName(kind, appearances)
 		: ITEM_NAMES[kind];
 };

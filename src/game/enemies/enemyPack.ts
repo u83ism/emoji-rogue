@@ -83,9 +83,12 @@ export const applyCarriedItemsDrop = (
 	if (enemy.carried.length === 0) {
 		return state;
 	}
-	const items = enemy.carried.reduce<readonly Item[]>((placed, item) => {
-		const tile = findDropTile(state, enemy, placed);
-		return tile === undefined ? placed : [...placed, { ...item, ...tile }];
-	}, state.items);
+	const items: Item[] = [...state.items];
+	for (const item of enemy.carried) {
+		const tile = findDropTile(state, enemy, items);
+		if (tile !== undefined) {
+			items.push({ ...item, ...tile });
+		}
+	}
 	return { ...state, items };
 };

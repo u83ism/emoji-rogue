@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
-import { seedToState } from "../rng.js";
+import { createRng as createAppearanceRng, seedToState } from "../rng.js";
+import { rollItemAppearances } from "./appearances.js";
 import {
 	BLIND_VIEW_RADIUS,
 	PLAYER_MAX_HP,
@@ -125,6 +126,7 @@ describe("deriveExploredState", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
 			enemies: [],
@@ -182,6 +184,7 @@ describe("deriveExploredState", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
 			enemies: [],

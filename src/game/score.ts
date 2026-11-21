@@ -1,5 +1,6 @@
+import { type ItemAppearances, RING_STONE_VALUES } from "./appearances.js";
 import type { ArmorKind, ItemKind, WeaponKind } from "./events.js";
-import { IDENTIFIABLE_ITEM_KINDS } from "./events.js";
+import { IDENTIFIABLE_ITEM_KINDS, isRingKind } from "./events.js";
 import { calculateArmorClass } from "./items/equipmentStats.js";
 import type { GameState, HeldItem } from "./state.js";
 
@@ -87,14 +88,22 @@ const FLAT_WORTH: Readonly<
  */
 const calculateFlatWorth = (
 	item: Exclude<HeldItem, { kind: "weapon" | "armor" }>,
+	appearances: ItemAppearances | undefined,
 ): number => {
+	/* a ring is worth its stone's value too (original Rogue's init_stones()) */
+	const stoneValue =
+		appearances !== undefined && isRingKind(item.kind)
+			? (RING_STONE_VALUES[appearances.ringStones[item.kind]] ?? 0)
+			: 0;
 	if ("charges" in item) {
 		return FLAT_WORTH[item.kind] + 20 * item.charges;
 	}
 	if ("bonus" in item) {
-		return item.bonus > 0 ? FLAT_WORTH[item.kind] + item.bonus * 100 : 10;
+		return item.bonus > 0
+			? FLAT_WORTH[item.kind] + stoneValue + item.bonus * 100
+			: 10;
 	}
-	return FLAT_WORTH[item.kind];
+	return FLAT_WORTH[item.kind] + stoneValue;
 };
 
 /** What the Amulet of Yendor sells for at the end of a won run. */
@@ -110,6 +119,7 @@ const AMULET_WORTH = 1000;
 export const calculateItemWorth = (
 	item: HeldItem,
 	identifiedItemKinds: readonly ItemKind[],
+	appearances?: ItemAppearances,
 ): number => {
 	switch (item.kind) {
 		case "weapon":
@@ -126,7 +136,7 @@ export const calculateItemWorth = (
 					10 * item.defenseBonus,
 			);
 		default: {
-			const worth = calculateFlatWorth(item);
+			const worth = calculateFlatWorth(item, appearances);
 			const unidentified =
 				IDENTIFIABLE_ITEM_KINDS.includes(item.kind) &&
 				!identifiedItemKinds.includes(item.kind);
@@ -151,7 +161,12 @@ export const calculateScore = (state: GameState): number => {
 				(state.hasAmulet ? AMULET_WORTH : 0) +
 				state.inventory.reduce(
 					(total, item) =>
-						total + calculateItemWorth(item, state.identifiedItemKinds),
+						total +
+						calculateItemWorth(
+							item,
+							state.identifiedItemKinds,
+							state.appearances,
+						),
 					0,
 				)
 			);

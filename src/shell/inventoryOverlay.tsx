@@ -20,13 +20,16 @@ const HeldItemRow = ({
 	index,
 	item,
 	identifiedItemKinds,
+	appearances,
 }: {
 	readonly index: number;
 	readonly item: HeldItem;
 	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
+	readonly appearances: GameState["appearances"];
 }) => (
 	<Text>
-		{toInventoryLetter(index)}) {formatHeldItemLabel(item, identifiedItemKinds)}
+		{toInventoryLetter(index)}){" "}
+		{formatHeldItemLabel(item, identifiedItemKinds, appearances)}
 	</Text>
 );
 
@@ -41,9 +44,11 @@ const ROWS_PER_COLUMN = 13;
 const HeldItemRowList = ({
 	items,
 	identifiedItemKinds,
+	appearances,
 }: {
 	readonly items: readonly HeldItem[];
 	readonly identifiedItemKinds: GameState["identifiedItemKinds"];
+	readonly appearances: GameState["appearances"];
 }) => (
 	<Box flexDirection="row">
 		{[0, ROWS_PER_COLUMN].map((columnStart) => (
@@ -56,6 +61,7 @@ const HeldItemRowList = ({
 							index={columnStart + rowIndex}
 							item={item}
 							identifiedItemKinds={identifiedItemKinds}
+							appearances={appearances}
 						/>
 					))}
 			</Box>
@@ -86,7 +92,11 @@ export const InventoryOverlay = ({
 		return (
 			<Box flexDirection="column" borderStyle="round">
 				<Text>
-					{formatHeldItemLabel(pendingThrowFor, state.identifiedItemKinds)}
+					{formatHeldItemLabel(
+						pendingThrowFor,
+						state.identifiedItemKinds,
+						state.appearances,
+					)}
 				</Text>
 				<Text>{THROW_DIRECTION_PROMPT}</Text>
 			</Box>
@@ -101,6 +111,7 @@ export const InventoryOverlay = ({
 				<HeldItemRowList
 					items={candidates}
 					identifiedItemKinds={state.identifiedItemKinds}
+					appearances={state.appearances}
 				/>
 			</Box>
 		);
@@ -112,7 +123,11 @@ export const InventoryOverlay = ({
 			{selectedItem !== undefined ? (
 				<>
 					<Text>
-						{formatHeldItemLabel(selectedItem, state.identifiedItemKinds)}
+						{formatHeldItemLabel(
+							selectedItem,
+							state.identifiedItemKinds,
+							state.appearances,
+						)}
 					</Text>
 					<Text>{resolveItemVerbPrompt(selectedItem)}</Text>
 				</>
@@ -122,6 +137,7 @@ export const InventoryOverlay = ({
 				<HeldItemRowList
 					items={state.inventory}
 					identifiedItemKinds={state.identifiedItemKinds}
+					appearances={state.appearances}
 				/>
 			)}
 		</Box>

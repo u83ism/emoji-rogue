@@ -1,5 +1,6 @@
 /* file-size-exception: GameState/Actionの型定義=ゲームの全語彙を1箇所で読める価値を優先(events.ts/balance.tsと同じ理屈、2026-07-19裁可) */
 import type { RngState } from "../rng.js";
+import type { ItemAppearances } from "./appearances.js";
 import type {
 	ArmorKind,
 	EnemyKind,
@@ -325,6 +326,8 @@ export interface GameState {
 	readonly inventory: readonly HeldItem[];
 	/** The itemId the next picked-up item will be assigned — incremented by applyItemPickup, never reused. */
 	readonly nextItemId: number;
+	/** How the run's unidentified kinds look (appearances.ts) — rolled once at the start. */
+	readonly appearances: ItemAppearances;
 	/** Item kinds identified this run — by using one (drinking a potion, wearing a ring, zapping a wand; see items/use.ts) or by an identify scroll. The shell shows a potion/ring/wand by its real name only once its kind is here. */
 	readonly identifiedItemKinds: readonly ItemKind[];
 	readonly goldPiles: readonly GoldPile[];

@@ -146,7 +146,7 @@ export const isEquipmentItemKind = (
 	kind: ItemKind,
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
-const WAND_KIND_VALUES = [
+export const WAND_KIND_VALUES = [
 	"slow-wand",
 	"teleport-wand",
 	"magic-missile-wand",
@@ -209,7 +209,7 @@ interface ItemEventPayload {
 	readonly variant?: EquipmentVariant;
 }
 
-const POTION_KIND_VALUES = [
+export const POTION_KIND_VALUES = [
 	"heal-potion",
 	"poison",
 	"strength",
@@ -234,17 +234,37 @@ export type PotionKind = (typeof POTION_KIND_VALUES)[number];
  * wider ItemKind[] so `POTION_KINDS.includes(anyItemKind)` stays a plain
  * membership test at call sites.
  */
-export const POTION_KINDS: readonly ItemKind[] = POTION_KIND_VALUES;
+export const POTION_KINDS: readonly ItemKind[] = [...POTION_KIND_VALUES];
 
 /**
- * Kinds whose real name stays hidden behind a shared generic one (未鑑定の薬,
- * 指輪, 杖) until identified — see GameState.identifiedItemKinds. Scrolls,
- * food, weapons and armor are always known by name.
+ * Kinds whose real name stays hidden behind their run's appearance (a
+ * potion's color, a scroll's title, a ring's stone, a wand's material —
+ * see appearances.ts) until identified — see GameState.identifiedItemKinds.
+ * Food, weapons and armor are always known by name.
  */
+/** The scrolls — in original Rogue unknown by name until read, each titled with nonsense words (appearances.ts). */
+export const SCROLL_KIND_VALUES = [
+	"teleport-scroll",
+	"mapping-scroll",
+	"identify-scroll",
+	"enchant-weapon",
+	"enchant-armor",
+	"protect-armor",
+	"remove-curse-scroll",
+	"confuse-monster-scroll",
+	"hold-monster-scroll",
+	"sleep-scroll",
+	"create-monster-scroll",
+	"aggravate-monsters-scroll",
+] as const satisfies readonly ItemKind[];
+
+export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];
+
 export const IDENTIFIABLE_ITEM_KINDS: readonly ItemKind[] = [
 	...POTION_KIND_VALUES,
 	...RING_KINDS,
 	...WAND_KIND_VALUES,
+	...SCROLL_KIND_VALUES,
 ];
 
 /** Original Rogue's eight traps (T_DOOR … T_MYST), in its own order — floor/traps.ts draws among them evenly. */

@@ -99,7 +99,7 @@ describe("applyUseItem dispatch", () => {
 		expect(zapped.identifiedItemKinds).toEqual(["slow-wand"]);
 	});
 
-	it("reading a scroll does not add it to identifiedItemKinds (scrolls are always known by name)", () => {
+	it("reading a scroll identifies its kind — in original Rogue scrolls are unknown until read", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "mapping-scroll" as const }],
@@ -108,7 +108,7 @@ describe("applyUseItem dispatch", () => {
 			type: "use-item",
 			payload: { itemId: 1 },
 		});
-		expect(next.identifiedItemKinds).toEqual([]);
+		expect(next.identifiedItemKinds).toEqual(["mapping-scroll"]);
 	});
 
 	it("using an itemId with nothing held under it is a no-op (same reference, no turn spent)", () => {

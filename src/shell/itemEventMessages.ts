@@ -1,3 +1,4 @@
+import type { ItemAppearances } from "../game/appearances.js";
 import { UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import {
@@ -83,6 +84,7 @@ export type ItemUseEvent = Extract<
 export const formatItemUseEvent = (
 	event: ItemUseEvent,
 	identifiedItemKinds: readonly ItemKind[],
+	appearances?: ItemAppearances,
 ): string => {
 	switch (event.type) {
 		case "player-healed":
@@ -90,11 +92,11 @@ export const formatItemUseEvent = (
 				? `${ITEM_NAMES[event.payload.by]}を飲んだ。HPが${event.payload.amount}回復した`
 				: `${ITEM_NAMES[event.payload.by]}を飲んだが、HPは満タンだった`;
 		case "item-picked-up":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を拾った`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant, appearances)}を拾った`;
 		case "inventory-full":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を持てなかった。持ち物がいっぱいだ`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant, appearances)}を持てなかった。持ち物がいっぱいだ`;
 		case "item-dropped":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を足元に置いた`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant, appearances)}を足元に置いた`;
 		case "weapon-equipped":
 			return `${EQUIPMENT_NAMES[event.payload.weaponKind]}を装備した。命中${formatSignedBonus(event.payload.hitBonus)}・ダメージ${formatSignedBonus(event.payload.damageBonus)}`;
 		case "armor-equipped":
@@ -124,7 +126,7 @@ export const formatItemUseEvent = (
 		case "ring-hands-full":
 			return "もう両手に指輪をはめている";
 		case "wand-empty":
-			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds)}を振ったが、何も起きなかった`;
+			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, undefined, appearances)}を振ったが、何も起きなかった`;
 		case "scroll-wasted":
 			return `${ITEM_NAMES[event.payload.kind]}を読んだが、何も起きなかった`;
 		case "items-decursed":

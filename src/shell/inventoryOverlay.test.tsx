@@ -38,8 +38,10 @@ describe("InventoryOverlay", () => {
 		);
 		const frame = lastFrame() ?? "";
 		expect(frame).toContain("持ち物(Escで閉じる) 3/26");
-		expect(frame).toContain("a) 未鑑定の薬");
-		expect(frame).toContain("b) 未鑑定の薬");
+		/* both are the same kind, so they show the same run color */
+		const potionName = frame.match(/a\) (\S+の薬)/)?.[1];
+		expect(potionName).toBeDefined();
+		expect(frame).toContain(`b) ${potionName}`);
 		expect(frame).toContain("c) 食料");
 	});
 

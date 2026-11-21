@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type RngState, seedToState, stepUniform } from "../../rng.js";
+import {
+	createRng as createAppearanceRng,
+	type RngState,
+	seedToState,
+	stepUniform,
+} from "../../rng.js";
+import { rollItemAppearances } from "../appearances.js";
 import {
 	calculateGoldAmountMax,
 	GOLD_AMOUNT_MIN,
@@ -223,6 +229,7 @@ describe("advanceEnemies", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
 			enemies: [zombie(5, 1)],
@@ -735,6 +742,7 @@ describe("advanceEnemies", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
 			enemies: [zombie(5, 1, false)],

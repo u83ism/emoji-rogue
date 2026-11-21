@@ -36,6 +36,7 @@ describe("calculateScore", () => {
 		const state = buildState({
 			status: "won",
 			hasAmulet: true,
+			identifiedItemKinds: ["teleport-scroll"],
 			inventory: [
 				{ itemId: 1, kind: "food" },
 				{ itemId: 2, kind: "teleport-scroll" },

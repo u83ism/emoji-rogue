@@ -1,3 +1,4 @@
+import type { ItemAppearances } from "../game/appearances.js";
 import { INVENTORY_CAPACITY, UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { ItemKind } from "../game/events.js";
 import { EQUIPPED_GLYPH } from "../game/glyphs.js";
@@ -33,13 +34,19 @@ export const formatPlayerStrength = (state: GameState): string =>
 export const formatHeldItemLabel = (
 	item: HeldItem,
 	identifiedItemKinds: readonly ItemKind[],
+	appearances?: ItemAppearances,
 ): string => {
 	const name =
 		item.kind === "weapon"
 			? `${EQUIPMENT_NAMES[item.weaponKind]}${item.quantity > 1 ? `×${item.quantity}` : ""}`
 			: item.kind === "armor"
 				? EQUIPMENT_NAMES[item.armorKind]
-				: resolveItemDisplayName(item.kind, identifiedItemKinds);
+				: resolveItemDisplayName(
+						item.kind,
+						identifiedItemKinds,
+						undefined,
+						appearances,
+					);
 	if (!("equipped" in item) || !item.equipped) {
 		return name;
 	}

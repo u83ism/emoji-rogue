@@ -1,3 +1,4 @@
+import type { ItemAppearances } from "../game/appearances.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import { formatDungeonEvent } from "./dungeonEventMessages.js";
 import {
@@ -20,6 +21,7 @@ import { formatItemUseEvent } from "./itemEventMessages.js";
 export const formatEvent = (
 	event: GameEvent,
 	identifiedItemKinds: readonly ItemKind[],
+	appearances?: ItemAppearances,
 ): string => {
 	switch (event.type) {
 		case "player-hit" /* 0 for the aquator (its attacks just rust) and the nymph (0d0) */:
@@ -64,7 +66,7 @@ export const formatEvent = (
 		case "player-blinded":
 		case "player-detected-monsters":
 		case "player-hallucinated":
-			return formatItemUseEvent(event, identifiedItemKinds);
+			return formatItemUseEvent(event, identifiedItemKinds, appearances);
 		case "stairs-refused":
 		case "trap-triggered":
 		case "trap-found":
@@ -99,7 +101,7 @@ export const formatEvent = (
 				? `${ENEMY_NAMES.thief}に${event.payload.amount}ゴールド盗まれた!`
 				: `${ENEMY_NAMES.thief}に襲われたが、何も盗られなかった`;
 		case "item-stolen":
-			return `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant)}を盗まれた!`;
+			return `${ENEMY_NAMES.nymph}に${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, event.payload.variant, appearances)}を盗まれた!`;
 		case "armor-rust-blocked":
 			return "防具に付いた錆はたちまち消えた!";
 		case "armor-rusted":

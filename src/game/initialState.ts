@@ -1,6 +1,7 @@
 import { at } from "../indexing.js";
 import { createArenaMap } from "../map/arena.js";
 import { createRng, seedToState } from "../rng.js";
+import { rollItemAppearances } from "./appearances.js";
 import {
 	PLAYER_MAX_HP,
 	PLAYER_START_FOOD,
@@ -115,6 +116,8 @@ export const buildArenaGameState = (
 		traps: [],
 		stairs: pickArenaStairs(columns, player),
 		amulet: undefined,
+		/* a separate stream, so the fixture's own rng stays exactly the seed's */
+		appearances: rollItemAppearances(createRng(seed)),
 		rng: seedToState(seed),
 	});
 };
@@ -161,6 +164,8 @@ export const buildDungeonGameState = (
 		stairs: layout.stairs,
 		amulet: layout.amulet,
 		inventory: startingInventory,
+		/* original Rogue draws these first (init.c); last here keeps every seed's floors as they were */
+		appearances: rollItemAppearances(rng),
 		rng: rng.getState(),
 		nextItemId: layout.nextItemId,
 		floorsWithoutFood: layout.floorsWithoutFood,

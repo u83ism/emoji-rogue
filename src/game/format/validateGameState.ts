@@ -1,6 +1,15 @@
 /* file-size-exception: 手書きセーブ検証 — 依存追加禁止(zod不採用)の受容コスト。型ナローイングの都合で逐次チェックが必要(2026-07-18裁可) */
+
 import { err, ok, type Result } from "../../result.js";
 import type { RngState } from "../../rng.js";
+import {
+	type ItemAppearances,
+	POTION_COLOR_COUNT,
+	RING_STONE_VALUES,
+	SCROLL_SYLLABLE_COUNT,
+	WAND_METAL_COUNT,
+	WAND_WOOD_COUNT,
+} from "../appearances.js";
 import { PLAYER_MAX_FOOD, STARVATION_TURNS } from "../balance.js";
 import { STRENGTH_MAX, STRENGTH_MIN } from "../combat/strength.js";
 import {
@@ -14,8 +23,12 @@ import {
 	isEquipmentItemKind,
 	isValuedRingKind,
 	isWandKind,
+	POTION_KIND_VALUES,
+	RING_KINDS,
+	SCROLL_KIND_VALUES,
 	TRAP_KIND_VALUES,
 	type TrapKind,
+	WAND_KIND_VALUES,
 	WEAPON_KIND_VALUES,
 } from "../events.js";
 import type {
@@ -476,6 +489,46 @@ const rebuildItem = (item: Item): Item => {
 	}
 };
 
+/** An index map over `kinds`, every value an integer in 0..count-1. */
+const isIndexRecord = (
+	value: unknown,
+	kinds: readonly string[],
+	count: number,
+): boolean =>
+	isRecord(value) &&
+	kinds.every((kind) => {
+		const index = value[kind];
+		return isNonNegativeInteger(index) && index < count;
+	});
+
+const isAppearances = (value: unknown): value is ItemAppearances =>
+	isRecord(value) &&
+	isIndexRecord(value.potionColors, POTION_KIND_VALUES, POTION_COLOR_COUNT) &&
+	isIndexRecord(value.ringStones, RING_KINDS, RING_STONE_VALUES.length) &&
+	isIndexRecord(
+		value.wandMaterials,
+		WAND_KIND_VALUES,
+		WAND_WOOD_COUNT + WAND_METAL_COUNT,
+	) &&
+	isRecord(value.scrollTitles) &&
+	SCROLL_KIND_VALUES.every((kind) => {
+		const title = (value.scrollTitles as Record<string, unknown>)[kind];
+		return (
+			Array.isArray(title) &&
+			title.length > 0 &&
+			title.every(
+				(word) =>
+					Array.isArray(word) &&
+					word.length > 0 &&
+					word.every(
+						(syllable) =>
+							isNonNegativeInteger(syllable) &&
+							syllable < SCROLL_SYLLABLE_COUNT,
+					),
+			)
+		);
+	});
+
 export const validateGameState = (
 	value: unknown,
 ): Result<GameState, string> => {
@@ -566,6 +619,10 @@ export const validateGameState = (
 	const paralyzedTurnsRemaining = value.paralyzedTurnsRemaining;
 	if (!isNonNegativeInteger(paralyzedTurnsRemaining)) {
 		return err("paralyzedTurnsRemaining");
+	}
+	const appearances = value.appearances;
+	if (!isAppearances(appearances)) {
+		return err("appearances");
 	}
 	const playerRunFlag = value.playerRunFlag;
 	if (!isBooleanValue(playerRunFlag)) {
@@ -716,6 +773,7 @@ export const validateGameState = (
 		blindTurnsRemaining,
 		paralyzedTurnsRemaining,
 		playerRunFlag,
+		appearances,
 		hasteTurnsRemaining,
 		hasteMoveSpent,
 		seeInvisibleTurnsRemaining,

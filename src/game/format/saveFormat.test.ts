@@ -51,6 +51,13 @@ describe("save file shape guard", () => {
 				blindTurnsRemaining: "number",
 				paralyzedTurnsRemaining: "number",
 				playerRunFlag: "boolean",
+				/* one index per kind — pinned as families here, their values by validateGameState */
+				appearances: {
+					potionColors: expect.any(Object),
+					scrollTitles: expect.any(Object),
+					ringStones: expect.any(Object),
+					wandMaterials: expect.any(Object),
+				},
 				hasteTurnsRemaining: "number",
 				hasteMoveSpent: "boolean",
 				seeInvisibleTurnsRemaining: "number",

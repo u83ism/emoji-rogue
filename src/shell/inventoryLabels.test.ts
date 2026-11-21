@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildArenaGameState } from "../game/initialState.js";
 import type { HeldItem } from "../game/state.js";
 import {
 	formatHeldItemLabel,
@@ -99,9 +100,24 @@ describe("formatHeldItemLabel", () => {
 		expect(formatHeldItemLabel(ring, ["stealth-ring"])).toBe("✅ 指輪");
 	});
 
-	it("always shows a scroll by its real name", () => {
+	it("shows an unread scroll by its run's title, and by its real name once read", () => {
 		const scroll: HeldItem = { itemId: 1, kind: "mapping-scroll" };
-		expect(formatHeldItemLabel(scroll, [])).toBe("地図の巻物");
+		const { appearances } = buildArenaGameState(3, 3, 1);
+		expect(formatHeldItemLabel(scroll, [], appearances)).toMatch(
+			/^『.+』と書かれた巻物$/,
+		);
+		expect(formatHeldItemLabel(scroll, ["mapping-scroll"], appearances)).toBe(
+			"地図の巻物",
+		);
+	});
+
+	it("shows an unidentified potion, ring or wand by its run's color, stone or material", () => {
+		const { appearances } = buildArenaGameState(3, 3, 1);
+		const potion: HeldItem = { itemId: 1, kind: "poison" };
+		expect(formatHeldItemLabel(potion, [], appearances)).toMatch(/の薬$/);
+		expect(formatHeldItemLabel(potion, [], appearances)).not.toBe("未鑑定の薬");
+		const wand: HeldItem = { itemId: 2, kind: "slow-wand", charges: 3 };
+		expect(formatHeldItemLabel(wand, [], appearances)).toMatch(/.+の杖$/);
 	});
 });
 

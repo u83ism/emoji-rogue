@@ -32,6 +32,7 @@ import {
 	WEAPON_KIND_VALUES,
 } from "../events.js";
 import type {
+	DungeonRoom,
 	Enemy,
 	EnemySpeed,
 	GameState,
@@ -529,6 +530,20 @@ const isAppearances = (value: unknown): value is ItemAppearances =>
 		);
 	});
 
+const isDungeonRoomArray = (value: unknown): value is readonly DungeonRoom[] =>
+	Array.isArray(value) &&
+	value.every(
+		(room) =>
+			isRecord(room) &&
+			isNonNegativeInteger(room.x1) &&
+			isNonNegativeInteger(room.y1) &&
+			isNonNegativeInteger(room.x2) &&
+			isNonNegativeInteger(room.y2) &&
+			room.x1 <= room.x2 &&
+			room.y1 <= room.y2 &&
+			isBooleanValue(room.dark),
+	);
+
 export const validateGameState = (
 	value: unknown,
 ): Result<GameState, string> => {
@@ -619,6 +634,10 @@ export const validateGameState = (
 	const paralyzedTurnsRemaining = value.paralyzedTurnsRemaining;
 	if (!isNonNegativeInteger(paralyzedTurnsRemaining)) {
 		return err("paralyzedTurnsRemaining");
+	}
+	const rooms = value.rooms;
+	if (!isDungeonRoomArray(rooms)) {
+		return err("rooms");
 	}
 	const appearances = value.appearances;
 	if (!isAppearances(appearances)) {
@@ -774,6 +793,13 @@ export const validateGameState = (
 		paralyzedTurnsRemaining,
 		playerRunFlag,
 		appearances,
+		rooms: rooms.map((room) => ({
+			x1: room.x1,
+			y1: room.y1,
+			x2: room.x2,
+			y2: room.y2,
+			dark: room.dark,
+		})),
 		hasteTurnsRemaining,
 		hasteMoveSpent,
 		seeInvisibleTurnsRemaining,

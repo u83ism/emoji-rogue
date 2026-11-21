@@ -2,18 +2,14 @@ import { describe, expect, it } from "vitest";
 import { encodePointKey } from "../pointkey.js";
 import { createRng as createAppearanceRng, seedToState } from "../rng.js";
 import { rollItemAppearances } from "./appearances.js";
-import {
-	BLIND_VIEW_RADIUS,
-	PLAYER_MAX_HP,
-	PLAYER_START_STRENGTH,
-} from "./balance.js";
+import { PLAYER_MAX_HP, PLAYER_START_STRENGTH } from "./balance.js";
 import { buildArenaGameState } from "./initialState.js";
 import type { Enemy, GameState } from "./state.js";
 import {
+	computePlayerVisiblePoints,
 	computeVisiblePoints,
 	deriveExploredState,
 	findVisibleEnemies,
-	resolveViewRadius,
 	VIEW_RADIUS,
 } from "./vision.js";
 
@@ -80,18 +76,51 @@ describe("computeVisiblePoints", () => {
 	});
 });
 
-describe("resolveViewRadius", () => {
-	it("returns the normal radius when not blind", () => {
-		const state = buildArenaGameState(5, 5, 1);
-		expect(resolveViewRadius(state)).toBe(8);
+describe("computePlayerVisiblePoints", () => {
+	/** A 15x9 arena whose middle is one room x 4..10, y 2..6; the player at its center (7,4). */
+	const withRoom = (dark: boolean): GameState => ({
+		...buildArenaGameState(15, 9, 1),
+		explored: buildUnexplored(15, 9),
+		rooms: [{ x1: 4, y1: 2, x2: 10, y2: 6, dark }],
 	});
 
-	it("returns the shrunken blind radius while blindTurnsRemaining is positive", () => {
-		const state: GameState = {
-			...buildArenaGameState(5, 5, 1),
-			blindTurnsRemaining: 5,
-		};
-		expect(resolveViewRadius(state)).toBe(BLIND_VIEW_RADIUS);
+	it("in a lit room, the whole room is seen, walls and doors included", () => {
+		const visible = computePlayerVisiblePoints(withRoom(false));
+		expect(visible.has(encodePointKey(3, 1))).toBe(true);
+		expect(visible.has(encodePointKey(11, 7))).toBe(true);
+		expect(visible.has(encodePointKey(12, 4))).toBe(false);
+	});
+
+	it("in a dark room or a corridor, only the eight tiles around", () => {
+		const visible = computePlayerVisiblePoints(withRoom(true));
+		expect(visible.size).toBe(9);
+		expect(visible.has(encodePointKey(8, 5))).toBe(true);
+		expect(visible.has(encodePointKey(9, 4))).toBe(false);
+		const corridor = { ...withRoom(false), rooms: [] };
+		expect(computePlayerVisiblePoints(corridor).size).toBe(9);
+	});
+
+	it("blind, nothing but the player's own tile", () => {
+		const blind = { ...withRoom(false), blindTurnsRemaining: 3 };
+		expect([...computePlayerVisiblePoints(blind)]).toEqual([
+			encodePointKey(7, 4),
+		]);
+	});
+
+	it("a dark room's floor is forgotten once the player is out of it, its walls are not", () => {
+		const inside = deriveExploredState(withRoom(true));
+		expect(inside.explored[8]?.[5]).toBe(true);
+		expect(inside.explored[3]?.[1]).toBe(false);
+		/* walk out east past the wall, onto (12,4) */
+		const outside = deriveExploredState({
+			...inside,
+			player: { x: 12, y: 4 },
+			explored: inside.explored.map((column, x) =>
+				column.map((seen, y) => seen || (x === 11 && y === 4)),
+			),
+		});
+		expect(outside.explored[8]?.[5]).toBe(false);
+		expect(outside.explored[11]?.[4]).toBe(true);
 	});
 });
 
@@ -126,6 +155,7 @@ describe("deriveExploredState", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			rooms: [],
 			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
@@ -160,7 +190,7 @@ describe("deriveExploredState", () => {
 		expect(state.explored[2]?.[1]).toBe(false); /* input not mutated */
 	});
 
-	it("explores fewer new cells while blind", () => {
+	it("explores nothing new while blind — not even the tile next door", () => {
 		const explored = buildUnexplored(7, 3);
 		const state: GameState = {
 			width: 7,
@@ -184,6 +214,7 @@ describe("deriveExploredState", () => {
 			hasteMoveSpent: false,
 			seeInvisibleTurnsRemaining: 0,
 			stuckTurnsRemaining: 0,
+			rooms: [],
 			appearances: rollItemAppearances(createAppearanceRng(1)),
 			detectMonstersTurnsRemaining: 0,
 			hallucinatingTurnsRemaining: 0,
@@ -213,12 +244,9 @@ describe("deriveExploredState", () => {
 		const next = deriveExploredState(state);
 
 		expect(next.explored[1]?.[1]).toBe(true); /* player's own tile */
-		expect(next.explored[2]?.[1]).toBe(
-			true,
-		); /* one tile away, still in radius 1 */
-		expect(next.explored[3]?.[1]).toBe(
-			false,
-		); /* two tiles away, too far while blind */
+		/* original Rogue's cansee(): blind, not even the tile next door */
+		expect(next.explored[2]?.[1]).toBe(false);
+		expect(next.explored[3]?.[1]).toBe(false);
 	});
 });
 

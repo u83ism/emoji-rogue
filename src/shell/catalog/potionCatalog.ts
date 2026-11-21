@@ -1,6 +1,5 @@
 import {
 	BLIND_POTION_DURATION,
-	BLIND_VIEW_RADIUS,
 	CONFUSION_POTION_DURATION,
 	DETECT_MONSTER_POTION_DURATION,
 	EXTRA_HEALING_POTION_DICE_SIDES,
@@ -57,7 +56,7 @@ export const POTION_CATALOG: Readonly<Record<PotionKind, ItemCatalogEntry>> = {
 		catalogName: "盲目の薬",
 		category: "薬",
 		spawn: itemDrawShare("blindness"),
-		effect: `${BLIND_POTION_DURATION}ターンの間、視界が周囲${BLIND_VIEW_RADIUS}マスに縮む`,
+		effect: `約${BLIND_POTION_DURATION}ターンの間、何も見えなくなる(地図に新しく何も記録されない)。治癒の薬で治る`,
 	},
 	"raise-level": {
 		catalogName: "レベルアップの薬",

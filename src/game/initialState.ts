@@ -115,6 +115,8 @@ export const buildArenaGameState = (
 		goldPiles: [],
 		traps: [],
 		stairs: pickArenaStairs(columns, player),
+		/* the arena is one lit room inside its walls */
+		rooms: [{ x1: 1, y1: 1, x2: width - 2, y2: height - 2, dark: false }],
 		amulet: undefined,
 		/* a separate stream, so the fixture's own rng stays exactly the seed's */
 		appearances: rollItemAppearances(createRng(seed)),
@@ -162,6 +164,7 @@ export const buildDungeonGameState = (
 		goldPiles: layout.goldPiles,
 		traps: layout.traps,
 		stairs: layout.stairs,
+		rooms: layout.dungeonRooms,
 		amulet: layout.amulet,
 		inventory: startingInventory,
 		/* original Rogue draws these first (init.c); last here keeps every seed's floors as they were */

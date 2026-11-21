@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { advanceTurn } from "./advanceTurn.js";
 import { buildFrameGrid } from "./frame.js";
 import { buildArenaGameState } from "./initialState.js";
+import { deriveExploredState } from "./vision.js";
 
 describe("buildFrameGrid", () => {
 	const state = buildArenaGameState(5, 4, 1);
@@ -49,8 +50,10 @@ describe("buildFrameGrid", () => {
 		};
 		expect(buildFrameGrid(seen)[2]?.[20]?.glyph).toBe("🧟");
 
+		/* out of the room (a corridor shows only the tiles around) */
 		const hidden = {
 			...wide,
+			rooms: [],
 			enemies: [{ ...zombie, x: 27, y: 2 }] /* distance 12 */,
 		};
 		expect(buildFrameGrid(hidden)[2]?.[27]?.glyph).not.toBe("🧟");
@@ -129,20 +132,25 @@ describe("buildFrameGrid", () => {
 	});
 
 	it("renders the three vision layers", () => {
-		/* 30x5 arena: player starts at (15,2); view radius is 8 */
-		const wide = buildArenaGameState(30, 5, 1);
+		/* a 30x3 corridor (no room: only the tiles around show), the player starting at (15,1) */
+		const start = buildArenaGameState(30, 3, 1);
+		const corridor = deriveExploredState({
+			...start,
+			rooms: [],
+			explored: start.explored.map((column) => column.map(() => false)),
+		});
 		const west = { type: "move", payload: { direction: "west" } } as const;
-		const moved = advanceTurn(advanceTurn(wide, west), west); /* (13,2) */
+		const moved = advanceTurn(advanceTurn(corridor, west), west); /* (13,1) */
 		const layered = buildFrameGrid(moved);
 
 		/* visible layer: emoji */
-		expect(layered[2]?.[12]?.glyph).toBe("🟫");
-		expect(layered[2]?.[13]?.glyph).toBe("🧑");
-		/* remembered layer: silhouettes (seen from (15,2), now out of range) */
-		expect(layered[2]?.[23]).toEqual({ glyph: "　", bg: "#262626" });
-		expect(layered[0]?.[23]).toEqual({ glyph: "　", bg: "#666666" });
+		expect(layered[1]?.[12]?.glyph).toBe("🟫");
+		expect(layered[1]?.[13]?.glyph).toBe("🧑");
+		/* remembered layer: silhouettes (next to the start, now out of sight) */
+		expect(layered[1]?.[16]).toEqual({ glyph: "　", bg: "#262626" });
+		expect(layered[0]?.[16]).toEqual({ glyph: "　", bg: "#666666" });
 		/* unexplored layer: darkness */
-		expect(layered[2]?.[29]).toEqual({ glyph: "　" });
+		expect(layered[1]?.[29]).toEqual({ glyph: "　" });
 	});
 
 	it("draws a weapon with its own glyph, distinct from potions", () => {
@@ -260,7 +268,7 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("🧟");
 
 		/* out of sight (distance 12): not drawn */
-		const far = { ...wide, items: [{ ...potion, x: 27 }] };
+		const far = { ...wide, rooms: [], items: [{ ...potion, x: 27 }] };
 		expect(buildFrameGrid(far)[2]?.[27]?.glyph).not.toBe("💊");
 	});
 
@@ -279,7 +287,7 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(covered)[2]?.[12]?.glyph).toBe("💊");
 
 		/* out of sight (distance 12): not drawn */
-		const far = { ...wide, goldPiles: [{ ...pile, x: 27 }] };
+		const far = { ...wide, rooms: [], goldPiles: [{ ...pile, x: 27 }] };
 		expect(buildFrameGrid(far)[2]?.[27]?.glyph).not.toBe("💰");
 	});
 
@@ -312,22 +320,24 @@ describe("buildFrameGrid", () => {
 	});
 
 	it("remembers a seen staircase with its own silhouette color", () => {
-		/* stairs at (23,2): inside view from the start (15,2), out of view
+		/* stairs at (16,2), next to the start (15,2) in a corridor, out of sight
 		 * after moving west twice — like the layered test above */
 		const wide = buildArenaGameState(30, 5, 1);
-		const withStairs = {
+		const withStairs = deriveExploredState({
 			...wide,
-			stairs: { x: 23, y: 2, direction: "down" as const },
-		};
+			rooms: [],
+			explored: wide.explored.map((column) => column.map(() => false)),
+			stairs: { x: 16, y: 2 },
+		});
 		const west = { type: "move", payload: { direction: "west" } } as const;
 		const moved = advanceTurn(advanceTurn(withStairs, west), west);
 		const layered = buildFrameGrid(moved);
-		expect(layered[2]?.[23]).toEqual({ glyph: "　", bg: "#26454a" });
+		expect(layered[2]?.[16]).toEqual({ glyph: "　", bg: "#26454a" });
 		/* an unexplored staircase gives nothing away */
 		const unseen = {
 			...moved,
-			stairs: { x: 28, y: 3, direction: "down" as const },
-			explored: wide.explored,
+			stairs: { x: 28, y: 3 },
+			explored: wide.explored.map((column) => column.map(() => false)),
 		};
 		expect(
 			buildFrameGrid({ ...unseen, player: { x: 13, y: 2 } })[3]?.[28],

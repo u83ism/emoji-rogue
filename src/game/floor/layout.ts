@@ -4,6 +4,7 @@ import { createRogueMap } from "../../map/rogue.js";
 import type { Rng } from "../../rng.js";
 import { buildEmptyColumns } from "../columns.js";
 import type {
+	DungeonRoom,
 	Enemy,
 	GoldPile,
 	Item,
@@ -32,8 +33,10 @@ export interface FloorLayout {
 	readonly stairs: Stairs;
 	/** Only set when `placesAmulet` — see buildFloorLayout. */
 	readonly amulet: Position | undefined;
-	/** The digger's room rectangles — kept for placement checks and tests; never part of GameState. */
+	/** The digger's room rectangles — kept for placement checks and tests. */
 	readonly rooms: readonly Room[];
+	/** The same rooms, lit or dark, as they go into GameState.rooms. */
+	readonly dungeonRooms: readonly DungeonRoom[];
 	/** `nextItemId` after this floor's equipment spawns each consumed one — see drawFloorItems. */
 	readonly nextItemId: number;
 	/** The food drought counter to carry to the next floor — see items.ts's drawFloorItems. */
@@ -145,6 +148,14 @@ export const buildFloorLayout = (
 		stairs,
 		amulet,
 		rooms,
+		/* original Rogue's do_rooms(): a room is dark when rnd(10) < level - 1 */
+		dungeonRooms: rooms.map((room) => ({
+			x1: room.x1,
+			y1: room.y1,
+			x2: room.x2,
+			y2: room.y2,
+			dark: rng.getUniformInt(0, 9) < floor - 1,
+		})),
 		nextItemId: nextItemIdAfterFloor,
 		floorsWithoutFood: floorsWithoutFoodAfter,
 	};

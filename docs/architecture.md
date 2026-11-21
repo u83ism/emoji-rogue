@@ -51,7 +51,7 @@ rot.js(2012年発のローグライクライブラリ)をフォークし、ア�
 | `floor/` | フロア遷移`transitions.ts`とフロア生成: `layout.ts`(組み立て)・`rooms.ts`(部屋ごとの金貨と敵。本家の`do_rooms()`)・`enemies.ts`(敵の種類と生成)/`items.ts`(アイテムとわなの配置)+`spawnTable.ts`(スポーンテーブル — **配列順=rng消費順**。並び替えは全シードを変える)・`spawnPool.ts`(抽選プール) |
 | `turnEnd/` | ターン終了時に毎回自動で進む処理。`hunger.ts`(空腹)・`regeneration.ts`(自然回復と再生の指輪)・`wanderer.ts`(徘徊モンスターの追加出現)と、「残りターンを1減らし0で解除イベント」だけの状態異常6種(混乱・浮遊・盲目・麻痺・索敵・幻覚)をフィールド表で回す`statusCountdowns.ts`。全て`applyTurnEndTicks`から呼ばれる |
 | `format/` | セーブ・リプレイの**純粋な**形式化とパース+検証(`SAVE_FORMAT_VERSION`/`REPLAY_FORMAT_VERSION`、`validateGameState`/`validateReplay`、リプレイ再構築`replay.ts`)。ファイルI/Oはシェル側 |
-| `vision.ts` / `frame.ts` / `glyphs.ts` | FOV導出(可視集合は保存せず毎回導出、既踏破のみ状態) / フレーム構築 / 絵文字辞書 |
+| `vision.ts` / `frame.ts` / `glyphs.ts` | 本家どおりの見え方の導出(明るい部屋は部屋全体、暗い部屋と通路は周囲1マス。可視集合は保存せず毎回導出、既踏破のみ状態。暗い部屋は出ると床の記憶が消える) / フレーム構築 / 絵文字辞書 |
 | `keymap.ts` / `inventoryKeymap.ts` / `score.ts` / `initialState.ts` / `columns.ts` | キー変換 / スコア / 初期状態(`INITIAL_RUN_STATE`に集約) / グリッド生成 |
 | `index.ts` | ゲーム層の公開APIバレル(`demo/`のブラウザ埋め込み向け) |
 

@@ -393,8 +393,6 @@ export const LEVITATION_POTION_DURATION = 30;
 export const BLIND_POTION_DURATION = 850;
 /** How long a see invisible potion lets the player see invisible monsters (original Rogue's SEEDURATION, spread like the others). */
 export const SEE_INVISIBLE_POTION_DURATION = 850;
-/** Field of view radius while blind — adjacent tiles only. */
-export const BLIND_VIEW_RADIUS = 1;
 
 /** How many turns a detect monster potion reveals every enemy through, regardless of FOV. */
 export const DETECT_MONSTER_POTION_DURATION = 20;

@@ -9,7 +9,7 @@ import { NON_WANDERING_ENEMY_KINDS } from "../enemies/enemyStats.js";
 import { calculateEnemyFloorRange } from "../floor/enemies.js";
 import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
 import type { GameState } from "../state.js";
-import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
+import { computePlayerVisiblePoints } from "../vision.js";
 import { applyWandererTick, drawWandererDelay } from "./wanderer.js";
 
 /** A real dungeon (plenty of floor out of sight) with no residents, so every enemy in it is a wanderer. */
@@ -82,11 +82,7 @@ describe("applyWandererTick", () => {
 		expect(wanderer.awake).toBe(true);
 		expect(wanderer.hp).toBe(wanderer.maxHp);
 		expect(state.terrain[wanderer.x]?.[wanderer.y]).toBe(0);
-		const visiblePoints = computeVisiblePoints(
-			state.terrain,
-			state.player,
-			resolveViewRadius(state),
-		);
+		const visiblePoints = computePlayerVisiblePoints(state);
 		expect(visiblePoints.has(encodePointKey(wanderer.x, wanderer.y))).toBe(
 			false,
 		);

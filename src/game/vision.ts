@@ -1,24 +1,11 @@
 import { createPreciseShadowcastingFov } from "../fov/index.js";
 import { encodePointKey } from "../pointkey.js";
-import { BLIND_VIEW_RADIUS } from "./balance.js";
-import type { Enemy, GameState } from "./state.js";
+import type { DungeonRoom, Enemy, GameState } from "./state.js";
 
-/** How far the player can see, in grid rings (precise shadowcasting). */
+/** How far floor generation looks from the player's start (spawnPool.ts) when keeping monsters out of the first view — generation only. */
 export const VIEW_RADIUS = 8;
 
-/** The player's current field-of-view radius — shrunk while blind (see BLIND_VIEW_RADIUS). */
-export const resolveViewRadius = (state: GameState): number =>
-	state.blindTurnsRemaining > 0 ? BLIND_VIEW_RADIUS : VIEW_RADIUS;
-
-/**
- * The set of point keys currently visible from `origin`. Derived from the
- * state on every call — visibility is never stored, only the explored grid
- * is (see GameState.explored). `radius` is deliberately not defaulted:
- * callers holding a real GameState must pass resolveViewRadius(state) so
- * blindness shrinks what they see too, and a default would let them forget
- * that silently (only radius-independent callers like floor generation pass
- * the plain VIEW_RADIUS).
- */
+/** The tiles in line of sight within `radius` of `origin` (precise shadowcasting) — only floor generation's spawn pool still uses this. */
 export const computeVisiblePoints = (
 	terrain: GameState["terrain"],
 	origin: GameState["player"],
@@ -36,24 +23,77 @@ export const computeVisiblePoints = (
 	return visible;
 };
 
+/** The room whose floor or walls the player stands in (doors included), if any — original Rogue's roomin(). */
+export const findPlayerRoom = (state: GameState): DungeonRoom | undefined =>
+	state.rooms.find(
+		(room) =>
+			state.player.x >= room.x1 - 1 &&
+			state.player.x <= room.x2 + 1 &&
+			state.player.y >= room.y1 - 1 &&
+			state.player.y <= room.y2 + 1,
+	);
+
+/**
+ * What the player sees right now, as original Rogue's cansee(): nothing at
+ * all while blind; otherwise the eight tiles around them (LAMPDIST), and —
+ * standing in a lit room — that whole room, walls and doors included. A
+ * dark room or a corridor shows only the tiles around. Derived on every
+ * call — visibility is never stored, only the explored grid is.
+ */
+export const computePlayerVisiblePoints = (
+	state: GameState,
+): ReadonlySet<string> => {
+	const visible = new Set<string>([
+		encodePointKey(state.player.x, state.player.y),
+	]);
+	if (state.blindTurnsRemaining > 0) {
+		return visible;
+	}
+	for (let x = state.player.x - 1; x <= state.player.x + 1; x++) {
+		for (let y = state.player.y - 1; y <= state.player.y + 1; y++) {
+			visible.add(encodePointKey(x, y));
+		}
+	}
+	const room = findPlayerRoom(state);
+	if (room !== undefined && !room.dark) {
+		for (let x = room.x1 - 1; x <= room.x2 + 1; x++) {
+			for (let y = room.y1 - 1; y <= room.y2 + 1; y++) {
+				visible.add(encodePointKey(x, y));
+			}
+		}
+	}
+	return visible;
+};
+
 /**
  * The same state with its explored grid extended by everything currently
- * visible. Already-explored cells never become unexplored. Shrinks along
- * with resolveViewRadius while blind — you cannot map what you cannot see.
+ * visible — and, as original Rogue's leave_room(), the remembered floor of
+ * every dark room the player is not in forgotten again (its walls, doors
+ * and the staircase stay remembered).
  */
 export const deriveExploredState = (state: GameState): GameState => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
+	const visiblePoints = computePlayerVisiblePoints(state);
+	const here = findPlayerRoom(state);
+	const forgets = (x: number, y: number): boolean =>
+		!(x === state.stairs.x && y === state.stairs.y) &&
+		state.rooms.some(
+			(room) =>
+				room.dark &&
+				room !== here &&
+				x >= room.x1 &&
+				x <= room.x2 &&
+				y >= room.y1 &&
+				y <= room.y2,
+		);
 	return {
 		...state,
 		explored: state.explored.map((column, x) =>
-			column.map(
-				(wasExplored, y) =>
-					wasExplored || visiblePoints.has(encodePointKey(x, y)),
-			),
+			column.map((wasExplored, y) => {
+				if (visiblePoints.has(encodePointKey(x, y))) {
+					return true;
+				}
+				return wasExplored && !forgets(x, y);
+			}),
 		),
 	};
 };
@@ -64,11 +104,7 @@ export const deriveExploredState = (state: GameState): GameState => {
  * area-effect hold monster scroll (items/scrolls.ts).
  */
 export const findVisibleEnemies = (state: GameState): readonly Enemy[] => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
+	const visiblePoints = computePlayerVisiblePoints(state);
 	return state.enemies.filter((enemy) =>
 		visiblePoints.has(encodePointKey(enemy.x, enemy.y)),
 	);

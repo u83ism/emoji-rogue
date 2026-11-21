@@ -7,7 +7,7 @@ import {
 } from "../balance.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "../floor/enemies.js";
 import type { GameState, Position } from "../state.js";
-import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
+import { computePlayerVisiblePoints } from "../vision.js";
 
 /**
  * How long until the wandering-monster rolls start (again): `WANDERER_DELAY_TURNS`
@@ -20,11 +20,7 @@ export const drawWandererDelay = (rng: Rng): number =>
 
 /** Every floor tile the player cannot currently see and no enemy stands on — where a wanderer may appear. */
 const collectHiddenFreeTiles = (state: GameState): Position[] => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
+	const visiblePoints = computePlayerVisiblePoints(state);
 	const occupied = new Set(
 		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
 	);

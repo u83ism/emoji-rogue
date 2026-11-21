@@ -8,7 +8,7 @@ import { isAdjacent } from "../combat/combat.js";
 import { buildEventLog } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
-import { computeVisiblePoints, resolveViewRadius } from "../vision.js";
+import { computePlayerVisiblePoints } from "../vision.js";
 import type { EnemyTurnProgress } from "./action.js";
 import { resolveEnemyTurnActions } from "./enemySpeed.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
@@ -35,11 +35,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			: { ...state, flytrapHoldDamage: 0 };
 	}
 
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
+	const visiblePoints = computePlayerVisiblePoints(state);
 	const occupied = new Set(
 		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
 	);

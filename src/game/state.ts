@@ -241,6 +241,20 @@ export type GoldPile = Position & {
 export type Stairs = Position;
 
 /**
+ * One room of the floor (its floor tiles x1..x2, y1..y2; its walls and
+ * doors lie one tile outside) — kept for original Rogue's sight rules
+ * (vision.ts): a lit room shows whole to a player inside it, a dark one
+ * only around them.
+ */
+export interface DungeonRoom {
+	readonly x1: number;
+	readonly y1: number;
+	readonly x2: number;
+	readonly y2: number;
+	readonly dark: boolean;
+}
+
+/**
  * A hidden trap, sprung once stepped on and then removed — never drawn, even
  * after triggering (no discovery/marking mechanic; see docs/tasks/game-history.md
  * milestone 22).
@@ -356,6 +370,8 @@ export interface GameState {
 	 * through every passability/visibility/rendering `=== 0` check.
 	 */
 	readonly stairs: Stairs;
+	/** The floor's rooms — see DungeonRoom and vision.ts. */
+	readonly rooms: readonly DungeonRoom[];
 	/** The Amulet of Yendor, lying on every floor from AMULET_FLOOR down until picked up. */
 	readonly amulet: Position | undefined;
 	/** Set for good once the amulet is picked up — see applyAmuletPickup. */

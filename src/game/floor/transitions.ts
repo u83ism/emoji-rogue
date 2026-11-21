@@ -44,6 +44,7 @@ const buildFloorTransition = (
 		goldPiles: layout.goldPiles,
 		traps: layout.traps,
 		stairs: layout.stairs,
+		rooms: layout.dungeonRooms,
 		amulet: layout.amulet,
 		events: buildEventLog(state.events, [event]),
 		rng: rng.getState(),

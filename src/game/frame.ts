@@ -18,11 +18,7 @@ import {
 	WON_PLAYER_CELL,
 } from "./glyphs.js";
 import type { GameState, GameStatus } from "./state.js";
-import {
-	canSeeInvisible,
-	computeVisiblePoints,
-	resolveViewRadius,
-} from "./vision.js";
+import { canSeeInvisible, computePlayerVisiblePoints } from "./vision.js";
 
 const toCell = (
 	state: GameState,
@@ -63,11 +59,7 @@ const resolvePlayerCell = (status: GameStatus): Cell => {
  * the shell (`main.tsx`).
  */
 export const buildFrameGrid = (state: GameState): Cell[][] => {
-	const visiblePoints = computeVisiblePoints(
-		state.terrain,
-		state.player,
-		resolveViewRadius(state),
-	);
+	const visiblePoints = computePlayerVisiblePoints(state);
 
 	const grid: Cell[][] = [];
 	for (let y = 0; y < state.height; y++) {

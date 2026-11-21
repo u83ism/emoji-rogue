@@ -120,12 +120,17 @@ describe("advanceTurn", () => {
 	});
 
 	it("expands the explored grid as the player moves", () => {
-		/* 30x5 arena: player starts at (15,2); view radius is 8 */
-		const state = buildArenaGameState(30, 5, 1);
-		expect(state.explored[24]?.[2]).toBe(false); /* distance 9: unseen */
+		/* a 30x5 corridor (no room): the player at (15,2) sees only the tiles around */
+		const arena = buildArenaGameState(30, 5, 1);
+		const state = {
+			...arena,
+			rooms: [],
+			explored: arena.explored.map((column) => column.map(() => false)),
+		};
+		expect(state.explored[17]?.[2]).toBe(false); /* two tiles away: unseen */
 
 		const moved = advanceTurn(state, move("east")); /* player (16,2) */
-		expect(moved.explored[24]?.[2]).toBe(true); /* now in view */
+		expect(moved.explored[17]?.[2]).toBe(true); /* now next to the player */
 		expect(moved.explored[15]?.[2]).toBe(true); /* old cells stay explored */
 	});
 

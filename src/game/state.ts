@@ -349,10 +349,13 @@ export interface GameState {
 	readonly frozen: boolean;
 	/**
 	 * Original Rogue's ISRUN flag on the player, which roll_em() reads: while
-	 * it is off, every monster attack gets NOT_RUNNING_HIT_BONUS. It starts
-	 * off, comes on when a paralysis wears off ("you can move again"), and
-	 * goes off again when the player is frozen or put to sleep, or the hunger
-	 * stage changes — see combat/hitChance.ts.
+	 * it is off, every monster attack gets NOT_RUNNING_HIT_BONUS. It goes off
+	 * when the player is frozen or put to sleep, or the hunger stage changes,
+	 * and comes back on when a paralysis wears off ("you can move again") —
+	 * see combat/hitChance.ts. Unlike original Rogue, where the player starts
+	 * without it (so every monster has +4 from the start until a first
+	 * paralysis ends), a run starts with it on: the developer's decision,
+	 * 2026-11-22 (docs/design.md's コンセプト方針).
 	 */
 	readonly playerRunFlag: boolean;
 	/** Original Rogue's CANHUH: the player's hands glow from a confuse monster scroll, and the next monster they hit is confused (combat/combat.ts's applyEnemyHit). */

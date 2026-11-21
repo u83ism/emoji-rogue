@@ -35,7 +35,8 @@ const INITIAL_RUN_STATE = {
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
 	frozen: false,
-	playerRunFlag: false,
+	/* on from the start — the developer's deliberate departure from original Rogue (docs/design.md) */
+	playerRunFlag: true,
 	nextHitConfuses: false,
 	hasteTurnsRemaining: 0,
 	seeInvisibleTurnsRemaining: 0,

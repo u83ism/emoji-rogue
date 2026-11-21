@@ -134,3 +134,10 @@ describe("buildDungeonGameState", () => {
 		}
 	});
 });
+
+describe("the player's run flag", () => {
+	it("is on from the start — monsters get +4 only once the player is laid out (a deliberate departure from original Rogue)", () => {
+		expect(buildDungeonGameState(80, 22, 1).playerRunFlag).toBe(true);
+		expect(buildArenaGameState(9, 3, 1).playerRunFlag).toBe(true);
+	});
+});

@@ -34,6 +34,7 @@ export const applyMedusaGaze = (state: GameState, enemy: Enemy): GazeResult => {
 		enemy.kind !== "medusa" ||
 		!enemy.awake ||
 		enemy.gazeUsed ||
+		enemy.cancelled ||
 		state.blindTurnsRemaining > 0 ||
 		state.hallucinatingTurnsRemaining > 0 ||
 		!inReach

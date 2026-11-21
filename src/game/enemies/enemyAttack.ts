@@ -173,7 +173,8 @@ export const resolveEnemyAttack = (
 		events,
 		died: false,
 	};
-	const effect = ON_HIT_EFFECTS[enemy.kind];
+	/* original Rogue's attack(): a cancelled monster's hit has no special effect */
+	const effect = enemy.cancelled ? undefined : ON_HIT_EFFECTS[enemy.kind];
 	const afterEffect =
 		landed && effect !== undefined ? effect(enemy, afterDice) : afterDice;
 

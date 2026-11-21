@@ -30,6 +30,7 @@ import {
 import { applyUseDrainLifeWand } from "./wands/drainWand.js";
 import { applyUseLightWand } from "./wands/lightWand.js";
 import {
+	applyUseCancellationWand,
 	applyUseInvisibilityWand,
 	applyUseTeleportToWand,
 	applyUseTeleportWand,
@@ -111,6 +112,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "cancellation-wand":
+			return applyUseCancellationWand(state, direction);
 		case "invisibility-wand":
 			return applyUseInvisibilityWand(state, direction);
 		case "drain-life-wand":

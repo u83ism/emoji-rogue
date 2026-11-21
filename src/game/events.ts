@@ -98,6 +98,7 @@ export const ITEM_KIND_VALUES = [
 	"lightning-wand",
 	"drain-life-wand",
 	"invisibility-wand",
+	"cancellation-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -162,6 +163,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"cancellation-wand",
 	"invisibility-wand",
 	"drain-life-wand",
 	"lightning-wand",

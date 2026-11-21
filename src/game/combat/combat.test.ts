@@ -40,6 +40,7 @@ const enemyOf = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 
@@ -372,6 +373,7 @@ describe("dragon", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);

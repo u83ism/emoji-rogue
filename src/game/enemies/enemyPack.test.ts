@@ -17,6 +17,7 @@ const monster = (kind: Enemy["kind"], x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 

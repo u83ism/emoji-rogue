@@ -81,6 +81,7 @@ describe("save file shape guard", () => {
 						mean: "boolean",
 						gazeUsed: "boolean",
 						confused: "boolean",
+						cancelled: "boolean",
 						invisible: "boolean",
 					},
 				],

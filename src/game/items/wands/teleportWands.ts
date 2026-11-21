@@ -5,7 +5,7 @@ import { applyEnemyTeleport } from "../../teleport.js";
 import { traceFlight } from "../../throw.js";
 
 /**
- * The wands that move a monster or hide it.
+ * The wands that move a monster, hide it or strip its powers.
  *
  * A teleport wand forcibly relocates the first monster its bolt meets to a
  * random floor tile and wakes it — aimed like the slow wand.
@@ -77,6 +77,29 @@ export const applyUseInvisibilityWand = (
 		...state,
 		enemies: state.enemies.map((enemy) =>
 			enemy === target ? { ...enemy, invisible: true } : enemy,
+		),
+	};
+};
+
+/**
+ * A wand of cancellation, as original Rogue's do_zap() (WS_CANCEL): the
+ * monster its bolt meets loses every special power — no special attack, no
+ * gaze, no flame, no disguise — and its invisibility. It is not woken.
+ */
+export const applyUseCancellationWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
+		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target
+				? { ...enemy, cancelled: true, invisible: false }
+				: enemy,
 		),
 	};
 };

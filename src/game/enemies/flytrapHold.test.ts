@@ -86,6 +86,7 @@ describe("isHeldByFlytrap", () => {
 		mean: false,
 		gazeUsed: false,
 		confused: false,
+		cancelled: false,
 		invisible: false,
 	});
 	const player = { x: 2, y: 2 };

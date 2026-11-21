@@ -17,6 +17,7 @@ const dragon = (x: number, y: number): Enemy => ({
 	mean: true,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 
@@ -58,6 +59,13 @@ describe("a dragon's flame", () => {
 		expect(flamed + dodged).toBeLessThan(85);
 		/* a level 1 player dodges with a 20% save */
 		expect(flamed).toBeGreaterThan(dodged);
+	});
+
+	it("never comes from a cancelled dragon", () => {
+		expect(countFlames({ ...dragon(9, 2), cancelled: true })).toEqual({
+			flamed: 0,
+			dodged: 0,
+		});
 	});
 
 	it("never comes off the line or from beyond BOLT_LENGTH", () => {

@@ -20,6 +20,7 @@ const awake = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 

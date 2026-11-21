@@ -53,6 +53,7 @@ describe("teleport wand", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {
@@ -136,5 +137,6 @@ const zombieAt = (x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });

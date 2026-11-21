@@ -139,6 +139,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const far = {
@@ -154,6 +155,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {
@@ -259,6 +261,7 @@ describe("items/scrolls", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {

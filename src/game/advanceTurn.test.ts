@@ -40,6 +40,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 
@@ -571,6 +572,7 @@ describe("advanceTurn", () => {
 					mean: false,
 					gazeUsed: false,
 					confused: false,
+					cancelled: false,
 					invisible: false,
 				},
 			],
@@ -595,6 +597,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {
@@ -628,6 +631,7 @@ describe("advanceTurn", () => {
 			mean: true,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
@@ -648,6 +652,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {
@@ -677,6 +682,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
@@ -698,6 +704,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		/* player at (2,2) in a 3x3 arena: every direction but toward the
@@ -721,6 +728,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const state = {
@@ -754,6 +762,7 @@ describe("advanceTurn", () => {
 			mean: false,
 			gazeUsed: false,
 			confused: false,
+			cancelled: false,
 			invisible: false,
 		};
 		const held = {

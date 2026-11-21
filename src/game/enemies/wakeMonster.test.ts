@@ -22,6 +22,7 @@ const sleeper = (kind: EnemyKind, x: number, y: number): Enemy => ({
 	mean: ENEMY_IS_MEAN[kind],
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 

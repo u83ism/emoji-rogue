@@ -46,6 +46,7 @@ const enemyOf = (
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 

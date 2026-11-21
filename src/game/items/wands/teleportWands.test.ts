@@ -16,6 +16,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	mean: false,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 
@@ -58,6 +59,32 @@ describe("the wand of invisibility", () => {
 		expect(next.inventory).toEqual([
 			{ itemId: 1, kind: "invisibility-wand", charges: 4 },
 		]);
+		expect(next.identifiedItemKinds).toEqual([]);
+	});
+});
+
+describe("the wand of cancellation", () => {
+	it("strips the monster its bolt meets of its powers and its invisibility", () => {
+		const phantom = {
+			...zombie(7, 1),
+			kind: "phantom" as const,
+			invisible: true,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [phantom],
+			inventory: [
+				{ itemId: 1, kind: "cancellation-wand" as const, charges: 5 },
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1, direction: "east" },
+		});
+		expect(next.enemies[0]).toMatchObject({
+			cancelled: true,
+			invisible: false,
+		});
 		expect(next.identifiedItemKinds).toEqual([]);
 	});
 });

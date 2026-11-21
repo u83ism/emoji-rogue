@@ -164,7 +164,9 @@ export const resolveAdjacentAction = (
 	actor: EnemyActor,
 	progress: EnemyTurnProgress,
 ): EnemyActionResult => {
-	const action = SPECIAL_ADJACENT_ACTIONS[enemy.kind] ?? attackWithDice;
+	const action =
+		(enemy.cancelled ? undefined : SPECIAL_ADJACENT_ACTIONS[enemy.kind]) ??
+		attackWithDice;
 	const result = action(state, enemy, actor, {
 		...progress,
 		playerAttacked: true,

@@ -17,6 +17,7 @@ const medusa = (x: number, y: number): Enemy => ({
 	mean: true,
 	gazeUsed: false,
 	confused: false,
+	cancelled: false,
 	invisible: false,
 });
 

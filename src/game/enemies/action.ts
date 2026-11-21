@@ -150,7 +150,7 @@ const resolveIntendedAction = (
 			progress: { ...progress, rng: step.rng },
 		};
 	}
-	if (enemy.kind === "dragon") {
+	if (enemy.kind === "dragon" && !enemy.cancelled) {
 		const flame = resolveDragonFlame(state, actor.position, progress);
 		if (flame.breathed) {
 			return { actor, progress: flame.progress };

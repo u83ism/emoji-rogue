@@ -40,7 +40,7 @@ export const resolveEnemyCell = (
 	hallucinating: boolean,
 	turnsOnCurrentFloor: number,
 ): Cell => {
-	if (enemy.kind === "xeroc" && !enemy.awake) {
+	if (enemy.kind === "xeroc" && !enemy.awake && !enemy.cancelled) {
 		return GOLD_CELL;
 	}
 	return hallucinating

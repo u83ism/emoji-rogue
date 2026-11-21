@@ -86,4 +86,10 @@ export const WAND_CATALOG: Readonly<Record<WandKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("invisibility-wand"),
 		effect: `選んだ方向へ振り、最初に当たった敵を透明にする(透明視がないと見えなくなる。起こしはしない)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
 	},
+	"cancellation-wand": {
+		catalogName: "打ち消しの杖",
+		category: "杖",
+		spawn: itemDrawShare("cancellation-wand"),
+		effect: `選んだ方向へ振り、最初に当たった敵の特殊能力をすべて消す(特殊な攻撃・視線・炎・擬態・透明)。起こしはしない。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
+	},
 };

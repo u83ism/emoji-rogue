@@ -269,6 +269,7 @@ describe("findVisibleEnemies", () => {
 		mean: false,
 		gazeUsed: false,
 		confused: false,
+		cancelled: false,
 		invisible: false,
 	});
 
@@ -299,6 +300,7 @@ describe("nameEnemy", () => {
 		mean: false,
 		gazeUsed: false,
 		confused: false,
+		cancelled: false,
 		invisible: kind === "phantom",
 	});
 

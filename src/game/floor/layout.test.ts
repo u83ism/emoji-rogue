@@ -119,3 +119,24 @@ describe("buildFloorLayout", () => {
 		}
 	});
 });
+
+describe("rooms one tile thick", () => {
+	it("never count as rooms — on the game's 40x20 map they are corridors to the eye", () => {
+		for (let seed = 1; seed <= 50; seed++) {
+			const layout = buildFloorLayout(
+				40,
+				20,
+				createRng(seed),
+				1,
+				false,
+				1,
+				0,
+				true,
+			);
+			for (const room of layout.dungeonRooms) {
+				expect(room.x2).toBeGreaterThan(room.x1);
+				expect(room.y2).toBeGreaterThan(room.y1);
+			}
+		}
+	});
+});

@@ -143,14 +143,20 @@ export const buildFloorLayout = (
 		placesGold,
 	);
 
-	const dungeonRooms = rooms.map((room) => ({
-		x1: room.x1,
-		y1: room.y1,
-		x2: room.x2,
-		y2: room.y2,
-		/* original Rogue's do_rooms(): a room is dark when rnd(10) < level - 1 */
-		dark: rng.getUniformInt(0, 9) < floor - 1,
-	}));
+	/* a room only one tile thick (the generator shrinks one so on a small map)
+	 * is a stretch of corridor to the eye — original Rogue never makes one
+	 * (its rooms are at least 2 inside) and leaves an empty cell as a mere
+	 * passage junction (ISGONE), so it does not count as a room here */
+	const dungeonRooms = rooms
+		.filter((room) => room.x2 > room.x1 && room.y2 > room.y1)
+		.map((room) => ({
+			x1: room.x1,
+			y1: room.y1,
+			x2: room.x2,
+			y2: room.y2,
+			/* original Rogue's do_rooms(): a room is dark when rnd(10) < level - 1 */
+			dark: rng.getUniformInt(0, 9) < floor - 1,
+		}));
 	const allEnemies = [...enemies, ...treasure.enemies];
 	const allItems = [...treasure.items, ...items];
 	const occupied = new Set(

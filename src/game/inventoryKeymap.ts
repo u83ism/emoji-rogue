@@ -1,5 +1,5 @@
 import { at } from "../indexing.js";
-import { type ItemKind, POTION_KINDS } from "./events.js";
+import { type ItemKind, isWandKind, POTION_KINDS } from "./events.js";
 import type { Action, Direction, HeldItem } from "./state.js";
 
 /**
@@ -56,7 +56,7 @@ export const canThrowItem = (item: HeldItem): boolean =>
  * The action for a keypress inside the verb prompt shown after a row is
  * selected: `u` uses the held item, `d` drops it. `t` (throw, weapons
  * only — see canThrowItem) asks for a direction first, so the shell
- * handles it (toThrowAction). For a kind filterScrollTargets
+ * handles it (toDirectedAction). For a kind filterScrollTargets
  * gives candidates for, the shell must intercept `u` before calling this (see main.tsx) and
  * open the target row list instead — this function always builds a
  * targetless use-item. Any other key answers undefined so the shell can
@@ -75,14 +75,18 @@ export const toItemVerbAction = (
 	return undefined;
 };
 
-/** The throw-item action for `item` toward `direction` — the direction-prompt follow-up to `t`. */
-export const toThrowAction = (
+/** Whether using `item` (`u`) first asks which way — a wand, as original Rogue's do_zap(). */
+export const asksZapDirection = (item: HeldItem): boolean =>
+	isWandKind(item.kind);
+
+/** The action for `item` toward `direction` — the direction-prompt follow-up: a wand's zap (`u`), any other item's throw (`t`). */
+export const toDirectedAction = (
 	item: HeldItem,
 	direction: Direction,
-): Action => ({
-	type: "throw-item",
-	payload: { itemId: item.itemId, direction },
-});
+): Action =>
+	asksZapDirection(item)
+		? { type: "use-item", payload: { itemId: item.itemId, direction } }
+		: { type: "throw-item", payload: { itemId: item.itemId, direction } };
 
 /** The use-item action for `sourceItem`, pointed at `targetItem` — the target-row-list follow-up to a filterScrollTargets kind. */
 export const toTargetedUseAction = (

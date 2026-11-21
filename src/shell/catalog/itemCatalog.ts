@@ -116,19 +116,19 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "鈍足の杖",
 		category: "杖",
 		spawn: itemDrawShare("slow-wand"),
-		effect: `視界内の最も近い敵を恒久的に鈍足にする(2回に1回しか動けない)。加速している敵なら加速を解くだけ。${WAND_CHARGES_TEXT}`,
+		effect: `選んだ方向へ振り、最初に当たった敵を恒久的に鈍足にする(2回に1回しか動けない)。加速している敵なら加速を解くだけ。${WAND_CHARGES_TEXT}`,
 	},
 	"teleport-wand": {
 		catalogName: "テレポートの杖",
 		category: "杖",
 		spawn: itemDrawShare("teleport-wand"),
-		effect: `視界内の最も近い敵をフロア内のランダムな床へ強制移動させる。${WAND_CHARGES_TEXT}`,
+		effect: `選んだ方向へ振り、最初に当たった敵をフロア内のランダムな床へ強制移動させる。${WAND_CHARGES_TEXT}`,
 	},
 	"magic-missile-wand": {
 		catalogName: "魔法の矢の杖",
 		category: "杖",
 		spawn: itemDrawShare("magic-missile-wand"),
-		effect: `視界内の最も近い敵に${MAGIC_MISSILE_DAMAGE_DICE.count}d${MAGIC_MISSILE_DAMAGE_DICE.sides}+${MAGIC_MISSILE_DAMAGE_BONUS}(+力と装備中の武器のダメージ補正)の必中ダメージ。敵が魔法へのセーブに成功すると消える。${WAND_CHARGES_TEXT}`,
+		effect: `選んだ方向へ撃ち、最初に当たった敵に${MAGIC_MISSILE_DAMAGE_DICE.count}d${MAGIC_MISSILE_DAMAGE_DICE.sides}+${MAGIC_MISSILE_DAMAGE_BONUS}(+力と装備中の武器のダメージ補正)の必中ダメージ。敵が魔法へのセーブに成功すると消える。${WAND_CHARGES_TEXT}`,
 	},
 	weapon: {
 		catalogName: "武器",

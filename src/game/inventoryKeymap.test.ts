@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { INVENTORY_CAPACITY } from "./balance.js";
 import {
+	asksZapDirection,
 	canThrowItem,
 	filterScrollTargets,
+	toDirectedAction,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
-	toThrowAction,
 } from "./inventoryKeymap.js";
 import type { HeldItem } from "./state.js";
 
@@ -149,7 +150,7 @@ describe("throwing from the verb prompt", () => {
 		expect(canThrowItem(dart)).toBe(true);
 		/* t itself builds nothing: the shell opens the direction prompt */
 		expect(toItemVerbAction("t", dart)).toBeUndefined();
-		expect(toThrowAction(dart, "west")).toEqual({
+		expect(toDirectedAction(dart, "west")).toEqual({
 			type: "throw-item",
 			payload: { itemId: 3, direction: "west" },
 		});
@@ -161,5 +162,17 @@ describe("throwing from the verb prompt", () => {
 		expect(toItemVerbAction("t", wielded)).toBeUndefined();
 		expect(canThrowItem(potion(1))).toBe(false);
 		expect(toItemVerbAction("t", potion(1))).toBeUndefined();
+	});
+});
+
+describe("asksZapDirection", () => {
+	it("asks a wand which way to zap, building a use-item with that direction", () => {
+		const wand: HeldItem = { itemId: 4, kind: "slow-wand", charges: 3 };
+		expect(asksZapDirection(wand)).toBe(true);
+		expect(asksZapDirection(potion(1))).toBe(false);
+		expect(toDirectedAction(wand, "northeast")).toEqual({
+			type: "use-item",
+			payload: { itemId: 4, direction: "northeast" },
+		});
 	});
 });

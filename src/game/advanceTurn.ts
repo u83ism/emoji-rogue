@@ -309,6 +309,7 @@ const reduceAction = (state: GameState, action: Action): GameState => {
 					current,
 					action.payload.itemId,
 					action.payload.targetItemId,
+					action.payload.direction,
 				),
 			);
 		case "drop-item":

@@ -20,7 +20,8 @@ const FLIGHT_STEPS = DIRECTION_VECTORS;
  * (seen or not — an invisible one stops it too) or is not floor. It stops
  * on the monster's tile, or on the wall it ran into.
  */
-const traceFlight = (
+/** Where a missile or a wand's bolt flying `direction` from the player stops, and the monster it stops at — see traceFlight's doc below. */
+export const traceFlight = (
 	state: GameState,
 	direction: Direction,
 ): { readonly stop: Position; readonly target: Enemy | undefined } => {

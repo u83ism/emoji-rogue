@@ -53,7 +53,7 @@ describe("items/wands", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
 		expect(next.inventory).toEqual(state.inventory);
 		expect(next.enemies[0]?.speed).toBe("normal");
@@ -64,7 +64,7 @@ describe("items/wands", () => {
 		expect(next.playerFood).toBe(state.playerFood - 1);
 	});
 
-	it("a slow wand slows the nearest visible enemy for good, waking it", () => {
+	it("a slow wand slows the monster its bolt meets for good, waking it", () => {
 		const target = zombie(7, 1, 2, false); /* 3 tiles east, asleep */
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -73,7 +73,7 @@ describe("items/wands", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
 		expect(next.player).toEqual(state.player); /* the player does not move */
 		/* advanceEnemies runs as part of the same turn: the slowed zombie acts
@@ -97,7 +97,7 @@ describe("items/wands", () => {
 				enemies: [target],
 				inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 			},
-			{ type: "use-item", payload: { itemId: 1 } },
+			{ type: "use-item", payload: { itemId: 1, direction: "east" } },
 		);
 		expect(next.enemies[0]?.speed).toBe("normal");
 		expect(next.events).toEqual([
@@ -105,7 +105,7 @@ describe("items/wands", () => {
 		]);
 	});
 
-	it("using a held slow wand targets whichever visible enemy is closest", () => {
+	it("a slow wand's bolt meets the nearer of two monsters in a row", () => {
 		const near = zombie(6, 1);
 		const far = zombie(8, 1);
 		const state = {
@@ -115,7 +115,7 @@ describe("items/wands", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
 		expect(next.events).toEqual([
 			{ type: "enemy-slowed", payload: { target: "zombie" } },
@@ -126,19 +126,39 @@ describe("items/wands", () => {
 		expect(next.enemies.find((enemy) => enemy.speed !== "normal")?.x).toBe(5);
 	});
 
-	it("using a held slow wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+	it("a wand zapped with no direction is a no-op; zapped at no monster, the charge is spent for nothing", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
 		};
-		const next = advanceTurn(state, {
+		expect(
+			advanceTurn(state, { type: "use-item", payload: { itemId: 1 } }),
+		).toBe(state);
+		const missed = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
-		expect(next).toBe(state);
+		expect(missed.inventory).toEqual([
+			{ itemId: 1, kind: "slow-wand", charges: 4 },
+		]);
+		expect(missed.events).toEqual([]);
 	});
 
-	it("a magic missile zap spends a charge on the nearest visible enemy, which either takes the bolt or saves against it", () => {
+	it("the bolt stops at the first monster in its way", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [zombie(6, 1)],
+			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
+		};
+		/* west meets only the wall */
+		const west = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1, direction: "west" },
+		});
+		expect(west.events).toEqual([]);
+	});
+
+	it("a magic missile zap spends a charge on the monster in its way, which either takes the bolt or saves against it", () => {
 		const outcomes = buildSpreadRngStates().map((rng) => {
 			const state = {
 				...buildArenaGameState(9, 3, 1),
@@ -150,7 +170,7 @@ describe("items/wands", () => {
 			};
 			const next = advanceTurn(state, {
 				type: "use-item",
-				payload: { itemId: 1 },
+				payload: { itemId: 1, direction: "east" },
 			});
 			expect(next.player).toEqual(state.player);
 			expect(next.inventory).toEqual([
@@ -162,7 +182,7 @@ describe("items/wands", () => {
 		expect(outcomes).toContain("magic-missile-vanished");
 	});
 
-	it("using a held magic missile wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+	it("a magic missile zapped at no monster spends the charge for nothing", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [
@@ -171,9 +191,12 @@ describe("items/wands", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
-		expect(next).toBe(state);
+		expect(next.inventory).toEqual([
+			{ itemId: 1, kind: "magic-missile-wand", charges: 4 },
+		]);
+		expect(next.events).toEqual([]);
 	});
 });
 

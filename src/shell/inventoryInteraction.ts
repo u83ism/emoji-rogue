@@ -1,11 +1,12 @@
 import { useState } from "react";
 import {
+	asksZapDirection,
 	canThrowItem,
 	filterScrollTargets,
+	toDirectedAction,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
-	toThrowAction,
 } from "../game/inventoryKeymap.js";
 import type { Action, Direction, HeldItem } from "../game/state.js";
 
@@ -23,8 +24,8 @@ export interface InventoryInteraction {
 	readonly isOpen: boolean;
 	readonly selectedItem: HeldItem | undefined;
 	readonly pendingTargetFor: HeldItem | undefined;
-	/** The weapon picked to throw, waiting for its direction. */
-	readonly pendingThrowFor: HeldItem | undefined;
+	/** The weapon picked to throw, or the wand to zap, waiting for its direction. */
+	readonly pendingDirectionFor: HeldItem | undefined;
 	readonly open: () => void;
 	readonly close: () => void;
 	/**
@@ -50,15 +51,15 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 		HeldItem | undefined
 	>(undefined);
 
-	const [pendingThrowFor, setPendingThrowFor] = useState<HeldItem | undefined>(
-		undefined,
-	);
+	const [pendingDirectionFor, setPendingDirectionFor] = useState<
+		HeldItem | undefined
+	>(undefined);
 
 	const close = (): void => {
 		setIsOpen(false);
 		setSelectedItem(undefined);
 		setPendingTargetFor(undefined);
-		setPendingThrowFor(undefined);
+		setPendingDirectionFor(undefined);
 	};
 
 	const handleInput = (
@@ -67,7 +68,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 		inventory: readonly HeldItem[],
 		direction: Direction | undefined,
 	): Action | undefined => {
-		if (pendingThrowFor !== undefined) {
+		if (pendingDirectionFor !== undefined) {
 			if (isEscape) {
 				close();
 				return undefined;
@@ -75,7 +76,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 			if (direction === undefined) {
 				return undefined;
 			}
-			const action = toThrowAction(pendingThrowFor, direction);
+			const action = toDirectedAction(pendingDirectionFor, direction);
 			close();
 			return action;
 		}
@@ -104,8 +105,11 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 				setPendingTargetFor(selectedItem);
 				return undefined;
 			}
-			if (input === "t" && canThrowItem(selectedItem)) {
-				setPendingThrowFor(selectedItem);
+			if (
+				(input === "t" && canThrowItem(selectedItem)) ||
+				(input === "u" && asksZapDirection(selectedItem))
+			) {
+				setPendingDirectionFor(selectedItem);
 				return undefined;
 			}
 			const action = toItemVerbAction(input, selectedItem);
@@ -129,7 +133,7 @@ export const useInventoryInteraction = (): InventoryInteraction => {
 		isOpen,
 		selectedItem,
 		pendingTargetFor,
-		pendingThrowFor,
+		pendingDirectionFor,
 		open: () => setIsOpen(true),
 		close,
 		handleInput,

@@ -30,7 +30,9 @@ const isAction = (value: unknown): value is Action => {
 				isRecord(value.payload) &&
 				isPositiveInteger(value.payload.itemId) &&
 				(value.payload.targetItemId === undefined ||
-					isPositiveInteger(value.payload.targetItemId))
+					isPositiveInteger(value.payload.targetItemId)) &&
+				(value.payload.direction === undefined ||
+					isDirection(value.payload.direction))
 			);
 		case "drop-item":
 			return isRecord(value.payload) && isPositiveInteger(value.payload.itemId);

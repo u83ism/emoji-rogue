@@ -52,6 +52,8 @@ export type Action =
 				 * Ignored by every other kind.
 				 */
 				readonly targetItemId?: number;
+				/** Which way a wand is zapped (original Rogue's do_zap() asks) — required by the wands, ignored by every other kind. */
+				readonly direction?: Direction;
 			};
 	  }
 	| {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { stepUniform } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 import type { Enemy } from "./state.js";
@@ -38,7 +39,7 @@ describe("teleport", () => {
 });
 
 describe("teleport wand", () => {
-	it("moves the nearest visible enemy to a different tile, wakes it, and logs enemy-teleported", () => {
+	it("moves the monster its bolt meets to a different tile, wakes it, and logs enemy-teleported", () => {
 		const target: Enemy = {
 			x: 7,
 			y: 1,
@@ -60,7 +61,7 @@ describe("teleport wand", () => {
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
 		expect(next.player).toEqual(state.player);
 		/* the zap spends a charge; the wand stays */
@@ -81,23 +82,34 @@ describe("teleport wand", () => {
 	});
 
 	it("never lands the target on another enemy's tile", () => {
-		let state = buildDungeonGameState(40, 20, 42);
-		state = {
-			...state,
-			inventory: [{ itemId: 1, kind: "teleport-wand" as const, charges: 5 }],
-		};
+		/* a 9x9 room, the player at (4,4), the target east, the room crowded */
+		const arena = buildArenaGameState(9, 9, 1);
+		const crowd: Enemy[] = [];
+		for (let x = 1; x <= 7; x++) {
+			for (let y = 1; y <= 7; y += 2) {
+				crowd.push({ ...zombieAt(x, y) });
+			}
+		}
+		let rng = arena.rng;
 		for (let attempt = 0; attempt < 20; attempt++) {
-			const next = advanceTurn(state, {
-				type: "use-item",
-				payload: { itemId: 1 },
-			});
+			const next = advanceTurn(
+				{
+					...arena,
+					rng,
+					enemies: [zombieAt(5, 4), ...crowd],
+					inventory: [
+						{ itemId: 1, kind: "teleport-wand" as const, charges: 5 },
+					],
+				},
+				{ type: "use-item", payload: { itemId: 1, direction: "east" } },
+			);
 			const positions = next.enemies.map((enemy) => `${enemy.x},${enemy.y}`);
 			expect(new Set(positions).size).toBe(positions.length);
-			state = { ...next, inventory: state.inventory };
+			rng = stepUniform(rng).state;
 		}
 	});
 
-	it("using a held teleport wand with no visible enemy is a no-op (same reference, not consumed)", () => {
+	it("a teleport wand zapped with no direction is a no-op (same reference, not consumed)", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "teleport-wand" as const, charges: 5 }],
@@ -108,4 +120,19 @@ describe("teleport wand", () => {
 		});
 		expect(next).toBe(state);
 	});
+});
+
+const zombieAt = (x: number, y: number): Enemy => ({
+	x,
+	y,
+	kind: "zombie",
+	hp: 2,
+	maxHp: 2,
+	awake: false,
+	speed: "normal",
+	held: false,
+	carried: [],
+	mean: false,
+	gazeUsed: false,
+	confused: false,
 });

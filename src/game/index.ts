@@ -19,6 +19,7 @@ export {
 	ITEM_TARGET_PROMPT,
 	SAVE_LOAD_WARNING_MESSAGE,
 	THROW_DIRECTION_PROMPT,
+	ZAP_DIRECTION_PROMPT,
 } from "../shell/systemMessages.js";
 export { advanceTurn } from "./advanceTurn.js";
 export {
@@ -49,13 +50,14 @@ export {
 } from "./glyphs.js";
 export { buildArenaGameState, buildDungeonGameState } from "./initialState.js";
 export {
+	asksZapDirection,
 	canThrowItem,
 	filterScrollTargets,
+	toDirectedAction,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
-	toThrowAction,
 } from "./inventoryKeymap.js";
 export { calculatePlayerDefense } from "./items/equipmentStats.js";
 export { calculateScore } from "./score.js";

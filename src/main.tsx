@@ -122,7 +122,7 @@ const App = () => {
 						state={state}
 						selectedItem={inventory.selectedItem}
 						pendingTargetFor={inventory.pendingTargetFor}
-						pendingThrowFor={inventory.pendingThrowFor}
+						pendingDirectionFor={inventory.pendingDirectionFor}
 					/>
 				</Box>
 			) : (

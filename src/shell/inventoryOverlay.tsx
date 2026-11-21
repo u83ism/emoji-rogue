@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import {
+	asksZapDirection,
 	filterScrollTargets,
 	toInventoryLetter,
 } from "../game/inventoryKeymap.js";
@@ -13,6 +14,7 @@ import {
 	INVENTORY_EMPTY_MESSAGE,
 	ITEM_TARGET_PROMPT,
 	THROW_DIRECTION_PROMPT,
+	ZAP_DIRECTION_PROMPT,
 } from "./systemMessages.js";
 
 /** One lettered row — shared by the main list and the target-selection list. */
@@ -81,24 +83,28 @@ export const InventoryOverlay = ({
 	state,
 	selectedItem,
 	pendingTargetFor,
-	pendingThrowFor,
+	pendingDirectionFor,
 }: {
 	readonly state: GameState;
 	readonly selectedItem: HeldItem | undefined;
 	readonly pendingTargetFor: HeldItem | undefined;
-	readonly pendingThrowFor?: HeldItem | undefined;
+	readonly pendingDirectionFor?: HeldItem | undefined;
 }) => {
-	if (pendingThrowFor !== undefined) {
+	if (pendingDirectionFor !== undefined) {
 		return (
 			<Box flexDirection="column" borderStyle="round">
 				<Text>
 					{formatHeldItemLabel(
-						pendingThrowFor,
+						pendingDirectionFor,
 						state.identifiedItemKinds,
 						state.appearances,
 					)}
 				</Text>
-				<Text>{THROW_DIRECTION_PROMPT}</Text>
+				<Text>
+					{asksZapDirection(pendingDirectionFor)
+						? ZAP_DIRECTION_PROMPT
+						: THROW_DIRECTION_PROMPT}
+				</Text>
 			</Box>
 		);
 	}

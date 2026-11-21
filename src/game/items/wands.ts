@@ -8,25 +8,33 @@ import { applyEnemyHit } from "../combat/combat.js";
 import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { ENEMY_STATS } from "../enemies/enemyStats.js";
 import { buildEventLog } from "../events.js";
-import type { Enemy, GameState } from "../state.js";
+import type { Direction, Enemy, GameState } from "../state.js";
 import { applyEnemyTeleport } from "../teleport.js";
-import { findNearestVisibleEnemy } from "../vision.js";
+import { traceFlight } from "../throw.js";
 import { calculatePlayerDamageBonus } from "./equipmentStats.js";
 
 /**
  * A wand of slow monster on the nearest visible enemy, as original Rogue's
  * do_zap(): a hasted one only loses its haste, any other is slowed for good
  * — acting every other move, starting with the next (enemies/enemySpeed.ts).
- * Either way the zap wakes it and breaks a hold (runto()). With no visible
- * target it is a no-op — same reference, no turn spent, wand not consumed,
- * matching how using an unheld item behaves (every wand here does the
- * same). Consumption from inventory happens in the dispatcher
+ * Either way the zap wakes it and breaks a hold (runto()). The bolt flies
+ * `direction` (original Rogue's do_zap()) to the first monster or wall
+ * (throw.ts's traceFlight); meeting no monster, the charge is spent for
+ * nothing. Without a direction it is a no-op — same reference, no turn
+ * spent (every wand here does the same). Consumption from inventory happens in the dispatcher
  * (items/use.ts).
  */
-export const applyUseSlowWand = (state: GameState): GameState => {
-	const target = findNearestVisibleEnemy(state);
-	if (target === undefined) {
+export const applyUseSlowWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
 		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	if (target === undefined) {
+		/* the bolt met only a wall: the charge is spent all the same */
+		return { ...state };
 	}
 	const wasHasted = target.speed === "hasted";
 	return {
@@ -51,13 +59,20 @@ export const applyUseSlowWand = (state: GameState): GameState => {
 };
 
 /**
- * A teleport wand forcibly relocates the nearest visible enemy to a random
- * floor tile and wakes it. Same no-visible-target no-op as the other wands.
+ * A teleport wand forcibly relocates the first monster its bolt meets to a
+ * random floor tile and wakes it — aimed like the slow wand.
  */
-export const applyUseTeleportWand = (state: GameState): GameState => {
-	const target = findNearestVisibleEnemy(state);
-	if (target === undefined) {
+export const applyUseTeleportWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
 		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	if (target === undefined) {
+		/* the bolt met only a wall: the charge is spent all the same */
+		return { ...state };
 	}
 	return applyEnemyTeleport(state, target);
 };
@@ -110,13 +125,20 @@ export const applyMagicMissileWandStrike = (
 };
 
 /**
- * A magic missile wand fires at the nearest visible enemy
- * (applyMagicMissileWandStrike) — same no-visible-target no-op as the other wands.
+ * A magic missile wand fires `direction` at the first monster in the way
+ * (applyMagicMissileWandStrike) — aimed like the slow wand.
  */
-export const applyUseMagicMissileWand = (state: GameState): GameState => {
-	const target = findNearestVisibleEnemy(state);
-	if (target === undefined) {
+export const applyUseMagicMissileWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
 		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	if (target === undefined) {
+		/* the bolt met only a wall: the charge is spent all the same */
+		return { ...state };
 	}
 	return applyMagicMissileWandStrike(state, target);
 };

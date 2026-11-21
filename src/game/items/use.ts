@@ -6,7 +6,7 @@ import {
 	isWandKind,
 } from "../events.js";
 import { revealsItemKind } from "../identification.js";
-import type { GameState, HeldItem } from "../state.js";
+import type { Direction, GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
 import {
 	applyUseEnchantArmorScroll,
@@ -50,6 +50,7 @@ const applyItemEffect = (
 	state: GameState,
 	item: HeldItem,
 	targetItemId: number | undefined,
+	direction: Direction | undefined,
 ): GameState => {
 	switch (item.kind) {
 		case "weapon":
@@ -98,11 +99,11 @@ const applyItemEffect = (
 		case "food":
 			return applyUseFood(state);
 		case "slow-wand":
-			return applyUseSlowWand(state);
+			return applyUseSlowWand(state, direction);
 		case "teleport-wand":
-			return applyUseTeleportWand(state);
+			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
-			return applyUseMagicMissileWand(state);
+			return applyUseMagicMissileWand(state, direction);
 		case "heal-potion":
 		case "poison":
 		case "strength":
@@ -147,6 +148,7 @@ export const applyUseItem = (
 	state: GameState,
 	itemId: number,
 	targetItemId: number | undefined,
+	direction?: Direction,
 ): GameState => {
 	const item = state.inventory.find((entry) => entry.itemId === itemId);
 	if (item === undefined) {
@@ -161,7 +163,7 @@ export const applyUseItem = (
 			]),
 		};
 	}
-	const afterEffect = applyItemEffect(state, item, targetItemId);
+	const afterEffect = applyItemEffect(state, item, targetItemId, direction);
 	if (afterEffect === state) {
 		return state;
 	}

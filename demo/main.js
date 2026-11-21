@@ -7,6 +7,7 @@
 import {
 	AMULET_FLOOR,
 	advanceTurn,
+	asksZapDirection,
 	BLINDNESS_GLYPH,
 	buildDungeonGameState,
 	buildFrameGrid,
@@ -31,11 +32,12 @@ import {
 	resolveItemVerbPrompt,
 	SAVE_LOAD_WARNING_MESSAGE,
 	THROW_DIRECTION_PROMPT,
+	toDirectedAction,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
-	toThrowAction,
+	ZAP_DIRECTION_PROMPT,
 } from "../dist/game/index.mjs";
 
 const WIDTH = 40;
@@ -135,7 +137,7 @@ let selectedItem;
  * immediately. Also display state, same lifetime as selectedItem. */
 let pendingTargetFor;
 /* The weapon picked to throw, waiting for a direction key. */
-let pendingThrowFor;
+let pendingDirectionFor;
 let showSaveLoadWarning = savedOutcome.kind === "corrupted";
 
 const mapElement = document.getElementById("map");
@@ -277,9 +279,11 @@ const renderInventory = () => {
 		return;
 	}
 	inventoryElement.textContent = "";
-	if (pendingThrowFor !== undefined) {
+	if (pendingDirectionFor !== undefined) {
 		const prompt = document.createElement("div");
-		prompt.textContent = THROW_DIRECTION_PROMPT;
+		prompt.textContent = asksZapDirection(pendingDirectionFor)
+			? ZAP_DIRECTION_PROMPT
+			: THROW_DIRECTION_PROMPT;
 		inventoryElement.appendChild(prompt);
 		return;
 	}
@@ -334,17 +338,17 @@ const closeInventory = () => {
 	isInventoryOpen = false;
 	selectedItem = undefined;
 	pendingTargetFor = undefined;
-	pendingThrowFor = undefined;
+	pendingDirectionFor = undefined;
 };
 
 window.addEventListener("keydown", (event) => {
 	if (isInventoryOpen) {
-		if (pendingThrowFor !== undefined) {
+		if (pendingDirectionFor !== undefined) {
 			const direction = KEY_TO_DIRECTION[event.key];
 			if (event.key === "Escape") {
 				closeInventory();
 			} else if (direction !== undefined) {
-				const action = toThrowAction(pendingThrowFor, direction);
+				const action = toDirectedAction(pendingDirectionFor, direction);
 				closeInventory();
 				state = advanceTurn(state, action);
 				persistSaveState(state);
@@ -389,8 +393,11 @@ window.addEventListener("keydown", (event) => {
 				render();
 				return;
 			}
-			if (event.key === "t" && canThrowItem(selectedItem)) {
-				pendingThrowFor = selectedItem;
+			if (
+				(event.key === "t" && canThrowItem(selectedItem)) ||
+				(event.key === "u" && asksZapDirection(selectedItem))
+			) {
+				pendingDirectionFor = selectedItem;
 				render();
 				return;
 			}

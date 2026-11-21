@@ -84,7 +84,7 @@ describe("applyUseItem dispatch", () => {
 		expect(removed.identifiedItemKinds).toEqual(["stealth-ring"]);
 	});
 
-	it("zapping a wand at a visible enemy identifies its kind; with no target it stays unidentified", () => {
+	it("zapping a wand identifies its kind; with no direction it is not zapped and stays unidentified", () => {
 		const held = {
 			...buildArenaGameState(9, 3, 1),
 			inventory: [{ itemId: 1, kind: "slow-wand" as const, charges: 5 }],
@@ -96,7 +96,7 @@ describe("applyUseItem dispatch", () => {
 		expect(noTarget.identifiedItemKinds).toEqual([]);
 		const zapped = advanceTurn(
 			{ ...held, enemies: [zombie(6, 1)] },
-			{ type: "use-item", payload: { itemId: 1 } },
+			{ type: "use-item", payload: { itemId: 1, direction: "east" } },
 		);
 		expect(zapped.identifiedItemKinds).toEqual(["slow-wand"]);
 	});

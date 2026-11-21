@@ -52,6 +52,10 @@ const KEY_TO_DIRECTION = {
 	h: "west",
 	ArrowRight: "east",
 	l: "east",
+	y: "northwest",
+	u: "northeast",
+	b: "southwest",
+	n: "southeast",
 };
 
 const toAction = (key) => {

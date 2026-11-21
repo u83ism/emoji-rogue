@@ -1,6 +1,7 @@
 /* file-size-exception: リデューサ本体(applyMove/applyTurnEndTicks/applyItemAction/advanceTurn)の一体性を優先(2026-07-19裁可) */
 import { stepUniform } from "../rng.js";
 import { applyPlayerAttack, isAdjacent } from "./combat/combat.js";
+import { canStepBetween, DIRECTION_VECTORS } from "./directions.js";
 import { advanceEnemies } from "./enemies/enemies.js";
 import { applyLookWake, applyRoomEntryWake } from "./enemies/wakeMonster.js";
 import { buildEventLog } from "./events.js";
@@ -17,7 +18,7 @@ import {
 } from "./items/pickups.js";
 import { applyUseItem } from "./items/use.js";
 import { applySearch, applySearchingRingTick } from "./search.js";
-import type { Action, Direction, Enemy, GameState } from "./state.js";
+import type { Action, Direction, Enemy, GameState, Position } from "./state.js";
 import { applyThrowItem } from "./throw.js";
 import { applyTrapTrigger } from "./trapTrigger.js";
 import { applyHungerTick } from "./turnEnd/hunger.js";
@@ -26,16 +27,6 @@ import { applyTeleportationRingTick } from "./turnEnd/ringTeleport.js";
 import { applyStatusCountdownTicks } from "./turnEnd/statusCountdowns.js";
 import { applyWandererTick } from "./turnEnd/wanderer.js";
 import { deriveExploredState, findPlayerRoom } from "./vision.js";
-
-const DIRECTION_VECTORS: Readonly<
-	Record<Direction, readonly [number, number]>
-> = {
-	north: [0, -1],
-	south: [0, 1],
-	west: [-1, 0],
-	east: [1, 0],
-};
-const ALL_DIRECTIONS: readonly Direction[] = ["north", "south", "west", "east"];
 
 const findEnemyAt = (
 	state: GameState,
@@ -57,59 +48,94 @@ const findHoldingFlytraps = (state: GameState): readonly Enemy[] =>
 			isAdjacent(enemy, state.player),
 	);
 
-/**
- * A movement turn: bump attack when an enemy occupies the target tile
- * (even one standing on the staircase), transition floors when it is the
- * staircase (direction decides descend vs ascend), walk when it is open
- * floor (picking up any item, gold or the amulet lying there). Bumping a
- * wall consumes no turn (returns the input state, same reference); the
- * other three all do.
- *
- * An awake venus-flytrap holds the player in place while adjacent: any
- * open-floor walk (including onto the staircase) that would leave every
- * flytrap currently holding it is blocked — logged as player-held — but
- * still spends the turn (struggling wastes the attempt, same as original
- * Rogue). Attacking the flytrap itself is unaffected, since that resolves
- * as the bump-attack branch above, never reaching this check.
- *
- * While confusedTurnsRemaining is set, the intended `direction` is ignored
- * in favor of a uniformly random one (consuming state.rng) — even a wall
- * bump then returns a state with a new rng, so (unlike normal wall bumps)
- * confused stumbling still costs the turn, matching the original's
- * uncertainty around walking while confused.
- */
-const applyMove = (state: GameState, direction: Direction): GameState => {
-	let effectiveDirection = direction;
-	let rng = state.rng;
-	if (state.confusedTurnsRemaining > 0) {
-		const roll = stepUniform(rng);
-		rng = roll.state;
-		const picked =
-			ALL_DIRECTIONS[Math.floor(roll.value * ALL_DIRECTIONS.length)];
-		effectiveDirection = picked ?? direction;
-	}
-	const stateWithRng = rng === state.rng ? state : { ...state, rng };
+/** A move's result: the next state, and whether it spent the turn (a bump into rock does not). */
+interface MoveOutcome {
+	readonly state: GameState;
+	readonly spent: boolean;
+}
 
-	const [deltaX, deltaY] = DIRECTION_VECTORS[effectiveDirection];
-	const x = stateWithRng.player.x + deltaX;
-	const y = stateWithRng.player.y + deltaY;
+/**
+ * Original Rogue's rndmove() for a confused player: a random tile among the
+ * nine (two rolls, rnd(3) - 1 each), or undefined when that is their own
+ * tile, a corner cut, rock, or a monster — then they stay put.
+ */
+const pickConfusedStep = (
+	state: GameState,
+): { readonly target: Position | undefined; readonly state: GameState } => {
+	const rollY = stepUniform(state.rng);
+	const rollX = stepUniform(rollY.state);
+	const target = {
+		x: state.player.x + Math.floor(rollX.value * 3) - 1,
+		y: state.player.y + Math.floor(rollY.value * 3) - 1,
+	};
+	const rolled = { ...state, rng: rollX.state };
+	const bad =
+		(target.x === state.player.x && target.y === state.player.y) ||
+		!canStepBetween(state.terrain, state.player, target) ||
+		!isFloor(state, target.x, target.y) ||
+		findEnemyAt(state, target.x, target.y) !== undefined;
+	return { target: bad ? undefined : target, state: rolled };
+};
+
+/**
+ * A movement turn, in any of the eight directions: bump attack when an
+ * enemy occupies the target tile, walk when it is open floor (picking up
+ * any item, gold or the amulet lying there). Bumping a wall, or a diagonal
+ * step cutting a corner (original Rogue's diag_ok()), spends no turn.
+ *
+ * An awake venus-flytrap holds the player in place while adjacent: every
+ * open-floor walk is blocked — logged as player-held — but still spends the
+ * turn (original Rogue's "you are being held"). Attacking the flytrap (or
+ * anything else) is unaffected, since that resolves as the bump-attack
+ * branch above, never reaching this check.
+ *
+ * While confused, as original Rogue's do_move(): four times in five
+ * (rnd(5) != 0) the intended `direction` gives way to pickConfusedStep's
+ * random tile — and when that is no good the player stays put, the turn not
+ * spent but the rolls are (the returned state carries the new rng).
+ */
+const applyMove = (state: GameState, direction: Direction): MoveOutcome => {
+	let stateWithRng = state;
+	let confusedTarget: Position | undefined;
+	if (state.confusedTurnsRemaining > 0) {
+		const stagger = stepUniform(state.rng);
+		stateWithRng = { ...state, rng: stagger.state };
+		if (Math.floor(stagger.value * 5) !== 0) {
+			const picked = pickConfusedStep(stateWithRng);
+			if (picked.target === undefined) {
+				return { state: picked.state, spent: false };
+			}
+			stateWithRng = picked.state;
+			confusedTarget = picked.target;
+		}
+	}
+
+	const [deltaX, deltaY] = DIRECTION_VECTORS[direction];
+	const { x, y } = confusedTarget ?? {
+		x: stateWithRng.player.x + deltaX,
+		y: stateWithRng.player.y + deltaY,
+	};
+	if (!canStepBetween(stateWithRng.terrain, stateWithRng.player, { x, y })) {
+		return { state: stateWithRng, spent: false };
+	}
 
 	const target = findEnemyAt(stateWithRng, x, y);
 	if (target !== undefined) {
-		return applyPlayerAttack(stateWithRng, target);
+		return { state: applyPlayerAttack(stateWithRng, target), spent: true };
 	}
 	if (!isFloor(stateWithRng, x, y)) {
-		return stateWithRng;
+		return { state: stateWithRng, spent: false };
 	}
-	const holdingFlytrap = findHoldingFlytraps(stateWithRng).find(
-		(flytrap) => !isAdjacent(flytrap, { x, y }),
-	);
+	const holdingFlytrap = findHoldingFlytraps(stateWithRng)[0];
 	if (holdingFlytrap !== undefined) {
 		return {
-			...stateWithRng,
-			events: buildEventLog(stateWithRng.events, [
-				{ type: "player-held", payload: { by: holdingFlytrap.kind } },
-			]),
+			state: {
+				...stateWithRng,
+				events: buildEventLog(stateWithRng.events, [
+					{ type: "player-held", payload: { by: holdingFlytrap.kind } },
+				]),
+			},
+			spent: true,
 		};
 	}
 	const walked = deriveExploredState({ ...stateWithRng, player: { x, y } });
@@ -119,9 +145,12 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 		findPlayerRoom(stateWithRng) === undefined
 			? applyRoomEntryWake(walked)
 			: walked;
-	return applyTrapTrigger(
-		applyGoldPickup(applyAmuletPickup(applyItemPickup(entered))),
-	);
+	return {
+		state: applyTrapTrigger(
+			applyGoldPickup(applyAmuletPickup(applyItemPickup(entered))),
+		),
+		spent: true,
+	};
 };
 
 /** Counts turnsOnCurrentFloor up by one — see its field doc in state.ts for what consumes it. */
@@ -238,10 +267,11 @@ const reduceAction = (state: GameState, action: Action): GameState => {
 					]),
 				});
 			}
-			const afterPlayer = applyMove(state, action.payload.direction);
-			if (afterPlayer === state) {
-				return state; /* bumping a wall consumes no turn */
+			const moved = applyMove(state, action.payload.direction);
+			if (!moved.spent) {
+				return moved.state; /* a bump into rock spends no turn */
 			}
+			const afterPlayer = moved.state;
 			if (afterPlayer.status !== "playing") {
 				return afterPlayer; /* a trap ended the run before enemies could act */
 			}

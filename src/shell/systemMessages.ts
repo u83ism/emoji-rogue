@@ -22,7 +22,7 @@ export const INVENTORY_EMPTY_MESSAGE = "何も持っていません";
 
 /** Shown after choosing to throw a weapon, until a direction is pressed. */
 export const THROW_DIRECTION_PROMPT =
-	"どの方向に投げますか(矢印キーかhjkl。Escでやめる)";
+	"どの方向に投げますか(矢印キーかhjkl・斜めはyubn。Escでやめる)";
 
 /** Shown while picking which held item a targeted scroll (the identify scroll) applies to. */
 export const ITEM_TARGET_PROMPT = "対象を選んでください(Escで閉じる)";

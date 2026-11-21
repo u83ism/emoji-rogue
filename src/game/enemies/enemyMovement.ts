@@ -2,15 +2,12 @@ import { createAStarPath } from "../../path/index.js";
 import { encodePointKey } from "../../pointkey.js";
 import type { RngState } from "../../rng.js";
 import { stepUniform } from "../../rng.js";
+import { canStepBetween, DIRECTION_VECTORS } from "../directions.js";
 import type { Enemy, GameState, Position } from "../state.js";
 
-/** Enemies move like the player: 4 directions, floor only. */
-const ENEMY_DIRECTIONS: readonly (readonly [number, number])[] = [
-	[0, -1],
-	[1, 0],
-	[0, 1],
-	[-1, 0],
-];
+/** Enemies move like the player: eight directions, floor only, no corner cutting. */
+const ENEMY_DIRECTIONS: readonly (readonly [number, number])[] =
+	Object.values(DIRECTION_VECTORS);
 
 const isFloor = (
 	terrain: GameState["terrain"],
@@ -41,7 +38,13 @@ export const stepTowardPlayer = (
 			return avoidAllies ? !occupied.has(encodePointKey(x, y)) : true;
 		};
 		const findPath = createAStarPath(state.player.x, state.player.y, passable, {
-			topology: 4,
+			topology: 8,
+			canStep: (fromX, fromY, toX, toY) =>
+				canStepBetween(
+					state.terrain,
+					{ x: fromX, y: fromY },
+					{ x: toX, y: toY },
+				),
 		});
 
 		const points: Position[] = [];
@@ -88,7 +91,11 @@ export const stepWandering = (
 		if (x === state.player.x && y === state.player.y) {
 			continue;
 		}
-		if (isFloor(state.terrain, x, y) && !occupied.has(encodePointKey(x, y))) {
+		if (
+			isFloor(state.terrain, x, y) &&
+			canStepBetween(state.terrain, enemy, { x, y }) &&
+			!occupied.has(encodePointKey(x, y))
+		) {
 			options.push({ x, y });
 		}
 	}

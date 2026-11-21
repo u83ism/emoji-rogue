@@ -86,11 +86,12 @@ const buildSpreadRngStates = (): readonly RngState[] => {
 };
 
 describe("isAdjacent", () => {
-	it("is true for the four orthogonal neighbors only", () => {
+	it("is true for the eight neighbors only", () => {
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 1 })).toBe(true);
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 3, y: 2 })).toBe(true);
-		/* diagonals and the same tile are out of reach */
-		expect(isAdjacent({ x: 2, y: 2 }, { x: 3, y: 3 })).toBe(false);
+		expect(isAdjacent({ x: 2, y: 2 }, { x: 3, y: 3 })).toBe(true);
+		/* the same tile and farther ones are not */
+		expect(isAdjacent({ x: 2, y: 2 }, { x: 4, y: 3 })).toBe(false);
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 2 })).toBe(false);
 		expect(isAdjacent({ x: 2, y: 2 }, { x: 2, y: 4 })).toBe(false);
 	});

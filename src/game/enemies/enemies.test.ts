@@ -797,6 +797,24 @@ describe("advanceEnemies", () => {
 		expect(next.rng).not.toEqual(state.rng);
 	});
 
+	it("attacks diagonally too, but not across a corner of rock", () => {
+		const arena = {
+			...buildArenaGameState(9, 9, 1) /* the player at (4,4) */,
+			inventory: [EXPOSING_ARMOR],
+			playerHp: 200,
+			playerMaxHp: 200,
+		};
+		const diagonal = { ...arena, enemies: [zombie(5, 5)] };
+		expect(advanceEnemies(diagonal).playerHp).toBeLessThan(200);
+		const terrain = arena.terrain.map((column, x) =>
+			column.map((tile, y) =>
+				(x === 5 && y === 4) || (x === 4 && y === 5) ? 1 : tile,
+			),
+		);
+		const cornered = { ...diagonal, terrain };
+		expect(advanceEnemies(cornered).playerHp).toBe(200);
+	});
+
 	it("a confused enemy still attacks when adjacent", () => {
 		const confused = { ...zombie(5, 1), confusedTurnsRemaining: 3 };
 		const state = buildExposedState([confused]);

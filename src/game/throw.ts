@@ -1,6 +1,7 @@
 import { applyEnemyHit } from "./combat/combat.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
+import { DIRECTION_VECTORS } from "./directions.js";
 import { WEAPON_STATS } from "./items/equipmentKinds.js";
 import {
 	calculatePlayerStrengthBonus,
@@ -11,12 +12,7 @@ import { removeHeldItem, replaceHeldItem } from "./items/inventory.js";
 import { applyMissileLanding } from "./missileLanding.js";
 import type { Direction, Enemy, GameState, Position } from "./state.js";
 
-const FLIGHT_STEPS: Readonly<Record<Direction, readonly [number, number]>> = {
-	north: [0, -1],
-	south: [0, 1],
-	west: [-1, 0],
-	east: [1, 0],
-};
+const FLIGHT_STEPS = DIRECTION_VECTORS;
 
 /**
  * Where a missile thrown `direction` stops, as original Rogue's do_motion():

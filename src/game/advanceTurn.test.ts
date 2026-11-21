@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { at } from "../indexing.js";
-import { createRng } from "../rng.js";
+import { createRng, stepUniform } from "../rng.js";
 import { advanceTurn } from "./advanceTurn.js";
 import { AMULET_FLOOR, PLAYER_MAX_HP, PLAYER_START_FOOD } from "./balance.js";
 import { buildFrameGrid } from "./frame.js";
@@ -286,29 +286,53 @@ describe("advanceTurn", () => {
 		expect(next.playerHp).toBeLessThan(state.playerHp);
 	});
 
-	it("moving while confused ignores the intended direction in favor of a random one", () => {
-		/* at seed 1, the confused roll always picks north regardless of intent */
-		const state: GameState = {
+	it("steps diagonally, but not across a corner (original Rogue's diag_ok())", () => {
+		const state = buildArenaGameState(9, 9, 1); /* the player at (4,4) */
+		expect(advanceTurn(state, move("northeast")).player).toEqual({
+			x: 5,
+			y: 3,
+		});
+		const terrain = state.terrain.map((column, x) =>
+			column.map((tile, y) => (x === 5 && y === 4 ? 1 : tile)),
+		);
+		const cornered = { ...state, terrain };
+		expect(advanceTurn(cornered, move("northeast"))).toBe(cornered);
+	});
+
+	it("moving while confused mostly goes a random way instead (original Rogue's rnd(5) != 0)", () => {
+		const base: GameState = {
 			...buildArenaGameState(9, 9, 1),
 			confusedTurnsRemaining: 5,
 		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual({ x: state.player.x, y: state.player.y - 1 });
-		expect(next.confusedTurnsRemaining).toBe(4);
+		const east = { x: base.player.x + 1, y: base.player.y };
+		let rng = base.rng;
+		let elsewhere = 0;
+		for (let i = 0; i < 100; i++) {
+			const next = advanceTurn({ ...base, rng }, move("east"));
+			if (next.player.x !== east.x || next.player.y !== east.y) {
+				elsewhere++;
+			}
+			rng = stepUniform(rng).state;
+		}
+		/* four in five roll a random tile, which is east only one time in nine */
+		expect(elsewhere).toBeGreaterThan(55);
+		expect(elsewhere).toBeLessThan(90);
 	});
 
-	it("a confused stumble into a wall still spends the turn (unlike a normal wall bump)", () => {
-		/* seed 1's confused roll picks north; placed just south of the wall so
-		 * that roll bumps into it instead of moving */
-		const state: GameState = {
-			...buildArenaGameState(5, 5, 1),
-			player: { x: 2, y: 1 },
+	it("a confused stumble that goes nowhere spends no turn, but uses up the rolls", () => {
+		/* in a 3x3 arena every tile around the player is wall */
+		const base: GameState = {
+			...buildArenaGameState(3, 3, 1),
 			confusedTurnsRemaining: 5,
 		};
-		const next = advanceTurn(state, move("east"));
-		expect(next.player).toEqual(state.player); /* did not move */
-		expect(next).not.toBe(state); /* but the turn was still spent */
-		expect(next.confusedTurnsRemaining).toBe(4);
+		let rng = base.rng;
+		for (let i = 0; i < 20; i++) {
+			const next = advanceTurn({ ...base, rng }, move("east"));
+			expect(next.player).toEqual(base.player);
+			expect(next.confusedTurnsRemaining).toBe(5); /* no turn passed */
+			expect(next.rng).not.toEqual(base.rng);
+			rng = stepUniform(rng).state;
+		}
 	});
 
 	it("confusedTurnsRemaining reaches 0 and fires confusion-faded", () => {
@@ -555,7 +579,7 @@ describe("advanceTurn", () => {
 		expect(next.enemies[0]?.hp).toBeLessThan(TEST_ENEMY_HP);
 	});
 
-	it("an adjacent, awake venus-flytrap blocks a move that would leave its reach, but the turn is still spent", () => {
+	it("an adjacent, awake venus-flytrap blocks every walk, but the turn is still spent", () => {
 		const flytrap: Enemy = {
 			x: 3,
 			y: 2,
@@ -575,10 +599,8 @@ describe("advanceTurn", () => {
 			inventory: [EXPOSING_ARMOR],
 			enemies: [flytrap],
 		};
-		const next = advanceTurn(
-			state,
-			move("north"),
-		); /* (2,1) is not adjacent to (3,2) */
+		/* even (2,1), still next to the flytrap at (3,2) */
+		const next = advanceTurn(state, move("north"));
 		expect(next.player).toEqual(state.player); /* did not move */
 		expect(next.playerFood).toBe(state.playerFood - 1); /* the turn was spent */
 		expect(next.events).toEqual([
@@ -678,8 +700,7 @@ describe("advanceTurn", () => {
 			stairs: { x: start.player.x + 1, y: start.player.y },
 			enemies: [{ ...flytrap, x: start.player.x, y: start.player.y + 1 }],
 		};
-		/* the flytrap sits south of the player, the stairs sit east — stepping
-		 * east would leave the flytrap's reach, so it should be blocked */
+		/* the flytrap sits south of the player, the stairs east — held, the step is blocked */
 		const next = advanceTurn(state, move("east"));
 		expect(next.floor).toBe(state.floor);
 		expect(next.player).toEqual(state.player);

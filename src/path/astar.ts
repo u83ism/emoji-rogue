@@ -96,7 +96,13 @@ export const createAStarPath = (
 				break;
 			}
 
-			const neighbors = getNeighbors(dirs, passable, item.x, item.y);
+			const neighbors = getNeighbors(
+				dirs,
+				passable,
+				item.x,
+				item.y,
+				options.canStep,
+			);
 			for (const [x, y] of neighbors) {
 				const neighborId = encodePointKey(x, y);
 				if (neighborId in done) {

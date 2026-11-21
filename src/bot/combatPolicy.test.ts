@@ -120,13 +120,17 @@ describe("decideWeaponToThrow", () => {
 		});
 	});
 
-	it("does not throw at an enemy off the player's row and column", () => {
+	it("does not throw at an enemy off the player's row, column and diagonals", () => {
 		const state = {
 			...baseState(),
 			inventory: [darts],
-			enemies: [enemyAt(6, 2)],
+			enemies: [enemyAt(6, 3)],
 		};
 		expect(decideWeaponToThrow(state)).toBeUndefined();
+		/* (6,2) lies on the player's (4,4) diagonal */
+		expect(
+			decideWeaponToThrow({ ...state, enemies: [enemyAt(6, 2)] })?.direction,
+		).toBe("northeast");
 	});
 
 	it("prefers the harder-hitting missile", () => {

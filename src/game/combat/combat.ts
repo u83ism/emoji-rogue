@@ -57,9 +57,9 @@ const applyThiefGoldDrop = (state: GameState): GameState => {
 	};
 };
 
-/** Orthogonal adjacency — the melee reach, matching 4-direction movement. */
+/** Whether the two touch, diagonals included (geometry only — directions.ts's isWithinReach also rules out cutting a corner). */
 export const isAdjacent = (left: Position, right: Position): boolean =>
-	Math.abs(left.x - right.x) + Math.abs(left.y - right.y) === 1;
+	Math.max(Math.abs(left.x - right.x), Math.abs(left.y - right.y)) === 1;
 
 /**
  * The shared back half of every player-sourced hit: `damage` applied to

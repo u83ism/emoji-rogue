@@ -288,3 +288,39 @@ describe("A*", () => {
 		});
 	});
 });
+
+describe("canStep", () => {
+	it("keeps A* off the steps it rules out", () => {
+		/* an open 3x3 field: from (0,0) to (2,2) is two diagonal steps */
+		const open: PassableCallback = (x, y) => x >= 0 && x < 3 && y >= 0 && y < 3;
+		const collect = (
+			canStep?: (
+				fromX: number,
+				fromY: number,
+				toX: number,
+				toY: number,
+			) => boolean,
+		) => {
+			const points: number[] = [];
+			const options =
+				canStep === undefined
+					? { topology: 8 as const }
+					: { topology: 8 as const, canStep };
+			createAStarPath(
+				2,
+				2,
+				open,
+				options,
+			)(0, 0, (x, y) => {
+				points.push(x, y);
+			});
+			return points;
+		};
+		expect(collect()).toEqual([0, 0, 1, 1, 2, 2]);
+		/* no diagonal steps at all: the path goes the long way */
+		const straightOnly = collect(
+			(fromX, fromY, toX, toY) => fromX === toX || fromY === toY,
+		);
+		expect(straightOnly.length).toBe(10);
+	});
+});

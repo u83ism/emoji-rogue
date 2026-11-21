@@ -14,7 +14,15 @@ import type {
 	WeaponKind,
 } from "./events.js";
 
-export type Direction = "north" | "south" | "west" | "east";
+export type Direction =
+	| "north"
+	| "south"
+	| "west"
+	| "east"
+	| "northwest"
+	| "northeast"
+	| "southwest"
+	| "southeast";
 
 /**
  * Everything the player (or an AI actor) can do in one turn, as a plain

@@ -89,7 +89,7 @@ describe("isHeldByFlytrap", () => {
 	});
 	const player = { x: 2, y: 2 };
 
-	it("is true only for an awake venus-flytrap orthogonally next to the player", () => {
+	it("is true only for an awake venus-flytrap next to the player, diagonals included", () => {
 		expect(isHeldByFlytrap([enemyAt("venus-flytrap", 3, 2)], player)).toBe(
 			true,
 		);
@@ -97,6 +97,9 @@ describe("isHeldByFlytrap", () => {
 			isHeldByFlytrap([enemyAt("venus-flytrap", 3, 2, false)], player),
 		).toBe(false);
 		expect(isHeldByFlytrap([enemyAt("venus-flytrap", 3, 3)], player)).toBe(
+			true,
+		);
+		expect(isHeldByFlytrap([enemyAt("venus-flytrap", 4, 3)], player)).toBe(
 			false,
 		);
 		expect(isHeldByFlytrap([enemyAt("zombie", 3, 2)], player)).toBe(false);

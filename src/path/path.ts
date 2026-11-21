@@ -4,9 +4,18 @@ import type { Result } from "../result.js";
 
 export type ComputeCallback = (x: number, y: number) => void;
 export type PassableCallback = (x: number, y: number) => boolean;
+/** Whether one step from (fromX, fromY) to the neighboring (toX, toY) is allowed — for rules on the edge rather than the tile, like no cutting a corner diagonally. */
+export type StepCallback = (
+	fromX: number,
+	fromY: number,
+	toX: number,
+	toY: number,
+) => boolean;
 
 export interface PathOptions {
 	topology: 4 | 6 | 8;
+	/** Absent, every step between passable neighbors is allowed. */
+	canStep?: StepCallback;
 }
 
 /** No path exists between the two points, given the current passability. */
@@ -50,18 +59,22 @@ export const getPathDirs = (topology: 4 | 6 | 8): [number, number][] => {
 	return dirs;
 };
 
-/** Passable neighbors of (cx, cy) along the given direction vectors. */
+/** Passable neighbors of (cx, cy) along the given direction vectors (and, given `canStep`, reachable in one step). */
 export const getNeighbors = (
 	dirs: readonly [number, number][],
 	passable: PassableCallback,
 	cx: number,
 	cy: number,
+	canStep?: StepCallback,
 ): [number, number][] => {
 	const result: [number, number][] = [];
 	for (const [dx, dy] of dirs) {
 		const x = cx + dx;
 		const y = cy + dy;
 		if (!passable(x, y)) {
+			continue;
+		}
+		if (canStep !== undefined && !canStep(cx, cy, x, y)) {
 			continue;
 		}
 		result.push([x, y]);

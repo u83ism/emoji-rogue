@@ -1,5 +1,5 @@
 import { type RngState, stepUniform } from "../../rng.js";
-import { isAdjacent } from "../combat/combat.js";
+import { isWithinReach } from "../directions.js";
 import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
@@ -111,7 +111,7 @@ const resolveIntendedAction = (
 	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
-	if (!isAdjacent(actor.position, state.player)) {
+	if (!isWithinReach(state.terrain, actor.position, state.player)) {
 		const movement = resolveEnemyMovement(
 			state,
 			enemy,

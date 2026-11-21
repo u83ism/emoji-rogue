@@ -6,7 +6,15 @@ const moveAction = (direction: Direction): Action => ({
 	payload: { direction },
 });
 
-/** The direction a keypress means — the arrow keys and hjkl — or undefined. Shared by moving and by the throw direction prompt. */
+/** The diagonal keys — original Rogue's yubn. */
+const DIAGONAL_KEYS: Readonly<Record<string, Direction>> = {
+	y: "northwest",
+	u: "northeast",
+	b: "southwest",
+	n: "southeast",
+};
+
+/** The direction a keypress means — the arrow keys, hjkl and yubn — or undefined. Shared by moving and by the throw direction prompt. */
 export const toDirection = (input: string, key: Key): Direction | undefined => {
 	if (key.upArrow || input === "k") {
 		return "north";
@@ -20,12 +28,12 @@ export const toDirection = (input: string, key: Key): Direction | undefined => {
 	if (key.rightArrow || input === "l") {
 		return "east";
 	}
-	return undefined;
+	return DIAGONAL_KEYS[input];
 };
 
 /**
  * Maps one keypress (as Ink's `useInput` reports it) to an `Action`.
- * Arrow keys and vi keys (hjkl) both move; `.` or space waits one turn;
+ * Arrow keys and vi keys (hjkl, yubn for the diagonals) all move; `.` or space waits one turn;
  * `>`/`<` take the stairs and `s` searches (original Rogue's keys);
  * `S` suspend-saves (also the original's); `q` quits. Unbound keys map to `undefined` so the
  * shell can ignore them without consuming a turn.

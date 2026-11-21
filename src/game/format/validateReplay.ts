@@ -1,4 +1,5 @@
 import { err, ok, type Result } from "../../result.js";
+import { DIRECTION_VALUES } from "../directions.js";
 import type { Action, Direction } from "../state.js";
 import type { Replay } from "./replay.js";
 import {
@@ -8,10 +9,7 @@ import {
 } from "./validateGameState.js";
 
 const isDirection = (value: unknown): value is Direction =>
-	value === "north" ||
-	value === "south" ||
-	value === "west" ||
-	value === "east";
+	DIRECTION_VALUES.some((direction) => direction === value);
 
 const isAction = (value: unknown): value is Action => {
 	if (!isRecord(value)) {

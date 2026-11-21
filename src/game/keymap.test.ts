@@ -66,6 +66,25 @@ describe("toAction", () => {
 		});
 	});
 
+	it("maps yubn to the diagonals, as original Rogue", () => {
+		expect(toAction("y", buildKey())).toEqual({
+			type: "move",
+			payload: { direction: "northwest" },
+		});
+		expect(toAction("u", buildKey())).toEqual({
+			type: "move",
+			payload: { direction: "northeast" },
+		});
+		expect(toAction("b", buildKey())).toEqual({
+			type: "move",
+			payload: { direction: "southwest" },
+		});
+		expect(toAction("n", buildKey())).toEqual({
+			type: "move",
+			payload: { direction: "southeast" },
+		});
+	});
+
 	it("maps period and space to wait", () => {
 		expect(toAction(".", buildKey())).toEqual({ type: "wait" });
 		expect(toAction(" ", buildKey())).toEqual({ type: "wait" });

@@ -53,7 +53,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		effect: `はめるとその値だけ力が上がり、外すと戻る。${VALUED_RING_NOTE}。満腹度の減りが毎ターン1増える`,
 	},
 	"sustain-strength-ring": {
-		catalogName: "持続の指輪",
+		catalogName: "力の維持の指輪",
 		category: "指輪",
 		spawn: itemDrawShare("sustain-strength-ring"),
 		effect:
@@ -84,7 +84,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		effect: `装備している間、毎ターン1/${TELEPORTATION_RING_CHANCE_DENOMINATOR}の確率でフロア内のどこかへ勝手に飛ばされる。必ず呪われており、解呪するまで外せない`,
 	},
 	"maintain-armor-ring": {
-		catalogName: "鎧の維持の指輪",
+		catalogName: "防錆の指輪",
 		category: "指輪",
 		spawn: itemDrawShare("maintain-armor-ring"),
 		effect:

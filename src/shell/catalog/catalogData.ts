@@ -71,12 +71,12 @@ export const TRAP_CATALOG: Readonly<Record<TrapKind, TrapCatalogEntry>> = {
 	teleport: { spawn: TRAP_SPAWN, effect: "フロア内のランダムな床へ飛ばされる" },
 	dart: {
 		spawn: TRAP_SPAWN,
-		effect: `毒矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ。さらに毒へのセーブに失敗すると力が1下がる(持続の指輪で防げる)`,
+		effect: `毒矢が飛んでくる。防具が硬いほど外れやすく、当たると${DART_TRAP_DAMAGE_DICE.count}d${DART_TRAP_DAMAGE_DICE.sides}ダメージ。さらに毒へのセーブに失敗すると力が1下がる(力の維持の指輪で防げる)`,
 	},
 	rust: {
 		spawn: TRAP_SPAWN,
 		effect:
-			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物・鎧の維持の指輪で防げる)",
+			"ダメージはないが装備中の防具が錆びつき防御力が1下がる(防具保護の巻物・防錆の指輪で防げる)",
 	},
 	mysterious: {
 		spawn: TRAP_SPAWN,

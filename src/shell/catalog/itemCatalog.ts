@@ -77,7 +77,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		effect: `読むと持っている巻物を1つ選び、その種類の正体が分かる(巻物を持っていなければ無駄になる)`,
 	},
 	"identify-ring-wand-scroll": {
-		catalogName: "指輪と杖の識別の巻物",
+		catalogName: "指輪・杖識別の巻物",
 		category: "巻物",
 		spawn: itemDrawShare("identify-ring-wand-scroll"),
 		effect: `読むと持っている指輪か杖を1つ選び、その種類の正体と、その品の値(指輪の+・杖の残り回数)が分かる(どちらも持っていなければ無駄になる)`,

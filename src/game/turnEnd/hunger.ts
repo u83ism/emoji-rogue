@@ -9,7 +9,7 @@ import {
 	STARVATION_TURNS,
 } from "../balance.js";
 import { buildEventLog, type GameEvent } from "../events.js";
-import { findWornRings } from "../items/rings.js";
+import { findWornRings } from "../items/rings/rings.js";
 import type { GameState } from "../state.js";
 
 /**

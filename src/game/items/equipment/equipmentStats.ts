@@ -51,7 +51,7 @@ export const calculatePlayerStrengthBonus = (state: GameState): number =>
 
 /**
  * The worn rings' values of `kind` — read here directly rather than
- * through items/rings.ts, which builds on combat/strength.ts and so cannot
+ * through items/rings/rings.ts, which builds on combat/strength.ts and so cannot
  * be imported from this module.
  */
 export const sumRingBonus = (

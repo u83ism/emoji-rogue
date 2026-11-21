@@ -348,7 +348,7 @@ export const ENCHANT_WEAPON_BONUS = 1;
  */
 export const ENCHANT_ARMOR_BONUS = 1;
 
-/** A magic missile's damage dice — original Rogue's bolt `o_hurldmg` "1x4" (see items/wands.ts's applyMagicMissileWandStrike). */
+/** A magic missile's damage dice — original Rogue's bolt `o_hurldmg` "1x4" (see items/wands/wands.ts's applyMagicMissileWandStrike). */
 export const MAGIC_MISSILE_DAMAGE_DICE = { count: 1, sides: 4 } as const;
 /** Added to every magic missile's roll — the bolt's own `o_dplus` of 1, before the player's strength and wielded-weapon bonuses. */
 export const MAGIC_MISSILE_DAMAGE_BONUS = 1;

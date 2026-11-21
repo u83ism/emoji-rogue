@@ -1,14 +1,17 @@
-import { createRng } from "../../rng.js";
+import { createRng } from "../../../rng.js";
 import {
 	HOLD_MONSTER_SCROLL_RANGE,
 	SLEEP_SCROLL_TURNS_MAX,
 	SLEEP_SCROLL_TURNS_MIN,
-} from "../balance.js";
-import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
-import { buildSpawnedEnemy, drawEnemyKindForFloor } from "../floor/enemies.js";
-import type { GameState, Position } from "../state.js";
-import { applyRandomTeleport } from "../teleport.js";
-import { applyScrollWasted } from "./equipment/equipmentScrolls.js";
+} from "../../balance.js";
+import { buildEventLog, type GameEvent, POTION_KINDS } from "../../events.js";
+import {
+	buildSpawnedEnemy,
+	drawEnemyKindForFloor,
+} from "../../floor/enemies.js";
+import type { GameState, Position } from "../../state.js";
+import { applyRandomTeleport } from "../../teleport.js";
+import { applyScrollWasted } from "../equipment/equipmentScrolls.js";
 
 // The area/environment-affecting scroll kinds — see equipmentScrolls.ts for
 // the weapon/armor-targeting ones, split out once this file passed the

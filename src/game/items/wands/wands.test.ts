@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { type RngState, seedToState, stepUniform } from "../../rng.js";
-import { advanceTurn } from "../advanceTurn.js";
+import { type RngState, seedToState, stepUniform } from "../../../rng.js";
+import { advanceTurn } from "../../advanceTurn.js";
 import {
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	PLAYER_START_STRENGTH,
-} from "../balance.js";
-import { calculateStrengthDamageBonus } from "../combat/strength.js";
-import { ENEMY_STATS } from "../enemies/enemyStats.js";
-import type { EnemyKind } from "../events.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { Enemy } from "../state.js";
+} from "../../balance.js";
+import { calculateStrengthDamageBonus } from "../../combat/strength.js";
+import { ENEMY_STATS } from "../../enemies/enemyStats.js";
+import type { EnemyKind } from "../../events.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { Enemy } from "../../state.js";
 import { applyMagicMissileWandStrike } from "./wands.js";
 
 /** add_dam[] for the starting strength of 16. */

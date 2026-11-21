@@ -1,6 +1,6 @@
 import { createRng } from "../../rng.js";
 import { TELEPORTATION_RING_CHANCE_DENOMINATOR } from "../balance.js";
-import { findWornRings } from "../items/rings.js";
+import { findWornRings } from "../items/rings/rings.js";
 import type { GameState } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
 

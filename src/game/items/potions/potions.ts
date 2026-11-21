@@ -1,82 +1,30 @@
 import {
-	EXTRA_HEALING_POTION_DICE_SIDES,
 	HASTE_EXHAUSTION_TURNS_MAX,
 	HASTE_POTION_TURNS_MAX,
 	HASTE_POTION_TURNS_MIN,
-	HEAL_POTION_DICE_SIDES,
 	POISON_POTION_STRENGTH_LOSS_MAX,
 	STRENGTH_POTION_STRENGTH_GAIN,
-} from "../balance.js";
-import { rollDamageDice } from "../combat/damage.js";
-import { applyLevelUp } from "../combat/experience.js";
+} from "../../balance.js";
+import { rollDamageDice } from "../../combat/damage.js";
+import { applyLevelUp } from "../../combat/experience.js";
 import {
 	applyStrengthChange,
 	calculateRestoredStrength,
 	isStrengthSustained,
-} from "../combat/strength.js";
-import { buildEventLog, type GameEvent, type PotionKind } from "../events.js";
-import type { GameState } from "../state.js";
-import { applyTimedPotion } from "../turnEnd/statusCountdowns.js";
+} from "../../combat/strength.js";
+import {
+	buildEventLog,
+	type GameEvent,
+	type PotionKind,
+} from "../../events.js";
+import type { GameState } from "../../state.js";
+import { applyTimedPotion } from "../../turnEnd/statusCountdowns.js";
+import { applyHealingPotion } from "./healing.js";
 
 const withEvents = (state: GameState, events: readonly GameEvent[]) => ({
 	...state,
 	events: buildEventLog(state.events, events),
 });
-
-/** Blindness cured by a healing potion (original Rogue's sight()) — logged only if the player was blind. */
-const cureBlindness = (state: GameState): GameState =>
-	state.blindTurnsRemaining > 0
-		? withEvents({ ...state, blindTurnsRemaining: 0 }, [
-				{ type: "blindness-faded", payload: {} },
-			])
-		: state;
-
-/**
- * A healing potion, as original Rogue's quaff(): level × d\`sides\` HP. Past
- * the maximum, the maximum goes up by 1 and HP fills it — an extra healing
- * potion overhealing by more than level + 1 raises it by 2. Either cures
- * blindness; extra healing also ends a hallucination (come_down()).
- */
-const applyHealingPotion = (
-	state: GameState,
-	kind: "heal-potion" | "extra-healing-potion",
-): GameState => {
-	const extra = kind === "extra-healing-potion";
-	const healRoll = rollDamageDice(
-		state.rng,
-		{
-			count: state.playerLevel,
-			sides: extra ? EXTRA_HEALING_POTION_DICE_SIDES : HEAL_POTION_DICE_SIDES,
-		},
-		0,
-		0,
-	);
-	const healed = state.playerHp + healRoll.damage;
-	const overheals = healed > state.playerMaxHp;
-	const bigOverheal =
-		extra && healed > state.playerMaxHp + state.playerLevel + 1;
-	const playerMaxHp =
-		state.playerMaxHp + (overheals ? 1 : 0) + (bigOverheal ? 1 : 0);
-	const playerHp = overheals ? playerMaxHp : healed;
-	const drunk = withEvents(
-		{
-			...state,
-			playerHp,
-			playerMaxHp,
-			hallucinatingTurnsRemaining: extra
-				? 0
-				: state.hallucinatingTurnsRemaining,
-			rng: healRoll.rng,
-		},
-		[
-			{
-				type: "player-healed",
-				payload: { by: kind, amount: playerHp - state.playerHp },
-			},
-		],
-	);
-	return cureBlindness(drunk);
-};
 
 /**
  * Original Rogue's add_haste(): hasted for HASTE_POTION_TURNS_MIN..MAX

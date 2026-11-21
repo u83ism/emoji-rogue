@@ -38,7 +38,7 @@ const collectTeleportTargets = (state: GameState): readonly Position[] => {
 /**
  * Relocates the player to a random floor tile (consuming state.rng) and
  * refreshes the explored grid from the new position. Shared by the teleport
- * scroll (items/scrolls.ts) and the teleport trap (trapTrigger.ts).
+ * scroll (items/scrolls/scrolls.ts) and the teleport trap (trapTrigger.ts).
  */
 export const applyRandomTeleport = (
 	state: GameState,
@@ -71,7 +71,7 @@ export const applyRandomTeleport = (
  * Forcibly relocates `target` to a random floor tile (same eligible-tile
  * rules as applyRandomTeleport — not the player's tile, not another enemy's)
  * and wakes it: landing somewhere unfamiliar and staying asleep would be an
- * odd combination. Used by the teleport wand (items/wands.ts).
+ * odd combination. Used by the teleport wand (items/wands/wands.ts).
  */
 export const applyEnemyTeleport = (
 	state: GameState,

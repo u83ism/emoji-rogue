@@ -77,7 +77,7 @@ export const isStrengthSustained = (inventory: readonly HeldItem[]): boolean =>
 		(item) => item.kind === "sustain-strength-ring" && item.equipped,
 	);
 
-/** The values of the add strength rings being worn — read here directly, not through items/rings.ts, which builds on this module. */
+/** The values of the add strength rings being worn — read here directly, not through items/rings/rings.ts, which builds on this module. */
 export const findWornAddStrengthBonuses = (
 	inventory: readonly HeldItem[],
 ): readonly number[] =>

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { advanceTurn } from "../advanceTurn.js";
-import { PLAYER_MAX_HP } from "../balance.js";
-import { buildArenaGameState } from "../initialState.js";
-import { calculatePlayerArmorClass } from "./equipment/equipmentStats.js";
+import { advanceTurn } from "../../advanceTurn.js";
+import { PLAYER_MAX_HP } from "../../balance.js";
+import { buildArenaGameState } from "../../initialState.js";
+import { calculatePlayerArmorClass } from "../equipment/equipmentStats.js";
 import { applyToggleRingEquip, hasEquippedRing } from "./rings.js";
 
 describe("items/rings", () => {

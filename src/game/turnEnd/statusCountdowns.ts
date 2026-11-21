@@ -83,7 +83,7 @@ export const applyStatusCountdownTicks = (state: GameState): GameState => {
 		: moving;
 };
 
-/** The potions (items/potions.ts) that only start one of these timed statuses: which countdown, for how long, and the event that says so. */
+/** The potions (items/potions/potions.ts) that only start one of these timed statuses: which countdown, for how long, and the event that says so. */
 const TIMED_POTIONS = {
 	confusion: {
 		field: "confusedTurnsRemaining",

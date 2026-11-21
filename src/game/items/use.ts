@@ -19,8 +19,8 @@ import {
 } from "./equipment/equipmentScrolls.js";
 import { applyUseFood } from "./food.js";
 import { removeHeldItem, replaceHeldItem } from "./inventory/inventory.js";
-import { applyUsePotion } from "./potions.js";
-import { applyToggleRingEquip } from "./rings.js";
+import { applyUsePotion } from "./potions/potions.js";
+import { applyToggleRingEquip } from "./rings/rings.js";
 import {
 	applyUseAggravateMonstersScroll,
 	applyUseConfuseMonsterScroll,
@@ -30,12 +30,12 @@ import {
 	applyUseMappingScroll,
 	applyUseSleepScroll,
 	applyUseTeleportScroll,
-} from "./scrolls.js";
+} from "./scrolls/scrolls.js";
 import {
 	applyUseMagicMissileWand,
 	applyUseSlowWand,
 	applyUseTeleportWand,
-} from "./wands.js";
+} from "./wands/wands.js";
 
 /**
  * The per-item effect. Deliberately exhaustive with no default: adding an
@@ -140,7 +140,7 @@ const identifyItemKind = (
  * spends one charge, and with none left only logs wand-empty (the turn
  * still passes, as original Rogue's do_zap()). Weapon/armor/ring
  * are never removed here; toggling their `equipped` flag in place is the
- * whole effect (see items/equipment/equipment.ts, items/rings.ts). Using an itemId not
+ * whole effect (see items/equipment/equipment.ts, items/rings/rings.ts). Using an itemId not
  * held, or a kind whose handler declared a no-op, returns the input state
  * (same reference, no turn spent, nothing consumed). A use that takes
  * effect identifies the item's kind for the rest of the run (see

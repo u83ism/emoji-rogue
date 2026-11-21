@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advanceTurn } from "../advanceTurn.js";
+import { advanceTurn } from "../../advanceTurn.js";
 import {
 	BLIND_POTION_DURATION,
 	CONFUSION_POTION_DURATION,
@@ -7,9 +7,9 @@ import {
 	HALLUCINATION_POTION_DURATION,
 	LEVITATION_POTION_DURATION,
 	PLAYER_MAX_HP,
-} from "../balance.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { GameState } from "../state.js";
+} from "../../balance.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { GameState } from "../../state.js";
 
 /** original Rogue's spread(base): base - base/20 + rnd(base/10). */
 const isInSpread = (turns: number, base: number): boolean => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { advanceTurn } from "../advanceTurn.js";
-import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
+import { advanceTurn } from "../../advanceTurn.js";
+import {
+	buildArenaGameState,
+	buildDungeonGameState,
+} from "../../initialState.js";
 
 describe("items/scrolls", () => {
 	it("using a held scroll teleports the player, consumes the scroll, and consumes rng", () => {

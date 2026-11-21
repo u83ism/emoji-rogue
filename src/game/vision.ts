@@ -109,7 +109,7 @@ export const deriveExploredState = (state: GameState): GameState => {
 /**
  * Every enemy currently in the player's field of view — the shared basis for
  * both the single-target wands/scrolls (see findNearestVisibleEnemy) and the
- * area-effect hold monster scroll (items/scrolls.ts).
+ * area-effect hold monster scroll (items/scrolls/scrolls.ts).
  */
 export const findVisibleEnemies = (state: GameState): readonly Enemy[] => {
 	const visiblePoints = computePlayerVisiblePoints(state);

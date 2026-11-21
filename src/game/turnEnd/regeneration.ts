@@ -5,7 +5,7 @@ import {
 	NATURAL_HEALING_SLOW_THRESHOLD,
 	RING_REGEN_AMOUNT,
 } from "../balance.js";
-import { findWornRings } from "../items/rings.js";
+import { findWornRings } from "../items/rings/rings.js";
 import type { GameState } from "../state.js";
 
 /**

@@ -1,6 +1,6 @@
 import { type RngState, stepUniform } from "../../rng.js";
 import type { EnemyKind } from "../events.js";
-import { hasEquippedRing } from "../items/rings.js";
+import { hasEquippedRing } from "../items/rings/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { findPlayerRoom, findRoomAt } from "../vision.js";
 import { applyMedusaGaze } from "./medusaGaze.js";

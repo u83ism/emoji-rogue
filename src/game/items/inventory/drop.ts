@@ -82,7 +82,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
  * no-op (same reference) when `itemId` is not held, or when it is a
  * currently-equipped cursed weapon/armor/ring — a cursed item can't be
  * removed at all while equipped (logs equip-blocked-cursed, same as trying
- * to unequip it directly; see items/equipment/equipment.ts and items/rings.ts), so
+ * to unequip it directly; see items/equipment/equipment.ts and items/rings/rings.ts), so
  * dropping it must not be a back door around that lock. If an item already
  * lies on that exact tile (the player is standing on one it never picked up
  * — INVENTORY_CAPACITY refused it, or a teleport landed there), the two

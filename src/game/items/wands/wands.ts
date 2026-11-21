@@ -3,16 +3,16 @@ import {
 	calculateMagicSaveChancePercent,
 	MAGIC_MISSILE_DAMAGE_BONUS,
 	MAGIC_MISSILE_DAMAGE_DICE,
-} from "../balance.js";
-import { applyEnemyHit } from "../combat/combat.js";
-import { rollDamageDice, rollToHit } from "../combat/damage.js";
-import { ENEMY_STATS } from "../enemies/enemyStats.js";
-import { buildEventLog } from "../events.js";
-import type { Direction, Enemy, GameState } from "../state.js";
-import { applyEnemyTeleport } from "../teleport.js";
-import { traceFlight } from "../throw.js";
-import { nameEnemy } from "../vision.js";
-import { calculatePlayerDamageBonus } from "./equipment/equipmentStats.js";
+} from "../../balance.js";
+import { applyEnemyHit } from "../../combat/combat.js";
+import { rollDamageDice, rollToHit } from "../../combat/damage.js";
+import { ENEMY_STATS } from "../../enemies/enemyStats.js";
+import { buildEventLog } from "../../events.js";
+import type { Direction, Enemy, GameState } from "../../state.js";
+import { applyEnemyTeleport } from "../../teleport.js";
+import { traceFlight } from "../../throw.js";
+import { nameEnemy } from "../../vision.js";
+import { calculatePlayerDamageBonus } from "../equipment/equipmentStats.js";
 
 /**
  * A wand of slow monster on the nearest visible enemy, as original Rogue's

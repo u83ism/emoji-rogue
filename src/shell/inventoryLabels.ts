@@ -66,7 +66,7 @@ export const formatHeldItemLabel = (
 /**
  * The verb prompt shown after selecting a row: "use" reads as 装備する/はずす
  * for a weapon/armor/ring (matching what `u` actually does — toggle equip,
- * see items/equipment/equipment.ts and items/rings.ts) and つかう for everything else.
+ * see items/equipment/equipment.ts and items/rings/rings.ts) and つかう for everything else.
  * "drop" and the escape hint never change; "throw" appears for a weapon
  * that is not the one wielded (see inventoryKeymap.ts's canThrowItem).
  */

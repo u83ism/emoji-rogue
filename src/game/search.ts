@@ -7,7 +7,7 @@ import {
 	SEARCH_TRAP_FIND_DENOMINATOR,
 } from "./balance.js";
 import { buildEventLog, type GameEvent } from "./events.js";
-import { findWornRings } from "./items/rings.js";
+import { findWornRings } from "./items/rings/rings.js";
 import type { GameState, HiddenTile, Position } from "./state.js";
 import { deriveExploredState } from "./vision.js";
 

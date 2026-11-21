@@ -1,7 +1,7 @@
-import { applyStrengthChange } from "../combat/strength.js";
-import { buildEventLog, type GameEvent, type RingKind } from "../events.js";
-import type { GameState, HeldItem } from "../state.js";
-import { replaceHeldItem } from "./inventory/inventory.js";
+import { applyStrengthChange } from "../../combat/strength.js";
+import { buildEventLog, type GameEvent, type RingKind } from "../../events.js";
+import type { GameState, HeldItem } from "../../state.js";
+import { replaceHeldItem } from "../inventory/inventory.js";
 
 type RingItem = Extract<HeldItem, { kind: RingKind }>;
 

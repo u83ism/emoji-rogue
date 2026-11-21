@@ -93,7 +93,7 @@ export const ITEM_KIND_VALUES = [
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
 
-/** The rings — any two can be worn at once, one per hand (see items/rings.ts). */
+/** The rings — any two can be worn at once, one per hand (see items/rings/rings.ts). */
 export const RING_KINDS = [
 	"regeneration-ring",
 	"sustenance-ring",
@@ -231,7 +231,7 @@ export const POTION_KIND_VALUES = [
 	"see-invisible-potion",
 ] as const satisfies readonly ItemKind[];
 
-/** The potion subset of ItemKind — lets items/potions.ts switch exhaustively. */
+/** The potion subset of ItemKind — lets items/potions/potions.ts switch exhaustively. */
 export type PotionKind = (typeof POTION_KIND_VALUES)[number];
 
 /**
@@ -437,12 +437,12 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** A restore strength potion — `strength` is playerStrength after it. See items/potions.ts. */
+			/** A restore strength potion — `strength` is playerStrength after it. See items/potions/potions.ts. */
 			readonly type: "strength-restored";
 			readonly payload: { readonly strength: number };
 	  }
 	| {
-			/** A haste self potion starting `turns` of two moves a turn — see items/potions.ts. */
+			/** A haste self potion starting `turns` of two moves a turn — see items/potions/potions.ts. */
 			readonly type: "player-hasted";
 			readonly payload: { readonly turns: number };
 	  }
@@ -579,12 +579,12 @@ export type GameEvent =
 			};
 	  }
 	| {
-			/** A magic missile that landed — same shape as enemy-hit, kept separate for its own flavor text. See items/wands.ts's applyMagicMissileWandStrike. */
+			/** A magic missile that landed — same shape as enemy-hit, kept separate for its own flavor text. See items/wands/wands.ts's applyMagicMissileWandStrike. */
 			readonly type: "wand-struck";
 			readonly payload: { readonly target: EnemyName; readonly damage: number };
 	  }
 	| {
-			/** A magic missile the target saved against — it vanishes, no damage. See items/wands.ts's applyMagicMissileWandStrike. */
+			/** A magic missile the target saved against — it vanishes, no damage. See items/wands/wands.ts's applyMagicMissileWandStrike. */
 			readonly type: "magic-missile-vanished";
 			readonly payload: { readonly target: EnemyName };
 	  }
@@ -599,12 +599,12 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** A wand of slow monster slowing its target for good (it acts every other move) — see items/wands.ts. */
+			/** A wand of slow monster slowing its target for good (it acts every other move) — see items/wands/wands.ts. */
 			readonly type: "enemy-slowed";
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** A wand of slow monster that only took away its hasted target's haste — see items/wands.ts. */
+			/** A wand of slow monster that only took away its hasted target's haste — see items/wands/wands.ts. */
 			readonly type: "enemy-slowed-removed";
 			readonly payload: { readonly target: EnemyKind };
 	  }
@@ -659,7 +659,7 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** Trying to unequip a cursed weapon/armor/ring — no-op, see items/equipment/equipment.ts and items/rings.ts. */
+			/** Trying to unequip a cursed weapon/armor/ring — no-op, see items/equipment/equipment.ts and items/rings/rings.ts. */
 			readonly type: "equip-blocked-cursed";
 			readonly payload: { readonly kind: ItemKind };
 	  }
@@ -729,7 +729,7 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** A hold monster scroll stopping one monster near the player until it is attacked — see items/scrolls.ts. */
+			/** A hold monster scroll stopping one monster near the player until it is attacked — see items/scrolls/scrolls.ts. */
 			readonly type: "enemy-held";
 			readonly payload: { readonly target: EnemyKind };
 	  }

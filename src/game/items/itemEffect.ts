@@ -23,10 +23,13 @@ import {
 	applyUseTeleportScroll,
 } from "./scrolls/scrolls.js";
 import {
+	applyUseTeleportToWand,
+	applyUseTeleportWand,
+} from "./wands/teleportWands.js";
+import {
 	applyUseHasteMonsterWand,
 	applyUseMagicMissileWand,
 	applyUseSlowWand,
-	applyUseTeleportWand,
 } from "./wands/wands.js";
 
 /**
@@ -99,6 +102,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "teleport-to-wand":
+			return applyUseTeleportToWand(state, direction);
 		case "haste-monster-wand":
 			return applyUseHasteMonsterWand(state, direction);
 		case "heal-potion":

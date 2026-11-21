@@ -9,7 +9,6 @@ import { rollDamageDice, rollToHit } from "../../combat/damage.js";
 import { ENEMY_STATS } from "../../enemies/enemyStats.js";
 import { buildEventLog } from "../../events.js";
 import type { Direction, Enemy, GameState } from "../../state.js";
-import { applyEnemyTeleport } from "../../teleport.js";
 import { traceFlight } from "../../throw.js";
 import { nameEnemy } from "../../vision.js";
 import { calculatePlayerDamageBonus } from "../equipment/equipmentStats.js";
@@ -57,25 +56,6 @@ export const applyUseSlowWand = (
 			},
 		]),
 	};
-};
-
-/**
- * A teleport wand forcibly relocates the first monster its bolt meets to a
- * random floor tile and wakes it — aimed like the slow wand.
- */
-export const applyUseTeleportWand = (
-	state: GameState,
-	direction: Direction | undefined,
-): GameState => {
-	if (direction === undefined) {
-		return state;
-	}
-	const { target } = traceFlight(state, direction);
-	if (target === undefined) {
-		/* the bolt met only a wall: the charge is spent all the same */
-		return { ...state };
-	}
-	return applyEnemyTeleport(state, target);
 };
 
 /**

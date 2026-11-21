@@ -123,6 +123,8 @@ export const formatEvent = (
 			return "混乱がおさまった";
 		case "enemy-slowed":
 			return `杖の力で${formatEnemyName(event.payload.target)}の動きが鈍くなった!`;
+		case "enemy-pulled":
+			return `杖の力で${formatEnemyName(event.payload.target)}が目の前に引き寄せられた!`;
 		case "enemy-hasted":
 			return `杖の力で${formatEnemyName(event.payload.target)}が素早くなった!`;
 		case "enemy-unslowed":

@@ -136,6 +136,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("haste-monster-wand"),
 		effect: `選んだ方向へ振り、最初に当たった敵を加速させる(1ターンに2回動く)。鈍足の敵なら鈍足を解くだけ。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
 	},
+	"teleport-to-wand": {
+		catalogName: "引き寄せの杖",
+		category: "杖",
+		spawn: itemDrawShare("teleport-to-wand"),
+		effect: `選んだ方向へ振り、最初に当たった敵をその方向のプレイヤーの隣まで引き寄せる(敵は起きて向かってくる)。振っても正体は分からない。${WAND_CHARGES_TEXT}`,
+	},
 	weapon: {
 		catalogName: "武器",
 		category: "装備",

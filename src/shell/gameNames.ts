@@ -74,6 +74,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"teleport-wand": "テレポートの杖",
 	"stealth-ring": "隠密の指輪",
 	"magic-missile-wand": "魔法の矢の杖",
+	"teleport-to-wand": "引き寄せの杖",
 	"haste-monster-wand": "加速の杖",
 	/* Scrolls show their real name immediately, unlike potions/rings/wands — no generic placeholder. */
 	"confuse-monster-scroll": "混乱の巻物",

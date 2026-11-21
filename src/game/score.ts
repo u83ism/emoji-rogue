@@ -79,6 +79,7 @@ const FLAT_WORTH: Readonly<
 	"slow-wand": 350,
 	"teleport-wand": 340,
 	"magic-missile-wand": 170,
+	"teleport-to-wand": 50,
 	"haste-monster-wand": 5,
 };
 

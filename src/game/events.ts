@@ -90,6 +90,7 @@ export const ITEM_KIND_VALUES = [
 	"create-monster-scroll",
 	"aggravate-monsters-scroll",
 	"haste-monster-wand",
+	"teleport-to-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -154,6 +155,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"teleport-to-wand",
 	"haste-monster-wand",
 	"slow-wand",
 	"teleport-wand",
@@ -608,6 +610,11 @@ export type GameEvent =
 	| {
 			/** A wand of slow monster that only took away its hasted target's haste — see items/wands/wands.ts. */
 			readonly type: "enemy-slowed-removed";
+			readonly payload: { readonly target: EnemyKind };
+	  }
+	| {
+			/** A teleport to wand's bolt brought a monster next to the player. */
+			readonly type: "enemy-pulled";
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {

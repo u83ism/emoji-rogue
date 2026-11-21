@@ -595,7 +595,7 @@ export type GameEvent =
 			readonly payload: { readonly kind: ItemKind };
 	  }
 	| {
-			/** A nymph's landed hit taking one unequipped magic item — see enemies/enemyFlee.ts. */
+			/** A nymph's landed hit taking one unequipped magic item — see enemies/abilities/enemyFlee.ts. */
 			readonly type: "item-stolen";
 			readonly payload: {
 				readonly kind: ItemKind;
@@ -872,7 +872,7 @@ export type GameEvent =
 			readonly payload: { readonly target: EnemyKind };
 	  }
 	| {
-			/** A vampire's or wraith's landed hit draining max HP (and HP) for good — see enemies/vitalityDrain.ts. */
+			/** A vampire's or wraith's landed hit draining max HP (and HP) for good — see enemies/abilities/vitalityDrain.ts. */
 			readonly type: "player-drained";
 			readonly payload: {
 				readonly by: "vampire" | "wraith";
@@ -895,7 +895,7 @@ export type GameEvent =
 			readonly payload: { readonly strengthLost: number };
 	  }
 	| {
-			/** An ice monster's hit freezing a player who was not frozen yet — sets paralyzedTurnsRemaining, the same field as the paralysis potion and the sleeping gas trap. See enemies/iceMonsterFreeze.ts. */
+			/** An ice monster's hit freezing a player who was not frozen yet — sets paralyzedTurnsRemaining, the same field as the paralysis potion and the sleeping gas trap. See enemies/abilities/iceMonsterFreeze.ts. */
 			readonly type: "player-frozen";
 			readonly payload: { readonly turns: number };
 	  }

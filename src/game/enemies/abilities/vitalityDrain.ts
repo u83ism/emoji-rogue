@@ -1,11 +1,11 @@
-import type { RngState } from "../../rng.js";
+import type { RngState } from "../../../rng.js";
 import {
 	LEVEL_EXPERIENCE_THRESHOLDS,
 	VITALITY_DRAIN_CHANCE_PERCENT,
 	VITALITY_DRAIN_DICE,
-} from "../balance.js";
-import { rollDamageDice, rollToHit } from "../combat/damage.js";
-import type { GameEvent } from "../events.js";
+} from "../../balance.js";
+import { rollDamageDice, rollToHit } from "../../combat/damage.js";
+import type { GameEvent } from "../../events.js";
 
 /** The two kinds whose landed hit can drain the player's vitality (original Rogue's 'V' and 'W'). */
 export type VitalityDrainerKind = "vampire" | "wraith";

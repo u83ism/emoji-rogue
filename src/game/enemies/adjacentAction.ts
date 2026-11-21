@@ -3,15 +3,15 @@ import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import type { EnemyKind, GameEvent } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
 import { nameEnemy } from "../vision.js";
+import { resolveFleeingTheft } from "./abilities/enemyFlee.js";
+import { resolveFlytrapAttack } from "./abilities/flytrapHold.js";
+import { resolveIceMonsterAttack } from "./abilities/iceMonsterFreeze.js";
 import type {
 	EnemyActionResult,
 	EnemyActor,
 	EnemyTurnProgress,
 } from "./action.js";
 import { resolveEnemyAttack } from "./enemyAttack.js";
-import { resolveFleeingTheft } from "./enemyFlee.js";
-import { resolveFlytrapAttack } from "./flytrapHold.js";
-import { resolveIceMonsterAttack } from "./iceMonsterFreeze.js";
 
 export const withEvents = (
 	progress: EnemyTurnProgress,

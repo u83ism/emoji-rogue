@@ -113,7 +113,7 @@ export type Enemy = Position & {
 	readonly carried: readonly Item[];
 	/** Original Rogue's ISMEAN — may wake when the player comes close (enemies/wakeMonster.ts). From its kind (ENEMY_IS_MEAN), or set for a treasure room's monsters. */
 	readonly mean: boolean;
-	/** Original Rogue's ISFOUND on a medusa: its one gaze is spent (enemies/medusaGaze.ts). */
+	/** Original Rogue's ISFOUND on a medusa: its one gaze is spent (enemies/abilities/medusaGaze.ts). */
 	readonly gazeUsed: boolean;
 	/** Where it heads instead of the player — original Rogue's t_dest: an item it means to pick up, or the gold an orc guards (enemies/enemyPack.ts). Absent, it is after the player. */
 	readonly goal?: Position;
@@ -402,7 +402,7 @@ export interface GameState {
 	readonly deepestFloor: number;
 	/** Turns since the player last fought (swung at an enemy or was swung at) — original Rogue's `quiet`. Natural healing waits on it and resets it; see turnEnd/regeneration.ts. */
 	readonly quietTurns: number;
-	/** HP a venus-flytrap's hold costs per turn right now — original Rogue's `vf_hit`. Grows by one with every bite that lands and is back to 0 as soon as no awake flytrap is adjacent. See enemies/flytrapHold.ts. */
+	/** HP a venus-flytrap's hold costs per turn right now — original Rogue's `vf_hit`. Grows by one with every bite that lands and is back to 0 as soon as no awake flytrap is adjacent. See enemies/abilities/flytrapHold.ts. */
 	readonly flytrapHoldDamage: number;
 	/** Turns left before the wandering-monster rolls begin (again) — see turnEnd/wanderer.ts. */
 	readonly wandererDelayTurns: number;

@@ -1,8 +1,8 @@
-import type { RngState } from "../../rng.js";
-import { isAdjacent } from "../combat/combat.js";
-import { rollToHit } from "../combat/damage.js";
-import type { GameEvent } from "../events.js";
-import type { Enemy, Position } from "../state.js";
+import type { RngState } from "../../../rng.js";
+import { isAdjacent } from "../../combat/combat.js";
+import { rollToHit } from "../../combat/damage.js";
+import type { GameEvent } from "../../events.js";
+import type { Enemy, Position } from "../../state.js";
 
 /** What one turn of a venus-flytrap's hold changes — see resolveFlytrapAttack. */
 export interface FlytrapAttackResult {

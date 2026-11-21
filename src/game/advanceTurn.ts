@@ -42,7 +42,7 @@ const isFloor = (state: GameState, x: number, y: number): boolean =>
 /**
  * The venus-flytrap holding the player, if any: original Rogue's ISHELD
  * comes with its first landed bite (flytrapHoldDamage above 0 — see
- * enemies/flytrapHold.ts) and lasts while it stays awake next to them.
+ * enemies/abilities/flytrapHold.ts) and lasts while it stays awake next to them.
  */
 const findHoldingFlytrap = (state: GameState): Enemy | undefined =>
 	state.flytrapHoldDamage > 0

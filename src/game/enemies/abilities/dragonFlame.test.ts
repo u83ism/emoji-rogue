@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { seedToState, stepUniform } from "../rng.js";
-import { advanceEnemies } from "./enemies/enemies.js";
-import { buildArenaGameState } from "./initialState.js";
-import type { Enemy, GameState } from "./state.js";
+import { seedToState, stepUniform } from "../../../rng.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { Enemy, GameState } from "../../state.js";
+import { advanceEnemies } from "../enemies.js";
 
 const dragon = (x: number, y: number): Enemy => ({
 	x,

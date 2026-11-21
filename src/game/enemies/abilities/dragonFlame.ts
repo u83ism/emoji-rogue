@@ -1,17 +1,17 @@
-import { type RngState, stepUniform } from "../rng.js";
+import { type RngState, stepUniform } from "../../../rng.js";
 import {
 	calculateEnemyLevelBonus,
 	calculateMagicSaveChancePercent,
 	calculatePlayerMagicSaveChancePercent,
-} from "./balance.js";
-import { calculateStrengthDamageBonus } from "./combat/strength.js";
-import type { EnemyTurnProgress } from "./enemies/action.js";
-import { ENEMY_STATS } from "./enemies/enemyStats.js";
-import type { GameEvent } from "./events.js";
-import { buildPassageMap, findArea, isSameArea } from "./floor/passages.js";
-import { sumRingBonus } from "./items/equipment/equipmentStats.js";
-import type { GameState, Position } from "./state.js";
-import { nameEnemy } from "./vision.js";
+} from "../../balance.js";
+import { calculateStrengthDamageBonus } from "../../combat/strength.js";
+import type { GameEvent } from "../../events.js";
+import { buildPassageMap, findArea, isSameArea } from "../../floor/passages.js";
+import { sumRingBonus } from "../../items/equipment/equipmentStats.js";
+import type { GameState, Position } from "../../state.js";
+import { nameEnemy } from "../../vision.js";
+import type { EnemyTurnProgress } from "../action.js";
+import { ENEMY_STATS } from "../enemyStats.js";
 
 /** Original Rogue's BOLT_LENGTH: how many tiles a bolt flies, and how far (squared) a dragon breathes from. */
 const BOLT_LENGTH = 6;

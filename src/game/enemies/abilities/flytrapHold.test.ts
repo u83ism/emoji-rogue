@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { seedToState } from "../../rng.js";
-import type { Enemy } from "../state.js";
+import { seedToState } from "../../../rng.js";
+import type { Enemy } from "../../state.js";
 import { isHeldByFlytrap, resolveFlytrapAttack } from "./flytrapHold.js";
 
 const RNG = seedToState(1);

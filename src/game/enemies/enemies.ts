@@ -4,10 +4,10 @@ import { applyEnemyHit } from "../combat/combat.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
 import { findRoomAt } from "../vision.js";
+import { isHeldByFlytrap } from "./abilities/flytrapHold.js";
 import type { EnemyTurnProgress, FlameStrike } from "./action.js";
 import { applyEnemyPickups, findItemGoal } from "./enemyPack.js";
 import { resolveEnemyTurnActions } from "./enemySpeed.js";
-import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
  * One turn for every enemy, in array order. A sleeping enemy does nothing —

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { type RngState, seedToState, stepUniform } from "../../rng.js";
-import { buildArenaGameState } from "../initialState.js";
-import type { Enemy, GameState } from "../state.js";
+import { type RngState, seedToState, stepUniform } from "../../../rng.js";
+import { buildArenaGameState } from "../../initialState.js";
+import type { Enemy, GameState } from "../../state.js";
 import { applyMedusaGaze } from "./medusaGaze.js";
 
 const medusa = (x: number, y: number): Enemy => ({

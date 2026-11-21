@@ -3,7 +3,7 @@ import type { EnemyKind } from "../events.js";
 import { hasEquippedRing } from "../items/rings/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { findPlayerRoom, findRoomAt } from "../vision.js";
-import { applyMedusaGaze } from "./medusaGaze.js";
+import { applyMedusaGaze } from "./abilities/medusaGaze.js";
 
 /**
  * Original Rogue's ISMEAN flag per kind: a mean monster may start chasing

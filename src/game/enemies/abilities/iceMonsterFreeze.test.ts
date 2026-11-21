@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { seedToState, stepUniform } from "../../rng.js";
+import { seedToState, stepUniform } from "../../../rng.js";
 import {
 	ICE_MONSTER_FREEZE_TURNS_MAX,
 	ICE_MONSTER_FREEZE_TURNS_MIN,
 	PARALYSIS_DEATH_TURNS,
-} from "../balance.js";
+} from "../../balance.js";
 import { resolveIceMonsterAttack } from "./iceMonsterFreeze.js";
 
 const SURE_HIT = 100;

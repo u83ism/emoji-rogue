@@ -5,11 +5,11 @@ import { isStrengthSustained, resolvePoisonDrain } from "../combat/strength.js";
 import type { EnemyKind, EnemyName, GameEvent } from "../events.js";
 import { resolveArmorRust } from "../items/equipment/equipment.js";
 import type { Enemy, HeldItem } from "../state.js";
-import { ENEMY_STATS } from "./enemyStats.js";
 import {
 	resolveVitalityDrain,
 	type VitalityDrainerKind,
-} from "./vitalityDrain.js";
+} from "./abilities/vitalityDrain.js";
+import { ENEMY_STATS } from "./enemyStats.js";
 
 /** The player's side of an enemy attack: everything a hit or a kind's on-hit effect can change. */
 export interface AttackTarget {

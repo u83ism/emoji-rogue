@@ -36,5 +36,5 @@
 見た目・名前・フォルダ名など、AIが候補と懸念を出して本人が決めるもの。
 
 - [ ] **未鑑定の見た目の日本語名(様子見)**(2026-11-21、巻物の題と指輪の石はカタカナにした): 薬の色と杖の材質の訳語(`src/shell/appearanceNames.ts`)は、本人が実際に遊んで様子を見る。杖の「落葉材」(本家の`fall`)は推測の訳
-- [ ] **`src/game/enemies/`のフォルダ分割**(2026-11-21、目覚め方(`wakeMonster.ts`)とメデューサの視線(`medusaGaze.ts`)を足して上限15に達した。ドラゴンの炎は飛び道具として`src/game/dragonFlame.ts`に置いたので、敵の新しい処理を足すときに必要): 候補(どれもAI造語、名前は本人が決める)——種類ごとの特殊能力(`flytrapHold.ts`・`iceMonsterFreeze.ts`・`medusaGaze.ts`・`vitalityDrain.ts`・`enemyFlee.ts`、`src/game/dragonFlame.ts`もここへ)を1フォルダに/1体の行動の決め方(`action.ts`・`adjacentAction.ts`・`enemyMovement.ts`・`enemySpeed.ts`・`enemyFlight.ts`)を1フォルダに/フラットのまま例外を記録
+- [ ] **`src/game/enemies/`のフォルダ分割**(2026-11-21、目覚め方(`wakeMonster.ts`)とメデューサの視線(`medusaGaze.ts`)を足して上限15に達した。ドラゴンの炎は飛び道具として`src/game/enemies/abilities/dragonFlame.ts`に置いたので、敵の新しい処理を足すときに必要): 候補(どれもAI造語、名前は本人が決める)——種類ごとの特殊能力(`flytrapHold.ts`・`iceMonsterFreeze.ts`・`medusaGaze.ts`・`vitalityDrain.ts`・`enemyFlee.ts`、`src/game/enemies/abilities/dragonFlame.ts`もここへ)を1フォルダに/1体の行動の決め方(`action.ts`・`adjacentAction.ts`・`enemyMovement.ts`・`enemySpeed.ts`・`enemyFlight.ts`)を1フォルダに/フラットのまま例外を記録
 - [ ] **扉の表示**: 本家の部屋の出入口は扉(`+`)のタイルで、通れるだけの印。現行は扉を描いていない(マイルストーン2で封印、`game-notes.md`)。本家にあるので戻すのが既定だが、見分けづらさの問題があったので、見え方は画面を見て決める

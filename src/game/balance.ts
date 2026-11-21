@@ -60,7 +60,7 @@ export const INVENTORY_CAPACITY = 26;
 
 // The thief is original Rogue's leprechaun under another name (the rename
 // is the developer's choice — docs/design.md). It steals gold on contact
-// and flees instead of fighting (see enemies/enemyFlee.ts). Both the theft
+// and flees instead of fighting (see enemies/abilities/enemyFlee.ts). Both the theft
 // and the gold it drops when killed first (combat.ts) are measured in gold
 // piles' worth (the floor's own gold roll, see calculateGoldAmountMax): one, or
 // THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME when the magic save goes the thief's way
@@ -91,7 +91,7 @@ export const calculatePlayerMagicSaveChancePercent = (
 export const calculatePoisonSaveChancePercent = (playerLevel: number): number =>
 	calculateSaveChancePercent(0, playerLevel);
 
-/** Chance (out of 100) that a vampire's or wraith's landed hit drains the player (original Rogue's attack(): 30 for 'V', 15 for 'W') — see enemies/vitalityDrain.ts. */
+/** Chance (out of 100) that a vampire's or wraith's landed hit drains the player (original Rogue's attack(): 30 for 'V', 15 for 'W') — see enemies/abilities/vitalityDrain.ts. */
 export const VITALITY_DRAIN_CHANCE_PERCENT: Readonly<
 	Record<"vampire" | "wraith", number>
 > = { vampire: 30, wraith: 15 };
@@ -107,7 +107,7 @@ export const VITALITY_DRAIN_DICE: Readonly<
  * An ice monster's hit freezes the player for MIN..MAX turns (original
  * Rogue's `rnd(2) + 2`), added onto any paralysis already left; once the
  * total passes PARALYSIS_DEATH_TURNS (the original's BORE_LEVEL) the player
- * freezes to death. See enemies/iceMonsterFreeze.ts.
+ * freezes to death. See enemies/abilities/iceMonsterFreeze.ts.
  */
 export const ICE_MONSTER_FREEZE_TURNS_MIN = 2;
 export const ICE_MONSTER_FREEZE_TURNS_MAX = 3;

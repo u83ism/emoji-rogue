@@ -1,12 +1,12 @@
-import { stepUniform } from "../../rng.js";
+import { stepUniform } from "../../../rng.js";
 import {
 	CONFUSION_POTION_DURATION,
 	calculatePlayerMagicSaveChancePercent,
-} from "../balance.js";
-import { buildEventLog } from "../events.js";
-import { sumRingBonus } from "../items/equipment/equipmentStats.js";
-import type { Enemy, GameState } from "../state.js";
-import { findPlayerRoom } from "../vision.js";
+} from "../../balance.js";
+import { buildEventLog } from "../../events.js";
+import { sumRingBonus } from "../../items/equipment/equipmentStats.js";
+import type { Enemy, GameState } from "../../state.js";
+import { findPlayerRoom } from "../../vision.js";
 
 /** Original Rogue's LAMPDIST: how near (squared distance below this) a medusa must be to gaze from the dark. */
 const LAMP_DISTANCE_SQUARED = 3;

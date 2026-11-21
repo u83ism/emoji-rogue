@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type RngState, seedToState, stepUniform } from "../../rng.js";
+import { type RngState, seedToState, stepUniform } from "../../../rng.js";
 import {
 	resolveVitalityDrain,
 	type VitalityDrainerKind,

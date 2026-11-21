@@ -7,6 +7,7 @@ import {
 	ITEM_KIND_VALUES,
 	isRingKind,
 	isValuedRingKind,
+	isWandKind,
 } from "../../events.js";
 import {
 	buildArenaGameState,
@@ -58,11 +59,7 @@ const buildFullInventory = (): readonly HeldItem[] =>
 		if (isRingKind(kind)) {
 			return { itemId, kind, equipped: false, cursed: false };
 		}
-		if (
-			kind === "slow-wand" ||
-			kind === "teleport-wand" ||
-			kind === "magic-missile-wand"
-		) {
+		if (isWandKind(kind)) {
 			return { itemId, kind, charges: 5 };
 		}
 		return { itemId, kind };

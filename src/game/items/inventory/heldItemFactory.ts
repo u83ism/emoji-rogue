@@ -61,6 +61,7 @@ export const buildFloorItem = (
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "haste-monster-wand":
 			return {
 				...position,
 				kind,
@@ -150,6 +151,7 @@ export const toHeldItem = (item: Item, freshItemId: number): HeldItem => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "haste-monster-wand":
 			return { kind: item.kind, ...item.identity };
 		default:
 			return { itemId: freshItemId, kind: item.kind };

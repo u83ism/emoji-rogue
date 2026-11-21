@@ -253,3 +253,29 @@ describe("applyMagicMissileWandStrike", () => {
 		]);
 	});
 });
+
+describe("the haste monster wand", () => {
+	it("hastes the monster its bolt meets, or only takes a slow away", () => {
+		const base = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [
+				{ itemId: 1, kind: "haste-monster-wand" as const, charges: 5 },
+			],
+		};
+		const zap = {
+			type: "use-item",
+			payload: { itemId: 1, direction: "east" },
+		} as const;
+		const hasted = advanceTurn({ ...base, enemies: [zombie(7, 1)] }, zap);
+		expect(hasted.enemies[0]?.speed).toBe("hasted");
+		expect(hasted.events[0]).toEqual({
+			type: "enemy-hasted",
+			payload: { target: "zombie" },
+		});
+		expect(hasted.identifiedItemKinds).toEqual([]);
+		const slowed = { ...zombie(7, 1), speed: "slowed-acting" as const };
+		const unslowed = advanceTurn({ ...base, enemies: [slowed] }, zap);
+		expect(unslowed.enemies[0]?.speed).toBe("normal");
+		expect(unslowed.events[0]?.type).toBe("enemy-unslowed");
+	});
+});

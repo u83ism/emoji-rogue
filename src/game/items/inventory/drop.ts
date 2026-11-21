@@ -67,6 +67,7 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "haste-monster-wand":
 			return {
 				...position,
 				kind: item.kind,

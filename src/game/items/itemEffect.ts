@@ -23,6 +23,7 @@ import {
 	applyUseTeleportScroll,
 } from "./scrolls/scrolls.js";
 import {
+	applyUseHasteMonsterWand,
 	applyUseMagicMissileWand,
 	applyUseSlowWand,
 	applyUseTeleportWand,
@@ -98,6 +99,8 @@ export const applyItemEffect = (
 			return applyUseTeleportWand(state, direction);
 		case "magic-missile-wand":
 			return applyUseMagicMissileWand(state, direction);
+		case "haste-monster-wand":
+			return applyUseHasteMonsterWand(state, direction);
 		case "heal-potion":
 		case "poison":
 		case "strength":

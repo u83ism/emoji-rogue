@@ -146,3 +146,44 @@ export const applyUseMagicMissileWand = (
 	}
 	return applyMagicMissileWandStrike(state, target);
 };
+
+/**
+ * A haste monster wand, as original Rogue's do_zap(): the monster its bolt
+ * meets (aimed like the slow wand) loses a slow if it has one, else is
+ * hasted — two moves to every one of the player's. Either way it wakes and
+ * any hold breaks (runto()).
+ */
+export const applyUseHasteMonsterWand = (
+	state: GameState,
+	direction: Direction | undefined,
+): GameState => {
+	if (direction === undefined) {
+		return state;
+	}
+	const { target } = traceFlight(state, direction);
+	if (target === undefined) {
+		/* the bolt met only a wall: the charge is spent all the same */
+		return { ...state };
+	}
+	const wasSlowed =
+		target.speed === "slowed-acting" || target.speed === "slowed-resting";
+	return {
+		...state,
+		enemies: state.enemies.map((enemy) =>
+			enemy === target
+				? {
+						...enemy,
+						speed: wasSlowed ? "normal" : "hasted",
+						awake: true,
+						held: false,
+					}
+				: enemy,
+		),
+		events: buildEventLog(state.events, [
+			{
+				type: wasSlowed ? "enemy-unslowed" : "enemy-hasted",
+				payload: { target: target.kind },
+			},
+		]),
+	};
+};

@@ -46,3 +46,26 @@ describe("the identify ring, wand or staff scroll", () => {
 		).toEqual([]);
 	});
 });
+
+describe("the identify weapon scroll", () => {
+	it("tells a weapon's numbers without naming any kind", () => {
+		const sword: HeldItem = {
+			itemId: 7,
+			kind: "weapon",
+			weaponKind: "long-sword",
+			equipped: false,
+			cursed: false,
+			hitBonus: 1,
+			damageBonus: 2,
+			quantity: 1,
+		};
+		const state = { ...buildArenaGameState(9, 3, 1), inventory: [sword] };
+		const read = applyUseIdentifyScroll(state, "identify-weapon-scroll", 7);
+		expect(read.knownItemIds).toEqual([7]);
+		expect(read.identifiedItemKinds).toEqual([]);
+		expect(read.events.at(-1)).toEqual({
+			type: "item-numbers-known",
+			payload: { itemId: 7 },
+		});
+	});
+});

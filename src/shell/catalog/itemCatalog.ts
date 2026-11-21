@@ -82,6 +82,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("identify-ring-wand-scroll"),
 		effect: `読むと持っている指輪か杖を1つ選び、その種類の正体と、その品の値(指輪の+・杖の残り回数)が分かる(どちらも持っていなければ無駄になる)`,
 	},
+	"identify-weapon-scroll": {
+		catalogName: "武器識別の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("identify-weapon-scroll"),
+		effect: `読むと持っている武器を1つ選び、その命中・ダメージの補正が分かる(装備していなくても持ち物欄に出る。武器を持っていなければ無駄になる)`,
+	},
 	"aggravate-monsters-scroll": {
 		catalogName: "警報の巻物",
 		category: "巻物",

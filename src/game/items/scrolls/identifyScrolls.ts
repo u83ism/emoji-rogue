@@ -1,5 +1,6 @@
 import {
 	buildEventLog,
+	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
 	isRingKind,
 	isWandKind,
@@ -14,6 +15,7 @@ export const IDENTIFY_SCROLL_KINDS = [
 	"identify-potion-scroll",
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
+	"identify-weapon-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type IdentifyScrollKind = (typeof IDENTIFY_SCROLL_KINDS)[number];
@@ -33,7 +35,14 @@ export const IDENTIFY_SCROLL_TARGETS: Readonly<
 	"identify-scroll-scroll": (kind) =>
 		SCROLL_KIND_VALUES.some((scroll) => scroll === kind),
 	"identify-ring-wand-scroll": (kind) => isRingKind(kind) || isWandKind(kind),
+	"identify-weapon-scroll": (kind) => kind === "weapon",
 };
+
+/** The identify scrolls that tell the very item's numbers (ISKNOW), not only its kind. */
+const TELLS_NUMBERS: ReadonlySet<IdentifyScrollKind> = new Set([
+	"identify-ring-wand-scroll",
+	"identify-weapon-scroll",
+]);
 
 /**
  * An identify scroll, as original Rogue's read_scroll() with whatis():
@@ -59,18 +68,22 @@ export const applyUseIdentifyScroll = (
 		return applyScrollWasted(state, scroll);
 	}
 	const knowsNumbers =
-		scroll === "identify-ring-wand-scroll" &&
-		!state.knownItemIds.includes(target.itemId);
+		TELLS_NUMBERS.has(scroll) && !state.knownItemIds.includes(target.itemId);
+	/* a weapon or armor kind is never hidden: only its numbers come to light */
+	const hidesKind = IDENTIFIABLE_ITEM_KINDS.includes(target.kind);
 	return {
 		...state,
 		knownItemIds: knowsNumbers
 			? [...state.knownItemIds, target.itemId]
 			: state.knownItemIds,
-		identifiedItemKinds: state.identifiedItemKinds.includes(target.kind)
-			? state.identifiedItemKinds
-			: [...state.identifiedItemKinds, target.kind],
+		identifiedItemKinds:
+			!hidesKind || state.identifiedItemKinds.includes(target.kind)
+				? state.identifiedItemKinds
+				: [...state.identifiedItemKinds, target.kind],
 		events: buildEventLog(state.events, [
-			{ type: "item-kind-identified", payload: { kind: target.kind } },
+			hidesKind
+				? { type: "item-kind-identified", payload: { kind: target.kind } }
+				: { type: "item-numbers-known", payload: { itemId: target.itemId } },
 		]),
 	};
 };

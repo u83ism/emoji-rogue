@@ -356,6 +356,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 			payload.source === "teleportation-ring"),
 	"floor-mapped": emptyPayload,
 	"item-kind-identified": (payload) => isItemKind(payload.kind),
+	"item-numbers-known": (payload) => isPositiveInteger(payload.itemId),
 	"player-strengthened": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&

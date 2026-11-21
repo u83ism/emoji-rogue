@@ -138,6 +138,19 @@ describe("an item whose numbers are known", () => {
 			"✅ 守りの指輪(+2)",
 		);
 		expect(formatHeldItemLabel(wand, ["slow-wand"])).toBe("鈍足の杖");
+		const sword: HeldItem = {
+			itemId: 4,
+			kind: "weapon",
+			weaponKind: "long-sword",
+			equipped: false,
+			cursed: false,
+			hitBonus: 1,
+			damageBonus: 2,
+			quantity: 1,
+		};
+		expect(formatHeldItemLabel(sword, [], undefined, [4])).toBe(
+			"長剣(命中+1・ダメージ+2)",
+		);
 	});
 });
 

@@ -55,7 +55,9 @@ export const formatHeldItemLabel = (
 			? `(残り${item.charges}回)`
 			: "bonus" in item
 				? `(${formatSignedBonus(item.bonus)})`
-				: "";
+				: item.kind === "weapon"
+					? `(命中${formatSignedBonus(item.hitBonus)}・ダメージ${formatSignedBonus(item.damageBonus)})`
+					: "";
 	if (!("equipped" in item) || !item.equipped) {
 		return `${name}${known}`;
 	}

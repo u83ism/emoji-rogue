@@ -102,6 +102,7 @@ export const ITEM_KIND_VALUES = [
 	"polymorph-wand",
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
+	"identify-weapon-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -288,6 +289,7 @@ export const SCROLL_KIND_VALUES = [
 	"aggravate-monsters-scroll",
 	"identify-scroll-scroll",
 	"identify-ring-wand-scroll",
+	"identify-weapon-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];
@@ -464,6 +466,11 @@ export type GameEvent =
 	| {
 			readonly type: "item-kind-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** An identify scroll told a weapon's or armor's own numbers (ISKNOW). */
+			readonly type: "item-numbers-known";
+			readonly payload: { readonly itemId: number };
 	  }
 	| {
 			/** A restore strength potion — `strength` is playerStrength after it. See items/potions/potions.ts. */

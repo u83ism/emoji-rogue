@@ -53,6 +53,7 @@ describe("save file shape guard", () => {
 				paralyzedTurnsRemaining: "number",
 				playerRunFlag: "boolean",
 				nextHitConfuses: "boolean",
+				frozen: "boolean",
 				/* one index per kind — pinned as families here, their values by validateGameState */
 				appearances: {
 					potionColors: expect.any(Object),

@@ -83,6 +83,7 @@ export const applyUseSleepScroll = (state: GameState): GameState => {
 	return {
 		...state,
 		paralyzedTurnsRemaining: state.paralyzedTurnsRemaining + turns,
+		frozen: false,
 		playerRunFlag: false,
 		rng: rng.getState(),
 		events: buildEventLog(state.events, [

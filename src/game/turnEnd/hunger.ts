@@ -44,6 +44,7 @@ const applyStarvationTurn = (state: GameState): GameState => {
 		...state,
 		playerFood,
 		paralyzedTurnsRemaining: turns,
+		frozen: false,
 		/* the hunger stage changed (stomach()): the run flag goes off */
 		playerRunFlag: false,
 		rng: rng.getState(),

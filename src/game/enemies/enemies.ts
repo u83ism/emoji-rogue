@@ -129,6 +129,9 @@ export const advanceEnemies = (state: GameState): GameState => {
 				quietTurns: progress.playerAttacked ? 0 : state.quietTurns,
 				confusedTurnsRemaining: progress.playerConfusedTurnsRemaining,
 				paralyzedTurnsRemaining: progress.playerParalyzedTurnsRemaining,
+				frozen: progress.events.some((event) => event.type === "player-frozen")
+					? true
+					: state.frozen,
 				playerRunFlag: progress.playerRunFlag,
 				/* the hold only builds while a flytrap still has the player — killing it, or being carried off, starts over */
 				flytrapHoldDamage: isHeldByFlytrap(nextEnemies, state.player)

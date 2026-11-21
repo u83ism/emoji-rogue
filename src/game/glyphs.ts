@@ -140,6 +140,8 @@ export const CONFUSION_GLYPH = "💫";
 export const LEVITATION_GLYPH = "🪽";
 export const BLINDNESS_GLYPH = "🙈";
 export const PARALYSIS_GLYPH = "⚡";
+/** Frozen by an ice monster — the ice monster's own 🧊 (enemyGlyphs.ts), already registered as Unicode 13+. */
+export const FROZEN_GLYPH = "🧊";
 export const DETECT_MONSTER_GLYPH = "🔭";
 /* Woozy face: single-codepoint, no VS16, Unicode 11.0 — CONFUSION_GLYPH(💫)
  * is already taken, and this project's other status chips are all

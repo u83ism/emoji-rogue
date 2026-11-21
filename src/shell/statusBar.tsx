@@ -7,6 +7,7 @@ import {
 	BLINDNESS_GLYPH,
 	CONFUSION_GLYPH,
 	DETECT_MONSTER_GLYPH,
+	FROZEN_GLYPH,
 	HALLUCINATION_GLYPH,
 	LEVITATION_GLYPH,
 	PARALYSIS_GLYPH,
@@ -80,7 +81,16 @@ const STATUS_CHIPS: readonly {
 		label: "麻痺",
 		glyph: PARALYSIS_GLYPH,
 		color: "red",
-		resolveRemaining: (state) => state.paralyzedTurnsRemaining,
+		resolveRemaining: (state) =>
+			state.frozen ? 0 : state.paralyzedTurnsRemaining,
+	},
+	{
+		/* an ice monster's freeze: the same lost turns, shown as the ice monster itself */
+		label: "凍結",
+		glyph: FROZEN_GLYPH,
+		color: "cyan",
+		resolveRemaining: (state) =>
+			state.frozen ? state.paralyzedTurnsRemaining : 0,
 	},
 	{
 		label: "索敵中",

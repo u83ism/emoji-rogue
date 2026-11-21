@@ -722,6 +722,10 @@ export const validateGameState = (
 	if (!isBooleanValue(playerRunFlag)) {
 		return err("playerRunFlag");
 	}
+	const frozen = value.frozen;
+	if (!isBooleanValue(frozen)) {
+		return err("frozen");
+	}
 	const nextHitConfuses = value.nextHitConfuses;
 	if (!isBooleanValue(nextHitConfuses)) {
 		return err("nextHitConfuses");
@@ -896,6 +900,7 @@ export const validateGameState = (
 		paralyzedTurnsRemaining,
 		playerRunFlag,
 		nextHitConfuses,
+		frozen,
 		appearances,
 		rooms: rooms.map((room) => ({
 			x1: room.x1,

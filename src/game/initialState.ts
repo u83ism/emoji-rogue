@@ -34,6 +34,7 @@ const INITIAL_RUN_STATE = {
 	levitationTurnsRemaining: 0,
 	blindTurnsRemaining: 0,
 	paralyzedTurnsRemaining: 0,
+	frozen: false,
 	playerRunFlag: false,
 	nextHitConfuses: false,
 	hasteTurnsRemaining: 0,

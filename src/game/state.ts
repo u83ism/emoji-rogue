@@ -345,6 +345,8 @@ export interface GameState {
 	readonly blindTurnsRemaining: number;
 	/** Turns left of being unable to act at all — see applyStatusCountdownTicks and advanceTurn. */
 	readonly paralyzedTurnsRemaining: number;
+	/** Whether paralyzedTurnsRemaining comes from an ice monster's freeze — the status bar shows it as frozen. Set by the freeze, cleared by any other way of being laid out (sleep, a faint). */
+	readonly frozen: boolean;
 	/**
 	 * Original Rogue's ISRUN flag on the player, which roll_em() reads: while
 	 * it is off, every monster attack gets NOT_RUNNING_HIT_BONUS. It starts

@@ -70,6 +70,7 @@ const TRAP_SIDE_EFFECTS: Readonly<
 	}),
 	"sleeping-gas": (state) => ({
 		...state,
+		frozen: false,
 		paralyzedTurnsRemaining:
 			state.paralyzedTurnsRemaining + SLEEPING_GAS_TRAP_PARALYSIS_DURATION,
 		/* falling asleep takes the run flag away (original Rogue's be_trapped()) */

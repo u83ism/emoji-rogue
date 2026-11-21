@@ -54,6 +54,7 @@ const applyHastePotion = (state: GameState): GameState => {
 				hasteTurnsRemaining: 0,
 				hasteMoveSpent: false,
 				paralyzedTurnsRemaining: state.paralyzedTurnsRemaining + turns,
+				frozen: false,
 				playerRunFlag: false,
 				rng: roll.rng,
 			},

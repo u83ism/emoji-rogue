@@ -284,7 +284,11 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 			);
 		case "throw-item":
 			return applyItemAction(state, (current) =>
-				applyThrowItem(current, action.payload.itemId),
+				applyThrowItem(
+					current,
+					action.payload.itemId,
+					action.payload.direction,
+				),
 			);
 		case "save":
 			/* Only mark the intent — the shell performs the actual file write

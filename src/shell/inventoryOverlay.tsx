@@ -12,6 +12,7 @@ import {
 import {
 	INVENTORY_EMPTY_MESSAGE,
 	ITEM_TARGET_PROMPT,
+	THROW_DIRECTION_PROMPT,
 } from "./systemMessages.js";
 
 /** One lettered row — shared by the main list and the target-selection list. */
@@ -74,11 +75,23 @@ export const InventoryOverlay = ({
 	state,
 	selectedItem,
 	pendingTargetFor,
+	pendingThrowFor,
 }: {
 	readonly state: GameState;
 	readonly selectedItem: HeldItem | undefined;
 	readonly pendingTargetFor: HeldItem | undefined;
+	readonly pendingThrowFor?: HeldItem | undefined;
 }) => {
+	if (pendingThrowFor !== undefined) {
+		return (
+			<Box flexDirection="column" borderStyle="round">
+				<Text>
+					{formatHeldItemLabel(pendingThrowFor, state.identifiedItemKinds)}
+				</Text>
+				<Text>{THROW_DIRECTION_PROMPT}</Text>
+			</Box>
+		);
+	}
 	if (pendingTargetFor !== undefined) {
 		const candidates =
 			filterScrollTargets(pendingTargetFor.kind, state.inventory) ?? [];

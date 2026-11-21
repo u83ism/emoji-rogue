@@ -1,6 +1,6 @@
 import { at } from "../indexing.js";
 import { type ItemKind, POTION_KINDS } from "./events.js";
-import type { Action, HeldItem } from "./state.js";
+import type { Action, Direction, HeldItem } from "./state.js";
 
 /**
  * Selection letters for inventory rows, in assignment order: all of a-z, one
@@ -54,8 +54,9 @@ export const canThrowItem = (item: HeldItem): boolean =>
 
 /**
  * The action for a keypress inside the verb prompt shown after a row is
- * selected: `u` uses the held item, `d` drops it, `t` throws it (weapons
- * only — see canThrowItem). For a kind filterScrollTargets
+ * selected: `u` uses the held item, `d` drops it. `t` (throw, weapons
+ * only — see canThrowItem) asks for a direction first, so the shell
+ * handles it (toThrowAction). For a kind filterScrollTargets
  * gives candidates for, the shell must intercept `u` before calling this (see main.tsx) and
  * open the target row list instead — this function always builds a
  * targetless use-item. Any other key answers undefined so the shell can
@@ -71,11 +72,17 @@ export const toItemVerbAction = (
 	if (input === "d") {
 		return { type: "drop-item", payload: { itemId: item.itemId } };
 	}
-	if (input === "t" && canThrowItem(item)) {
-		return { type: "throw-item", payload: { itemId: item.itemId } };
-	}
 	return undefined;
 };
+
+/** The throw-item action for `item` toward `direction` — the direction-prompt follow-up to `t`. */
+export const toThrowAction = (
+	item: HeldItem,
+	direction: Direction,
+): Action => ({
+	type: "throw-item",
+	payload: { itemId: item.itemId, direction },
+});
 
 /** The use-item action for `sourceItem`, pointed at `targetItem` — the target-row-list follow-up to a filterScrollTargets kind. */
 export const toTargetedUseAction = (

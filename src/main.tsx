@@ -2,7 +2,7 @@ import { Box, render, Text, useApp, useInput } from "ink";
 import { useEffect, useState } from "react";
 import type { GameEvent } from "./game/events.js";
 import { buildFrameGrid } from "./game/frame.js";
-import { isFullWidthInput, toAction } from "./game/keymap.js";
+import { isFullWidthInput, toAction, toDirection } from "./game/keymap.js";
 import { calculateScore } from "./game/score.js";
 import { GameScreen, parseTerminalProfile } from "./renderer/index.js";
 import { formatEvent } from "./shell/eventMessages.js";
@@ -58,7 +58,12 @@ const App = () => {
 
 	useInput((input, key) => {
 		if (inventory.isOpen) {
-			const action = inventory.handleInput(input, key.escape, state.inventory);
+			const action = inventory.handleInput(
+				input,
+				key.escape,
+				state.inventory,
+				toDirection(input, key),
+			);
 			if (action !== undefined) {
 				setSession((current) => recordAction(current, action));
 			}
@@ -117,6 +122,7 @@ const App = () => {
 						state={state}
 						selectedItem={inventory.selectedItem}
 						pendingTargetFor={inventory.pendingTargetFor}
+						pendingThrowFor={inventory.pendingThrowFor}
 					/>
 				</Box>
 			) : (

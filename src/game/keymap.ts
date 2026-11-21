@@ -6,6 +6,23 @@ const moveAction = (direction: Direction): Action => ({
 	payload: { direction },
 });
 
+/** The direction a keypress means — the arrow keys and hjkl — or undefined. Shared by moving and by the throw direction prompt. */
+export const toDirection = (input: string, key: Key): Direction | undefined => {
+	if (key.upArrow || input === "k") {
+		return "north";
+	}
+	if (key.downArrow || input === "j") {
+		return "south";
+	}
+	if (key.leftArrow || input === "h") {
+		return "west";
+	}
+	if (key.rightArrow || input === "l") {
+		return "east";
+	}
+	return undefined;
+};
+
 /**
  * Maps one keypress (as Ink's `useInput` reports it) to an `Action`.
  * Arrow keys and vi keys (hjkl) both move; `.` or space waits one turn;
@@ -14,17 +31,9 @@ const moveAction = (direction: Direction): Action => ({
  * shell can ignore them without consuming a turn.
  */
 export const toAction = (input: string, key: Key): Action | undefined => {
-	if (key.upArrow || input === "k") {
-		return moveAction("north");
-	}
-	if (key.downArrow || input === "j") {
-		return moveAction("south");
-	}
-	if (key.leftArrow || input === "h") {
-		return moveAction("west");
-	}
-	if (key.rightArrow || input === "l") {
-		return moveAction("east");
+	const direction = toDirection(input, key);
+	if (direction !== undefined) {
+		return moveAction(direction);
 	}
 	if (input === "." || input === " ") {
 		return { type: "wait" };

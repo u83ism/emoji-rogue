@@ -13,6 +13,7 @@ import {
 	buildSaveFileContent,
 	CONFUSION_GLYPH,
 	calculatePlayerDefense,
+	canThrowItem,
 	DETECT_MONSTER_GLYPH,
 	filterScrollTargets,
 	formatEvent,
@@ -29,10 +30,12 @@ import {
 	parseSaveFileContent,
 	resolveItemVerbPrompt,
 	SAVE_LOAD_WARNING_MESSAGE,
+	THROW_DIRECTION_PROMPT,
 	toInventoryLetter,
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
+	toThrowAction,
 } from "../dist/game/index.mjs";
 
 const WIDTH = 40;
@@ -127,6 +130,8 @@ let selectedItem;
  * second, filtered row list (filterScrollTargets) instead of dispatching
  * immediately. Also display state, same lifetime as selectedItem. */
 let pendingTargetFor;
+/* The weapon picked to throw, waiting for a direction key. */
+let pendingThrowFor;
 let showSaveLoadWarning = savedOutcome.kind === "corrupted";
 
 const mapElement = document.getElementById("map");
@@ -264,6 +269,12 @@ const renderInventory = () => {
 		return;
 	}
 	inventoryElement.textContent = "";
+	if (pendingThrowFor !== undefined) {
+		const prompt = document.createElement("div");
+		prompt.textContent = THROW_DIRECTION_PROMPT;
+		inventoryElement.appendChild(prompt);
+		return;
+	}
 	if (pendingTargetFor !== undefined) {
 		const prompt = document.createElement("div");
 		prompt.textContent = ITEM_TARGET_PROMPT;
@@ -314,10 +325,24 @@ const closeInventory = () => {
 	isInventoryOpen = false;
 	selectedItem = undefined;
 	pendingTargetFor = undefined;
+	pendingThrowFor = undefined;
 };
 
 window.addEventListener("keydown", (event) => {
 	if (isInventoryOpen) {
+		if (pendingThrowFor !== undefined) {
+			const direction = KEY_TO_DIRECTION[event.key];
+			if (event.key === "Escape") {
+				closeInventory();
+			} else if (direction !== undefined) {
+				const action = toThrowAction(pendingThrowFor, direction);
+				closeInventory();
+				state = advanceTurn(state, action);
+				persistSaveState(state);
+			}
+			render();
+			return;
+		}
 		if (pendingTargetFor !== undefined) {
 			if (event.key === "Escape") {
 				closeInventory();
@@ -352,6 +377,11 @@ window.addEventListener("keydown", (event) => {
 				candidates.length > 0
 			) {
 				pendingTargetFor = selectedItem;
+				render();
+				return;
+			}
+			if (event.key === "t" && canThrowItem(selectedItem)) {
+				pendingThrowFor = selectedItem;
 				render();
 				return;
 			}

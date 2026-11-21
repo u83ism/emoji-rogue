@@ -95,7 +95,7 @@ export const decideAction = (
 	const weaponToThrow = decideWeaponToThrow(state);
 	if (weaponToThrow !== undefined) {
 		return {
-			action: { type: "throw-item", payload: { itemId: weaponToThrow } },
+			action: { type: "throw-item", payload: weaponToThrow },
 			memory,
 		};
 	}

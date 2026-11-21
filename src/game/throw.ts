@@ -1,8 +1,6 @@
-import { createRng } from "../rng.js";
 import { applyEnemyHit } from "./combat/combat.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
-import { buildEventLog } from "./events.js";
 import { WEAPON_STATS } from "./items/equipmentKinds.js";
 import {
 	calculatePlayerStrengthBonus,
@@ -10,44 +8,48 @@ import {
 	type WeaponItem,
 } from "./items/equipmentStats.js";
 import { removeHeldItem, replaceHeldItem } from "./items/inventory.js";
-import type { Enemy, GameState, Item, Position } from "./state.js";
-import { findNearestVisibleEnemy } from "./vision.js";
+import { applyMissileLanding } from "./missileLanding.js";
+import type { Direction, Enemy, GameState, Position } from "./state.js";
 
-/**
- * The tile a missile that missed comes to rest on: a random floor tile out
- * of the 3x3 around `target` (original Rogue's fallpos), skipping the
- * player's own tile and any tile that already holds an item or the
- * staircase. Undefined when none qualifies — the missile is simply lost.
- */
-const drawLandingTile = (
-	state: GameState,
-	target: Position,
-	rng: ReturnType<typeof createRng>,
-): Position | undefined => {
-	const candidates: Position[] = [];
-	for (let x = target.x - 1; x <= target.x + 1; x++) {
-		for (let y = target.y - 1; y <= target.y + 1; y++) {
-			const isFree =
-				state.terrain[x]?.[y] === 0 &&
-				!(x === state.player.x && y === state.player.y) &&
-				!(x === state.stairs.x && y === state.stairs.y) &&
-				!state.items.some((item) => item.x === x && item.y === y);
-			if (isFree) {
-				candidates.push({ x, y });
-			}
-		}
-	}
-	return candidates.length === 0
-		? undefined
-		: candidates[rng.getUniformInt(0, candidates.length - 1)];
+const FLIGHT_STEPS: Readonly<Record<Direction, readonly [number, number]>> = {
+	north: [0, -1],
+	south: [0, 1],
+	west: [-1, 0],
+	east: [1, 0],
 };
 
 /**
- * Throws one of the held weapon `itemId` at the nearest visible enemy —
- * original Rogue's missile(), with the wands' automatic aim standing in for
- * its direction prompt. A no-op (same reference, no turn spent) when the
- * item is not a held weapon, is the weapon currently wielded (the original
- * refuses that too), or no enemy is in view.
+ * Where a missile thrown `direction` stops, as original Rogue's do_motion():
+ * it flies tile by tile from the player until the next tile holds a monster
+ * (seen or not — an invisible one stops it too) or is not floor. It stops
+ * on the monster's tile, or on the wall it ran into.
+ */
+const traceFlight = (
+	state: GameState,
+	direction: Direction,
+): { readonly stop: Position; readonly target: Enemy | undefined } => {
+	const [deltaX, deltaY] = FLIGHT_STEPS[direction];
+	let x = state.player.x;
+	let y = state.player.y;
+	for (;;) {
+		x += deltaX;
+		y += deltaY;
+		const target = state.enemies.find(
+			(enemy) => enemy.x === x && enemy.y === y,
+		);
+		if (target !== undefined || state.terrain[x]?.[y] !== 0) {
+			return { stop: { x, y }, target };
+		}
+	}
+};
+
+/**
+ * Throws one of the held weapon `itemId` `direction`, as original Rogue's
+ * missile(): it flies until it meets a monster or a wall (traceFlight). A
+ * no-op (same reference, no turn spent) when the item is not a held
+ * weapon or is the weapon currently wielded (the original refuses that
+ * too). Thrown at no monster, it falls near where it stopped
+ * (missile-landed).
  *
  * One leaves the stack (the slot empties with the last). To-hit is the
  * usual level + armor class + the missile's own hitBonus, +4 against a
@@ -57,7 +59,11 @@ const drawLandingTile = (
  * the missile; a miss drops it near the target (drawLandingTile), where it
  * can be picked up again. Either way the target wakes.
  */
-export const applyThrowItem = (state: GameState, itemId: number): GameState => {
+export const applyThrowItem = (
+	state: GameState,
+	itemId: number,
+	direction: Direction,
+): GameState => {
 	const item = state.inventory.find(
 		(entry): entry is WeaponItem =>
 			entry.kind === "weapon" && entry.itemId === itemId,
@@ -65,10 +71,7 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 	if (item === undefined || item.equipped) {
 		return state;
 	}
-	const target = findNearestVisibleEnemy(state);
-	if (target === undefined) {
-		return state;
-	}
+	const { stop, target } = traceFlight(state, direction);
 
 	const stats = WEAPON_STATS[item.weaponKind];
 	const wielded = findEquippedWeapon(state.inventory);
@@ -97,6 +100,9 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 		quietTurns: 0,
 	};
 
+	if (target === undefined) {
+		return applyMissileLanding(thrown, item, stop, state.rng, undefined);
+	}
 	const hitRoll = rollToHit(
 		state.rng,
 		calculateThrowHitChancePercent(state, target.kind, hitBonus),
@@ -118,42 +124,5 @@ export const applyThrowItem = (state: GameState, itemId: number): GameState => {
 		);
 	}
 
-	const rng = createRng(1).setState(hitRoll.rng);
-	const landing = drawLandingTile(state, target, rng);
-	/* the last of a stack keeps its own id; one split off a stack needs a fresh one */
-	const splitsStack = item.quantity > 1;
-	const landed: Item | undefined =
-		landing === undefined
-			? undefined
-			: {
-					...landing,
-					kind: "weapon",
-					identity: {
-						itemId: splitsStack ? state.nextItemId : item.itemId,
-						weaponKind: item.weaponKind,
-						cursed: item.cursed,
-						hitBonus: item.hitBonus,
-						damageBonus: item.damageBonus,
-						quantity: 1,
-					},
-				};
-	return {
-		...thrown,
-		rng: rng.getState(),
-		nextItemId:
-			landed !== undefined && splitsStack
-				? state.nextItemId + 1
-				: state.nextItemId,
-		items: landed === undefined ? state.items : [...state.items, landed],
-		enemies: state.enemies.map(
-			(enemy): Enemy =>
-				enemy === target ? { ...enemy, awake: true, held: false } : enemy,
-		),
-		events: buildEventLog(state.events, [
-			{
-				type: "missile-missed",
-				payload: { target: target.kind, variant: item.weaponKind },
-			},
-		]),
-	};
+	return applyMissileLanding(thrown, item, target, hitRoll.rng, target);
 };

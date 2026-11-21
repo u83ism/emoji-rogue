@@ -7,6 +7,7 @@ import {
 	toItemVerbAction,
 	toSelectedHeldItem,
 	toTargetedUseAction,
+	toThrowAction,
 } from "./inventoryKeymap.js";
 import type { HeldItem } from "./state.js";
 
@@ -144,11 +145,13 @@ describe("throwing from the verb prompt", () => {
 		quantity: 9,
 	};
 
-	it("t throws an unwielded weapon", () => {
+	it("t on an unwielded weapon asks for a direction, which then throws it", () => {
 		expect(canThrowItem(dart)).toBe(true);
-		expect(toItemVerbAction("t", dart)).toEqual({
+		/* t itself builds nothing: the shell opens the direction prompt */
+		expect(toItemVerbAction("t", dart)).toBeUndefined();
+		expect(toThrowAction(dart, "west")).toEqual({
 			type: "throw-item",
-			payload: { itemId: 3 },
+			payload: { itemId: 3, direction: "west" },
 		});
 	});
 

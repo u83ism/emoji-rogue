@@ -35,8 +35,13 @@ const isAction = (value: unknown): value is Action => {
 					isPositiveInteger(value.payload.targetItemId))
 			);
 		case "drop-item":
-		case "throw-item":
 			return isRecord(value.payload) && isPositiveInteger(value.payload.itemId);
+		case "throw-item":
+			return (
+				isRecord(value.payload) &&
+				isPositiveInteger(value.payload.itemId) &&
+				isDirection(value.payload.direction)
+			);
 		default:
 			return false;
 	}

@@ -103,6 +103,8 @@ export const formatEvent = (
 			return `装備中の防具が錆びついた!防御力が${event.payload.amount}下がった`;
 		case "missile-hit":
 			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げた。${ENEMY_NAMES[event.payload.target]}に${event.payload.damage}ダメージ`;
+		case "missile-landed":
+			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、何にも当たらなかった`;
 		case "missile-missed":
 			return `${EQUIPMENT_NAMES[event.payload.variant]}を投げたが、${ENEMY_NAMES[event.payload.target]}に当たらなかった`;
 		case "wand-struck":

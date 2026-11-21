@@ -423,6 +423,11 @@ export type GameEvent =
 			readonly payload: { readonly turns: number };
 	  }
 	| {
+			/** A thrown weapon that met no monster, falling near where it stopped — see throw.ts. */
+			readonly type: "missile-landed";
+			readonly payload: { readonly variant: EquipmentVariant };
+	  }
+	| {
 			/** Searching (the `s` key, or a worn searching ring) turned up a hidden trap next to the player — see search.ts. */
 			readonly type: "trap-found";
 			readonly payload: { readonly kind: TrapKind };

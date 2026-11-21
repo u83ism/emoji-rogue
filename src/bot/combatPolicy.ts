@@ -1,6 +1,6 @@
 import { PLAYER_WEAK_THRESHOLD } from "../game/balance.js";
 import type { WeaponKind } from "../game/events.js";
-import type { Direction, GameState } from "../game/state.js";
+import type { Direction, GameState, Position } from "../game/state.js";
 import { findNearestVisibleEnemy } from "../game/vision.js";
 
 /** The weapons worth throwing: the ones that need no launcher and hit harder thrown than a punch — best first. */
@@ -12,14 +12,50 @@ const THROW_PREFERENCE_ORDER: readonly WeaponKind[] = [
 ];
 
 /**
- * The itemId of a weapon to throw this turn, if any: only when the nearest
- * visible enemy (what a throw auto-aims at — items/throw.ts) is awake and
- * not yet adjacent, so the bot softens up what is coming for it instead of
- * waking something asleep (a melee swing at it gets the sleeping-target
- * to-hit bonus first). Never the
- * wielded weapon, which cannot be thrown.
+ * The direction from the player straight along a row or column to `target`
+ * with nothing in between (no wall, no other enemy) — the only throws that
+ * can reach it, now that a missile flies where it is aimed (throw.ts).
  */
-export const decideWeaponToThrow = (state: GameState): number | undefined => {
+const resolveClearThrowDirection = (
+	state: GameState,
+	target: Position,
+): Direction | undefined => {
+	const deltaX = Math.sign(target.x - state.player.x);
+	const deltaY = Math.sign(target.y - state.player.y);
+	if (deltaX !== 0 && deltaY !== 0) {
+		return undefined;
+	}
+	const direction = ALL_DIRECTIONS.find((candidate) => {
+		const [stepX, stepY] = DIRECTION_VECTORS[candidate];
+		return stepX === deltaX && stepY === deltaY;
+	});
+	if (direction === undefined) {
+		return undefined;
+	}
+	let x = state.player.x + deltaX;
+	let y = state.player.y + deltaY;
+	while (x !== target.x || y !== target.y) {
+		const blocked =
+			state.terrain[x]?.[y] !== 0 ||
+			state.enemies.some((enemy) => enemy.x === x && enemy.y === y);
+		if (blocked) {
+			return undefined;
+		}
+		x += deltaX;
+		y += deltaY;
+	}
+	return direction;
+};
+
+/**
+ * A missile worth throwing this turn and where: the nearest visible awake
+ * enemy two or more tiles away, straight in line with a clear flight
+ * (resolveClearThrowDirection), and the first held, unwielded weapon of
+ * THROW_PREFERENCE_ORDER.
+ */
+export const decideWeaponToThrow = (
+	state: GameState,
+): { readonly itemId: number; readonly direction: Direction } | undefined => {
 	const target = findNearestVisibleEnemy(state);
 	if (target === undefined || !target.awake) {
 		return undefined;
@@ -27,6 +63,10 @@ export const decideWeaponToThrow = (state: GameState): number | undefined => {
 	const distance =
 		Math.abs(target.x - state.player.x) + Math.abs(target.y - state.player.y);
 	if (distance < 2) {
+		return undefined;
+	}
+	const direction = resolveClearThrowDirection(state, target);
+	if (direction === undefined) {
 		return undefined;
 	}
 	for (const weaponKind of THROW_PREFERENCE_ORDER) {
@@ -37,7 +77,7 @@ export const decideWeaponToThrow = (state: GameState): number | undefined => {
 				!item.equipped,
 		);
 		if (held !== undefined) {
-			return held.itemId;
+			return { itemId: held.itemId, direction };
 		}
 	}
 	return undefined;

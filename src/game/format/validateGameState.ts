@@ -335,6 +335,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-sees-invisible": (payload) => isPositiveInteger(payload.turns),
 	"see-invisible-faded": emptyPayload,
 	"trap-found": (payload) => isTrapKind(payload.kind),
+	"missile-landed": (payload) => isOneOf(WEAPON_KIND_VALUES, payload.variant),
 	"player-stuck": emptyPayload,
 	"trap-mystery": (payload) =>
 		isNonNegativeInteger(payload.variant) && payload.variant < 11,

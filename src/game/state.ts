@@ -50,9 +50,12 @@ export type Action =
 			readonly payload: { readonly itemId: number };
 	  }
 	| {
-			/** Throws one of the held weapon `itemId` at the nearest visible enemy — see items/throw.ts. */
+			/** Throws one of the held weapon `itemId` toward `direction` — see throw.ts. */
 			readonly type: "throw-item";
-			readonly payload: { readonly itemId: number };
+			readonly payload: {
+				readonly itemId: number;
+				readonly direction: Direction;
+			};
 	  }
 	| { readonly type: "save" }
 	| { readonly type: "quit" };

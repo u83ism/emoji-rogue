@@ -73,21 +73,37 @@ describe("applyThrowItem", () => {
 			weaponOf(1, "mace", { equipped: true }),
 			{ itemId: 2, kind: "food" },
 		]);
-		expect(applyThrowItem(state, 99)).toBe(state);
-		expect(applyThrowItem(state, 2)).toBe(state);
-		expect(applyThrowItem(state, 1)).toBe(state);
+		expect(applyThrowItem(state, 99, "east")).toBe(state);
+		expect(applyThrowItem(state, 2, "east")).toBe(state);
+		expect(applyThrowItem(state, 1, "east")).toBe(state);
 	});
 
-	it("is a no-op with no enemy in view", () => {
-		const state = buildState([weaponOf(1, "dart")], { enemies: [] });
-		expect(applyThrowItem(state, 1)).toBe(state);
+	it("thrown at no monster, it flies to the wall and falls near it (missile-landed)", () => {
+		const state = buildState([weaponOf(1, "dart", { quantity: 2 })], {
+			enemies: [],
+		});
+		const next = applyThrowItem(state, 1, "east");
+		expect(next.events).toEqual([
+			{ type: "missile-landed", payload: { variant: "dart" } },
+		]);
+		const [landed] = next.items;
+		/* the wall is at x = 8: it falls on a floor tile around it */
+		expect(landed?.x).toBe(7);
+		expect(Math.abs((landed?.y ?? 0) - 4)).toBeLessThanOrEqual(1);
+	});
+
+	it("flies only where it is aimed — a monster off the line is not hit", () => {
+		const state = buildState([weaponOf(1, "dart")]);
+		const next = applyThrowItem(state, 1, "north");
+		expect(next.enemies).toEqual(state.enemies);
+		expect(next.events[0]?.type).toBe("missile-landed");
 	});
 
 	it("a hit rolls the weapon's hurl dice plus the strength bonus, uses the missile up and wakes the target", () => {
 		const state = buildState([weaponOf(1, "spear")], {
 			enemies: [enemyOf("zombie", 7, 4, false)],
 		});
-		const next = applyThrowItem(state, 1);
+		const next = applyThrowItem(state, 1, "east");
 		const damage = readDamage(next);
 		/* a thrown spear is 1d6 */
 		expect(damage).toBeGreaterThanOrEqual(1 + START_STRENGTH_DAMAGE);
@@ -108,7 +124,7 @@ describe("applyThrowItem", () => {
 
 	it("takes one off a stack and leaves the rest in the same slot", () => {
 		const state = buildState([weaponOf(1, "dart", { quantity: 10 })]);
-		const next = applyThrowItem(state, 1);
+		const next = applyThrowItem(state, 1, "east");
 		expect(next.inventory).toEqual([weaponOf(1, "dart", { quantity: 9 })]);
 	});
 
@@ -117,7 +133,7 @@ describe("applyThrowItem", () => {
 			weaponOf(1, "short-bow", { equipped: true, damageBonus: 10 }),
 			weaponOf(2, "arrow", { quantity: 5 }),
 		]);
-		const damage = readDamage(applyThrowItem(state, 2));
+		const damage = readDamage(applyThrowItem(state, 2, "east"));
 		expect(damage).toBeGreaterThanOrEqual(2 + 10 + START_STRENGTH_DAMAGE);
 		expect(damage).toBeLessThanOrEqual(6 + 10 + START_STRENGTH_DAMAGE);
 	});
@@ -127,7 +143,7 @@ describe("applyThrowItem", () => {
 			weaponOf(1, "short-bow", { damageBonus: 10 }) /* held, not wielded */,
 			weaponOf(2, "arrow", { quantity: 5 }),
 		]);
-		expect(readDamage(applyThrowItem(state, 2))).toBe(
+		expect(readDamage(applyThrowItem(state, 2, "east"))).toBe(
 			1 + START_STRENGTH_DAMAGE,
 		);
 	});
@@ -136,7 +152,7 @@ describe("applyThrowItem", () => {
 		const state = buildState([weaponOf(1, "shuriken", { quantity: 3 })], {
 			enemies: [{ ...enemyOf("zombie", 7, 4), hp: 1 }],
 		});
-		const next = applyThrowItem(state, 1);
+		const next = applyThrowItem(state, 1, "east");
 		expect(next.enemies).toEqual([]);
 		expect(next.playerExperience).toBeGreaterThan(state.playerExperience);
 		expect(next.events.map((event) => event.type)).toContain("enemy-defeated");
@@ -148,7 +164,7 @@ describe("applyThrowItem", () => {
 			[weaponOf(1, "dart", { quantity: 4, hitBonus: -200 })],
 			{ nextItemId: 50 },
 		);
-		const next = applyThrowItem(state, 1);
+		const next = applyThrowItem(state, 1, "east");
 		expect(next.inventory).toEqual([
 			weaponOf(1, "dart", { quantity: 3, hitBonus: -200 }),
 		]);
@@ -182,7 +198,7 @@ describe("applyThrowItem", () => {
 		const state = buildState([weaponOf(7, "spear", { hitBonus: -200 })], {
 			nextItemId: 50,
 		});
-		const next = applyThrowItem(state, 7);
+		const next = applyThrowItem(state, 7, "east");
 		expect(next.inventory).toEqual([]);
 		const landed = next.items[0];
 		expect(landed?.kind === "weapon" ? landed.identity.itemId : undefined).toBe(
@@ -195,7 +211,7 @@ describe("applyThrowItem", () => {
 		const state = buildState([weaponOf(1, "dart", { hitBonus: -200 })], {
 			enemies: [enemyOf("zombie", 7, 4, false)],
 		});
-		expect(applyThrowItem(state, 1).enemies[0]?.awake).toBe(true);
+		expect(applyThrowItem(state, 1, "east").enemies[0]?.awake).toBe(true);
 	});
 
 	it("gets no edge against a sleeping target — original Rogue's fight() wakes it before rolling", () => {
@@ -208,7 +224,7 @@ describe("applyThrowItem", () => {
 			});
 			let hits = 0;
 			for (let attempt = 0; attempt < 300; attempt++) {
-				const next = applyThrowItem(state, 1);
+				const next = applyThrowItem(state, 1, "east");
 				if (next.events.some((event) => event.type === "missile-hit")) {
 					hits += 1;
 				}
@@ -229,7 +245,7 @@ describe("applyThrowItem", () => {
 		const state = buildState([weaponOf(1, "dart", { quantity: 2 })]);
 		const next = advanceTurn(state, {
 			type: "throw-item",
-			payload: { itemId: 1 },
+			payload: { itemId: 1, direction: "east" },
 		});
 		expect(next.playerFood).toBe(state.playerFood - 1);
 	});

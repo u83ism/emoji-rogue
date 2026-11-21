@@ -111,7 +111,20 @@ describe("decideWeaponToThrow", () => {
 			inventory: [darts],
 			enemies: [enemyAt(4, 1)],
 		};
-		expect(decideWeaponToThrow(state)).toBe(5);
+		/* the player stands at (4,4): the enemy is straight north */
+		expect(decideWeaponToThrow(state)).toEqual({
+			itemId: 5,
+			direction: "north",
+		});
+	});
+
+	it("does not throw at an enemy off the player's row and column", () => {
+		const state = {
+			...baseState(),
+			inventory: [darts],
+			enemies: [enemyAt(6, 2)],
+		};
+		expect(decideWeaponToThrow(state)).toBeUndefined();
 	});
 
 	it("prefers the harder-hitting missile", () => {
@@ -121,7 +134,7 @@ describe("decideWeaponToThrow", () => {
 			inventory: [darts, shuriken],
 			enemies: [enemyAt(4, 1)],
 		};
-		expect(decideWeaponToThrow(state)).toBe(6);
+		expect(decideWeaponToThrow(state)?.itemId).toBe(6);
 	});
 
 	it("does not throw at an adjacent enemy, a sleeping one, or with nothing in view", () => {

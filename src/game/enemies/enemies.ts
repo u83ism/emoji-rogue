@@ -2,7 +2,7 @@ import { encodePointKey } from "../../pointkey.js";
 import { createRng } from "../../rng.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
-import { computePlayerVisiblePoints, findRoomAt } from "../vision.js";
+import { findRoomAt } from "../vision.js";
 import type { EnemyTurnProgress } from "./action.js";
 import { applyEnemyPickups, findItemGoal } from "./enemyPack.js";
 import { resolveEnemyTurnActions } from "./enemySpeed.js";
@@ -30,7 +30,6 @@ export const advanceEnemies = (state: GameState): GameState => {
 			: { ...state, flytrapHoldDamage: 0 };
 	}
 
-	const visiblePoints = computePlayerVisiblePoints(state);
 	const occupied = new Set(
 		state.enemies.map((enemy) => encodePointKey(enemy.x, enemy.y)),
 	);
@@ -72,13 +71,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 			nextEnemies.push(enemy);
 			continue;
 		}
-		const result = resolveEnemyTurnActions(
-			state,
-			enemy,
-			progress,
-			visiblePoints,
-			occupied,
-		);
+		const result = resolveEnemyTurnActions(state, enemy, progress, occupied);
 		const actor = result.actor;
 		progress = result.progress;
 

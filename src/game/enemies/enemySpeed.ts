@@ -43,18 +43,10 @@ export const resolveEnemyTurnActions = (
 	state: GameState,
 	enemy: Enemy,
 	progress: EnemyTurnProgress,
-	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyTurnResult => {
 	const act = (from: EnemyActionResult): EnemyActionResult =>
-		resolveEnemyAction(
-			state,
-			enemy,
-			from.actor,
-			from.progress,
-			visiblePoints,
-			occupied,
-		);
+		resolveEnemyAction(state, enemy, from.actor, from.progress, occupied);
 	const move = (from: EnemyTurnResult): EnemyTurnResult => {
 		const first = from.speed === "slowed-resting" ? from : act(from);
 		const second =

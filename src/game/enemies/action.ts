@@ -6,7 +6,7 @@ import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
 import {
 	resolveEnemyMovement,
-	stepTowardPlayer,
+	stepChase,
 	stepWandering,
 } from "./enemyMovement.js";
 
@@ -69,7 +69,6 @@ export const resolveEnemyAction = (
 	enemy: Enemy,
 	actor: EnemyActor,
 	turnProgress: EnemyTurnProgress,
-	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
 	let progress = turnProgress;
@@ -96,14 +95,7 @@ export const resolveEnemyAction = (
 	}
 	const erraticChancePercent = ERRATIC_MOVE_CHANCE_PERCENT[enemy.kind];
 	if (erraticChancePercent === undefined) {
-		return resolveIntendedAction(
-			state,
-			enemy,
-			actor,
-			progress,
-			visiblePoints,
-			occupied,
-		);
+		return resolveIntendedAction(state, enemy, actor, progress, occupied);
 	}
 	const erraticRoll = stepUniform(progress.rng);
 	if (erraticRoll.value >= erraticChancePercent / 100) {
@@ -112,7 +104,6 @@ export const resolveEnemyAction = (
 			enemy,
 			actor,
 			{ ...progress, rng: erraticRoll.state },
-			visiblePoints,
 			occupied,
 		);
 	}
@@ -134,17 +125,20 @@ const resolveIntendedAction = (
 	enemy: Enemy,
 	actor: EnemyActor,
 	progress: EnemyTurnProgress,
-	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
 	const goal = enemy.goal;
 	if (goal !== undefined) {
 		/* original Rogue's do_chase() toward t_dest: no attack on the way */
 		const atGoal = actor.position.x === goal.x && actor.position.y === goal.y;
-		const step = atGoal
-			? undefined
-			: stepTowardPlayer(state, actor.position, occupied, goal);
-		return { actor: { ...actor, position: step ?? actor.position }, progress };
+		if (atGoal) {
+			return { actor, progress };
+		}
+		const step = stepChase(state, actor.position, occupied, progress.rng, goal);
+		return {
+			actor: { ...actor, position: step.position },
+			progress: { ...progress, rng: step.rng },
+		};
 	}
 	if (!isWithinReach(state.terrain, actor.position, state.player)) {
 		const movement = resolveEnemyMovement(
@@ -152,7 +146,6 @@ const resolveIntendedAction = (
 			enemy,
 			actor.position,
 			occupied,
-			visiblePoints,
 			progress.rng,
 		);
 		return {

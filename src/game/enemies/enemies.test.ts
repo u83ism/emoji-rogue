@@ -198,7 +198,7 @@ describe("advanceEnemies", () => {
 		expect(next.enemies).toEqual([zombie(5, 1), zombie(6, 1)]);
 	});
 
-	it("an unseen enemy wanders, consuming the state's rng", () => {
+	it("an unseen enemy still comes for the player — an awake monster knows where they are", () => {
 		/* 7x3 corridor cut by a wall at x=3: the enemy at (5,1) is hidden */
 		const state: GameState = {
 			width: 7,
@@ -260,9 +260,9 @@ describe("advanceEnemies", () => {
 			status: "playing",
 		};
 		const next = advanceEnemies(state);
-		/* (4,1) is the only open neighbor */
+		/* (4,1) is the open neighbor nearest the player, no tie to roll */
 		expect(next.enemies).toEqual([zombie(4, 1)]);
-		expect(next.rng).not.toEqual(state.rng);
+		expect(next.rng).toEqual(state.rng);
 	});
 
 	it("is deterministic: same state in, same state out", () => {

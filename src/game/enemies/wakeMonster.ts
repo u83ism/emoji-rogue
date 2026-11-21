@@ -2,7 +2,7 @@ import { type RngState, stepUniform } from "../../rng.js";
 import type { EnemyKind } from "../events.js";
 import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
-import { findPlayerRoom } from "../vision.js";
+import { findPlayerRoom, findRoomAt } from "../vision.js";
 import { applyMedusaGaze } from "./medusaGaze.js";
 
 /**
@@ -71,6 +71,20 @@ const rollWake = (enemy: Enemy, rng: RngState, quiet: boolean): WakeRoll => {
 	return { enemy, rng };
 };
 
+/** Original Rogue's wake_monster(), ISGREED: an orc just woken heads for the gold in the player's room, if any. */
+const guardGold = (state: GameState, woken: Enemy, before: Enemy): Enemy => {
+	if (!isGreedy(woken.kind) || before.awake || !woken.awake) {
+		return woken;
+	}
+	const room = findPlayerRoom(state);
+	const pile = state.goldPiles.find(
+		(gold) => room !== undefined && findRoomAt(state.rooms, gold) === room,
+	);
+	return pile === undefined
+		? woken
+		: { ...woken, goal: { x: pile.x, y: pile.y } };
+};
+
 /** `calls` wake_monster() calls on every enemy `isNear` picks, in array order — each one also the medusa's chance to gaze (medusaGaze.ts). */
 const applyWakeRolls = (
 	state: GameState,
@@ -90,7 +104,7 @@ const applyWakeRolls = (
 			const woken = rollWake(current, running.rng, quiet);
 			const gazed = applyMedusaGaze(
 				woken.rng === running.rng ? running : { ...running, rng: woken.rng },
-				woken.enemy,
+				guardGold(running, woken.enemy, current),
 			);
 			current = gazed.enemy;
 			running = gazed.state;

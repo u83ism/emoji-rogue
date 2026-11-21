@@ -115,6 +115,8 @@ export type Enemy = Position & {
 	readonly mean: boolean;
 	/** Original Rogue's ISFOUND on a medusa: its one gaze is spent (enemies/medusaGaze.ts). */
 	readonly gazeUsed: boolean;
+	/** Where it heads instead of the player — original Rogue's t_dest: an item it means to pick up, or the gold an orc guards (enemies/enemyPack.ts). Absent, it is after the player. */
+	readonly goal?: Position;
 	/** Original Rogue's ISHUH: four moves in five go a random way, and each such stumble may clear it (one in twenty) — enemies/action.ts. A hit while the player's hands glow (nextHitConfuses) sets it. */
 	readonly confused: boolean;
 };

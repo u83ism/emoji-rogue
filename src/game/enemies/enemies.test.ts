@@ -821,6 +821,20 @@ describe("advanceEnemies", () => {
 		expect(recovered).toBeLessThan(35);
 	});
 
+	it("one heading for an item walks there without attacking, even next to the player", () => {
+		const nymph = { ...enemyOf("nymph", 5, 1), goal: { x: 6, y: 1 } };
+		const state = {
+			...buildExposedState([nymph]),
+			items: [{ x: 6, y: 1, kind: "heal-potion" as const }],
+		};
+		const next = advanceEnemies(state);
+		expect(next.playerHp).toBe(state.playerHp);
+		/* there, it picks the potion up and stops */
+		expect(next.items).toEqual([]);
+		expect(next.enemies[0]).toMatchObject({ x: 6, y: 1, awake: false });
+		expect(next.enemies[0]?.carried).toHaveLength(1);
+	});
+
 	it("attacks diagonally too, but not across a corner of rock", () => {
 		const arena = {
 			...buildArenaGameState(9, 9, 1) /* the player at (4,4) */,

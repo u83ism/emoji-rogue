@@ -86,6 +86,13 @@ describe("applyLookWake", () => {
 		).toBe(300);
 	});
 
+	it("sends a woken orc to guard the gold of the player's room", () => {
+		const state = withEnemies([sleeper("orc", 5, 2)], seedToState(1), {
+			goldPiles: [{ x: 7, y: 3, amount: 20 }],
+		});
+		expect(applyLookWake(state).enemies[0]?.goal).toEqual({ x: 7, y: 3 });
+	});
+
 	it("leaves a mean monster asleep under a ring of stealth, while floating, or held", () => {
 		const zombie = sleeper("zombie", 5, 2);
 		expect(

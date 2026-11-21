@@ -1,8 +1,10 @@
 import { encodePointKey } from "../../pointkey.js";
+import { createRng } from "../../rng.js";
 import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
-import { computePlayerVisiblePoints } from "../vision.js";
+import { computePlayerVisiblePoints, findRoomAt } from "../vision.js";
 import type { EnemyTurnProgress } from "./action.js";
+import { applyEnemyPickups, findItemGoal } from "./enemyPack.js";
 import { resolveEnemyTurnActions } from "./enemySpeed.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
 
@@ -85,7 +87,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		}
 		const next = actor.position;
 		occupied.add(encodePointKey(next.x, next.y));
-		nextEnemies.push({
+		const moved: Enemy = {
 			...enemy,
 			x: next.x,
 			y: next.y,
@@ -93,10 +95,26 @@ export const advanceEnemies = (state: GameState): GameState => {
 			awake: true,
 			speed: result.speed,
 			confused: actor.confused,
-		});
+		};
+		/* original Rogue's relocate(): into another room, it picks a new destination */
+		if (findRoomAt(state.rooms, enemy) === findRoomAt(state.rooms, next)) {
+			nextEnemies.push(moved);
+			continue;
+		}
+		const rng = createRng(1).setState(progress.rng);
+		const { goal: _old, ...headingForPlayer } = moved;
+		const goal = findItemGoal(
+			{ ...state, enemies: nextEnemies },
+			headingForPlayer,
+			rng,
+		);
+		progress = { ...progress, rng: rng.getState() };
+		nextEnemies.push(
+			goal === undefined ? headingForPlayer : { ...headingForPlayer, goal },
+		);
 	}
 
-	return {
+	return applyEnemyPickups({
 		...state,
 		playerHp: Math.max(0, progress.playerHp),
 		playerMaxHp: progress.playerMaxHp,
@@ -118,5 +136,5 @@ export const advanceEnemies = (state: GameState): GameState => {
 		events: buildEventLog(state.events, progress.events),
 		rng: progress.rng,
 		status: progress.died ? "dead" : state.status,
-	};
+	});
 };

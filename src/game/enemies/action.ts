@@ -4,7 +4,11 @@ import type { GameEvent } from "../events.js";
 import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
-import { resolveEnemyMovement, stepWandering } from "./enemyMovement.js";
+import {
+	resolveEnemyMovement,
+	stepTowardPlayer,
+	stepWandering,
+} from "./enemyMovement.js";
 
 /**
  * Everything the enemies' turn has changed on the player's side so far,
@@ -133,6 +137,15 @@ const resolveIntendedAction = (
 	visiblePoints: ReadonlySet<string>,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
+	const goal = enemy.goal;
+	if (goal !== undefined) {
+		/* original Rogue's do_chase() toward t_dest: no attack on the way */
+		const atGoal = actor.position.x === goal.x && actor.position.y === goal.y;
+		const step = atGoal
+			? undefined
+			: stepTowardPlayer(state, actor.position, occupied, goal);
+		return { actor: { ...actor, position: step ?? actor.position }, progress };
+	}
 	if (!isWithinReach(state.terrain, actor.position, state.player)) {
 		const movement = resolveEnemyMovement(
 			state,

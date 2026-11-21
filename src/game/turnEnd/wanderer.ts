@@ -5,6 +5,7 @@ import {
 	WANDERER_ROLL_DIE_SIDES,
 	WANDERER_ROLL_INTERVAL_TURNS,
 } from "../balance.js";
+import { findItemGoal } from "../enemies/enemyPack.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "../floor/enemies.js";
 import type { GameState, Position } from "../state.js";
 import { computePlayerVisiblePoints } from "../vision.js";
@@ -73,10 +74,13 @@ export const applyWandererTick = (state: GameState): GameState => {
 		throw new Error("unreachable: the index is within the tile list");
 	}
 	const kind = drawEnemyKindForFloor(rng, state.floor, "wanderer");
-	const wanderer = {
+	const spawned = {
 		...buildSpawnedEnemy(kind, position, rng, state.floor),
 		awake: true,
 	};
+	/* original Rogue's wanderer() starts it with runto(), which calls find_dest() */
+	const goal = findItemGoal(state, spawned, rng);
+	const wanderer = goal === undefined ? spawned : { ...spawned, goal };
 	return {
 		...state,
 		enemies: [...state.enemies, wanderer],

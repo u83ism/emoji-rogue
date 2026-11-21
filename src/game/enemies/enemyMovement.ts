@@ -26,18 +26,22 @@ export const stepTowardPlayer = (
 	state: GameState,
 	enemy: Position,
 	occupied: ReadonlySet<string>,
+	goal: Position = state.player,
 ): Position | undefined => {
 	const computeFirstStep = (avoidAllies: boolean): Position | undefined => {
 		const passable = (x: number, y: number): boolean => {
-			if (x === state.player.x && y === state.player.y) {
+			if (x === goal.x && y === goal.y) {
 				return true; /* the goal itself */
+			}
+			if (x === state.player.x && y === state.player.y) {
+				return false; /* heading elsewhere, it goes around the player */
 			}
 			if (!isFloor(state.terrain, x, y)) {
 				return false;
 			}
 			return avoidAllies ? !occupied.has(encodePointKey(x, y)) : true;
 		};
-		const findPath = createAStarPath(state.player.x, state.player.y, passable, {
+		const findPath = createAStarPath(goal.x, goal.y, passable, {
 			topology: 8,
 			canStep: (fromX, fromY, toX, toY) =>
 				canStepBetween(

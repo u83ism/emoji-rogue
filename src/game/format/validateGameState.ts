@@ -134,7 +134,11 @@ const isEnemyArray = (
 			isItemArray(enemy.carried, terrain) &&
 			isBooleanValue(enemy.mean) &&
 			isBooleanValue(enemy.gazeUsed) &&
-			isBooleanValue(enemy.confused),
+			isBooleanValue(enemy.confused) &&
+			(enemy.goal === undefined ||
+				(isRecord(enemy.goal) &&
+					Number.isInteger(enemy.goal.x) &&
+					Number.isInteger(enemy.goal.y))),
 	);
 
 const isEnemyName = (value: unknown): boolean =>
@@ -863,6 +867,9 @@ export const validateGameState = (
 			mean: enemy.mean,
 			gazeUsed: enemy.gazeUsed,
 			confused: enemy.confused,
+			...(enemy.goal === undefined
+				? {}
+				: { goal: { x: enemy.goal.x, y: enemy.goal.y } }),
 		})),
 		items: items.map(rebuildItem),
 		inventory: [...inventory],

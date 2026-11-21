@@ -1,7 +1,7 @@
 import { createPreciseShadowcastingFov } from "../fov/index.js";
 import { encodePointKey } from "../pointkey.js";
 import type { EnemyName } from "./events.js";
-import type { DungeonRoom, Enemy, GameState } from "./state.js";
+import type { DungeonRoom, Enemy, GameState, Position } from "./state.js";
 
 /** How far floor generation looks from the player's start (spawnPool.ts) when keeping monsters out of the first view — generation only. */
 export const VIEW_RADIUS = 8;
@@ -24,15 +24,22 @@ export const computeVisiblePoints = (
 	return visible;
 };
 
-/** The room whose floor or walls the player stands in (doors included), if any — original Rogue's roomin(). */
-export const findPlayerRoom = (state: GameState): DungeonRoom | undefined =>
-	state.rooms.find(
+/** The room whose floor or walls `position` lies in (doors included), if any — original Rogue's roomin(). */
+export const findRoomAt = (
+	rooms: readonly DungeonRoom[],
+	position: Position,
+): DungeonRoom | undefined =>
+	rooms.find(
 		(room) =>
-			state.player.x >= room.x1 - 1 &&
-			state.player.x <= room.x2 + 1 &&
-			state.player.y >= room.y1 - 1 &&
-			state.player.y <= room.y2 + 1,
+			position.x >= room.x1 - 1 &&
+			position.x <= room.x2 + 1 &&
+			position.y >= room.y1 - 1 &&
+			position.y <= room.y2 + 1,
 	);
+
+/** The room the player stands in, if any (findRoomAt). */
+export const findPlayerRoom = (state: GameState): DungeonRoom | undefined =>
+	findRoomAt(state.rooms, state.player);
 
 /**
  * What the player sees right now, as original Rogue's cansee(): nothing at
@@ -152,13 +159,12 @@ export const canSeeInvisible = (state: GameState): boolean =>
  * invisible) or monsters are being detected — "something" otherwise, as
  * when blind.
  */
-export const nameEnemy = (state: GameState, enemy: Enemy): EnemyName => {
-	if (state.detectMonstersTurnsRemaining > 0) {
-		return enemy.kind;
-	}
-	const inSight = computePlayerVisiblePoints(state).has(
-		encodePointKey(enemy.x, enemy.y),
-	);
-	const shows = enemy.kind !== "phantom" || canSeeInvisible(state);
-	return inSight && shows ? enemy.kind : "something";
-};
+export const nameEnemy = (state: GameState, enemy: Enemy): EnemyName =>
+	state.detectMonstersTurnsRemaining > 0 || canSeeEnemy(state, enemy)
+		? enemy.kind
+		: "something";
+
+/** Whether the player sees `enemy` — original Rogue's see_monst(): in sight, and a phantom only with see invisible. */
+export const canSeeEnemy = (state: GameState, enemy: Enemy): boolean =>
+	computePlayerVisiblePoints(state).has(encodePointKey(enemy.x, enemy.y)) &&
+	(enemy.kind !== "phantom" || canSeeInvisible(state));

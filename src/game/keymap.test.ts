@@ -85,6 +85,40 @@ describe("toAction", () => {
 		});
 	});
 
+	it("maps the number pad, with NumLock on (digits) or off (Home/PageUp/End/PageDown)", () => {
+		const moveOf = (input: string, key = buildKey()) => toAction(input, key);
+		expect(moveOf("8")).toEqual({
+			type: "move",
+			payload: { direction: "north" },
+		});
+		expect(moveOf("7")).toEqual({
+			type: "move",
+			payload: { direction: "northwest" },
+		});
+		expect(moveOf("3")).toEqual({
+			type: "move",
+			payload: { direction: "southeast" },
+		});
+		expect(moveOf("", buildKey({ home: true }))).toEqual({
+			type: "move",
+			payload: { direction: "northwest" },
+		});
+		expect(moveOf("", buildKey({ pageUp: true }))).toEqual({
+			type: "move",
+			payload: { direction: "northeast" },
+		});
+		expect(moveOf("", buildKey({ end: true }))).toEqual({
+			type: "move",
+			payload: { direction: "southwest" },
+		});
+		expect(moveOf("", buildKey({ pageDown: true }))).toEqual({
+			type: "move",
+			payload: { direction: "southeast" },
+		});
+		/* 5, the pad's centre, means nothing */
+		expect(moveOf("5")).toBeUndefined();
+	});
+
 	it("maps period and space to wait", () => {
 		expect(toAction(".", buildKey())).toEqual({ type: "wait" });
 		expect(toAction(" ", buildKey())).toEqual({ type: "wait" });

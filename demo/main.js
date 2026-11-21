@@ -59,6 +59,19 @@ const KEY_TO_DIRECTION = {
 	u: "northeast",
 	b: "southwest",
 	n: "southeast",
+	/* the number pad: its digits with NumLock on, Home/PageUp/End/PageDown with it off */
+	8: "north",
+	2: "south",
+	4: "west",
+	6: "east",
+	7: "northwest",
+	9: "northeast",
+	1: "southwest",
+	3: "southeast",
+	Home: "northwest",
+	PageUp: "northeast",
+	End: "southwest",
+	PageDown: "southeast",
 };
 
 const toAction = (key) => {

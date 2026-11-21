@@ -6,34 +6,63 @@ const moveAction = (direction: Direction): Action => ({
 	payload: { direction },
 });
 
-/** The diagonal keys — original Rogue's yubn. */
-const DIAGONAL_KEYS: Readonly<Record<string, Direction>> = {
+/** The direction letters and digits: original Rogue's hjkl/yubn, and the number pad with NumLock on (8 up, 7 up-left …). */
+const DIRECTION_KEYS: Readonly<Record<string, Direction>> = {
+	k: "north",
+	j: "south",
+	h: "west",
+	l: "east",
 	y: "northwest",
 	u: "northeast",
 	b: "southwest",
 	n: "southeast",
+	"8": "north",
+	"2": "south",
+	"4": "west",
+	"6": "east",
+	"7": "northwest",
+	"9": "northeast",
+	"1": "southwest",
+	"3": "southeast",
 };
 
-/** The direction a keypress means — the arrow keys, hjkl and yubn — or undefined. Shared by moving and by the throw direction prompt. */
+/**
+ * The direction a keypress means, or undefined: the arrow keys, hjkl and
+ * yubn, and the number pad — its digits with NumLock on, and with it off
+ * the Home/PageUp/End/PageDown its 7/9/1/3 send for the diagonals. Shared
+ * by moving and by the throw/zap direction prompt.
+ */
 export const toDirection = (input: string, key: Key): Direction | undefined => {
-	if (key.upArrow || input === "k") {
+	if (key.upArrow) {
 		return "north";
 	}
-	if (key.downArrow || input === "j") {
+	if (key.downArrow) {
 		return "south";
 	}
-	if (key.leftArrow || input === "h") {
+	if (key.leftArrow) {
 		return "west";
 	}
-	if (key.rightArrow || input === "l") {
+	if (key.rightArrow) {
 		return "east";
 	}
-	return DIAGONAL_KEYS[input];
+	if (key.home) {
+		return "northwest";
+	}
+	if (key.pageUp) {
+		return "northeast";
+	}
+	if (key.end) {
+		return "southwest";
+	}
+	if (key.pageDown) {
+		return "southeast";
+	}
+	return DIRECTION_KEYS[input];
 };
 
 /**
  * Maps one keypress (as Ink's `useInput` reports it) to an `Action`.
- * Arrow keys and vi keys (hjkl, yubn for the diagonals) all move; `.` or space waits one turn;
+ * Arrow keys, vi keys (hjkl, yubn for the diagonals) and the number pad all move; `.` or space waits one turn;
  * `>`/`<` take the stairs and `s` searches (original Rogue's keys);
  * `S` suspend-saves (also the original's); `q` quits. Unbound keys map to `undefined` so the
  * shell can ignore them without consuming a turn.

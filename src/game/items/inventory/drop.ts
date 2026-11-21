@@ -83,6 +83,9 @@ const toFloorItem = (item: HeldItem, position: Position): Item => {
 				kind: item.kind,
 				identity: { itemId: item.itemId, charges: item.charges },
 			};
+		case "scare-monster-scroll":
+			/* it was picked up to be held: the next pickup turns it to dust */
+			return { ...position, kind: item.kind, pickedUp: true };
 		default:
 			return { ...position, kind: item.kind };
 	}

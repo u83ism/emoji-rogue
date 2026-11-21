@@ -24,11 +24,11 @@ import {
 	ARMOR_STATS,
 	WEAPON_STATS,
 } from "../../game/items/equipment/equipmentKinds.js";
+import { TRAP_NAMES } from "../dungeonEventMessages.js";
 import {
 	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
 	resolveItemDisplayName,
-	TRAP_NAMES,
 } from "../gameNames.js";
 import {
 	type ItemCategory,

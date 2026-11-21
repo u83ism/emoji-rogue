@@ -62,6 +62,7 @@ const ITEM_REVEALS: Readonly<Record<PotionKind | ScrollKind, Reveal>> = {
 	"sleep-scroll": always,
 	"create-monster-scroll": never,
 	"aggravate-monsters-scroll": never,
+	"scare-monster-scroll": never,
 	"food-detection-scroll": (_before, after) => after.sensedItems.length > 0,
 	"identify-armor-scroll": always,
 	"identify-weapon-scroll": always,

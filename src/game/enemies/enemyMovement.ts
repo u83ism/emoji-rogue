@@ -20,6 +20,13 @@ const isFloor = (
 	y: number,
 ): boolean => terrain[x]?.[y] === 0;
 
+/** Whether a scare monster scroll lies at (x, y) — no monster steps there (original Rogue's chase()/rndmove()). */
+export const isScareTile = (state: GameState, x: number, y: number): boolean =>
+	state.items.some(
+		(item) =>
+			item.kind === "scare-monster-scroll" && item.x === x && item.y === y,
+	);
+
 const distanceSquared = (left: Position, right: Position): number =>
 	(left.x - right.x) ** 2 + (left.y - right.y) ** 2;
 
@@ -95,6 +102,7 @@ export const stepChase = (
 				!isFloor(state.terrain, tile.x, tile.y) ||
 				!canStepBetween(state.terrain, from, tile) ||
 				occupied.has(encodePointKey(tile.x, tile.y)) ||
+				isScareTile(state, tile.x, tile.y) ||
 				(tile.x === state.player.x && tile.y === state.player.y);
 			if (blocked) {
 				continue;
@@ -143,7 +151,8 @@ export const stepWandering = (
 		if (
 			isFloor(state.terrain, x, y) &&
 			canStepBetween(state.terrain, enemy, { x, y }) &&
-			!occupied.has(encodePointKey(x, y))
+			!occupied.has(encodePointKey(x, y)) &&
+			!isScareTile(state, x, y)
 		) {
 			options.push({ x, y });
 		}

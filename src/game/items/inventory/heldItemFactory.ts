@@ -53,6 +53,9 @@ export const buildFloorItem = (
 	position: Position,
 	rng: Rng,
 ): Item => {
+	if (kind === "scare-monster-scroll") {
+		return { ...position, kind, pickedUp: false };
+	}
 	if (!hasItemIdentity(kind)) {
 		return { ...position, kind };
 	}

@@ -106,6 +106,7 @@ export const ITEM_KIND_VALUES = [
 	"identify-armor-scroll",
 	"food-detection-scroll",
 	"magic-detection-potion",
+	"scare-monster-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -296,6 +297,7 @@ export const SCROLL_KIND_VALUES = [
 	"identify-weapon-scroll",
 	"identify-armor-scroll",
 	"food-detection-scroll",
+	"scare-monster-scroll",
 ] as const satisfies readonly ItemKind[];
 
 export type ScrollKind = (typeof SCROLL_KIND_VALUES)[number];
@@ -472,6 +474,16 @@ export type GameEvent =
 	| {
 			readonly type: "item-kind-identified";
 			readonly payload: { readonly kind: ItemKind };
+	  }
+	| {
+			/** A scare monster scroll read: only distant laughter. */
+			readonly type: "maniacal-laughter";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A scare monster scroll picked up a second time crumbles away. */
+			readonly type: "scroll-turned-to-dust";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** A magic detection potion: how many magic things it showed (none — only a strange feeling). */

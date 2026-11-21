@@ -322,3 +322,65 @@ describe("the food detection scroll", () => {
 		expect(read.identifiedItemKinds).toEqual([]);
 	});
 });
+
+describe("the scare monster scroll", () => {
+	it("on the floor keeps monsters off it — the player standing on it is not attacked", () => {
+		/* a 9x3 arena, the player at (4,1) on the scroll, an awake zombie next to them */
+		const zombie = {
+			x: 5,
+			y: 1,
+			kind: "zombie" as const,
+			hp: 20,
+			maxHp: 20,
+			awake: true,
+			speed: "normal" as const,
+			held: false,
+			carried: [],
+			mean: true,
+			gazeUsed: false,
+			confused: false,
+			invisible: false,
+			cancelled: false,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [],
+			items: [
+				{ x: 4, y: 1, kind: "scare-monster-scroll" as const, pickedUp: true },
+			],
+			enemies: [zombie],
+		};
+		const next = advanceTurn(state, { type: "wait" });
+		expect(next.playerHp).toBe(state.playerHp);
+		expect(
+			next.events.some((event) => event.type === "enemy-attack-missed"),
+		).toBe(false);
+	});
+
+	it("picked up again after being dropped, turns to dust", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			items: [
+				{ x: 5, y: 1, kind: "scare-monster-scroll" as const, pickedUp: true },
+			],
+		};
+		const next = advanceTurn(state, {
+			type: "move",
+			payload: { direction: "east" },
+		});
+		expect(next.items).toEqual([]);
+		expect(next.inventory).toEqual([]);
+		expect(next.events.at(-1)?.type).toBe("scroll-turned-to-dust");
+		/* a fresh one is picked up as usual */
+		const fresh = {
+			...state,
+			items: [
+				{ x: 5, y: 1, kind: "scare-monster-scroll" as const, pickedUp: false },
+			],
+		};
+		expect(
+			advanceTurn(fresh, { type: "move", payload: { direction: "east" } })
+				.inventory,
+		).toHaveLength(1);
+	});
+});

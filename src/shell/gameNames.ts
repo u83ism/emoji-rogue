@@ -7,7 +7,6 @@ import {
 	type EquipmentVariant,
 	IDENTIFIABLE_ITEM_KINDS,
 	type ItemKind,
-	type TrapKind,
 } from "../game/events.js";
 import { resolveUnidentifiedName } from "./appearanceNames.js";
 
@@ -93,6 +92,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"sleep-scroll": "眠りの巻物",
 	"create-monster-scroll": "召喚の巻物",
 	"aggravate-monsters-scroll": "警報の巻物",
+	"scare-monster-scroll": "怪物よけの巻物",
 	"food-detection-scroll": "食料感知の巻物",
 	"identify-armor-scroll": "防具識別の巻物",
 	"identify-weapon-scroll": "武器識別の巻物",
@@ -164,17 +164,6 @@ export const formatDeathMessage = (by: DeathCause): string =>
 	isNonEnemyDeathCause(by)
 		? NON_ENEMY_DEATH_MESSAGES[by]
 		: `${ENEMY_NAMES[by]}にやられた……`;
-
-export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
-	trapdoor: "落とし穴",
-	arrow: "矢のわな",
-	"sleeping-gas": "睡眠ガスのわな",
-	bear: "捕獲のわな",
-	teleport: "テレポートの罠",
-	dart: "毒矢のわな",
-	rust: "錆びわな",
-	mysterious: "謎のわな",
-};
 
 /**
  * The name to show for `kind`: the real name once identified (or for a kind

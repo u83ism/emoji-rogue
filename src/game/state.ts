@@ -159,7 +159,17 @@ type ValuedRingIdentity = Omit<
  */
 export type Item = Position &
 	(
-		| { readonly kind: Exclude<ItemKind, EquipmentItemKind | WandKind> }
+		| {
+				readonly kind: Exclude<
+					ItemKind,
+					EquipmentItemKind | WandKind | "scare-monster-scroll"
+				>;
+		  }
+		| {
+				/** Original Rogue's ISFOUND on it: once picked up, the next pickup turns it to dust (items/inventory/pickups.ts). */
+				readonly kind: "scare-monster-scroll";
+				readonly pickedUp: boolean;
+		  }
 		| {
 				readonly kind: WandKind;
 				readonly identity: {

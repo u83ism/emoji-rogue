@@ -100,6 +100,12 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("food-detection-scroll"),
 		effect: `読むとその階の食料の場所がそのターンだけ地図に出る(食料が無ければ鼻がむずむずするだけ)。食料があったときだけ正体が分かる`,
 	},
+	"scare-monster-scroll": {
+		catalogName: "怪物よけの巻物",
+		category: "巻物",
+		spawn: itemDrawShare("scare-monster-scroll"),
+		effect: `床に置いてあると、敵はそのマスに入れず、その上に立つプレイヤーも攻撃できない。読んでも遠くで笑い声が聞こえるだけ。一度拾ってから置くと、次に拾うときに塵になって消える。読んでも正体は分からない`,
+	},
 	"aggravate-monsters-scroll": {
 		catalogName: "警報の巻物",
 		category: "巻物",

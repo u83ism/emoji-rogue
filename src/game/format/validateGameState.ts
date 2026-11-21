@@ -359,6 +359,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"item-numbers-known": (payload) => isPositiveInteger(payload.itemId),
 	"food-detected": (payload) => isNonNegativeInteger(payload.count),
 	"magic-detected": (payload) => isNonNegativeInteger(payload.count),
+	"maniacal-laughter": emptyPayload,
+	"scroll-turned-to-dust": emptyPayload,
 	"player-strengthened": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&
@@ -556,6 +558,8 @@ const rebuildItem = (item: Item): Item => {
 				kind: item.kind,
 				identity: item.identity,
 			};
+		case "scare-monster-scroll":
+			return { ...position, kind: item.kind, pickedUp: item.pickedUp === true };
 		default:
 			return { ...position, kind: item.kind };
 	}

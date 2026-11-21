@@ -20,6 +20,7 @@ import {
 	applyUseFoodDetectionScroll,
 	applyUseHoldMonsterScroll,
 	applyUseMappingScroll,
+	applyUseScareMonsterScroll,
 	applyUseSleepScroll,
 	applyUseTeleportScroll,
 } from "./scrolls/scrolls.js";
@@ -134,6 +135,8 @@ export const applyItemEffect = (
 			);
 		case "food-detection-scroll":
 			return applyUseFoodDetectionScroll(state);
+		case "scare-monster-scroll":
+			return applyUseScareMonsterScroll(state);
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food":

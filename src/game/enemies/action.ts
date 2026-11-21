@@ -6,6 +6,7 @@ import type { Enemy, GameState, HeldItem, Position } from "../state.js";
 import { resolveAdjacentAction } from "./adjacentAction.js";
 import { ERRATIC_MOVE_CHANCE_PERCENT } from "./enemyFlight.js";
 import {
+	isScareTile,
 	resolveEnemyMovement,
 	stepChase,
 	stepWandering,
@@ -168,7 +169,9 @@ const resolveChaseOrBite = (
 	progress: EnemyTurnProgress,
 	occupied: ReadonlySet<string>,
 ): EnemyActionResult => {
-	if (!isWithinReach(state.terrain, actor.position, state.player)) {
+	/* standing on a scare monster scroll, the player cannot be attacked */
+	const scared = isScareTile(state, state.player.x, state.player.y);
+	if (scared || !isWithinReach(state.terrain, actor.position, state.player)) {
 		const movement = resolveEnemyMovement(
 			state,
 			enemy,

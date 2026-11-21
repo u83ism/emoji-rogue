@@ -1,5 +1,18 @@
-import type { GameEvent } from "../game/events.js";
-import { formatEnemyName, TRAP_NAMES } from "./gameNames.js";
+import type { GameEvent, TrapKind } from "../game/events.js";
+
+/** The eight traps as the log and the catalog name them. */
+export const TRAP_NAMES: Readonly<Record<TrapKind, string>> = {
+	trapdoor: "落とし穴",
+	arrow: "矢のわな",
+	"sleeping-gas": "睡眠ガスのわな",
+	bear: "捕獲のわな",
+	teleport: "テレポートの罠",
+	dart: "毒矢のわな",
+	rust: "錆びわな",
+	mysterious: "謎のわな",
+};
+
+import { formatEnemyName } from "./gameNames.js";
 
 /** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
 const STAIRS_REFUSAL_MESSAGES: Readonly<
@@ -44,6 +57,8 @@ const DUNGEON_EVENT_TYPES = [
 	"item-numbers-known",
 	"food-detected",
 	"magic-detected",
+	"maniacal-laughter",
+	"scroll-turned-to-dust",
 	"room-lit",
 	"corridor-glowed",
 	"life-drained",
@@ -88,6 +103,10 @@ export const formatDungeonEvent = (event: DungeonEvent): string => {
 			return "部屋がぱっと明るくなった!";
 		case "corridor-glowed":
 			return "通路が光り、すぐに消えた";
+		case "maniacal-laughter":
+			return "巻物を読んだ。遠くで狂ったような笑い声が聞こえた";
+		case "scroll-turned-to-dust":
+			return "拾おうとした巻物は塵になって消えた";
 		case "magic-detected":
 			return event.payload.count > 0
 				? "薬を飲んだ。この階に魔法の気配を感じる!"

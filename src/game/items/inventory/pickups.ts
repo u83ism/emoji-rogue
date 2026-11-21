@@ -28,6 +28,16 @@ export const applyItemPickup = (state: GameState): GameState => {
 	if (item === undefined) {
 		return state;
 	}
+	if (item.kind === "scare-monster-scroll" && item.pickedUp) {
+		/* original Rogue's pick_up(): ISFOUND — it turns to dust */
+		return {
+			...state,
+			items: state.items.filter((candidate) => candidate !== item),
+			events: buildEventLog(state.events, [
+				{ type: "scroll-turned-to-dust", payload: {} },
+			]),
+		};
+	}
 	const heldItem = toHeldItem(item, state.nextItemId);
 	const stackTarget = findStackTarget(state.inventory, heldItem);
 	if (stackTarget !== undefined && heldItem.kind === "weapon") {

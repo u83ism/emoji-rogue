@@ -118,7 +118,10 @@ export const findItemGoal = (
 		return undefined;
 	}
 	for (const item of state.items) {
-		if (findRoomAt(state.rooms, item) !== room) {
+		if (
+			item.kind === "scare-monster-scroll" ||
+			findRoomAt(state.rooms, item) !== room
+		) {
 			continue;
 		}
 		if (rng.getUniformInt(0, 99) >= carryPercent) {

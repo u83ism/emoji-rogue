@@ -163,3 +163,11 @@ export const applyUseFoodDetectionScroll = (state: GameState): GameState => {
 		]),
 	};
 };
+
+/** A scare monster scroll read (original Rogue's S_SCARE): a mistake — only distant laughter. Its use is lying on the floor (see Item). */
+export const applyUseScareMonsterScroll = (state: GameState): GameState => ({
+	...state,
+	events: buildEventLog(state.events, [
+		{ type: "maniacal-laughter", payload: {} },
+	]),
+});

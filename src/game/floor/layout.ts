@@ -1,17 +1,20 @@
 import { at } from "../../indexing.js";
 import { getRoomCenter, type Room } from "../../map/features.js";
 import { createRogueMap } from "../../map/rogue.js";
+import { encodePointKey } from "../../pointkey.js";
 import type { Rng } from "../../rng.js";
 import { buildEmptyColumns } from "../columns.js";
 import type {
 	DungeonRoom,
 	Enemy,
 	GoldPile,
+	HiddenTile,
 	Item,
 	Position,
 	Stairs,
 	Trap,
 } from "../state.js";
+import { drawHiddenTiles } from "./hiddenTiles.js";
 import { drawFloorItems } from "./items.js";
 import { drawRoomContents } from "./rooms.js";
 import {
@@ -37,6 +40,8 @@ export interface FloorLayout {
 	readonly rooms: readonly Room[];
 	/** The same rooms, lit or dark, as they go into GameState.rooms. */
 	readonly dungeonRooms: readonly DungeonRoom[];
+	/** The secret doors and passages (hiddenTiles.ts) — already wall in `terrain`. */
+	readonly hiddenTiles: readonly HiddenTile[];
 	/** `nextItemId` after this floor's equipment spawns each consumed one — see drawFloorItems. */
 	readonly nextItemId: number;
 	/** The food drought counter to carry to the next floor — see items.ts's drawFloorItems. */
@@ -138,24 +143,38 @@ export const buildFloorLayout = (
 		placesGold,
 	);
 
+	const dungeonRooms = rooms.map((room) => ({
+		x1: room.x1,
+		y1: room.y1,
+		x2: room.x2,
+		y2: room.y2,
+		/* original Rogue's do_rooms(): a room is dark when rnd(10) < level - 1 */
+		dark: rng.getUniformInt(0, 9) < floor - 1,
+	}));
+	const allEnemies = [...enemies, ...treasure.enemies];
+	const allItems = [...treasure.items, ...items];
+	const occupied = new Set(
+		[player, stairs, ...allEnemies, ...allItems, ...goldPiles, ...traps]
+			.concat(amulet === undefined ? [] : [amulet])
+			.map((thing) => encodePointKey(thing.x, thing.y)),
+	);
+	const hiddenTiles = drawHiddenTiles(columns, rooms, rng, floor, occupied);
+	for (const tile of hiddenTiles) {
+		at(columns, tile.x)[tile.y] = 1;
+	}
+
 	return {
 		terrain: columns,
 		player,
-		enemies: [...enemies, ...treasure.enemies],
-		items: [...treasure.items, ...items],
+		enemies: allEnemies,
+		items: allItems,
 		goldPiles,
 		traps,
 		stairs,
 		amulet,
 		rooms,
-		/* original Rogue's do_rooms(): a room is dark when rnd(10) < level - 1 */
-		dungeonRooms: rooms.map((room) => ({
-			x1: room.x1,
-			y1: room.y1,
-			x2: room.x2,
-			y2: room.y2,
-			dark: rng.getUniformInt(0, 9) < floor - 1,
-		})),
+		dungeonRooms,
+		hiddenTiles,
 		nextItemId: nextItemIdAfterFloor,
 		floorsWithoutFood: floorsWithoutFoodAfter,
 	};

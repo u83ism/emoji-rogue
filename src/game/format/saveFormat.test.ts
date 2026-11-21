@@ -32,6 +32,7 @@ describe("save file shape guard", () => {
 			...dungeon,
 			traps: [{ ...dungeon.player, kind: "dart", seen: false }],
 		});
+		/* hiddenTiles comes out empty on floor 1 (never hidden there), so its element shape is pinned by validateGameState's tests */
 		expect(describeShape(JSON.parse(written))).toEqual({
 			formatVersion: "number",
 			state: {
@@ -101,6 +102,7 @@ describe("save file shape guard", () => {
 				goldPiles: [{ x: "number", y: "number", amount: "number" }],
 				goldCollected: "number",
 				traps: [{ x: "number", y: "number", kind: "string", seen: "boolean" }],
+				hiddenTiles: [],
 				floor: "number",
 				deepestFloor: "number",
 				turnsOnCurrentFloor: "number",

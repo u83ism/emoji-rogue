@@ -277,6 +277,11 @@ export type Trap = Position & {
 	readonly seen: boolean;
 };
 
+/** A secret door or passage (original Rogue's tile without F_REAL): wall in `terrain` until searched out — see search.ts. */
+export type HiddenTile = Position & {
+	readonly kind: "door" | "passage";
+};
+
 /**
  * The complete, serializable game state. Contains only data — no functions —
  * so a save file is just `JSON.stringify(state)` and a replay is the initial
@@ -362,6 +367,8 @@ export interface GameState {
 	/** Running total of gold collected across the whole run — also the de facto final score. */
 	readonly goldCollected: number;
 	readonly traps: readonly Trap[];
+	/** The floor's secret doors and passages still unfound — see HiddenTile. */
+	readonly hiddenTiles: readonly HiddenTile[];
 	/** 1-based; grows as the player descends. */
 	readonly floor: number;
 	/** The deepest floor ever stood on this run — original Rogue's `max_level`. Below it (climbing back with the amulet) floors hold no gold and a thief drops none. */

@@ -71,6 +71,7 @@ export const formatEvent = (
 		case "stairs-refused":
 		case "trap-triggered":
 		case "trap-found":
+		case "secret-door-found":
 		case "player-stuck":
 		case "trap-mystery":
 			return formatDungeonEvent(event);

@@ -688,6 +688,11 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
+			/** A search turned up a secret door (original Rogue's "a secret door") — see search.ts. A secret passage turns up silently. */
+			readonly type: "secret-door-found";
+			readonly payload: Record<string, never>;
+	  }
+	| {
 			/** The glow passing into the monster just hit. */
 			readonly type: "hands-stopped-glowing";
 			readonly payload: Record<string, never>;

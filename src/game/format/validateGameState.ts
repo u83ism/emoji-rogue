@@ -38,6 +38,7 @@ import type {
 	GameState,
 	GoldPile,
 	HeldItem,
+	HiddenTile,
 	Item,
 	Position,
 	Trap,
@@ -274,6 +275,22 @@ const isTrapArray = (
 			isBooleanValue(trap.seen),
 	);
 
+const isHiddenTileArray = (
+	value: unknown,
+	terrain: readonly (readonly number[])[],
+): value is readonly HiddenTile[] =>
+	Array.isArray(value) &&
+	value.every(
+		(tile) =>
+			isRecord(tile) &&
+			Number.isInteger(tile.x) &&
+			Number.isInteger(tile.y) &&
+			typeof tile.x === "number" &&
+			typeof tile.y === "number" &&
+			terrain[tile.x]?.[tile.y] === 1 &&
+			(tile.kind === "door" || tile.kind === "passage"),
+	);
+
 type PayloadValidator = (payload: Record<string, unknown>) => boolean;
 
 /** An event whose payload is always empty carries nothing to validate. */
@@ -407,6 +424,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-confused": (payload) => isEnemyKind(payload.target),
 	"hands-glowing": emptyPayload,
 	"hands-stopped-glowing": emptyPayload,
+	"secret-door-found": emptyPayload,
 	"player-hallucinated": (payload) => isPositiveInteger(payload.turns),
 	"hallucination-faded": emptyPayload,
 	"enemy-held": (payload) => isEnemyKind(payload.target),
@@ -769,6 +787,10 @@ export const validateGameState = (
 	if (!isTrapArray(traps, terrain)) {
 		return err("traps");
 	}
+	const hiddenTiles = value.hiddenTiles;
+	if (!isHiddenTileArray(hiddenTiles, terrain)) {
+		return err("hiddenTiles");
+	}
 	const events = value.events;
 	if (!isGameEventArray(events)) {
 		return err("events");
@@ -854,6 +876,11 @@ export const validateGameState = (
 			y: trap.y,
 			kind: trap.kind,
 			seen: trap.seen,
+		})),
+		hiddenTiles: hiddenTiles.map((tile) => ({
+			x: tile.x,
+			y: tile.y,
+			kind: tile.kind,
 		})),
 		events: [...events],
 		rng: { s0: rng.s0, s1: rng.s1, s2: rng.s2, c: rng.c },

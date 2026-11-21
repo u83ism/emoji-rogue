@@ -46,6 +46,7 @@ const buildFloorTransition = (
 			items: layout.items,
 			goldPiles: layout.goldPiles,
 			traps: layout.traps,
+			hiddenTiles: layout.hiddenTiles,
 			stairs: layout.stairs,
 			rooms: layout.dungeonRooms,
 			amulet: layout.amulet,

@@ -2,7 +2,7 @@ import {
 	INVENTORY_CAPACITY,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 } from "../game/balance.js";
-import type { GameState } from "../game/state.js";
+import type { GameState, Position } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
 import { findNearestReachableTarget } from "./pathfinding.js";
 
@@ -104,4 +104,26 @@ export const isGoalStillValid = (state: GameState, goal: BotGoal): boolean => {
 		case "stairs":
 			return true;
 	}
+};
+
+/**
+ * With the stairs out of reach, where to look for the secret door or
+ * passage in the way: "search" when one lies next to the bot, else the
+ * first step toward the nearest floor tile next to one, or undefined when
+ * no hidden tile is reachable either. The bot reads GameState.hiddenTiles
+ * directly — it is a measuring tool, and already knows where the stairs
+ * are (chooseGoal).
+ */
+export const decideSecretSearch = (
+	state: GameState,
+): "search" | Position | undefined => {
+	const isNextToSecret = (x: number, y: number): boolean =>
+		state.hiddenTiles.some(
+			(tile) => Math.max(Math.abs(tile.x - x), Math.abs(tile.y - y)) === 1,
+		);
+	if (isNextToSecret(state.player.x, state.player.y)) {
+		return "search";
+	}
+	return findNearestReachableTarget(state.terrain, state.player, isNextToSecret)
+		?.nextStep;
 };

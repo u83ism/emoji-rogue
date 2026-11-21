@@ -5,7 +5,7 @@ import {
 } from "../game/balance.js";
 import { buildArenaGameState } from "../game/initialState.js";
 import type { GameState, Item } from "../game/state.js";
-import { chooseGoal, isGoalStillValid } from "./goals.js";
+import { chooseGoal, decideSecretSearch, isGoalStillValid } from "./goals.js";
 
 const baseState = (): GameState => buildArenaGameState(9, 9, 1);
 
@@ -162,5 +162,22 @@ describe("isGoalStillValid", () => {
 	it("is always true for a stairs goal", () => {
 		const state = baseState();
 		expect(isGoalStillValid(state, { kind: "stairs", x: 0, y: 0 })).toBe(true);
+	});
+});
+
+describe("decideSecretSearch", () => {
+	/* a 9x5 arena, the player at (4,2) */
+	it("searches next to a secret tile, walks toward a farther one, and gives up with none", () => {
+		const arena = buildArenaGameState(9, 5, 1);
+		const near = {
+			...arena,
+			hiddenTiles: [{ x: 4, y: 0, kind: "door" as const }],
+		};
+		/* (4,0) is two rows up: step north first */
+		expect(decideSecretSearch(near)).toEqual({ x: 4, y: 1 });
+		expect(decideSecretSearch({ ...near, player: { x: 4, y: 1 } })).toBe(
+			"search",
+		);
+		expect(decideSecretSearch(arena)).toBeUndefined();
 	});
 });

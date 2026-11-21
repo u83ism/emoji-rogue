@@ -115,6 +115,7 @@ export const buildArenaGameState = (
 		items: [],
 		goldPiles: [],
 		traps: [],
+		hiddenTiles: [],
 		stairs: pickArenaStairs(columns, player),
 		/* the arena is one lit room inside its walls */
 		rooms: [{ x1: 1, y1: 1, x2: width - 2, y2: height - 2, dark: false }],
@@ -164,6 +165,7 @@ export const buildDungeonGameState = (
 		items: layout.items,
 		goldPiles: layout.goldPiles,
 		traps: layout.traps,
+		hiddenTiles: layout.hiddenTiles,
 		stairs: layout.stairs,
 		rooms: layout.dungeonRooms,
 		amulet: layout.amulet,

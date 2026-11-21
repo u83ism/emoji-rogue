@@ -130,13 +130,14 @@ describe("descendStairs", () => {
 		expect(fallen.amulet).toBeUndefined();
 	});
 
-	it("only spawns kinds whose floor range covers the new floor", () => {
+	it("only spawns kinds whose floor range covers the new floor (or the one below, for a treasure room)", () => {
 		let state = buildDungeonGameState(40, 20, 7);
 		for (let floor = 2; floor <= 12; floor++) {
 			state = descendStairs(state);
 			for (const enemy of state.enemies) {
 				const range = calculateEnemyFloorRange(enemy.kind);
-				expect(floor).toBeGreaterThanOrEqual(range.firstFloor);
+				/* treasure room monsters come from the floor below (treasureRoom.ts) */
+				expect(floor + 1).toBeGreaterThanOrEqual(range.firstFloor);
 				expect(floor).toBeLessThanOrEqual(range.lastFloor ?? floor);
 				expect(enemy.hp).toBe(enemy.maxHp);
 			}

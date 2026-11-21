@@ -42,6 +42,7 @@ export type DungeonEvent = Extract<
 			| "stairs-refused"
 			| "trap-triggered"
 			| "trap-found"
+			| "secret-door-found"
 			| "player-stuck"
 			| "trap-mystery";
 	}
@@ -70,6 +71,8 @@ export const formatDungeonEvent = (event: DungeonEvent): string => {
 				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;
 		case "trap-found":
 			return `${TRAP_NAMES[event.payload.kind]}を見つけた`;
+		case "secret-door-found":
+			return "隠し扉を見つけた!";
 		case "player-stuck":
 			return "まだ捕獲のわなに捕まっている";
 		case "trap-mystery":

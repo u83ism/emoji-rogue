@@ -6,7 +6,7 @@ import {
 	findAdjacentEnemyDirection,
 	shouldRestToHeal,
 } from "./combatPolicy.js";
-import { chooseGoal, isGoalStillValid } from "./goals.js";
+import { chooseGoal, decideSecretSearch, isGoalStillValid } from "./goals.js";
 import { decideItemToUse } from "./itemUsePolicy.js";
 import {
 	type BotMemory,
@@ -149,6 +149,21 @@ export const decideAction = (
 		(x, y) => x === goal.x && y === goal.y,
 	);
 
+	if (step === undefined && goal.kind === "stairs") {
+		/* a secret door or passage stands between the bot and the stairs */
+		const secret = decideSecretSearch(state);
+		const toward =
+			secret === undefined || secret === "search"
+				? undefined
+				: resolveDirection(state.player, secret);
+		if (secret === "search" || toward !== undefined) {
+			const action: Action =
+				toward === undefined
+					? { type: "search" }
+					: { type: "move", payload: { direction: toward } };
+			return { action, memory: { ...memory, goal } };
+		}
+	}
 	if (step === undefined) {
 		/* The chosen goal turned out unreachable from here — blacklist it and
 		 * try again next turn instead of retrying forever. */

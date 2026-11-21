@@ -290,6 +290,9 @@ export const SLEEPING_GAS_TRAP_PARALYSIS_DURATION = 5;
  * probinc)`), harder while hallucinating (+3) or blind (+2).
  */
 export const SEARCH_TRAP_FIND_DENOMINATOR = 2;
+/** The same search's odds for a secret door (`rnd(5 + probinc)`) and a secret passage (`rnd(3 + probinc)`). */
+export const SEARCH_DOOR_FIND_DENOMINATOR = 5;
+export const SEARCH_PASSAGE_FIND_DENOMINATOR = 3;
 export const SEARCH_HALLUCINATING_PENALTY = 3;
 export const SEARCH_BLIND_PENALTY = 2;
 

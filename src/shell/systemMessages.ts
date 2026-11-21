@@ -46,6 +46,6 @@ export const resolveStairsHint = (state: GameState): string | undefined => {
 		return undefined;
 	}
 	return state.hasAmulet
-		? "階段です。< で上ります(> で下ります)"
-		: "階段です。> で下ります";
+		? "階段です。Shift+,(<)で上ります(Shift+.(>)で下ります)"
+		: "階段です。Shift+.(>)で下ります";
 };

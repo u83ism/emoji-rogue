@@ -37,6 +37,7 @@ const zombie = (x: number, y: number): Enemy => ({
 	speed: "normal" as const,
 	held: false,
 	carried: [],
+	mean: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -541,6 +542,7 @@ describe("advanceTurn", () => {
 					speed: "normal" as const,
 					held: false,
 					carried: [],
+					mean: false,
 					confusedTurnsRemaining: 0,
 				},
 			],
@@ -562,6 +564,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -593,6 +596,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -619,6 +623,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };
@@ -637,6 +642,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		/* player at (2,2) in a 3x3 arena: every direction but toward the
@@ -657,6 +663,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -687,6 +694,7 @@ describe("advanceTurn", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const held = { ...buildArenaGameState(5, 5, 1), enemies: [flytrap] };

@@ -1,6 +1,7 @@
 import { createRng } from "../../rng.js";
 import { AMULET_FLOOR } from "../balance.js";
 import { buildUnexploredColumns } from "../columns.js";
+import { applyRoomEntryWake } from "../enemies/wakeMonster.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState } from "../state.js";
 import { deriveExploredState } from "../vision.js";
@@ -34,27 +35,30 @@ const buildFloorTransition = (
 		/* original Rogue: no gold on the floors climbed back through with the amulet */
 		!state.hasAmulet || nextFloor >= deepestFloor,
 	);
-	return deriveExploredState({
-		...state,
-		terrain: layout.terrain,
-		explored: buildUnexploredColumns(state.width, state.height),
-		player: layout.player,
-		enemies: layout.enemies,
-		items: layout.items,
-		goldPiles: layout.goldPiles,
-		traps: layout.traps,
-		stairs: layout.stairs,
-		rooms: layout.dungeonRooms,
-		amulet: layout.amulet,
-		events: buildEventLog(state.events, [event]),
-		rng: rng.getState(),
-		floor: nextFloor,
-		deepestFloor,
-		flytrapHoldDamage: 0,
-		turnsOnCurrentFloor: 0,
-		nextItemId: layout.nextItemId,
-		floorsWithoutFood: layout.floorsWithoutFood,
-	});
+	/* original Rogue's new_level() ends in enter_room() */
+	return applyRoomEntryWake(
+		deriveExploredState({
+			...state,
+			terrain: layout.terrain,
+			explored: buildUnexploredColumns(state.width, state.height),
+			player: layout.player,
+			enemies: layout.enemies,
+			items: layout.items,
+			goldPiles: layout.goldPiles,
+			traps: layout.traps,
+			stairs: layout.stairs,
+			rooms: layout.dungeonRooms,
+			amulet: layout.amulet,
+			events: buildEventLog(state.events, [event]),
+			rng: rng.getState(),
+			floor: nextFloor,
+			deepestFloor,
+			flytrapHoldDamage: 0,
+			turnsOnCurrentFloor: 0,
+			nextItemId: layout.nextItemId,
+			floorsWithoutFood: layout.floorsWithoutFood,
+		}),
+	);
 };
 
 /** Why the player cannot take the stairs `direction` right now — see advanceTurn's applyStairs. */

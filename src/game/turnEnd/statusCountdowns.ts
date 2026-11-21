@@ -7,6 +7,7 @@ import {
 	LEVITATION_POTION_DURATION,
 	SEE_INVISIBLE_POTION_DURATION,
 } from "../balance.js";
+import { applyRoomEntryWake } from "../enemies/wakeMonster.js";
 import { buildEventLog, type GameEvent } from "../events.js";
 import type { GameState } from "../state.js";
 
@@ -72,10 +73,14 @@ export const applyStatusCountdownTicks = (state: GameState): GameState => {
 	}
 	const ticked = COUNTDOWN_FIELDS.reduce(applyCountdownTick, state);
 	/* original Rogue's "you can move again" turns the run flag back on */
-	return state.paralyzedTurnsRemaining > 0 &&
-		ticked.paralyzedTurnsRemaining === 0
-		? { ...ticked, playerRunFlag: true }
-		: ticked;
+	const moving =
+		state.paralyzedTurnsRemaining > 0 && ticked.paralyzedTurnsRemaining === 0
+			? { ...ticked, playerRunFlag: true }
+			: ticked;
+	/* sight coming back is original Rogue's enter_room() all over again */
+	return state.blindTurnsRemaining > 0 && ticked.blindTurnsRemaining === 0
+		? applyRoomEntryWake(moving)
+		: moving;
 };
 
 /** The potions (items/potions.ts) that only start one of these timed statuses: which countdown, for how long, and the event that says so. */

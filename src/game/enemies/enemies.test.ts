@@ -60,6 +60,7 @@ const enemyOf = (
 	speed: "normal" as const,
 	held: false,
 	carried: [],
+	mean: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -775,78 +776,16 @@ describe("advanceEnemies", () => {
 		expect(next.rng).toEqual(state.rng); /* wandering would have advanced it */
 	});
 
-	/*
-	 * Waking is a WAKE_CHANCE_PERCENT roll each turn, not guaranteed (see
-	 * balance.ts) — buildCorridorState's fixed seed (1) happens to succeed the
-	 * very first roll, so these two exercise the "wakes" branch. The "stays
-	 * asleep despite being visible/adjacent" branch (the one that leaves room
-	 * for a sneak attack) is exercised separately below with a seed whose
-	 * first roll fails.
-	 */
-	it("a sleeping enemy inside the player's field of view wakes and chases the same turn", () => {
-		const state = buildCorridorState([zombie(7, 1, false)]);
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([zombie(6, 1, true)]);
-	});
-
-	it("a sleeping enemy adjacent to the player wakes and attacks the same turn", () => {
-		const base = buildExposedState([zombie(5, 1, false)]);
-		const rng = findRngState(
-			(candidate) =>
-				advanceEnemies({ ...base, rng: candidate }).enemies[0]?.awake === true,
-		);
-		const state = { ...base, rng };
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([zombie(5, 1, true)]);
-		expect(next.playerHp).toBeLessThan(state.playerHp);
-		expect(next.events.map((event) => event.type)).toEqual(["player-hit"]);
-	});
-
-	it("a sleeping enemy adjacent to the player can fail its wake roll and stay asleep, taking no action", () => {
-		/* seed 678's first WAKE_CHANCE_PERCENT roll fails (see balance.ts) —
-		 * this is exactly the window a sneak attack relies on. */
-		const state = {
-			...buildArenaGameState(9, 3, 678),
-			enemies: [zombie(5, 1, false)],
-		};
-		const next = advanceEnemies(state);
-		expect(next.enemies).toEqual([zombie(5, 1, false)]);
-		expect(next.playerHp).toBe(
-			state.playerHp,
-		); /* no attack despite adjacency */
+	it("a sleeping enemy does nothing, in view or adjacent — waking is wakeMonster.ts's", () => {
+		const seen = buildCorridorState([{ ...zombie(7, 1, false), mean: true }]);
+		expect(advanceEnemies(seen).enemies).toEqual(seen.enemies);
+		const adjacent = buildExposedState([
+			{ ...zombie(5, 1, false), mean: true },
+		]);
+		const next = advanceEnemies(adjacent);
+		expect(next.enemies).toEqual(adjacent.enemies);
+		expect(next.playerHp).toBe(adjacent.playerHp);
 		expect(next.events).toEqual([]);
-	});
-
-	/*
-	 * A structural property that holds for any rng stream, not just a lucky
-	 * seed: STEALTH_RING_WAKE_CHANCE_PERCENT < WAKE_CHANCE_PERCENT, so
-	 * `roll.value < stealth/100` implies `roll.value < normal/100` — whenever
-	 * an equipped stealth ring's lower threshold wakes a sleeping enemy, the
-	 * unringed (higher-threshold) run on the exact same rng stream must also
-	 * wake it.
-	 */
-	it("an equipped stealth ring only ever lowers (never raises) the wake chance, for every seed", () => {
-		const stealthRing: HeldItem = {
-			itemId: 1,
-			kind: "stealth-ring",
-			equipped: true,
-			cursed: false,
-		};
-		for (let seed = 0; seed < 200; seed++) {
-			const base = {
-				...buildArenaGameState(9, 3, 1),
-				rng: seedToState(seed),
-				enemies: [zombie(5, 1, false)],
-			};
-			const withRing = advanceEnemies({
-				...base,
-				inventory: [stealthRing],
-			});
-			if (withRing.enemies[0]?.awake) {
-				const withoutRing = advanceEnemies({ ...base, inventory: [] });
-				expect(withoutRing.enemies[0]?.awake).toBe(true);
-			}
-		}
 	});
 
 	it("a confused visible enemy wanders (consuming rng) instead of chasing via A*", () => {

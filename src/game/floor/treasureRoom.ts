@@ -33,7 +33,7 @@ const rollBelow = (rng: Rng, bound: number): number =>
  * TREASURE_ROOM_MAX), drawn like any found item, and at least two more
  * monsters than items — monsters of the floor below, each maybe carrying
  * an item of its own (enemyPack.ts). They lie asleep like any room's
- * monsters (the original also makes them ISMEAN, quicker to wake).
+ * monsters, but all of them mean (ISMEAN — enemies/wakeMonster.ts).
  */
 export const drawTreasureRoom = (
 	pool: Position[],
@@ -101,12 +101,16 @@ export const drawTreasureRoom = (
 			break;
 		}
 		/* "fill up room with monsters from the next level down" */
-		const enemy = buildSpawnedEnemy(
-			drawEnemyKindForFloor(rng, floor + 1),
-			tile,
-			rng,
-			floor + 1,
-		);
+		/* "no slouchers in THIS room": every one of them is mean */
+		const enemy = {
+			...buildSpawnedEnemy(
+				drawEnemyKindForFloor(rng, floor + 1),
+				tile,
+				rng,
+				floor + 1,
+			),
+			mean: true,
+		};
 		enemies.push(
 			rollsCarriedItem(rng, enemy.kind, true)
 				? { ...enemy, carried: [drawItem(tile)] }

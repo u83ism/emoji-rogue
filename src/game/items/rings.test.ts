@@ -224,6 +224,7 @@ describe("items/rings", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const asleepB = {
@@ -236,6 +237,7 @@ describe("items/rings", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -274,6 +276,7 @@ describe("items/rings", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const item = {

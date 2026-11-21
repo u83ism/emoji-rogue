@@ -1,12 +1,5 @@
 import { encodePointKey } from "../../pointkey.js";
-import { stepUniform } from "../../rng.js";
-import {
-	STEALTH_RING_WAKE_CHANCE_PERCENT,
-	WAKE_CHANCE_PERCENT,
-} from "../balance.js";
-import { isAdjacent } from "../combat/combat.js";
 import { buildEventLog } from "../events.js";
-import { hasEquippedRing } from "../items/rings.js";
 import type { Enemy, GameState } from "../state.js";
 import { computePlayerVisiblePoints } from "../vision.js";
 import type { EnemyTurnProgress } from "./action.js";
@@ -14,9 +7,9 @@ import { resolveEnemyTurnActions } from "./enemySpeed.js";
 import { isHeldByFlytrap } from "./flytrapHold.js";
 
 /**
- * One turn for every enemy, in array order. A still-sleeping enemy wakes
- * this turn only while adjacent/visible, via a WAKE_CHANCE_PERCENT roll (STEALTH_RING_WAKE_CHANCE_PERCENT
- * with a stealth ring worn). Once awake it takes one action per turn —
+ * One turn for every enemy, in array order. A sleeping enemy does nothing —
+ * what wakes one is wakeMonster.ts (and attacks, wands, scrolls). An awake
+ * one takes one action per turn —
  * what that action is (attack, steal and flee, chase, wander, a kind's own
  * special case) lives in action.ts's resolveEnemyAction. The flying kinds
  * (bat, kestrel, griffin) take a second action while they are still away
@@ -66,22 +59,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		}
 		occupied.delete(encodePointKey(enemy.x, enemy.y));
 
-		let awake = enemy.awake;
-		const canWakeFromSight = visiblePoints.has(
-			encodePointKey(enemy.x, enemy.y),
-		);
-		if (!awake && (isAdjacent(enemy, state.player) || canWakeFromSight)) {
-			const wakeChancePercent = hasEquippedRing(
-				progress.inventory,
-				"stealth-ring",
-			)
-				? STEALTH_RING_WAKE_CHANCE_PERCENT
-				: WAKE_CHANCE_PERCENT;
-			const roll = stepUniform(progress.rng);
-			progress = { ...progress, rng: roll.state };
-			awake = roll.value < wakeChancePercent / 100;
-		}
-		if (!awake) {
+		if (!enemy.awake) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
 			nextEnemies.push(enemy);
 			continue;
@@ -97,7 +75,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 
 		if (progress.died) {
 			occupied.add(encodePointKey(enemy.x, enemy.y));
-			nextEnemies.push({ ...enemy, awake, confusedTurnsRemaining });
+			nextEnemies.push({ ...enemy, confusedTurnsRemaining });
 			continue;
 		}
 		const result = resolveEnemyTurnActions(

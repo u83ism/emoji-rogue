@@ -101,6 +101,8 @@ export type Enemy = Position & {
 	readonly held: boolean;
 	/** What it carries (original Rogue's t_pack) — dropped where it dies (enemies/enemyPack.ts). Positions are meaningless until then. */
 	readonly carried: readonly Item[];
+	/** Original Rogue's ISMEAN — may wake when the player comes close (enemies/wakeMonster.ts). From its kind (ENEMY_IS_MEAN), or set for a treasure room's monsters. */
+	readonly mean: boolean;
 	/** Chases wander instead of A*-pursue while positive; adjacent attacks are unaffected — see advanceEnemies and the confuse monster scroll. */
 	readonly confusedTurnsRemaining: number;
 };

@@ -1,5 +1,6 @@
 import { encodePointKey } from "../pointkey.js";
 import { createRng } from "../rng.js";
+import { applyRoomEntryWake } from "./enemies/wakeMonster.js";
 import { buildEventLog, type TeleportSource } from "./events.js";
 import type { Enemy, GameState, Position } from "./state.js";
 import { deriveExploredState } from "./vision.js";
@@ -51,17 +52,19 @@ export const applyRandomTeleport = (
 			"unreachable: collectTeleportTargets always returns at least one tile",
 		);
 	}
-	return deriveExploredState({
-		...state,
-		player: target,
-		rng: rng.getState(),
-		events: buildEventLog(state.events, [
-			{
-				type: "player-teleported",
-				payload: { x: target.x, y: target.y, source },
-			},
-		]),
-	});
+	return applyRoomEntryWake(
+		deriveExploredState({
+			...state,
+			player: target,
+			rng: rng.getState(),
+			events: buildEventLog(state.events, [
+				{
+					type: "player-teleported",
+					payload: { x: target.x, y: target.y, source },
+				},
+			]),
+		}),
+	);
 };
 
 /**

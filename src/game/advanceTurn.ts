@@ -2,6 +2,7 @@
 import { stepUniform } from "../rng.js";
 import { applyPlayerAttack, isAdjacent } from "./combat/combat.js";
 import { advanceEnemies } from "./enemies/enemies.js";
+import { applyLookWake, applyRoomEntryWake } from "./enemies/wakeMonster.js";
 import { buildEventLog } from "./events.js";
 import {
 	ascendStairs,
@@ -24,7 +25,7 @@ import { applyRegenerationTick } from "./turnEnd/regeneration.js";
 import { applyTeleportationRingTick } from "./turnEnd/ringTeleport.js";
 import { applyStatusCountdownTicks } from "./turnEnd/statusCountdowns.js";
 import { applyWandererTick } from "./turnEnd/wanderer.js";
-import { deriveExploredState } from "./vision.js";
+import { deriveExploredState, findPlayerRoom } from "./vision.js";
 
 const DIRECTION_VECTORS: Readonly<
 	Record<Direction, readonly [number, number]>
@@ -111,14 +112,15 @@ const applyMove = (state: GameState, direction: Direction): GameState => {
 			]),
 		};
 	}
+	const walked = deriveExploredState({ ...stateWithRng, player: { x, y } });
+	/* stepping in through a door: original Rogue's enter_room() */
+	const entered =
+		findPlayerRoom(walked) !== undefined &&
+		findPlayerRoom(stateWithRng) === undefined
+			? applyRoomEntryWake(walked)
+			: walked;
 	return applyTrapTrigger(
-		applyGoldPickup(
-			applyAmuletPickup(
-				applyItemPickup(
-					deriveExploredState({ ...stateWithRng, player: { x, y } }),
-				),
-			),
-		),
+		applyGoldPickup(applyAmuletPickup(applyItemPickup(entered))),
 	);
 };
 
@@ -215,12 +217,7 @@ const applyStairs = (state: GameState, direction: "down" | "up"): GameState => {
 	return after.status === "playing" ? applyTurnEndTicks(after) : after;
 };
 
-/**
- * The pure game reducer: one action in, the next state out. Same state and
- * action always produce the same result; a blocked move returns the input
- * state unchanged (same reference).
- */
-export const advanceTurn = (state: GameState, action: Action): GameState => {
+const reduceAction = (state: GameState, action: Action): GameState => {
 	switch (action.type) {
 		case "move": {
 			if (state.status !== "playing") {
@@ -300,4 +297,18 @@ export const advanceTurn = (state: GameState, action: Action): GameState => {
 		case "quit":
 			return { ...state, status: "exited" };
 	}
+};
+
+/**
+ * The pure game reducer: one action in, the next state out. Same state and
+ * action always produce the same result; a blocked move returns the input
+ * state unchanged (same reference). After every spent command the monsters
+ * next to the player may wake (original Rogue's look(true), which runs
+ * before the next command).
+ */
+export const advanceTurn = (state: GameState, action: Action): GameState => {
+	const next = reduceAction(state, action);
+	return next === state || next.status !== "playing"
+		? next
+		: applyLookWake(next);
 };

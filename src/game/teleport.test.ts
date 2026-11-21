@@ -49,6 +49,7 @@ describe("teleport wand", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {

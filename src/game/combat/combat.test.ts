@@ -37,6 +37,7 @@ const enemyOf = (
 	speed: "normal" as const,
 	held: false,
 	carried: [],
+	mean: false,
 	confusedTurnsRemaining: 0,
 });
 
@@ -365,6 +366,7 @@ describe("dragon", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const next = applyPlayerAttack({ ...state, enemies: [target] }, target);

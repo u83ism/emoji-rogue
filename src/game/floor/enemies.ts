@@ -7,6 +7,7 @@ import {
 	ENEMY_STATS,
 	NON_WANDERING_ENEMY_KINDS,
 } from "../enemies/enemyStats.js";
+import { ENEMY_IS_MEAN } from "../enemies/wakeMonster.js";
 import type { EnemyKind } from "../events.js";
 import type { Enemy, Position } from "../state.js";
 
@@ -107,6 +108,7 @@ export const buildSpawnedEnemy = (
 		speed: floor >= HASTED_ENEMY_FLOOR ? "hasted" : "normal",
 		held: false,
 		carried: [],
+		mean: ENEMY_IS_MEAN[kind],
 		confusedTurnsRemaining: 0,
 	};
 };

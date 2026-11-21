@@ -1,9 +1,7 @@
 import {
 	RING_FOOD_USE,
 	RING_REGEN_AMOUNT,
-	STEALTH_RING_WAKE_CHANCE_PERCENT,
 	TELEPORTATION_RING_CHANCE_DENOMINATOR,
-	WAKE_CHANCE_PERCENT,
 } from "../../game/balance.js";
 import type { RingKind } from "../../game/events.js";
 import { type ItemCatalogEntry, itemDrawShare } from "./catalogData.js";
@@ -34,7 +32,7 @@ export const RING_CATALOG: Readonly<Record<RingKind, ItemCatalogEntry>> = {
 		catalogName: "隠密の指輪",
 		category: "指輪",
 		spawn: itemDrawShare("stealth-ring"),
-		effect: `装備している間、敵の毎ターンの目覚め確率が${WAKE_CHANCE_PERCENT}%から${STEALTH_RING_WAKE_CHANCE_PERCENT}%に下がる代わりに、満腹度の減りが毎ターン${RING_FOOD_USE["stealth-ring"]}増える(外すと効果も消える)`,
+		effect: `装備している間、近づいても敵が目を覚まさない(欲深いオークは別)代わりに、満腹度の減りが毎ターン${RING_FOOD_USE["stealth-ring"]}増える(外すと効果も消える)`,
 	},
 	"aggravate-monster-ring": {
 		catalogName: "警報の指輪",

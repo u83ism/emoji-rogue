@@ -97,7 +97,7 @@ export const VITALITY_DRAIN_DICE: Readonly<
 	>
 > = { vampire: { count: 1, sides: 3 }, wraith: { count: 1, sides: 10 } };
 
-/** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands — same "roll every eligible turn" idiom as WAKE_CHANCE_PERCENT. */
+/** Chance (out of 100), rolled independently every turn a medusa is visible but not adjacent, that its gaze lands. */
 export const MEDUSA_GAZE_CHANCE_PERCENT = 33;
 /** Shorter than a confusion potion's duration (see items/potions.ts) since a medusa's gaze can reapply every turn it stays visible. */
 export const MEDUSA_GAZE_CONFUSE_DURATION = 6;
@@ -132,18 +132,6 @@ export const WANDERER_ROLL_DIE_SIDES = 6;
 export const ROOM_GOLD_CHANCE_PERCENT = 50;
 export const ROOM_ENEMY_CHANCE_PERCENT_WITH_GOLD = 80;
 export const ROOM_ENEMY_CHANCE_PERCENT_WITHOUT_GOLD = 25;
-
-/**
- * Chance (out of 100), rolled independently every turn a sleeping enemy is
- * adjacent to or within sight of the player, that it wakes up this turn.
- * Deliberately not "wakes for sure the instant it's adjacent/visible" — a
- * bump attack only ever happens from an already-adjacent tile (movement is
- * the only way to become adjacent, so there is always a prior turn standing
- * next to the enemy), so a guaranteed-on-adjacency wake would make every
- * approach wake the enemy one full turn before the player could ever attack,
- * leaving no room to swing at a sleeping one.
- */
-export const WAKE_CHANCE_PERCENT = 33;
 
 /** Max HP gained per level is one die of this many sides — original Rogue's check_level() `roll(levels gained, 10)`. */
 export const PLAYER_LEVEL_UP_HP_DICE_SIDES = 10;
@@ -316,12 +304,6 @@ export const RING_REGEN_AMOUNT = 1;
 export const NATURAL_HEALING_SLOW_THRESHOLD = 20;
 export const NATURAL_HEALING_FAST_LEVEL = 8;
 export const NATURAL_HEALING_FAST_INTERVAL = 3;
-
-/**
- * Replaces WAKE_CHANCE_PERCENT (33) while a ring of stealth is equipped —
- * roughly half, see enemies.ts's advanceEnemies.
- */
-export const STEALTH_RING_WAKE_CHANCE_PERCENT = 15;
 
 /**
  * Food a worn ring uses each turn, original Rogue's ring_eat() table: a

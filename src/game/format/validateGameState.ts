@@ -131,6 +131,7 @@ const isEnemyArray = (
 			isOneOf(ENEMY_SPEEDS, enemy.speed) &&
 			isBooleanValue(enemy.held) &&
 			isItemArray(enemy.carried, terrain) &&
+			isBooleanValue(enemy.mean) &&
 			isNonNegativeInteger(enemy.confusedTurnsRemaining),
 	);
 
@@ -827,6 +828,7 @@ export const validateGameState = (
 			speed: enemy.speed,
 			held: enemy.held,
 			carried: enemy.carried.map(rebuildItem),
+			mean: enemy.mean,
 			confusedTurnsRemaining: enemy.confusedTurnsRemaining,
 		})),
 		items: items.map(rebuildItem),

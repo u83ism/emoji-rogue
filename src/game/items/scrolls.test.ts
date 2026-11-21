@@ -119,6 +119,7 @@ describe("items/scrolls", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -164,6 +165,7 @@ describe("items/scrolls", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const far = {
@@ -176,6 +178,7 @@ describe("items/scrolls", () => {
 			speed: "normal" as const,
 			held: false,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {
@@ -278,6 +281,7 @@ describe("items/scrolls", () => {
 			speed: "normal" as const,
 			held: true,
 			carried: [],
+			mean: false,
 			confusedTurnsRemaining: 0,
 		};
 		const state = {

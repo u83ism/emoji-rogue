@@ -5,6 +5,7 @@ import {
 	type ItemKind,
 	isWandKind,
 } from "../events.js";
+import { revealsItemKind } from "../identification.js";
 import type { GameState, HeldItem } from "../state.js";
 import { applyToggleArmorEquip, applyToggleWeaponEquip } from "./equipment.js";
 import {
@@ -137,10 +138,10 @@ const identifyItemKind = (
  * are never removed here; toggling their `equipped` flag in place is the
  * whole effect (see items/equipment.ts, items/rings.ts). Using an itemId not
  * held, or a kind whose handler declared a no-op, returns the input state
- * (same reference, no turn spent, nothing consumed). Any use that does take
+ * (same reference, no turn spent, nothing consumed). A use that takes
  * effect identifies the item's kind for the rest of the run (see
- * GameState.identifiedItemKinds) — drinking a potion, putting on a ring and
- * zapping a wand all reveal what it was.
+ * GameState.identifiedItemKinds) — unless it is a potion or scroll whose
+ * effect did not show (identification.ts's revealsItemKind).
  */
 export const applyUseItem = (
 	state: GameState,
@@ -164,13 +165,15 @@ export const applyUseItem = (
 	if (afterEffect === state) {
 		return state;
 	}
-	const identified = {
-		...afterEffect,
-		identifiedItemKinds: identifyItemKind(
-			afterEffect.identifiedItemKinds,
-			item.kind,
-		),
-	};
+	const identified = revealsItemKind(item.kind, state, afterEffect)
+		? {
+				...afterEffect,
+				identifiedItemKinds: identifyItemKind(
+					afterEffect.identifiedItemKinds,
+					item.kind,
+				),
+			}
+		: afterEffect;
 	if (EQUIPMENT_ITEM_KINDS.includes(item.kind)) {
 		return identified;
 	}

@@ -141,11 +141,11 @@ export const formatEvent = (
 		case "enemy-teleported":
 			return `杖の力で${ENEMY_NAMES[event.payload.target]}をどこかへ飛ばした!`;
 		case "enemy-confused":
-			return `混乱の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}が混乱した!`;
+			return `${resolveItemDisplayName("confuse-monster-scroll", identifiedItemKinds, undefined, appearances)}を読んだ。${ENEMY_NAMES[event.payload.target]}が混乱した!`;
 		case "hallucination-faded":
 			return "幻覚がおさまった";
 		case "enemy-held":
-			return `束縛の巻物を読んだ。${ENEMY_NAMES[event.payload.target]}が動きを止めた!`;
+			return `${resolveItemDisplayName("hold-monster-scroll", identifiedItemKinds, undefined, appearances)}を読んだ。${ENEMY_NAMES[event.payload.target]}が動きを止めた!`;
 		case "player-drained":
 			return `${ENEMY_NAMES[event.payload.by]}に生命力を吸われ、急に体が弱った。最大HPが${event.payload.maxHpLost}下がった`;
 		case "player-level-drained":

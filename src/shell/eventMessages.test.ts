@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GameEvent } from "../game/events.js";
+import { type GameEvent, IDENTIFIABLE_ITEM_KINDS } from "../game/events.js";
 import { formatEvent } from "./eventMessages.js";
 
 describe("formatEvent", () => {
@@ -390,9 +390,28 @@ describe("formatEvent", () => {
 				"ハエトリソウに捕まっていて動けない!",
 			],
 		];
+		/* every kind identified: the lines name what was used by its real name */
 		for (const [event, expected] of cases) {
-			expect(formatEvent(event, [])).toBe(expected);
+			expect(formatEvent(event, IDENTIFIABLE_ITEM_KINDS)).toBe(expected);
 		}
+	});
+
+	it("names a used potion or scroll by its look while it is still unidentified", () => {
+		expect(
+			formatEvent({ type: "strength-restored", payload: { strength: 16 } }, []),
+		).toBe("未鑑定の薬を飲んだ。体じゅうが温かい(力16)");
+		expect(
+			formatEvent(
+				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
+				[],
+			),
+		).toMatch(/^.+を読んだ。ゾンビが混乱した!$/);
+		expect(
+			formatEvent(
+				{ type: "enemy-confused", payload: { target: "zombie", turns: 8 } },
+				[],
+			),
+		).not.toContain("混乱の巻物");
 	});
 
 	it("shows the generic unidentified name for a potion-family pickup not yet identified", () => {

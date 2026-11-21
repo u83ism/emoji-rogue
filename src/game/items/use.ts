@@ -18,10 +18,13 @@ import { removeHeldItem, replaceHeldItem } from "./inventory.js";
 import { applyUsePotion } from "./potions.js";
 import { applyToggleRingEquip } from "./rings.js";
 import {
+	applyUseAggravateMonstersScroll,
 	applyUseConfuseMonsterScroll,
+	applyUseCreateMonsterScroll,
 	applyUseHoldMonsterScroll,
 	applyUseIdentifyScroll,
 	applyUseMappingScroll,
+	applyUseSleepScroll,
 	applyUseTeleportScroll,
 } from "./scrolls.js";
 import {
@@ -85,6 +88,12 @@ const applyItemEffect = (
 			return applyUseConfuseMonsterScroll(state);
 		case "hold-monster-scroll":
 			return applyUseHoldMonsterScroll(state);
+		case "sleep-scroll":
+			return applyUseSleepScroll(state);
+		case "create-monster-scroll":
+			return applyUseCreateMonsterScroll(state);
+		case "aggravate-monsters-scroll":
+			return applyUseAggravateMonstersScroll(state);
 		case "food":
 			return applyUseFood(state);
 		case "slow-wand":

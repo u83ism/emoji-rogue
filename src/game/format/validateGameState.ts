@@ -335,6 +335,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-sees-invisible": (payload) => isPositiveInteger(payload.turns),
 	"see-invisible-faded": emptyPayload,
 	"trap-found": (payload) => isTrapKind(payload.kind),
+	"player-fell-asleep": (payload) => isPositiveInteger(payload.turns),
+	"monster-created": (payload) =>
+		payload.target === undefined || isEnemyKind(payload.target),
+	"monsters-aggravated": emptyPayload,
 	"missile-landed": (payload) => isOneOf(WEAPON_KIND_VALUES, payload.variant),
 	"player-stuck": emptyPayload,
 	"trap-mystery": (payload) =>

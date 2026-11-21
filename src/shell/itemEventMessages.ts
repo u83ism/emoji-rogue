@@ -1,6 +1,7 @@
 import { UNARMORED_ARMOR_CLASS } from "../game/balance.js";
 import type { GameEvent, ItemKind } from "../game/events.js";
 import {
+	ENEMY_NAMES,
 	EQUIPMENT_NAMES,
 	ITEM_NAMES,
 	resolveItemDisplayName,
@@ -50,6 +51,9 @@ export type ItemUseEvent = Extract<
 			| "ring-hands-full"
 			| "strength-restored"
 			| "player-hasted"
+			| "player-fell-asleep"
+			| "monster-created"
+			| "monsters-aggravated"
 			| "player-sees-invisible"
 			| "player-exhausted"
 			| "scroll-wasted"
@@ -107,6 +111,14 @@ export const formatItemUseEvent = (
 			return `${ITEM_NAMES["haste-self-potion"]}を飲んだ。体が軽い!${event.payload.turns}ターン素早く動ける`;
 		case "player-sees-invisible":
 			return `${ITEM_NAMES["see-invisible-potion"]}を飲んだ。透明なものが見えるようになった`;
+		case "player-fell-asleep":
+			return `${ITEM_NAMES["sleep-scroll"]}を読んだ。眠り込んでしまった!`;
+		case "monster-created":
+			return event.payload.target === undefined
+				? `${ITEM_NAMES["create-monster-scroll"]}を読んだ。遠くでかすかな悲鳴が聞こえた`
+				: `${ITEM_NAMES["create-monster-scroll"]}を読んだ。${ENEMY_NAMES[event.payload.target]}が現れた!`;
+		case "monsters-aggravated":
+			return `${ITEM_NAMES["aggravate-monsters-scroll"]}を読んだ。かん高い音が鳴り響いた`;
 		case "player-exhausted":
 			return `${ITEM_NAMES["haste-self-potion"]}を重ねて飲み、疲れ果てて気を失った!`;
 		case "ring-hands-full":

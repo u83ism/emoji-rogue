@@ -42,6 +42,9 @@ export const formatEvent = (
 		case "ring-hands-full":
 		case "strength-restored":
 		case "player-hasted":
+		case "player-fell-asleep":
+		case "monster-created":
+		case "monsters-aggravated":
 		case "player-sees-invisible":
 		case "player-exhausted":
 		case "wand-empty":

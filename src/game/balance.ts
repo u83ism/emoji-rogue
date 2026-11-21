@@ -375,6 +375,9 @@ export const HALLUCINATION_POTION_DURATION = 850;
 
 /** How near (in tiles, either axis) a monster must be for a hold monster scroll to stop it — original Rogue's read_scroll(): hero.x - 2 .. hero.x + 2. */
 export const HOLD_MONSTER_SCROLL_RANGE = 2;
+/** A sleep scroll's nap: original Rogue's `rnd(SLEEPTIME) + 4`, 4..8 turns. */
+export const SLEEP_SCROLL_TURNS_MIN = 4;
+export const SLEEP_SCROLL_TURNS_MAX = 8;
 
 /** How many turns a confusion potion randomizes movement for. */
 export const CONFUSION_POTION_DURATION = 20;

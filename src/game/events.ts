@@ -80,6 +80,9 @@ export const ITEM_KIND_VALUES = [
 	"see-invisible-potion",
 	"see-invisible-ring",
 	"searching-ring",
+	"sleep-scroll",
+	"create-monster-scroll",
+	"aggravate-monsters-scroll",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -421,6 +424,21 @@ export type GameEvent =
 			/** A haste self potion drunk while already hasted: fainting for `turns` (original Rogue's add_haste()). */
 			readonly type: "player-exhausted";
 			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** A sleep scroll: the player falls asleep for `turns` (original Rogue's S_SLEEP). */
+			readonly type: "player-fell-asleep";
+			readonly payload: { readonly turns: number };
+	  }
+	| {
+			/** A create monster scroll bringing a monster next to the player — or, with no room, only "a faint cry" (`target` undefined). */
+			readonly type: "monster-created";
+			readonly payload: { readonly target: EnemyKind | undefined };
+	  }
+	| {
+			/** An aggravate monsters scroll waking every monster on the floor. */
+			readonly type: "monsters-aggravated";
+			readonly payload: Record<string, never>;
 	  }
 	| {
 			/** A thrown weapon that met no monster, falling near where it stopped — see throw.ts. */

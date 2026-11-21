@@ -1,9 +1,13 @@
+import { createRng } from "../../rng.js";
 import {
 	CONFUSE_MONSTER_SCROLL_DURATION,
 	HOLD_MONSTER_SCROLL_RANGE,
+	SLEEP_SCROLL_TURNS_MAX,
+	SLEEP_SCROLL_TURNS_MIN,
 } from "../balance.js";
 import { buildEventLog, type GameEvent, POTION_KINDS } from "../events.js";
-import type { GameState } from "../state.js";
+import { buildSpawnedEnemy, drawEnemyKindForFloor } from "../floor/enemies.js";
+import type { GameState, Position } from "../state.js";
 import { applyRandomTeleport } from "../teleport.js";
 import { findNearestVisibleEnemy } from "../vision.js";
 import { applyScrollWasted } from "./equipmentScrolls.js";
@@ -117,3 +121,78 @@ export const applyUseHoldMonsterScroll = (state: GameState): GameState => {
 		events: buildEventLog(state.events, events),
 	};
 };
+
+/** Original Rogue's sleep scroll: asleep for SLEEP_SCROLL_TURNS_MIN..MAX turns, the run flag gone. */
+export const applyUseSleepScroll = (state: GameState): GameState => {
+	const rng = createRng(1).setState(state.rng);
+	const turns = rng.getUniformInt(
+		SLEEP_SCROLL_TURNS_MIN,
+		SLEEP_SCROLL_TURNS_MAX,
+	);
+	return {
+		...state,
+		paralyzedTurnsRemaining: state.paralyzedTurnsRemaining + turns,
+		playerRunFlag: false,
+		rng: rng.getState(),
+		events: buildEventLog(state.events, [
+			{ type: "player-fell-asleep", payload: { turns } },
+		]),
+	};
+};
+
+/**
+ * Original Rogue's create monster scroll: a new monster of this floor's
+ * kinds on one of the free tiles next to the player, each as likely
+ * (rnd(++i) == 0), asleep like any newly made monster. With no free tile
+ * there is only "a faint cry of anguish in the distance".
+ */
+export const applyUseCreateMonsterScroll = (state: GameState): GameState => {
+	const free: Position[] = [];
+	for (let x = state.player.x - 1; x <= state.player.x + 1; x++) {
+		for (let y = state.player.y - 1; y <= state.player.y + 1; y++) {
+			const open =
+				state.terrain[x]?.[y] === 0 &&
+				!(x === state.player.x && y === state.player.y) &&
+				!state.enemies.some((enemy) => enemy.x === x && enemy.y === y);
+			if (open) {
+				free.push({ x, y });
+			}
+		}
+	}
+	const rng = createRng(1).setState(state.rng);
+	const tile =
+		free.length > 0 ? free[rng.getUniformInt(0, free.length - 1)] : undefined;
+	if (tile === undefined) {
+		return {
+			...state,
+			events: buildEventLog(state.events, [
+				{ type: "monster-created", payload: { target: undefined } },
+			]),
+		};
+	}
+	const kind = drawEnemyKindForFloor(rng, state.floor);
+	const enemy = buildSpawnedEnemy(kind, tile, rng, state.floor);
+	return {
+		...state,
+		enemies: [...state.enemies, enemy],
+		rng: rng.getState(),
+		events: buildEventLog(state.events, [
+			{ type: "monster-created", payload: { target: kind } },
+		]),
+	};
+};
+
+/** Original Rogue's aggravate monsters scroll (aggravate()): every monster on the floor wakes and comes for the player. */
+export const applyUseAggravateMonstersScroll = (
+	state: GameState,
+): GameState => ({
+	...state,
+	enemies: state.enemies.map((enemy) => ({
+		...enemy,
+		awake: true,
+		held: false,
+	})),
+	events: buildEventLog(state.events, [
+		{ type: "monsters-aggravated", payload: {} },
+	]),
+});

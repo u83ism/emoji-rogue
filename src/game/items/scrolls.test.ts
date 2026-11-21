@@ -214,4 +214,87 @@ describe("items/scrolls", () => {
 			{ type: "scroll-wasted", payload: { kind: "hold-monster-scroll" } },
 		]);
 	});
+
+	it("a sleep scroll puts the player to sleep for 4..8 turns and takes the run flag", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			playerRunFlag: true,
+			inventory: [{ itemId: 1, kind: "sleep-scroll" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		const [event] = next.events;
+		if (event?.type !== "player-fell-asleep") {
+			throw new Error("expected player-fell-asleep");
+		}
+		expect(event.payload.turns).toBeGreaterThanOrEqual(4);
+		expect(event.payload.turns).toBeLessThanOrEqual(8);
+		expect(next.playerRunFlag).toBe(false);
+		expect(next.paralyzedTurnsRemaining).toBe(event.payload.turns - 1);
+	});
+
+	it("a create monster scroll puts a sleeping monster next to the player — or only a cry with no room", () => {
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			inventory: [{ itemId: 1, kind: "create-monster-scroll" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		const [created] = next.enemies;
+		expect(created).toBeDefined();
+		expect(Math.abs((created?.x ?? 99) - state.player.x)).toBeLessThanOrEqual(
+			1,
+		);
+		expect(Math.abs((created?.y ?? 99) - state.player.y)).toBeLessThanOrEqual(
+			1,
+		);
+		const cramped = {
+			...buildArenaGameState(3, 3, 1),
+			inventory: [{ itemId: 1, kind: "create-monster-scroll" as const }],
+		};
+		const cried = advanceTurn(cramped, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(cried.enemies).toEqual([]);
+		expect(cried.events[0]).toEqual({
+			type: "monster-created",
+			payload: { target: undefined },
+		});
+	});
+
+	it("an aggravate monsters scroll wakes every monster on the floor", () => {
+		const sleeper = {
+			x: 1,
+			y: 1,
+			kind: "zombie" as const,
+			hp: 9,
+			maxHp: 9,
+			awake: false,
+			speed: "normal" as const,
+			held: true,
+			carried: [],
+			confusedTurnsRemaining: 0,
+		};
+		const state = {
+			...buildArenaGameState(9, 3, 1),
+			enemies: [sleeper],
+			inventory: [{ itemId: 1, kind: "aggravate-monsters-scroll" as const }],
+		};
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(next.events[0]).toEqual({
+			type: "monsters-aggravated",
+			payload: {},
+		});
+		expect(next.enemies.every((enemy) => enemy.awake && !enemy.held)).toBe(
+			true,
+		);
+	});
 });

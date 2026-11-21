@@ -14,6 +14,8 @@ import {
 	MAGIC_MISSILE_DAMAGE_DICE,
 	PLAYER_MAX_FOOD,
 	PLAYER_START_FOOD,
+	SLEEP_SCROLL_TURNS_MAX,
+	SLEEP_SCROLL_TURNS_MIN,
 	WAND_CHARGES_MAX,
 	WAND_CHARGES_MIN,
 	WEAPON_CURSE_CHANCE_PERCENT,
@@ -59,6 +61,25 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		category: "巻物",
 		spawn: itemDrawShare("confuse-monster-scroll"),
 		effect: `視界内の最も近い敵を${CONFUSE_MONSTER_SCROLL_DURATION}ターン混乱させる(以後は視界内でも追跡してこず徘徊するようになる。隣接時の攻撃は変わらず行う)`,
+	},
+	"sleep-scroll": {
+		catalogName: "眠りの巻物",
+		category: "巻物",
+		spawn: itemDrawShare("sleep-scroll"),
+		effect: `読むと${SLEEP_SCROLL_TURNS_MIN}〜${SLEEP_SCROLL_TURNS_MAX}ターン眠り込んで動けなくなる`,
+	},
+	"create-monster-scroll": {
+		catalogName: "召喚の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("create-monster-scroll"),
+		effect:
+			"周り8マスのどこかに、その階の敵が1体現れる(空きが無ければ何も起きない)",
+	},
+	"aggravate-monsters-scroll": {
+		catalogName: "警報の巻物",
+		category: "巻物",
+		spawn: itemDrawShare("aggravate-monsters-scroll"),
+		effect: "その階の敵が全員目を覚ます",
 	},
 	"hold-monster-scroll": {
 		catalogName: "束縛の巻物",

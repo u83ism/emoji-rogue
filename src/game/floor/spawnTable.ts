@@ -49,12 +49,15 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "confuse-monster-scroll", weight: 7 },
 		{ kind: "mapping-scroll", weight: 4 },
 		{ kind: "hold-monster-scroll", weight: 2 },
+		{ kind: "sleep-scroll", weight: 3 },
 		{ kind: "enchant-armor", weight: 7 },
 		/* the original's identify potion scroll — see items/scrolls.ts */
 		{ kind: "identify-scroll", weight: 10 },
 		{ kind: "teleport-scroll", weight: 5 },
 		{ kind: "enchant-weapon", weight: 8 },
+		{ kind: "create-monster-scroll", weight: 4 },
 		{ kind: "remove-curse-scroll", weight: 7 },
+		{ kind: "aggravate-monsters-scroll", weight: 3 },
 		{ kind: "protect-armor", weight: 2 },
 	],
 	/* the original's slime mold (1 in 10) is not in this game: every food is a ration */

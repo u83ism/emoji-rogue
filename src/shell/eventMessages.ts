@@ -74,6 +74,11 @@ export const formatEvent = (
 		case "trap-triggered":
 		case "trap-found":
 		case "secret-door-found":
+		case "room-lit":
+		case "corridor-glowed":
+		case "tingling":
+		case "life-drained":
+		case "enemy-drained":
 		case "player-stuck":
 		case "trap-mystery":
 			return formatDungeonEvent(event);
@@ -134,10 +139,6 @@ export const formatEvent = (
 			return `跳ね返った${BOLT_NAMES[event.payload.kind]}をかわした`;
 		case "player-bolted":
 			return `跳ね返った${BOLT_NAMES[event.payload.kind]}を浴びた!${event.payload.damage}のダメージを受けた`;
-		case "room-lit":
-			return "部屋がぱっと明るくなった!";
-		case "corridor-glowed":
-			return "通路が光り、すぐに消えた";
 		case "enemy-pulled":
 			return `杖の力で${formatEnemyName(event.payload.target)}が目の前に引き寄せられた!`;
 		case "enemy-hasted":

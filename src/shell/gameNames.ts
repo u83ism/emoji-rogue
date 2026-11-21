@@ -75,6 +75,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	"teleport-wand": "テレポートの杖",
 	"stealth-ring": "隠密の指輪",
 	"magic-missile-wand": "魔法の矢の杖",
+	"drain-life-wand": "吸命の杖",
 	"lightning-wand": "電撃の杖",
 	"cold-wand": "冷気の杖",
 	"fire-wand": "炎の杖",

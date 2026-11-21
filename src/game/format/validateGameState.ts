@@ -418,6 +418,10 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"enemy-hasted": (payload) => isEnemyKind(payload.target),
 	"enemy-pulled": (payload) => isEnemyKind(payload.target),
 	"room-lit": emptyPayload,
+	tingling: emptyPayload,
+	"life-drained": (payload) => isPositiveInteger(payload.lost),
+	"enemy-drained": (payload) =>
+		isEnemyName(payload.target) && isNonNegativeInteger(payload.damage),
 	"bolt-hit": (payload) =>
 		isBoltKind(payload.kind) &&
 		isEnemyName(payload.target) &&
@@ -530,6 +534,7 @@ const rebuildItem = (item: Item): Item => {
 		case "slow-wand":
 		case "teleport-wand":
 		case "magic-missile-wand":
+		case "drain-life-wand":
 		case "lightning-wand":
 		case "cold-wand":
 		case "fire-wand":

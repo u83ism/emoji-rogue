@@ -134,3 +134,26 @@ export const findAreaExits = (
 			return passages.exits.get(area.id) ?? [];
 	}
 };
+
+/** The corridor beyond `position` when it is a room's doorway (an open tile of a wall ring with a corridor tile next to it), if any. */
+export const findDoorCorridor = (
+	state: GameState,
+	passages: PassageMap,
+	position: Position,
+): number | undefined => {
+	const room = findRoomAt(state.rooms, position);
+	const onRing =
+		room !== undefined &&
+		(position.x === room.x1 - 1 ||
+			position.x === room.x2 + 1 ||
+			position.y === room.y1 - 1 ||
+			position.y === room.y2 + 1);
+	if (!onRing) {
+		return undefined;
+	}
+	return ORTHOGONAL.map(([deltaX, deltaY]) =>
+		passages.passageAt.get(
+			encodePointKey(position.x + deltaX, position.y + deltaY),
+		),
+	).find((id) => id !== undefined);
+};

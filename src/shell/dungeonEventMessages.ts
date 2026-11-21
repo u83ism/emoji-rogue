@@ -1,5 +1,5 @@
 import type { GameEvent } from "../game/events.js";
-import { TRAP_NAMES } from "./gameNames.js";
+import { formatEnemyName, TRAP_NAMES } from "./gameNames.js";
 
 /** Why `>`/`<` did nothing (original Rogue's d_level()/u_level() messages), by reason and direction. */
 const STAIRS_REFUSAL_MESSAGES: Readonly<
@@ -43,6 +43,11 @@ export type DungeonEvent = Extract<
 			| "trap-triggered"
 			| "trap-found"
 			| "secret-door-found"
+			| "tingling"
+			| "room-lit"
+			| "corridor-glowed"
+			| "life-drained"
+			| "enemy-drained"
 			| "player-stuck"
 			| "trap-mystery";
 	}
@@ -71,6 +76,16 @@ export const formatDungeonEvent = (event: DungeonEvent): string => {
 				: `${TRAP_NAMES[event.payload.kind]}を踏んでしまった!`;
 		case "trap-found":
 			return `${TRAP_NAMES[event.payload.kind]}を見つけた`;
+		case "room-lit":
+			return "部屋がぱっと明るくなった!";
+		case "corridor-glowed":
+			return "通路が光り、すぐに消えた";
+		case "tingling":
+			return "体がぴりぴりした";
+		case "life-drained":
+			return `杖に生命力を吸い取られ、HPが${event.payload.lost}減った。その力が周りの敵を襲う!`;
+		case "enemy-drained":
+			return `${formatEnemyName(event.payload.target)}は生命力を奪われて倒れた!`;
 		case "secret-door-found":
 			return "隠し扉を見つけた!";
 		case "player-stuck":

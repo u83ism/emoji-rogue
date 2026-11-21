@@ -96,6 +96,7 @@ export const ITEM_KIND_VALUES = [
 	"fire-wand",
 	"cold-wand",
 	"lightning-wand",
+	"drain-life-wand",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KIND_VALUES)[number];
@@ -160,6 +161,7 @@ export const isEquipmentItemKind = (
 ): kind is EquipmentItemKind => EQUIPMENT_ITEM_KINDS.includes(kind);
 
 export const WAND_KIND_VALUES = [
+	"drain-life-wand",
 	"lightning-wand",
 	"cold-wand",
 	"fire-wand",
@@ -653,6 +655,21 @@ export type GameEvent =
 			/** The player's own bolt, bounced back, struck them for 6d6. */
 			readonly type: "player-bolted";
 			readonly payload: { readonly kind: BoltKind; readonly damage: number };
+	  }
+	| {
+			/** A wand of drain life with no monster in reach. */
+			readonly type: "tingling";
+			readonly payload: Record<string, never>;
+	  }
+	| {
+			/** A wand of drain life took half the player's HP to share among the monsters in reach. */
+			readonly type: "life-drained";
+			readonly payload: { readonly lost: number };
+	  }
+	| {
+			/** A monster a wand of drain life killed — the player's kill. */
+			readonly type: "enemy-drained";
+			readonly payload: { readonly target: EnemyName; readonly damage: number };
 	  }
 	| {
 			/** A wand of light lit the player's room for good. */

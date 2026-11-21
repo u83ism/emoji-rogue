@@ -16,6 +16,7 @@ import { StatusBar } from "./shell/statusBar.js";
 import {
 	FULL_WIDTH_INPUT_WARNING,
 	GAME_SAVED_MESSAGE,
+	resolveStairsHint,
 	SAVE_LOAD_WARNING_MESSAGE,
 } from "./shell/systemMessages.js";
 
@@ -101,6 +102,7 @@ const App = () => {
 	}, [state, replay, exit]);
 
 	/* keyed by position in the full log so React keys stay stable per event */
+	const stairsHint = resolveStairsHint(state);
 	const logLines = state.events
 		.map((event, eventIndex) => ({ eventIndex, event }))
 		.slice(-LOG_LINE_COUNT);
@@ -153,8 +155,10 @@ const App = () => {
 			 * saved), kept visually apart from the log by a blank line. */}
 			{(showFullWidthWarning ||
 				showSaveLoadWarning ||
+				stairsHint !== undefined ||
 				state.status === "suspended") && (
 				<Box marginTop={1} flexDirection="column">
+					{stairsHint !== undefined && <Text color="cyan">{stairsHint}</Text>}
 					{showFullWidthWarning && (
 						<Text color="yellow">{FULL_WIDTH_INPUT_WARNING}</Text>
 					)}

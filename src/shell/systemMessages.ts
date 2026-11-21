@@ -1,3 +1,4 @@
+import type { GameState } from "../game/state.js";
 // System notices (app/session concerns, never part of GameState). They speak
 // in polite style to contrast with the plain style of in-world log lines —
 // see the log/notice distinction in docs/tasks/game.md.
@@ -30,3 +31,21 @@ export const ZAP_DIRECTION_PROMPT =
 
 /** Shown while picking which held item a targeted scroll (the identify scroll) applies to. */
 export const ITEM_TARGET_PROMPT = "対象を選んでください(Escで閉じる)";
+
+/**
+ * Shown while the player stands on the staircase, which only `>` (down) or
+ * `<` (up, with the amulet) takes — original Rogue's keys; stepping on it
+ * does nothing by itself. Undefined anywhere else.
+ */
+export const resolveStairsHint = (state: GameState): string | undefined => {
+	if (
+		state.status !== "playing" ||
+		state.player.x !== state.stairs.x ||
+		state.player.y !== state.stairs.y
+	) {
+		return undefined;
+	}
+	return state.hasAmulet
+		? "階段です。< で上ります(> で下ります)"
+		: "階段です。> で下ります";
+};

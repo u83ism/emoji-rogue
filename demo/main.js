@@ -30,6 +30,7 @@ import {
 	PLAYER_WEAK_THRESHOLD,
 	parseSaveFileContent,
 	resolveItemVerbPrompt,
+	resolveStairsHint,
 	SAVE_LOAD_WARNING_MESSAGE,
 	THROW_DIRECTION_PROMPT,
 	toDirectedAction,
@@ -264,6 +265,13 @@ const renderLog = () => {
 			line.className = "log-won";
 		}
 		logElement.appendChild(line);
+	}
+	const stairsHint = resolveStairsHint(state);
+	if (stairsHint !== undefined) {
+		const hint = document.createElement("div");
+		hint.className = "log-hint";
+		hint.textContent = stairsHint;
+		logElement.appendChild(hint);
 	}
 };
 

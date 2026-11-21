@@ -104,7 +104,7 @@ describe("formatHeldItemLabel", () => {
 		const scroll: HeldItem = { itemId: 1, kind: "mapping-scroll" };
 		const { appearances } = buildArenaGameState(3, 3, 1);
 		expect(formatHeldItemLabel(scroll, [], appearances)).toMatch(
-			/^『.+』と書かれた巻物$/,
+			/^『[ァ-ヴー]+( [ァ-ヴー]+)*』と書かれた巻物$/,
 		);
 		expect(formatHeldItemLabel(scroll, ["mapping-scroll"], appearances)).toBe(
 			"地図の巻物",

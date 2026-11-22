@@ -41,7 +41,7 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "地図の巻物",
 		category: "巻物",
 		spawn: itemDrawShare("mapping-scroll"),
-		effect: "フロア全体の地形が既踏破になる",
+		effect: "フロア全体の地形が既踏破になる。隠し扉・隠し通路も開く",
 	},
 	"identify-potion-scroll": {
 		catalogName: "薬識別の巻物",

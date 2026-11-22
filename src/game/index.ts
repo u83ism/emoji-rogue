@@ -6,6 +6,7 @@
 
 export type { Cell } from "../renderer/index.js";
 export { buildCatalogMarkdown } from "../shell/catalog/catalog.js";
+export { buildCatalogHtml } from "../shell/catalog/catalogHtml.js";
 export { formatEvent } from "../shell/eventMessages.js";
 export { resolveItemDisplayName } from "../shell/gameNames.js";
 export {

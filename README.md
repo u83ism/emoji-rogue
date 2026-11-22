@@ -6,7 +6,7 @@
 
 ## 現在の状態
 
-一通り遊べる状態です。ルールとバランスは原作Rogue 5.4のまま(`lcn2/rogue5.4`のソースで確認)で、見た目と操作感とコードだけを現代化しています。進捗は [docs/tasks/game.md](docs/tasks/game.md)、敵・アイテム・罠の数値の全一覧は [docs/catalog.md](docs/catalog.md) を参照。
+一通り遊べる状態です。ルールとバランスは原作Rogue 5.4のまま(`lcn2/rogue5.4`のソースで確認)で、見た目と操作感とコードだけを現代化しています。進捗は [docs/tasks/game.md](docs/tasks/game.md)、敵・アイテム・罠の数値の全一覧は [docs/catalog.md](docs/catalog.md)(Web版: [カタログ](https://emoji-rogue-497.pages.dev/demo/catalog.html))を参照。
 
 - **目的**: 26階より深くにあるイェンダーの魔除け💎を手に入れ、地上まで持ち帰ると勝利🎉。階段🔽は1つで上り下りの両方に使い、上るには魔除けが要る。ダンジョンに底は無く、27階からは敵が強くなる
 - **ダンジョン**: 原作と同じ3×3の部屋割り。明るい部屋は入ると全体が見え、暗い部屋と通路は周りだけ(深い階ほど暗い部屋が多い)。暗い部屋は出ると床の記憶が消える。深い階には隠し扉・隠し通路がある
@@ -69,20 +69,20 @@ npm start
 
 ## ブラウザデモ
 
-ターミナル環境が用意できない場合向けに、`demo/`にビルド不要のブラウザ版があります。絵文字幅問題(端末最大の地雷)はCSSでセル幅を明示できるブラウザには存在しません。セーブは`localStorage`に毎ターン自動保存され(CLI版の`s`キー手動セーブと違い、タブがいつ閉じられるか分からないため)、次回開いたときに自動再開します(1スロット・消費型でCLI版と同じ)。リプレイは非対応です。
+ターミナル環境が用意できない場合向けに、`demo/`にビルド不要のブラウザ版があります。絵文字幅問題(端末最大の地雷)はCSSでセル幅を明示できるブラウザには存在しません。セーブは`localStorage`に毎ターン自動保存され(CLI版の`S`キー手動セーブと違い、タブがいつ閉じられるか分からないため)、次回開いたときに自動再開します(1スロット・消費型でCLI版と同じ)。リプレイは非対応です。
 
 ```
 npm run build
 npx serve .   # または python3 -m http.server などリポジトリルートで静的配信できれば何でもよい
 ```
 
-ブラウザで `demo/index.html` を開いてください(`file://`ではESモジュールのimportがCORSでブロックされるため、必ず簡易サーバー経由で開くこと)。`?seed=123` のようにURLパラメータでシードを指定できます。
+ブラウザで `demo/index.html` を開いてください(`file://`ではESモジュールのimportがCORSでブロックされるため、必ず簡易サーバー経由で開くこと)。`?seed=123` のようにURLパラメータでシードを指定できます。ページ上部のリンクから、敵・アイテム・罠のカタログ(`demo/catalog.html`。[docs/catalog.md](docs/catalog.md)と同じ内容)も開けます。
 
 ## ドキュメント
 
 - [docs/architecture.md](docs/architecture.md) — コードベースの読み方
 - [docs/design.md](docs/design.md) — 製品コンセプトと絵文字方針
-- [docs/catalog.md](docs/catalog.md) — 敵・アイテム・罠の全一覧(ゲームのデータから生成。`npm run docs:catalog`で更新)
+- [docs/catalog.md](docs/catalog.md) — 敵・アイテム・罠の全一覧(ゲームのデータから生成。`npm run docs:catalog`でWeb版の`demo/catalog.html`と一緒に更新)
 - [docs/emoji-policy.md](docs/emoji-policy.md) — 絵文字選定の技術基準(ADR含む)
 - [docs/emoji-registry.md](docs/emoji-registry.md) — 現在の絵文字割り当て・却下候補の台帳(手動更新)
 - [docs/tasks/game.md](docs/tasks/game.md) — ゲーム開発タスクトラッカー(やること・判断待ち)

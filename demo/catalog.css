@@ -1,0 +1,91 @@
+@import url("./site.css");
+
+main {
+	max-width: 72em;
+	margin: 0 auto;
+	padding: 0 1em 3em;
+	line-height: 1.7;
+}
+
+h1 {
+	font-size: 1.4em;
+	margin: 0.5em 0;
+}
+
+h2 {
+	font-size: 1.15em;
+	margin: 2em 0 0.5em;
+	padding-bottom: 0.25em;
+	border-bottom: 1px solid #333;
+	scroll-margin-top: 1em;
+}
+
+p {
+	color: #ccc;
+	font-size: 0.95em;
+}
+
+.toc {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin: 0.5em 0 1em;
+}
+
+.toc a {
+	padding: 0.2em 0.75em;
+	border: 1px solid #444;
+	border-radius: 999px;
+	color: #ccc;
+	text-decoration: none;
+	font-size: 0.9em;
+}
+
+.toc a:hover {
+	border-color: #8cf;
+	color: #eee;
+}
+
+/* wide tables scroll inside their own box instead of the whole page */
+.table-scroll {
+	overflow-x: auto;
+}
+
+table {
+	border-collapse: collapse;
+	font-size: 0.9em;
+	width: 100%;
+}
+
+th,
+td {
+	border-bottom: 1px solid #2a2a2a;
+	padding: 0.35em 0.6em;
+	text-align: left;
+	vertical-align: top;
+}
+
+thead th {
+	background: #1c1c1c;
+	color: #aaa;
+	font-weight: normal;
+	white-space: nowrap;
+}
+
+tbody tr:hover {
+	background: #1a1a1a;
+}
+
+/* the name and short numeric columns stay on one line; the long
+ * description column takes the rest */
+td:not(:last-child) {
+	white-space: nowrap;
+}
+
+code {
+	font-family: ui-monospace, monospace;
+	background: #222;
+	border: 1px solid #444;
+	border-radius: 3px;
+	padding: 0 0.3em;
+}

@@ -160,6 +160,27 @@ const logElement = document.getElementById("log");
 const inventoryElement = document.getElementById("inventory");
 const warningElement = document.getElementById("warning");
 const seedElement = document.getElementById("seed");
+const manualElement = document.getElementById("manual");
+
+/* The key table remembers whether the viewer folded it away — a per-viewer
+ * convenience, so storage failures (private windows) just keep it open. */
+const MANUAL_STORAGE_KEY = "emoji-rogue-manual-closed";
+try {
+	if (localStorage.getItem(MANUAL_STORAGE_KEY) === "1") {
+		manualElement.open = false;
+	}
+} catch {
+	/* storage unavailable — leave the table open */
+}
+manualElement.addEventListener("toggle", () => {
+	try {
+		localStorage.setItem(MANUAL_STORAGE_KEY, manualElement.open ? "0" : "1");
+	} catch {
+		/* storage unavailable — the choice lasts only this visit */
+	}
+	/* a focused <summary> would take the next Space/Enter as another toggle */
+	document.activeElement?.blur();
+});
 
 const renderMap = () => {
 	/* the inventory panel replaces the map while open — same exclusivity as the CLI (milestone 70) */

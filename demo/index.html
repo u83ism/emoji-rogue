@@ -26,9 +26,72 @@
 	</head>
 	<body>
 		<h1>絵文字ローグ</h1>
-		<p class="hint">
-			移動: 矢印キー/hjkl/テンキー(斜めはyubnかテンキーの7・9・1・3)・待機: .またはスペース・持ち物: i(文字キーで使用、Escで閉じる)
-		</p>
+		<details id="manual" class="manual" open>
+			<summary>操作方法</summary>
+			<div class="manual-tables">
+				<table>
+					<caption>マップ</caption>
+					<tbody>
+						<tr>
+							<th>移動・攻撃</th>
+							<td><kbd>←↑↓→</kbd> / <kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd> / テンキー</td>
+						</tr>
+						<tr>
+							<th>斜め移動</th>
+							<td><kbd>y</kbd><kbd>u</kbd><kbd>b</kbd><kbd>n</kbd> / テンキーの<kbd>7</kbd><kbd>9</kbd><kbd>1</kbd><kbd>3</kbd></td>
+						</tr>
+						<tr>
+							<th>待機</th>
+							<td><kbd>.</kbd> / <kbd>Space</kbd></td>
+						</tr>
+						<tr>
+							<th>探す</th>
+							<td><kbd>s</kbd>(周り8マスの隠れた罠・隠し扉・隠し通路)</td>
+						</tr>
+						<tr>
+							<th>階段を下りる</th>
+							<td><kbd>&gt;</kbd>(<kbd>Shift</kbd>+<kbd>.</kbd>)</td>
+						</tr>
+						<tr>
+							<th>階段を上る</th>
+							<td><kbd>&lt;</kbd>(<kbd>Shift</kbd>+<kbd>,</kbd>)。魔除けが必要</td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<caption>持ち物</caption>
+					<tbody>
+						<tr>
+							<th>開く</th>
+							<td><kbd>i</kbd></td>
+						</tr>
+						<tr>
+							<th>選ぶ</th>
+							<td><kbd>a</kbd>〜<kbd>z</kbd>(表示された文字)</td>
+						</tr>
+						<tr>
+							<th>使う・装備する</th>
+							<td><kbd>u</kbd>(杖はこのあと方向キー)</td>
+						</tr>
+						<tr>
+							<th>投げる</th>
+							<td><kbd>t</kbd>→方向キー(装備していない武器)</td>
+						</tr>
+						<tr>
+							<th>捨てる</th>
+							<td><kbd>d</kbd></td>
+						</tr>
+						<tr>
+							<th>やめる・閉じる</th>
+							<td><kbd>Esc</kbd></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p class="manual-note">
+				セーブは毎ターン自動です。半角入力モードで遊んでください。
+			</p>
+		</details>
 		<div id="status" class="status"></div>
 		<div id="map" class="map"></div>
 		<div id="inventory" class="inventory" hidden></div>

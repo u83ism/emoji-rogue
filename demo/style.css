@@ -13,11 +13,70 @@ h1 {
 	margin: 0 0 0.25em;
 }
 
-.hint {
+.manual {
 	font-size: 0.85em;
-	color: #999;
+	color: #bbb;
 	margin: 0 0 0.75em;
+	max-width: 100%;
+}
+
+.manual summary {
+	cursor: pointer;
 	text-align: center;
+	color: #999;
+}
+
+.manual-tables {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5em 1.5em;
+	margin-top: 0.5em;
+}
+
+.manual table {
+	border-collapse: collapse;
+}
+
+.manual caption {
+	text-align: left;
+	font-weight: bold;
+	color: #eee;
+	padding-bottom: 0.25em;
+}
+
+.manual th,
+.manual td {
+	border-top: 1px solid #333;
+	padding: 0.2em 0.6em;
+	text-align: left;
+	vertical-align: top;
+}
+
+.manual th {
+	font-weight: normal;
+	color: #999;
+	white-space: nowrap;
+}
+
+.manual kbd {
+	display: inline-block;
+	min-width: 1.2em;
+	padding: 0 0.3em;
+	margin: 0 0.1em;
+	border: 1px solid #555;
+	border-bottom-width: 2px;
+	border-radius: 3px;
+	background: #222;
+	color: #eee;
+	font-family: ui-monospace, monospace;
+	text-align: center;
+}
+
+.manual-note {
+	margin: 0.5em 0 0;
+	text-align: center;
+	color: #888;
 }
 
 .map {

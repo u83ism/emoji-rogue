@@ -54,6 +54,28 @@ describe("items/scrolls", () => {
 		}
 	});
 
+	it("a mapping scroll opens every secret door and passage, as original Rogue's S_MAP", () => {
+		const state = buildDungeonGameState(40, 20, 7);
+		const door = { x: 1, y: 1, kind: "door" as const };
+		const passage = { x: 2, y: 1, kind: "passage" as const };
+		const terrain = state.terrain.map((column, x) =>
+			column.map((value, y) => (y === 1 && (x === 1 || x === 2) ? 1 : value)),
+		);
+		const next = advanceTurn(
+			{
+				...state,
+				terrain,
+				hiddenTiles: [door, passage],
+				inventory: [{ itemId: 1, kind: "mapping-scroll" as const }],
+			},
+			{ type: "use-item", payload: { itemId: 1 } },
+		);
+		expect(next.hiddenTiles).toEqual([]);
+		expect(next.terrain[1]?.[1]).toBe(0);
+		expect(next.terrain[2]?.[1]).toBe(0);
+		expect(next.events).toEqual([{ type: "floor-mapped", payload: {} }]);
+	});
+
 	it("an identify scroll pointed at a held potion identifies that potion's kind", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),

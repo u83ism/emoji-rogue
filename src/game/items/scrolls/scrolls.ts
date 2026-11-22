@@ -23,9 +23,21 @@ import { applyScrollWasted } from "../equipment/equipmentScrolls.js";
 export const applyUseTeleportScroll = (state: GameState): GameState =>
 	applyRandomTeleport(state, "teleport-scroll");
 
-/** A magic mapping scroll reveals the whole floor as explored. */
+/**
+ * A magic mapping scroll reveals the whole floor as explored. As original
+ * Rogue's S_MAP, it also gives away every secret door and passage — they
+ * turn into plain floor, silently, as if searched out (search.ts).
+ */
 export const applyUseMappingScroll = (state: GameState): GameState => ({
 	...state,
+	terrain: state.terrain.map((column, x) =>
+		column.map((value, y) =>
+			state.hiddenTiles.some((tile) => tile.x === x && tile.y === y)
+				? 0
+				: value,
+		),
+	),
+	hiddenTiles: [],
 	explored: state.terrain.map((column) => column.map(() => true)),
 	events: buildEventLog(state.events, [{ type: "floor-mapped", payload: {} }]),
 });

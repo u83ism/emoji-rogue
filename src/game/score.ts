@@ -21,7 +21,7 @@ const WEAPON_WORTH: Readonly<Record<WeaponKind, number>> = {
 	spear: 5,
 };
 
-const ARMOR_WORTH: Readonly<Record<ArmorKind, number>> = {
+export const ARMOR_WORTH: Readonly<Record<ArmorKind, number>> = {
 	"leather-armor": 20,
 	"ring-mail": 25,
 	"studded-leather-armor": 20,

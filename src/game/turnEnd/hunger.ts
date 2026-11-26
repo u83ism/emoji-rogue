@@ -60,9 +60,8 @@ const applyStarvationTurn = (state: GameState): GameState => {
  * (RING_FOOD_USE — a slow digestion ring saves the 1 half the time), with
  * a one-time player-hungry warning the
  * turn it crosses PLAYER_HUNGER_WARNING_THRESHOLD going down and a one-time
- * player-weak warning at PLAYER_WEAK_THRESHOLD (which also weakens the
- * player's damage for as long as playerFood stays at or below it — no
- * separate flag, derived straight from playerFood). With nothing left it
+ * player-weak warning at PLAYER_WEAK_THRESHOLD (only a warning: original
+ * Rogue's Weak stage changes nothing in combat). With nothing left it
  * becomes applyStarvationTurn instead. A no-op once the run is no longer
  * playing — called after combat/movement resolves each turn-consuming
  * action, so a death from an enemy this same turn must not also take a

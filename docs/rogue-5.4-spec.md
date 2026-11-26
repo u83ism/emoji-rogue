@@ -39,7 +39,7 @@
 
 **出現階層**: `randmonster()`が`level + (rnd(10) - 6)`でA〜Zのインデックスを決める。単純化すると「深い階ほど後ろの文字(強いモンスター)が出やすい」——26種は26階層に緩やかに対応している。
 
-**emoji-rogueの26種との名前の対応(2026-11-12更新)**: マイルストーン101〜103で26種まで実装したが、本家5.4と名前が一致しないものが4種ある——`thief`(本家L=leprechaun)、`rat`(本家R=rattlesnake)、`ur-vile`(本家U=black unicorn)、`icky-thing`(本家I=ice monster)。残り22種は本家と同名。`rat`・`ur-vile`・`icky-thing`は能力も本家5.4の該当モンスターと照合していない。
+**emoji-rogueの26種との名前の対応(2026-11-26更新)**: 26種とも能力は本家5.4のもの。名前が本家と違うのは、絵文字に合わせて改名した3種(rattlesnake→🦂サソリ、black unicorn→🦏サイ、yeti→🐻雪男)と、本人の判断で名前だけ残した`thief`(盗賊、本家L=leprechaun)。経緯は`docs/design.md`のコンセプト方針と`docs/tasks/game-notes.md`の「本家ありきの絵文字割り当て見直し」。
 
 **"thief"は本家に存在しない名前**: `thief`(金を盗んで逃げる)は本家の**leprechaun**に相当する。名前は「盗賊」のままアレンジとして残し、挙動だけ本家に合わせた(2026-11-12本人決定、マイルストーン110)。`nymph`は本家と同名・同挙動(アイテムを盗んで消える)で一致している。
 
@@ -63,7 +63,7 @@
 
 **呪いが解ける条件**(`scrolls.c`): remove curseの巻物は装備中の武器・防具・左右の指輪の呪いを解く。**enchant weapon・enchant armorの巻物も、装備中の武器/防具の呪いを解く**(強化と同時に`ISCURSED`を落とす)。
 
-**emoji-rogueの対応(マイルストーン110・111)**: 武器・防具の抽選と確率、指輪の「警報(aggravate monster)だけ必ず呪い」は本家どおり。武器の呪い/強化は命中補正(`hitBonus`)だけを動かし、強化の巻物は呪いも解く(マイルストーン111で対応)。残る差分は1つ——強化の巻物の対象を持ち物から選べること(本家は装備中のものに効く)。
+**emoji-rogueの対応(マイルストーン110・111)**: 武器・防具の抽選と確率、指輪の「警報(aggravate monster)だけ必ず呪い」は本家どおり。武器の呪い/強化は命中補正(`hitBonus`)だけを動かし、強化の巻物は呪いも解く(マイルストーン111で対応)。強化・保護の巻物はマイルストーン119で本家どおり装備中の物に効くようにした。呪われた武器・鎧は、外すことも別の物に持ち替えることもできない(2026-11-26、本家の`wield()`の`dropcheck()`と`wear()`)。
 
 ## 戦闘計算 — `fight.c`
 
@@ -73,13 +73,13 @@
 - **プレイヤーの成長**(`check_level()`、`extern.c`の`e_levels[]`・`INIT_STATS`): HP12・力16・AC10・素手1d4で開始。経験値10/20/40/…でレベルが上がり、1レベルごとに最大HP+1d10
 - **自然回復**(`daemons.c`の`doctor()`): 戦闘のないターン数`quiet`を数え、レベル7以下は`quiet + レベル×2 > 20`で1回復、レベル8以上は3ターンごとに`rnd(レベル-7)+1`回復。再生の指輪は毎ターン+1。回復すると`quiet`は0に戻る。`quiet`は自分が攻撃したとき・攻撃されたときにも0に戻る(`fight.c`)
 - **敵の出現**(`monsters.c`の`randmonster()`・`lvl_mons[]`): 26種を弱い順に並べた表から「階 + rnd(10) - 6」番目を引く(表の外に出たら先頭5種/末尾5種から引き直す)。部屋ごとに、金貨のある部屋は80%・ない部屋は25%で1体
-- **emoji-rogueの対応(マイルストーン111、2026-11-16)**: 上の命中判定・ダメージ・モンスターの攻撃・成長・自然回復・出現の表引きを本家どおりに実装した。力(`str_plus[]`・`add_dam[]`、`misc.c`の`chg_str()`)はマイルストーン117で本家どおりにした(16で開始・3〜31・最大値を別に持つ・命中とダメージに表引きで上乗せ、投げた武器にも効く)。差分:不意打ちは必中+ダメージ3倍のまま(本家は命中+4のみ)。部屋ごとの金貨(50%)と出現率(80%/25%)はマイルストーン115で本家どおりにした。徘徊モンスター(`daemons.c`の`swander()`/`rollwand()`、`monsters.c`の`wanderer()`: 約70ターン(`spread(70)`=67〜73)待ってから4ターンごとに1/6で1体、出たら待ち直し。プレイヤーのいる部屋以外に、起きた状態で出る。ice monster・leprechaun・nymph・venus flytrap・xeroc・dragonは徘徊しない)はマイルストーン114で実装した——出現場所は「プレイヤーから見えていない床」で代用している(部屋の情報を`GameState`に持っていないため)。ハエトリソウの拘束ダメージ(`fight.c`の`vf_hit`: 命中のたびに1増え、外れたターンもその値を受ける)、コウモリ・ファントムの不規則な動き(`chase.c`の`chase()`: コウモリ1/2・ファントム1/5でランダムな1歩)、飛ぶ敵(`ISFLY`: コウモリ・ケストレル・グリフィン)の、プレイヤーから離れている間の2回行動(`runners()`)はマイルストーン115で実装した。ice monsterは2026-11-20にイッキーシングから置き換え、本家どおり凍らせる(命中で2〜3ターン麻痺、加算されて50ターンを超えると死ぬ)
+- **emoji-rogueの対応(マイルストーン111、2026-11-16)**: 上の命中判定・ダメージ・モンスターの攻撃・成長・自然回復・出現の表引きを本家どおりに実装した。力(`str_plus[]`・`add_dam[]`、`misc.c`の`chg_str()`)はマイルストーン117で本家どおりにした(16で開始・3〜31・最大値を別に持つ・命中とダメージに表引きで上乗せ、投げた武器にも効く)。不意打ちはマイルストーン118で本家どおり命中+4だけにした。部屋ごとの金貨(50%)と出現率(80%/25%)はマイルストーン115で本家どおりにした。徘徊モンスター(`daemons.c`の`swander()`/`rollwand()`、`monsters.c`の`wanderer()`: 約70ターン(`spread(70)`=67〜73)待ってから4ターンごとに1/6で1体、出たら待ち直し。プレイヤーのいる部屋以外に、起きた状態で出る。ice monster・leprechaun・nymph・venus flytrap・xeroc・dragonは徘徊しない)はマイルストーン114で実装した。出現場所は2026-11-26に本家どおり「プレイヤーのいる部屋以外の、でたらめに選んだ部屋の床」にした(それまでは部屋の情報が無く、見えていない床で代用していた)。ハエトリソウの拘束ダメージ(`fight.c`の`vf_hit`: 命中のたびに1増え、外れたターンもその値を受ける)、コウモリ・ファントムの不規則な動き(`chase.c`の`chase()`: コウモリ1/2・ファントム1/5でランダムな1歩)、飛ぶ敵(`ISFLY`: コウモリ・ケストレル・グリフィン)の、プレイヤーから離れている間の2回行動(`runners()`)はマイルストーン115で実装した。ice monsterは2026-11-20にイッキーシングから置き換え、本家どおり凍らせる(命中で2〜3ターン麻痺、加算されて50ターンを超えると死ぬ)
 
 ## わな — `move.c`の`be_trapped()`
 
 - 矢(`T_ARROW`): `swing(レベル-1, AC, 1)`で命中すると1d6、外れると矢が足元に落ちる
 - ダーツ(`T_DART`): `swing(レベル+1, AC, 1)`で命中すると1d4、さらに`save(VS_POISON)`に失敗すると力-1(持続の指輪で防ぐ)。外れると何も残らない
-- **emoji-rogueの対応(マイルストーン115)**: emoji-rogueの「矢のわな」(内部名`dart`)は`T_DART`の命中判定と1d4にした。毒へのセーブに失敗したときの力-1はマイルストーン117で入れた(持続の指輪は未実装)。本家の`T_ARROW`(1d6・矢が落ちる)は未実装。本家のわなは踏んでも消えず見えるようになるが、emoji-rogueでは1回で消える(マイルストーン22からの簡略化)
+- **emoji-rogueの対応(マイルストーン115・117・119)**: ダーツのわな(`dart`)は`T_DART`の命中判定と1d4、毒へのセーブに失敗すると力-1(力の維持の指輪で防ぐ)。矢のわな(`arrow`)は`T_ARROW`の1d6で、外れると矢が落ちる。わなは本家の8種で、踏んでも消えず、見つけると見えるようになる(マイルストーン119)
 
 ## 薬(力に関わるもの) — `potions.c`の`quaff()`
 
@@ -87,7 +87,7 @@
 - 怪力(`P_STRENGTH`): 力が1上がる(`chg_str(1)`。最大値を超えれば最大値も上がる)
 - 力の回復(`P_RESTORE`): 力が最大値に戻る
 - 毒へのセーブ(`save(VS_POISON)`): d20がレベル/2(切り捨て)を引いた14以上で成功。レベル1で35%
-- **emoji-rogueの対応(マイルストーン117)**: 毒と怪力は本家どおり。毒薬で死ぬことは無くなった。力の回復の薬と持続の指輪は未実装
+- **emoji-rogueの対応(マイルストーン117・119)**: 毒・怪力・力の回復の薬と、力の維持の指輪は本家どおり。毒薬で死ぬことは無い
 
 ## 空腹 — `daemons.c`の`stomach()`、`misc.c`の`eat()`
 
@@ -97,7 +97,7 @@
 - 食料を食べると(負なら0に戻してから)`HUNGERTIME - 200 + rnd(400)`増える
 - 指輪の消費(`rings.c`の`ring_eat()`): regenerationは2、protection・add strength・sustain strength・stealth・maintain armorは1、searching・add hit・add damageは1/3の確率で1、see invisibleは1/5の確率で1、slow digestionは1/2の確率で-1、aggravate monster・teleportationは0
 - 食料の出方(`things.c`の`new_thing()`、`new_level.c`): 1階につき9回、各36%でアイテムが出て、その16%が食料。階を作るたびに`no_food`を1増やし、3を超えていれば次に出るアイテムは必ず食料
-- **emoji-rogueの対応(マイルストーン112、2026-11-16)**: 上の数値と挙動を実装した。差分: 魔除け所持での消費軽減は無い。食料は他のアイテムと独立に抽選する(1回5.76%×9回)。本家のWeak段階は表示と警告だけで、戦闘の数値には効かない(`hungry_state`は`daemons.c`と`io.c`の表示でしか使われていない、2026-11-20に確認)。マイルストーン100から入れていたWeak中のダメージ-1は、マイルストーン117で外した
+- **emoji-rogueの対応(マイルストーン112・119、2026-11-26)**: 上の数値と挙動を実装した。魔除けを持つと消費が1減る。食料は他のアイテムと同じ抽選(1階9回・36%、その16%)で出る(マイルストーン119)。食料の1割は果物(本家の`fruit`、仮に🍎「りんご」)で、ふつうの食料は29%でひどい味がして経験値が1増える(`rnd(100) > 70`、2026-11-26)。本家のWeak段階は表示と警告だけで、戦闘の数値には効かない(`hungry_state`は`daemons.c`と`io.c`の表示でしか使われていない、2026-11-20に確認)。マイルストーン100から入れていたWeak中のダメージ-1は、マイルストーン117で外した
 
 ## ダンジョン構造の定数 — `rogue.h`
 
@@ -138,31 +138,31 @@ emoji-rogueもマイルストーン111でこの8種を実装した(`src/game/ite
 | shuriken | 12 | 5 | 1x2 | 2x4 |
 | spear | 12 | 5 | 2x3 | 1x6 |
 
-emoji-rogueはマイルストーン111で近接5種(mace・long sword・dagger・two handed sword・spear)を実装した。short bow・arrow・dart・shurikenは「投げる」コマンドが無いので未実装。出現重みは5種だけで按分している。本家の初期装備(`init.c`の`init_player()`)はメイス+1/+1・リングメイル+1・食料1・弓+1・矢で、emoji-rogueは弓矢以外を持って始まる。
+emoji-rogueはマイルストーン111で近接5種(mace・long sword・dagger・two handed sword・spear)、マイルストーン113で投擲系4種(short bow・arrow・dart・shuriken)と「投げる」を実装し、9種が揃った。本家の初期装備(`init.c`の`init_player()`)はメイス+1/+1・リングメイル+1・食料1・弓+1・矢で、emoji-rogueも同じ物を持って始まる。
 
 ### 薬14種(`pot_info`)
 
 confusion / hallucination / poison / gain strength / see invisible / healing / monster detection / magic detection / raise level / extra healing / haste self / restore strength / blindness / levitation
 
-emoji-rogueにあるのは poison・strength(gain相当)・raise-level・detect-monster・hallucination・confusion・levitation・blind(ness)・heal(healing相当、extra healingの上位区分は無し)。本家に無いlife(生命の薬、Brogue由来)・paralysis(麻痺の薬)は2026-11-21に削除した。本家にあってemoji-rogueに無いもの: see invisible・magic detection・extra healing(healingとの2段階区分)・haste self・restore strength(gain strengthとは別物、力を吸われた時の回復専用)
+emoji-rogueにも14種すべてがある(マイルストーン119・120で揃った)。本家に無いlife(生命の薬、Brogue由来)・paralysis(麻痺の薬)は2026-11-21に削除した。
 
 ### 巻物18種(`scr_info`)
 
 monster confusion / magic mapping / hold monster / sleep / enchant armor / identify potion / identify scroll / identify weapon / identify armor / identify ring,wand or staff / scare monster / food detection / teleportation / enchant weapon / create monster / remove curse / aggravate monsters / protect armor
 
-emoji-rogueにあるのは teleport・mapping・identify(**カテゴリ別5種→汎用1種に統合**)・enchant-weapon・enchant-armor・protect-armor・confuse-monster・hold-monster・remove-curse。本家にあってemoji-rogueに無いもの: sleep・scare monster・food detection・create monster・aggravate monsters(巻物版、指輪の`aggravate-monster`とは別物)
+emoji-rogueにも18種すべてがある(マイルストーン119・120で揃った。識別も本家どおり5種に分けた)。
 
 ### 指輪14種(`ring_info`)
 
 protection / add strength / sustain strength / searching / see invisible / adornment / aggravate monster / dexterity / increase damage / regeneration / slow digestion / teleportation / stealth / maintain armor
 
-emoji-rogueにあるのは regeneration・sustenance(slow digestion相当)・stealth・aggravate-monster。本家14種に無いawareness(千里眼の指輪——敵を常に映す。searchingは隠し扉・わなを探す指輪で別物)は2026-11-21に削除した。本家にあってemoji-rogueに無いもの: protection・add strength・sustain strength・see invisible・adornment・dexterity・increase damage・teleportation(指輪版)・maintain armor(防具の錆防止——emoji-rogueは同じ効果を巻物(`protect-armor`)側だけで持つ)
+emoji-rogueにも14種すべてがある(マイルストーン119で揃った。左右に2つまで)。本家14種に無いawareness(千里眼の指輪)は2026-11-21に削除した。
 
 ### 杖/魔法棒14種(`ws_info`)
 
 light / invisibility / lightning / fire / cold / polymorph / magic missile / haste monster / slow monster / drain life / nothing / teleport away / teleport to / cancellation
 
-emoji-rogueにあるのは teleport(teleport away相当)・magic-missile・slow(monster相当)。本家に無いstriking(打撃、出どころ不明)・sleep(眠り。本家は巻物のみ)の杖は2026-11-21に削除し、魔法の矢は本家どおり1d4+1・敵が魔法へのセーブに成功すると消える、にした。本家にあってemoji-rogueに無いもの: light・invisibility・lightning・fire・cold・polymorph・drain life・nothing(ハズレ枠)・teleport to(teleport awayとは別方向)・cancellation
+emoji-rogueにも14種すべてがある(マイルストーン120で揃った)。本家に無いstriking(打撃、出どころ不明)・sleep(眠り。本家は巻物のみ)の杖は2026-11-21に削除し、魔法の矢は本家どおり1d4+1・敵が魔法へのセーブに成功すると消える、にした。
 
 ## emoji-rogueに存在せず、本家にも存在しない要素(不思議のダンジョン由来と確認)
 

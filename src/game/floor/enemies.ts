@@ -1,6 +1,7 @@
 import { at } from "../../indexing.js";
 import type { Rng } from "../../rng.js";
 import { calculateEnemyLevelBonus, HASTED_ENEMY_FLOOR } from "../balance.js";
+import { drawXerocDisguise } from "../enemies/abilities/xerocDisguise.js";
 import {
 	ENEMY_DEPTH_ORDER,
 	ENEMY_HP_DICE_SIDES,
@@ -86,7 +87,7 @@ export const calculateEnemyFloorRange = (
  * A fresh, sleeping `kind` born on `floor` at `position`, as original
  * Rogue's new_monster(): its HP rolled as level d8 — the level boosted by
  * calculateEnemyLevelBonus on deep floors — and hasted from
- * HASTED_ENEMY_FLOOR down.
+ * HASTED_ENEMY_FLOOR down. A xeroc also draws its disguise (rnd_thing()).
  */
 export const buildSpawnedEnemy = (
 	kind: EnemyKind,
@@ -113,5 +114,6 @@ export const buildSpawnedEnemy = (
 		confused: false,
 		cancelled: false,
 		invisible: kind === "phantom",
+		...(kind === "xeroc" ? { disguise: drawXerocDisguise(rng, floor) } : {}),
 	};
 };

@@ -1,6 +1,7 @@
 /* file-size-exception: GameState/Actionの型定義=ゲームの全語彙を1箇所で読める価値を優先(events.ts/balance.tsと同じ理屈、2026-07-19裁可) */
 import type { RngState } from "../rng.js";
 import type { ItemAppearances } from "./appearances.js";
+import type { XerocDisguise } from "./enemies/abilities/xerocDisguise.js";
 import type {
 	ArmorKind,
 	EnemyKind,
@@ -123,6 +124,8 @@ export type Enemy = Position & {
 	readonly cancelled: boolean;
 	/** Original Rogue's ISINVIS: unseen without see invisible (vision.ts's canSeeEnemy) — a phantom from birth, any monster a wand of invisibility hits. */
 	readonly invisible: boolean;
+	/** What a xeroc looks like on the map until it fights a seeing player or is cancelled (original Rogue's t_disguise) — enemies/abilities/xerocDisguise.ts. Absent, it shows as itself. */
+	readonly disguise?: XerocDisguise;
 };
 
 /**

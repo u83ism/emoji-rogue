@@ -1,4 +1,5 @@
 import { DIRECTION_VECTORS } from "../../directions.js";
+import { removeDisguise } from "../../enemies/abilities/xerocDisguise.js";
 import { buildEventLog } from "../../events.js";
 import type { Direction, GameState } from "../../state.js";
 import { applyEnemyTeleport } from "../../teleport.js";
@@ -98,7 +99,7 @@ export const applyUseCancellationWand = (
 		...state,
 		enemies: state.enemies.map((enemy) =>
 			enemy === target
-				? { ...enemy, cancelled: true, invisible: false }
+				? { ...removeDisguise(enemy), cancelled: true, invisible: false }
 				: enemy,
 		),
 	};

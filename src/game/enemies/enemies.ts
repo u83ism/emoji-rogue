@@ -5,6 +5,10 @@ import { buildEventLog } from "../events.js";
 import type { Enemy, GameState } from "../state.js";
 import { findRoomAt } from "../vision.js";
 import { isHeldByFlytrap } from "./abilities/flytrapHold.js";
+import {
+	mergeXerocUnmasking,
+	removeDisguise,
+} from "./abilities/xerocDisguise.js";
 import { applyEnemyPickups, findItemGoal } from "./enemyPack.js";
 import type { EnemyTurnProgress, FlameStrike } from "./turn/action.js";
 import { resolveEnemyTurnActions } from "./turn/enemySpeed.js";
@@ -79,9 +83,20 @@ export const advanceEnemies = (state: GameState): GameState => {
 			keep(enemy, enemy);
 			continue;
 		}
-		const result = resolveEnemyTurnActions(state, enemy, progress, occupied);
+		const result = resolveEnemyTurnActions(
+			state,
+			enemy,
+			{ ...progress, playerAttacked: false },
+			occupied,
+		);
 		const actor = result.actor;
-		progress = result.progress;
+		const unmasked = mergeXerocUnmasking(
+			state,
+			enemy,
+			progress,
+			result.progress,
+		);
+		progress = unmasked.progress;
 
 		if (actor.fled) {
 			continue;
@@ -89,7 +104,7 @@ export const advanceEnemies = (state: GameState): GameState => {
 		const next = actor.position;
 		occupied.add(encodePointKey(next.x, next.y));
 		const moved: Enemy = {
-			...enemy,
+			...(unmasked.unmasked ? removeDisguise(enemy) : enemy),
 			x: next.x,
 			y: next.y,
 			hp: actor.hp,

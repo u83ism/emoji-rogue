@@ -12,6 +12,7 @@ import {
 } from "../appearances.js";
 import { PLAYER_MAX_FOOD, STARVATION_TURNS } from "../balance.js";
 import { STRENGTH_MAX, STRENGTH_MIN } from "../combat/strength.js";
+import { XEROC_DISGUISES } from "../enemies/abilities/xerocDisguise.js";
 import {
 	ARMOR_KIND_VALUES,
 	type DeathCause,
@@ -137,6 +138,8 @@ const isEnemyArray = (
 			isBooleanValue(enemy.confused) &&
 			isBooleanValue(enemy.cancelled) &&
 			isBooleanValue(enemy.invisible) &&
+			(enemy.disguise === undefined ||
+				isOneOf(XEROC_DISGUISES, enemy.disguise)) &&
 			(enemy.goal === undefined ||
 				(isRecord(enemy.goal) &&
 					Number.isInteger(enemy.goal.x) &&
@@ -402,6 +405,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-gazed": (payload) => isPositiveInteger(payload.turns),
 	"player-held": (payload) => isEnemyKind(payload.by),
 	"player-frozen": (payload) => isPositiveInteger(payload.turns),
+	"xeroc-revealed": emptyPayload,
 	"player-strength-drained": (payload) =>
 		isPositiveInteger(payload.strengthLost),
 	"weapon-enchanted": (payload) =>
@@ -942,6 +946,7 @@ export const validateGameState = (
 			confused: enemy.confused,
 			cancelled: enemy.cancelled,
 			invisible: enemy.invisible,
+			...(enemy.disguise === undefined ? {} : { disguise: enemy.disguise }),
 			...(enemy.goal === undefined
 				? {}
 				: { goal: { x: enemy.goal.x, y: enemy.goal.y } }),

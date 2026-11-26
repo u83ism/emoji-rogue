@@ -2,6 +2,7 @@ import { applyEnemyHit } from "./combat/combat.js";
 import { rollDamageDice, rollToHit } from "./combat/damage.js";
 import { calculateThrowHitChancePercent } from "./combat/hitChance.js";
 import { DIRECTION_VECTORS } from "./directions.js";
+import { applyXerocUnmasking } from "./enemies/abilities/xerocDisguise.js";
 import { WEAPON_STATS } from "./items/equipment/equipmentKinds.js";
 import {
 	calculatePlayerStrengthBonus,
@@ -72,7 +73,7 @@ export const applyThrowItem = (
 	if (item === undefined || item.equipped) {
 		return state;
 	}
-	const { stop, target } = traceFlight(state, direction);
+	const { stop, target: sighted } = traceFlight(state, direction);
 
 	const stats = WEAPON_STATS[item.weaponKind];
 	const wielded = findEquippedWeapon(state.inventory);
@@ -95,15 +96,17 @@ export const applyThrowItem = (
 					quantity: item.quantity - 1,
 				})
 			: removeHeldItem(state.inventory, item.itemId);
-	const thrown: GameState = {
+	const launched: GameState = {
 		...state,
 		inventory,
 		quietTurns: 0,
 	};
 
-	if (target === undefined) {
-		return applyMissileLanding(thrown, item, stop, state.rng, undefined);
+	if (sighted === undefined) {
+		return applyMissileLanding(launched, item, stop, state.rng, undefined);
 	}
+	/* fight() unmasks a xeroc, then rolls as usual for a thrown weapon */
+	const { state: thrown, target } = applyXerocUnmasking(launched, sighted);
 	const hitRoll = rollToHit(
 		state.rng,
 		calculateThrowHitChancePercent(state, target.kind, hitBonus),

@@ -5,6 +5,7 @@ import {
 	calculatePlayerMagicSaveChancePercent,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../balance.js";
+import { applyXerocUnmasking } from "../enemies/abilities/xerocDisguise.js";
 import { applyCarriedItemsDrop } from "../enemies/enemyPack.js";
 import { calculateEnemyExperienceReward } from "../enemies/enemyStats.js";
 import { buildEventLog, type GameEvent } from "../events.js";
@@ -153,11 +154,16 @@ const rollPlayerDamage = (rng: RngState, state: GameState): DamageRoll =>
  * miss ends the turn with no damage (player-attack-missed) but still resets
  * quietTurns (swinging, even missing, is fighting). The
  * player does not move — attacking is what the movement turn was spent on.
+ * Bumping a disguised xeroc only unmasks it: fight() returns before rolling.
  */
 export const applyPlayerAttack = (
 	state: GameState,
 	target: Enemy,
 ): GameState => {
+	const unmasked = applyXerocUnmasking(state, target);
+	if (unmasked.state !== state) {
+		return unmasked.state;
+	}
 	const hitRoll = rollToHit(
 		state.rng,
 		calculatePlayerHitChancePercent(state, target.kind),

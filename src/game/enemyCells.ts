@@ -1,6 +1,7 @@
 import type { Cell } from "../renderer/index.js";
+import type { XerocDisguise } from "./enemies/abilities/xerocDisguise.js";
 import { ENEMY_GLYPHS } from "./enemyGlyphs.js";
-import { GOLD_CELL } from "./glyphs.js";
+import { AMULET_CELL, GOLD_CELL, ITEM_GLYPHS, STAIRS_CELL } from "./glyphs.js";
 import type { Enemy } from "./state.js";
 
 // How one enemy looks on the map — its glyph, a xeroc's disguise, a
@@ -34,14 +35,28 @@ const resolveHallucinatedGlyph = (
 	return glyph;
 };
 
-/** A still-asleep xeroc draws as GOLD_CELL (outranking hallucination, which would otherwise give the disguise away) — otherwise the hallucinated decoy or the real glyph. */
+/** How each xeroc disguise draws — the item category's own glyph, the staircase or the amulet. */
+const DISGUISE_CELLS: Readonly<Record<XerocDisguise, Cell>> = {
+	potion: ITEM_GLYPHS["heal-potion"],
+	scroll: ITEM_GLYPHS["teleport-scroll"],
+	ring: ITEM_GLYPHS["regeneration-ring"],
+	wand: ITEM_GLYPHS["slow-wand"],
+	food: ITEM_GLYPHS.food,
+	weapon: ITEM_GLYPHS.weapon,
+	armor: ITEM_GLYPHS.armor,
+	stairs: STAIRS_CELL,
+	gold: GOLD_CELL,
+	amulet: AMULET_CELL,
+};
+
+/** A disguised xeroc draws as its disguise (outranking hallucination, which would otherwise give it away) — otherwise the hallucinated decoy or the real glyph. */
 export const resolveEnemyCell = (
 	enemy: Enemy,
 	hallucinating: boolean,
 	turnsOnCurrentFloor: number,
 ): Cell => {
-	if (enemy.kind === "xeroc" && !enemy.awake && !enemy.cancelled) {
-		return GOLD_CELL;
+	if (enemy.disguise !== undefined) {
+		return DISGUISE_CELLS[enemy.disguise];
 	}
 	return hallucinating
 		? resolveHallucinatedGlyph(enemy, turnsOnCurrentFloor)

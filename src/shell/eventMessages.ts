@@ -183,6 +183,8 @@ export const formatEvent = (
 			return `毒が回って力が${event.payload.strengthLost}下がった`;
 		case "player-frozen":
 			return `${ENEMY_NAMES["ice-monster"]}に凍らされた!${event.payload.turns}ターン動けない`;
+		case "xeroc-revealed":
+			return `待て!${ENEMY_NAMES.xeroc}だ!`;
 		case "player-held":
 			return `${formatEnemyName(event.payload.by)}に捕まっていて動けない!`;
 		case "player-attack-missed":

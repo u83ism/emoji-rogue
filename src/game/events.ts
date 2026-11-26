@@ -905,6 +905,11 @@ export type GameEvent =
 			readonly payload: { readonly turns: number };
 	  }
 	| {
+			/** A disguised xeroc fighting a player who can see — its disguise drops (original Rogue's "wait!  That's a xeroc!"). See enemies/abilities/xerocDisguise.ts. */
+			readonly type: "xeroc-revealed";
+			readonly payload: Record<string, never>;
+	  }
+	| {
 			/** An attempt to move away from an adjacent, awake venus-flytrap — the turn is still spent struggling. See advanceTurn.ts's applyMove. */
 			readonly type: "player-held";
 			readonly payload: { readonly by: EnemyKind };

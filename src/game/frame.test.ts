@@ -532,7 +532,7 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(state)[2]?.[27]?.glyph).toBe("🫥");
 	});
 
-	it("a still-asleep xeroc draws as a gold pile, not its own glyph", () => {
+	it("a disguised xeroc draws as its disguise, not its own glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const xeroc = {
 			kind: "xeroc",
@@ -547,6 +547,7 @@ describe("buildFrameGrid", () => {
 			confused: false,
 			cancelled: false,
 			invisible: false,
+			disguise: "gold",
 			x: 20,
 			y: 2,
 		} as const;
@@ -554,7 +555,7 @@ describe("buildFrameGrid", () => {
 		expect(buildFrameGrid(state)[2]?.[20]?.glyph).toBe("💰");
 	});
 
-	it("an awake xeroc draws its real glyph", () => {
+	it("a xeroc without a disguise (unmasked or cancelled) draws its real glyph", () => {
 		const wide = buildArenaGameState(30, 5, 1);
 		const xeroc = {
 			kind: "xeroc",
@@ -591,6 +592,7 @@ describe("buildFrameGrid", () => {
 			confused: false,
 			cancelled: false,
 			invisible: false,
+			disguise: "gold",
 			x: 20,
 			y: 2,
 		} as const;

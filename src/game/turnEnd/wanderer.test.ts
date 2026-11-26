@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { encodePointKey } from "../../pointkey.js";
 import { createRng } from "../../rng.js";
 import {
 	WANDERER_DELAY_TURNS,
@@ -9,7 +8,7 @@ import { NON_WANDERING_ENEMY_KINDS } from "../enemies/enemyStats.js";
 import { calculateEnemyFloorRange } from "../floor/enemies.js";
 import { buildArenaGameState, buildDungeonGameState } from "../initialState.js";
 import type { GameState } from "../state.js";
-import { computePlayerVisiblePoints } from "../vision.js";
+import { findPlayerRoom } from "../vision.js";
 import { applyWandererTick, drawWandererDelay } from "./wanderer.js";
 
 /** A real dungeon (plenty of floor out of sight) with no residents, so every enemy in it is a wanderer. */
@@ -72,7 +71,7 @@ describe("applyWandererTick", () => {
 		);
 	});
 
-	it("the wanderer arrives awake, at full HP, on a floor tile the player cannot see", () => {
+	it("the wanderer arrives awake, at full HP, inside a room other than the player's — never in a corridor", () => {
 		const start = buildEmptyDungeon(3);
 		const { state } = tickUntilArrival(start);
 		const wanderer = state.enemies[0];
@@ -82,10 +81,15 @@ describe("applyWandererTick", () => {
 		expect(wanderer.awake).toBe(true);
 		expect(wanderer.hp).toBe(wanderer.maxHp);
 		expect(state.terrain[wanderer.x]?.[wanderer.y]).toBe(0);
-		const visiblePoints = computePlayerVisiblePoints(state);
-		expect(visiblePoints.has(encodePointKey(wanderer.x, wanderer.y))).toBe(
-			false,
+		const room = state.rooms.find(
+			(candidate) =>
+				wanderer.x >= candidate.x1 &&
+				wanderer.x <= candidate.x2 &&
+				wanderer.y >= candidate.y1 &&
+				wanderer.y <= candidate.y2,
 		);
+		expect(room).toBeDefined();
+		expect(room).not.toBe(findPlayerRoom(state));
 		expect(state.events).toEqual(start.events); /* silent */
 	});
 
@@ -126,8 +130,8 @@ describe("applyWandererTick", () => {
 		expect(average).toBeLessThan(WANDERER_DELAY_TURNS + 40);
 	});
 
-	it("brings nothing where the player can see every floor tile, but keeps rolling", () => {
-		/* a small open arena: nothing is out of sight */
+	it("brings nothing when the only room is the player's, but keeps rolling", () => {
+		/* the arena is one room, and the player stands in it */
 		let state: GameState = {
 			...buildArenaGameState(7, 7, 1),
 			wandererDelayTurns: 0,

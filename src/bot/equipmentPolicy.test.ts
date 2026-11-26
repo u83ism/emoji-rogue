@@ -89,12 +89,14 @@ describe("decideArmorToEquip", () => {
 		expect(decideArmorToEquip(state, noDisabled)).toBe(1);
 	});
 
-	it("swaps to strictly better held armor", () => {
+	it("takes the worn armor off first when strictly better armor is held — armor cannot go on over armor", () => {
 		const state = {
 			...baseState(),
 			inventory: [armor(1, 1, true), armor(2, 2)],
 		};
-		expect(decideArmorToEquip(state, noDisabled)).toBe(2);
+		expect(decideArmorToEquip(state, noDisabled)).toBe(1);
+		const takenOff = { ...state, inventory: [armor(1, 1), armor(2, 2)] };
+		expect(decideArmorToEquip(takenOff, noDisabled)).toBe(2);
 	});
 });
 

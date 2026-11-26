@@ -47,6 +47,7 @@ export const formatEvent = (
 		case "equip-blocked-cursed":
 		case "curse-revealed":
 		case "ring-hands-full":
+		case "armor-already-worn":
 		case "strength-restored":
 		case "player-hasted":
 		case "player-fell-asleep":

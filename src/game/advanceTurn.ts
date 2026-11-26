@@ -10,6 +10,7 @@ import {
 	descendStairs,
 	resolveStairsRefusal,
 } from "./floor/transitions.js";
+import { resolveArmorWear } from "./items/equipment/equipment.js";
 import { applyItemDrop } from "./items/inventory/drop.js";
 import {
 	applyAmuletPickup,
@@ -225,6 +226,27 @@ const applyItemAction = (
 };
 
 /**
+ * Original Rogue's wear(): with armor already worn the attempt is refused
+ * outright (armor-already-worn, no turn spent — its after = false);
+ * otherwise waste_time() lets one turn of monsters and daemons pass before
+ * the armor goes on, and that turn is spent as usual.
+ */
+const applyWearArmor = (
+	state: GameState,
+	itemId: number,
+	wear: "put-on" | "refused",
+): GameState => {
+	if (wear === "refused") {
+		return applyUseItem(state, itemId, undefined, undefined);
+	}
+	const wasted = applyTurnEndTicks(advanceEnemies(state));
+	if (wasted.status !== "playing") {
+		return wasted;
+	}
+	return endPlayerTurn(applyUseItem(wasted, itemId, undefined, undefined));
+};
+
+/**
  * Taking the staircase under the player (original Rogue's `>`/`<`): down
  * always, up only with the amulet. A refusal (resolveStairsRefusal) only
  * logs why, spending no turn — as the original's "I see no way down". The
@@ -303,7 +325,14 @@ const reduceAction = (state: GameState, action: Action): GameState => {
 			 * cornered player would soft-lock: bumps consume no turn, so the
 			 * enemy turn that would end the run could never arrive. */
 			return state.status === "playing" ? endPlayerTurn(state) : state;
-		case "use-item":
+		case "use-item": {
+			const wear =
+				state.status === "playing" && state.paralyzedTurnsRemaining === 0
+					? resolveArmorWear(state, action.payload.itemId)
+					: undefined;
+			if (wear !== undefined) {
+				return applyWearArmor(state, action.payload.itemId, wear);
+			}
 			return applyItemAction(state, (current) =>
 				applyUseItem(
 					current,
@@ -312,6 +341,7 @@ const reduceAction = (state: GameState, action: Action): GameState => {
 					action.payload.direction,
 				),
 			);
+		}
 		case "drop-item":
 			return applyItemAction(state, (current) =>
 				applyItemDrop(current, action.payload.itemId),

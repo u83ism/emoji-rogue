@@ -3,7 +3,7 @@ import { rollDamageDice, rollToHit } from "../combat/damage.js";
 import { calculateEnemyHitChancePercent } from "../combat/hitChance.js";
 import { isStrengthSustained, resolvePoisonDrain } from "../combat/strength.js";
 import type { EnemyKind, EnemyName, GameEvent } from "../events.js";
-import { resolveArmorRust } from "../items/equipment/equipment.js";
+import { resolveArmorRust } from "../items/equipment/armorRust.js";
 import type { Enemy, HeldItem } from "../state.js";
 import {
 	resolveVitalityDrain,

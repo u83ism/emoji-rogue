@@ -3,7 +3,6 @@ import { advanceTurn } from "../../advanceTurn.js";
 import { PLAYER_WEAK_THRESHOLD } from "../../balance.js";
 import { buildArenaGameState } from "../../initialState.js";
 import type { HeldItem } from "../../state.js";
-import { resolveArmorRust } from "./equipment.js";
 import {
 	calculatePlayerDamageBonus as calculatePlayerAttackDamage,
 	calculatePlayerDefense,
@@ -257,55 +256,60 @@ describe("items/equipment", () => {
 		]);
 	});
 
-	it("equipping a second armor swaps out the first — only one armor slot exists", () => {
-		const state = {
-			...buildArenaGameState(9, 3, 1),
-			inventory: [
-				{
-					itemId: 1,
-					kind: "armor" as const,
-					equipped: true,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 1,
-					rustProtected: false,
-				},
-				{
-					itemId: 2,
-					kind: "armor" as const,
-					equipped: false,
-					cursed: false,
-					armorKind: "ring-mail" as const,
-					defenseBonus: 2,
-					rustProtected: false,
-				},
-			],
-		};
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2 },
-		});
-		expect(next.inventory).toEqual([
+	it("putting on armor while wearing some is refused without spending the turn — original Rogue's wear()", () => {
+		const inventory: readonly HeldItem[] = [
 			{
 				itemId: 1,
 				kind: "armor",
-				equipped: false,
+				equipped: true,
 				cursed: false,
-				armorKind: "ring-mail" as const,
+				armorKind: "ring-mail",
 				defenseBonus: 1,
 				rustProtected: false,
 			},
 			{
 				itemId: 2,
 				kind: "armor",
-				equipped: true,
+				equipped: false,
 				cursed: false,
-				armorKind: "ring-mail" as const,
+				armorKind: "ring-mail",
 				defenseBonus: 2,
 				rustProtected: false,
 			},
-		]);
-		expect(calculatePlayerDefense(next.inventory)).toBe(5);
+		];
+		const state = { ...buildArenaGameState(9, 3, 1), inventory };
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 2 },
+		});
+		expect(next.inventory).toEqual(inventory);
+		expect(next.playerFood).toBe(state.playerFood);
+		expect(next.events).toEqual([{ type: "armor-already-worn", payload: {} }]);
+	});
+
+	it("putting on armor takes two turns (waste_time() first), taking it off one", () => {
+		const armor: HeldItem = {
+			itemId: 1,
+			kind: "armor",
+			equipped: false,
+			cursed: false,
+			armorKind: "ring-mail",
+			defenseBonus: 0,
+			rustProtected: false,
+		};
+		const state = { ...buildArenaGameState(9, 3, 1), inventory: [armor] };
+		const worn = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(worn.inventory).toEqual([{ ...armor, equipped: true }]);
+		expect(worn.playerFood).toBe(state.playerFood - 2);
+		const takenOff = advanceTurn(worn, {
+			type: "use-item",
+			payload: { itemId: 1 },
+		});
+		expect(takenOff.inventory).toEqual([armor]);
+		expect(takenOff.playerFood).toBe(worn.playerFood - 1);
 	});
 
 	it("cursed armor applies its (negative) defense bonus when equipped — worse than unarmored — and cannot be unequipped", () => {
@@ -347,116 +351,6 @@ describe("items/equipment", () => {
 				(event) => event.type === "equip-blocked-cursed",
 			),
 		).toBe(true);
-	});
-
-	it("cursed armor being worn cannot be swapped away by putting on another", () => {
-		const inventory: readonly HeldItem[] = [
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: true,
-				cursed: true,
-				armorKind: "ring-mail",
-				defenseBonus: -2,
-				rustProtected: false,
-			},
-			{
-				itemId: 2,
-				kind: "armor",
-				equipped: false,
-				cursed: false,
-				armorKind: "plate-mail",
-				defenseBonus: 0,
-				rustProtected: false,
-			},
-		];
-		const state = { ...buildArenaGameState(9, 3, 1), inventory };
-		const next = advanceTurn(state, {
-			type: "use-item",
-			payload: { itemId: 2 },
-		});
-		expect(next.inventory).toEqual(inventory);
-		expect(next.events).toEqual([
-			{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
-		]);
-	});
-
-	it("a worn ring of maintain armor blocks rust like protected armor does", () => {
-		const inventory = [
-			{
-				itemId: 1,
-				kind: "armor" as const,
-				equipped: true,
-				cursed: false,
-				armorKind: "ring-mail" as const,
-				defenseBonus: 2,
-				rustProtected: false,
-			},
-			{
-				itemId: 9,
-				kind: "maintain-armor-ring" as const,
-				equipped: true,
-				cursed: false,
-			},
-		];
-		const rust = resolveArmorRust(inventory);
-		expect(rust.inventory).toBe(inventory);
-		expect(rust.event).toEqual({ type: "armor-rust-blocked", payload: {} });
-	});
-
-	it("rust worsens the armor by 1 per hit, as in original Rogue: never past armor class 9, and never leather", () => {
-		const armorWith = (defenseBonus: number) => [
-			{
-				itemId: 1,
-				kind: "armor" as const,
-				equipped: true,
-				cursed: defenseBonus < 0,
-				armorKind: "ring-mail" as const,
-				defenseBonus,
-				rustProtected: false,
-			},
-		];
-		const rusted = (inventory: readonly HeldItem[]): number =>
-			calculatePlayerDefense(resolveArmorRust(inventory).inventory);
-		/* ring mail is armor class 7, i.e. 3 points of defense before its own bonus */
-		expect(rusted(armorWith(2))).toBe(4);
-		expect(rusted(armorWith(0))).toBe(2);
-		expect(resolveArmorRust(armorWith(0)).event).toEqual({
-			type: "armor-rusted",
-			payload: { amount: 1 },
-		});
-		/* a cursed one keeps rusting too, down to armor class 9 (1 point of defense)... */
-		expect(rusted(armorWith(-1))).toBe(1);
-		/* ...and no further, silently */
-		expect(rusted(armorWith(-2))).toBe(1);
-		expect(resolveArmorRust(armorWith(-2)).event).toBeUndefined();
-
-		const leather = armorWith(0).map((armor) => ({
-			...armor,
-			armorKind: "leather-armor" as const,
-		}));
-		expect(resolveArmorRust(leather)).toEqual({
-			inventory: leather,
-			event: undefined,
-		});
-	});
-
-	it("protected armor blocks rust and logs armor-rust-blocked, as original Rogue's rust_armor()", () => {
-		const protectedArmor: readonly HeldItem[] = [
-			{
-				itemId: 1,
-				kind: "armor",
-				equipped: true,
-				cursed: false,
-				armorKind: "ring-mail",
-				defenseBonus: 0,
-				rustProtected: true,
-			},
-		];
-		expect(resolveArmorRust(protectedArmor)).toEqual({
-			inventory: protectedArmor,
-			event: { type: "armor-rust-blocked", payload: {} },
-		});
 	});
 
 	it("is unaffected by hunger — original Rogue's Weak stage changes nothing in combat", () => {

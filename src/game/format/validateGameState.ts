@@ -375,6 +375,7 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"scroll-wasted": (payload) => isItemKind(payload.kind),
 	"wand-empty": (payload) => isItemKind(payload.kind),
 	"ring-hands-full": emptyPayload,
+	"armor-already-worn": emptyPayload,
 	"strength-restored": (payload) =>
 		isInteger(payload.strength) &&
 		payload.strength >= STRENGTH_MIN &&

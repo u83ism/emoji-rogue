@@ -566,6 +566,11 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
+			/** Putting on armor while already wearing some — refused without spending the turn; it has to come off first (original Rogue's wear()). */
+			readonly type: "armor-already-worn";
+			readonly payload: Record<string, never>;
+	  }
+	| {
 			/** Putting on a ring with one already on each hand — refused (original Rogue's ring_on()). */
 			readonly type: "ring-hands-full";
 			readonly payload: Record<string, never>;
@@ -621,7 +626,7 @@ export type GameEvent =
 			readonly payload: { readonly amount: number };
 	  }
 	| {
-			/** A rust attempt the worn armor's protection (the protect-armor scroll) blocked — equipment.ts's resolveArmorRust. */
+			/** A rust attempt the worn armor's protection (the protect-armor scroll) blocked — armorRust.ts's resolveArmorRust. */
 			readonly type: "armor-rust-blocked";
 			readonly payload: Record<string, never>;
 	  }

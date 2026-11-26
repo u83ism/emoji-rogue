@@ -80,7 +80,12 @@ export const decideWeaponToEquip = (
 	return bestUnequipped.itemId;
 };
 
-/** Same idea as decideWeaponToEquip, ranking by the armor class each armor gives. */
+/**
+ * Same idea as decideWeaponToEquip, ranking by the armor class each armor
+ * gives — except that armor cannot be put on over armor (original Rogue's
+ * wear()), so a better one first takes the worn one off: this returns the
+ * worn armor's itemId, and the next turn's call the better one's.
+ */
 export const decideArmorToEquip = (
 	state: GameState,
 	disabledKinds: ReadonlySet<ItemKind>,
@@ -106,7 +111,7 @@ export const decideArmorToEquip = (
 	) {
 		return undefined;
 	}
-	return bestUnequipped.itemId;
+	return (equipped ?? bestUnequipped).itemId;
 };
 
 /**

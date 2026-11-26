@@ -2,13 +2,8 @@ import { buildEventLog, type GameEvent } from "../../events.js";
 import type { GameState, HeldItem } from "../../state.js";
 import { replaceHeldItem } from "../inventory/inventory.js";
 import {
-	RUST_ARMOR_CLASS_LIMIT,
-	RUSTPROOF_ARMOR_KIND,
-} from "./equipmentKinds.js";
-import {
 	type ArmorItem,
 	calculateArmorClass,
-	findEquippedArmor,
 	type WeaponItem,
 } from "./equipmentStats.js";
 
@@ -18,46 +13,6 @@ export type { EquippableItem };
 
 const isEquippableItem = (item: HeldItem): item is EquippableItem =>
 	"equipped" in item;
-
-/** What one rust attempt did: the (possibly worsened) inventory and the event to log, if any. */
-export interface ArmorRust {
-	readonly inventory: readonly HeldItem[];
-	readonly event: GameEvent | undefined;
-}
-
-/**
- * One rust attempt (an aquator's landed hit, a rust trap), as original
- * Rogue's rust_armor(): no armor, leather, or armor already rusted down to
- * RUST_ARMOR_CLASS_LIMIT is silently unaffected; protected armor or a worn
- * ring of maintain armor blocks the rust and logs armor-rust-blocked ("the rust vanishes instantly");
- * otherwise the armor loses a point (defenseBonus - 1) and armor-rusted is
- * logged.
- */
-export const resolveArmorRust = (inventory: readonly HeldItem[]): ArmorRust => {
-	const equippedArmor = findEquippedArmor(inventory);
-	if (
-		equippedArmor === undefined ||
-		equippedArmor.armorKind === RUSTPROOF_ARMOR_KIND ||
-		calculateArmorClass(equippedArmor) >= RUST_ARMOR_CLASS_LIMIT
-	) {
-		return { inventory, event: undefined };
-	}
-	if (
-		equippedArmor.rustProtected ||
-		inventory.some(
-			(item) => item.kind === "maintain-armor-ring" && item.equipped,
-		)
-	) {
-		return { inventory, event: { type: "armor-rust-blocked", payload: {} } };
-	}
-	return {
-		inventory: replaceHeldItem(inventory, equippedArmor.itemId, {
-			...equippedArmor,
-			defenseBonus: equippedArmor.defenseBonus - 1,
-		}),
-		event: { type: "armor-rusted", payload: { amount: 1 } },
-	};
-};
 
 /** The held item of `kind` other than `keepItemId` that is currently equipped, if any. */
 const findOtherEquipped = (
@@ -142,8 +97,29 @@ export const applyToggleWeaponEquip = (
 };
 
 /**
- * Toggles a held armor's equip state — same shape as applyToggleWeaponEquip.
- * The event carries the armor class the player now has from it.
+ * What a use-item on `itemId` would do as original Rogue's wear(): "put-on"
+ * for held armor going on with none worn (which wastes a turn first —
+ * advanceTurn.ts runs it), "refused" for armor while some is already worn
+ * (armor-already-worn, no turn spent), undefined for anything else.
+ */
+export const resolveArmorWear = (
+	state: GameState,
+	itemId: number,
+): "put-on" | "refused" | undefined => {
+	const item = state.inventory.find((held) => held.itemId === itemId);
+	if (item?.kind !== "armor" || item.equipped) {
+		return undefined;
+	}
+	return findOtherEquipped(state.inventory, itemId, "armor") === undefined
+		? "put-on"
+		: "refused";
+};
+
+/**
+ * Toggles a held armor's equip state, as original Rogue's wear()/take_off():
+ * taking it off is refused while cursed, and putting it on is refused while
+ * other armor is worn (armor-already-worn — take that off first). The event
+ * carries the armor class the player now has from it.
  */
 export const applyToggleArmorEquip = (
 	state: GameState,
@@ -164,18 +140,15 @@ export const applyToggleArmorEquip = (
 			]),
 		};
 	}
-	const worn = findOtherEquipped(state.inventory, item.itemId, "armor");
-	if (worn?.cursed === true) {
-		return applyCurseBlocked(state, "armor");
+	if (findOtherEquipped(state.inventory, item.itemId, "armor") !== undefined) {
+		return {
+			...state,
+			events: buildEventLog(state.events, [
+				{ type: "armor-already-worn", payload: {} },
+			]),
+		};
 	}
-	const unworn =
-		worn === undefined
-			? state.inventory
-			: replaceHeldItem(state.inventory, worn.itemId, {
-					...worn,
-					equipped: false,
-				});
-	const inventory = replaceHeldItem(unworn, item.itemId, {
+	const inventory = replaceHeldItem(state.inventory, item.itemId, {
 		...item,
 		equipped: true,
 	});

@@ -49,6 +49,7 @@ export type ItemUseEvent = Extract<
 			| "curse-revealed"
 			| "wand-empty"
 			| "ring-hands-full"
+			| "armor-already-worn"
 			| "strength-restored"
 			| "player-hasted"
 			| "player-fell-asleep"
@@ -130,6 +131,8 @@ export const formatItemUseEvent = (
 			return `${nameOf("haste-self-potion")}を重ねて飲み、疲れ果てて気を失った!`;
 		case "ring-hands-full":
 			return "もう両手に指輪をはめている";
+		case "armor-already-worn":
+			return "もう鎧を着ている。先に脱がなければならない";
 		case "wand-empty":
 			return `${resolveItemDisplayName(event.payload.kind, identifiedItemKinds, undefined, appearances)}を振ったが、何も起きなかった`;
 		case "scroll-wasted":

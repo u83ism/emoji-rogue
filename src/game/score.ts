@@ -37,6 +37,7 @@ const FLAT_WORTH: Readonly<
 	Record<Exclude<ItemKind, "weapon" | "armor">, number>
 > = {
 	"food-ration": 2,
+	fruit: 2,
 	"heal-potion": 130,
 	poison: 5,
 	strength: 150,

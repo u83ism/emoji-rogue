@@ -140,7 +140,8 @@ export const applyItemEffect = (
 		case "aggravate-monsters-scroll":
 			return applyUseAggravateMonstersScroll(state);
 		case "food-ration":
-			return applyUseFood(state);
+		case "fruit":
+			return applyUseFood(state, item.kind);
 		case "slow-wand":
 			return applyUseSlowWand(state, direction);
 		case "teleport-wand":

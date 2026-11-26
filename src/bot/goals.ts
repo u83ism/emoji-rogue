@@ -2,6 +2,7 @@ import {
 	INVENTORY_CAPACITY,
 	PLAYER_HUNGER_WARNING_THRESHOLD,
 } from "../game/balance.js";
+import { isFoodKind } from "../game/events.js";
 import type { GameState, Position } from "../game/state.js";
 import { encodePointKey } from "../pointkey.js";
 import { findNearestReachableTarget } from "./pathfinding.js";
@@ -37,7 +38,7 @@ const isLootTile = (state: GameState, x: number, y: number): boolean => {
 const isFoodTile = (state: GameState, x: number, y: number): boolean =>
 	hasInventorySpace(state) &&
 	state.items.some(
-		(item) => item.kind === "food-ration" && item.x === x && item.y === y,
+		(item) => isFoodKind(item.kind) && item.x === x && item.y === y,
 	);
 
 /**
@@ -72,9 +73,7 @@ export const chooseGoal = (
 	const isNotBlacklisted = (x: number, y: number): boolean =>
 		!blacklist.has(encodePointKey(x, y));
 
-	const holdsFood = state.inventory.some(
-		(entry) => entry.kind === "food-ration",
-	);
+	const holdsFood = state.inventory.some((entry) => isFoodKind(entry.kind));
 	if (!holdsFood && state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD) {
 		const food = findNearestReachableTarget(
 			state.terrain,

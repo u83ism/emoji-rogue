@@ -66,8 +66,11 @@ export const ITEM_KIND_WEIGHTS: Readonly<
 		{ kind: "identify-scroll-scroll", weight: 10 },
 		{ kind: "protect-armor", weight: 2 },
 	],
-	/* the original's slime mold (1 in 10) is not in this game: every food is a ration */
-	food: [{ kind: "food-ration", weight: 1 }],
+	/* original Rogue's new_thing(): a ration nine times in ten (rnd(10) != 0), else the fruit */
+	food: [
+		{ kind: "food-ration", weight: 9 },
+		{ kind: "fruit", weight: 1 },
+	],
 	weapon: [{ kind: "weapon", weight: 1 }],
 	armor: [{ kind: "armor", weight: 1 }],
 	ring: [

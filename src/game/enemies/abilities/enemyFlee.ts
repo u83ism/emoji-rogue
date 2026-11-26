@@ -6,7 +6,7 @@ import {
 	GOLD_AMOUNT_MIN,
 	THIEF_GOLD_ROLLS_ON_SAVE_OUTCOME,
 } from "../../balance.js";
-import type { GameEvent } from "../../events.js";
+import { type GameEvent, isFoodKind } from "../../events.js";
 import { toItemEventPayload } from "../../items/equipment/equipmentKinds.js";
 import { sumRingBonus } from "../../items/equipment/equipmentStats.js";
 import { removeHeldItemAtIndex } from "../../items/inventory/inventory.js";
@@ -37,7 +37,7 @@ const isMagicItem = (item: HeldItem): boolean => {
 	if (item.kind === "armor") {
 		return item.defenseBonus !== 0 || item.rustProtected;
 	}
-	return item.kind !== "food-ration";
+	return !isFoodKind(item.kind);
 };
 
 /** Takes one item at `itemIndex` — one off a weapon bundle, the whole slot otherwise. */

@@ -43,6 +43,7 @@ export const ITEM_GLYPHS: Readonly<Record<ItemKind, Cell>> = {
 	weapon: { glyph: "🔪" },
 	armor: { glyph: "🦺" },
 	"food-ration": { glyph: "🍖" },
+	fruit: { glyph: "🍎" },
 	/* Same glyph as heal-potion, on purpose — poison is unidentified until drunk. */
 	poison: { glyph: "💊" },
 	/* Also the same glyph — strength is unidentified until drunk too. */

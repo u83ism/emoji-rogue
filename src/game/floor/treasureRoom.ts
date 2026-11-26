@@ -6,7 +6,7 @@ import {
 	TREASURE_ROOM_MIN,
 } from "../balance.js";
 import { rollsCarriedItem } from "../enemies/enemyPack.js";
-import { hasItemIdentity } from "../events.js";
+import { hasItemIdentity, isFoodKind } from "../events.js";
 import { buildFloorItem } from "../items/inventory/heldItemFactory.js";
 import type { Enemy, Item, Position } from "../state.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "./enemies.js";
@@ -71,7 +71,7 @@ export const drawTreasureRoom = (
 	let floorsWithoutFood = previousFloorsWithoutFood;
 	const drawItem = (tile: Position): Item => {
 		const kind = drawItemKind(rng, floorsWithoutFood);
-		if (kind === "food-ration") {
+		if (isFoodKind(kind)) {
 			floorsWithoutFood = 0;
 		}
 		const item = buildFloorItem(kind, nextItemId, tile, rng);

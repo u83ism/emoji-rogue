@@ -48,6 +48,7 @@ export const ITEM_KIND_VALUES = [
 	"weapon",
 	"armor",
 	"food-ration",
+	"fruit",
 	"poison",
 	"teleport-scroll",
 	"mapping-scroll",
@@ -132,6 +133,20 @@ export const RING_KINDS = [
 export type RingKind = (typeof RING_KINDS)[number];
 
 const RING_KIND_LIST: readonly ItemKind[] = RING_KINDS;
+
+/** The two foods — original Rogue's FOOD with o_which 0 (a ration) and 1 (the fruit). */
+export const FOOD_KINDS = [
+	"food-ration",
+	"fruit",
+] as const satisfies readonly ItemKind[];
+
+export type FoodKind = (typeof FOOD_KINDS)[number];
+
+const FOOD_KIND_LIST: readonly ItemKind[] = FOOD_KINDS;
+
+/** Type guard: narrows an ItemKind to FoodKind. */
+export const isFoodKind = (kind: ItemKind): kind is FoodKind =>
+	FOOD_KIND_LIST.includes(kind);
 
 /** Type guard: narrows an ItemKind to RingKind. */
 export const isRingKind = (kind: ItemKind): kind is RingKind =>
@@ -443,7 +458,11 @@ export type GameEvent =
 	| {
 			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. awful: it tasted awful, and the player gained 1 experience for it (original Rogue's eat()). */
 			readonly type: "player-ate";
-			readonly payload: { readonly amount: number; readonly awful: boolean };
+			readonly payload: {
+				readonly kind: FoodKind;
+				readonly amount: number;
+				readonly awful: boolean;
+			};
 	  }
 	| {
 			readonly type: "gold-collected";

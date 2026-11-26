@@ -142,8 +142,8 @@ export const formatItemUseEvent = (
 		case "player-ate":
 			return `${
 				event.payload.amount > 0
-					? `${nameOf("food-ration")}を食べた。満腹度が${event.payload.amount}回復した`
-					: `${nameOf("food-ration")}を食べたが、もう腹に入らなかった`
+					? `${nameOf(event.payload.kind)}を食べた。満腹度が${event.payload.amount}回復した`
+					: `${nameOf(event.payload.kind)}を食べたが、もう腹に入らなかった`
 			}${event.payload.awful ? "。ひどい味だった" : ""}`;
 		case "player-poisoned":
 			return event.payload.strengthLost > 0

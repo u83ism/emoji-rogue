@@ -1,4 +1,4 @@
-import { buildEventLog } from "../../events.js";
+import { buildEventLog, isFoodKind } from "../../events.js";
 import type { GameState, Item, SensedItem } from "../../state.js";
 
 /**
@@ -12,7 +12,7 @@ const isMagicFloorItem = (item: Item): boolean => {
 	if (item.kind === "armor") {
 		return item.identity.defenseBonus !== 0 || item.identity.rustProtected;
 	}
-	return item.kind !== "food-ration";
+	return !isFoodKind(item.kind);
 };
 
 /**

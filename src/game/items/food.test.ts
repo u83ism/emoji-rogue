@@ -18,24 +18,32 @@ const buildState = (playerFood: number): GameState => ({
 describe("applyUseFood", () => {
 	it("adds 1100-1499 food, as original Rogue's ration does, and logs what was gained", () => {
 		const state = buildState(100);
-		const next = applyUseFood(state);
+		const next = applyUseFood(state, "food-ration");
 		const gained = next.playerFood - state.playerFood;
 		expect(gained).toBeGreaterThanOrEqual(FOOD_RATION_RESTORE_MIN);
 		expect(gained).toBeLessThanOrEqual(FOOD_RATION_RESTORE_MAX);
 		expect(next.events[0]).toEqual({
 			type: "player-ate",
-			payload: { amount: gained, awful: expect.any(Boolean) },
+			payload: {
+				kind: "food-ration",
+				amount: gained,
+				awful: expect.any(Boolean),
+			},
 		});
 		expect(next.rng).not.toEqual(state.rng);
 	});
 
 	it("never fills past PLAYER_MAX_FOOD", () => {
 		const state = buildState(PLAYER_MAX_FOOD - 10);
-		const next = applyUseFood(state);
+		const next = applyUseFood(state, "food-ration");
 		expect(next.playerFood).toBe(PLAYER_MAX_FOOD);
 		expect(next.events[0]).toEqual({
 			type: "player-ate",
-			payload: { amount: 10, awful: expect.any(Boolean) },
+			payload: {
+				kind: "food-ration",
+				amount: 10,
+				awful: expect.any(Boolean),
+			},
 		});
 	});
 
@@ -44,7 +52,10 @@ describe("applyUseFood", () => {
 		let state = buildState(100);
 		const trials = 2000;
 		for (let i = 0; i < trials; i++) {
-			const next = applyUseFood({ ...state, playerFood: 100, events: [] });
+			const next = applyUseFood(
+				{ ...state, playerFood: 100, events: [] },
+				"food-ration",
+			);
 			const ate = next.events[0];
 			if (ate?.type !== "player-ate") {
 				throw new Error("unreachable: eating logs player-ate first");
@@ -61,8 +72,29 @@ describe("applyUseFood", () => {
 		expect(awful / trials).toBeLessThan(FOOD_AWFUL_CHANCE_PERCENT / 100 + 0.04);
 	});
 
+	it("the fruit fills the same, but never tastes awful and is worth no experience", () => {
+		let state = buildState(100);
+		for (let i = 0; i < 200; i++) {
+			const next = applyUseFood(
+				{ ...state, playerFood: 100, events: [] },
+				"fruit",
+			);
+			const gained = next.playerFood - 100;
+			expect(gained).toBeGreaterThanOrEqual(FOOD_RATION_RESTORE_MIN);
+			expect(gained).toBeLessThanOrEqual(FOOD_RATION_RESTORE_MAX);
+			expect(next.playerExperience).toBe(state.playerExperience);
+			expect(next.events).toEqual([
+				{
+					type: "player-ate",
+					payload: { kind: "fruit", amount: gained, awful: false },
+				},
+			]);
+			state = { ...state, rng: next.rng };
+		}
+	});
+
 	it("brings a starving stomach back to zero first, then adds the ration", () => {
-		const next = applyUseFood(buildState(-400));
+		const next = applyUseFood(buildState(-400), "food-ration");
 		expect(next.playerFood).toBeGreaterThanOrEqual(FOOD_RATION_RESTORE_MIN);
 		expect(next.playerFood).toBeLessThanOrEqual(FOOD_RATION_RESTORE_MAX);
 	});

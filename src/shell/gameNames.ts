@@ -53,6 +53,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	weapon: "武器",
 	armor: "防具",
 	"food-ration": "食料",
+	fruit: "りんご",
 	poison: "毒薬",
 	"teleport-scroll": "テレポートの巻物",
 	"mapping-scroll": "地図の巻物",

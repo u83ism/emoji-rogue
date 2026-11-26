@@ -146,16 +146,32 @@ describe("formatEvent", () => {
 			[{ type: "player-weak", payload: {} }, "空腹で力が入らなくなってきた"],
 			[{ type: "player-fainted", payload: { turns: 5 } }, "空腹で気を失った!"],
 			[
-				{ type: "player-ate", payload: { amount: 50, awful: false } },
+				{
+					type: "player-ate",
+					payload: { kind: "food-ration", amount: 50, awful: false },
+				},
 				"食料を食べた。満腹度が50回復した",
 			],
 			[
-				{ type: "player-ate", payload: { amount: 50, awful: true } },
+				{
+					type: "player-ate",
+					payload: { kind: "food-ration", amount: 50, awful: true },
+				},
 				"食料を食べた。満腹度が50回復した。ひどい味だった",
 			],
 			[
-				{ type: "player-ate", payload: { amount: 0, awful: false } },
+				{
+					type: "player-ate",
+					payload: { kind: "food-ration", amount: 0, awful: false },
+				},
 				"食料を食べたが、もう腹に入らなかった",
+			],
+			[
+				{
+					type: "player-ate",
+					payload: { kind: "fruit", amount: 50, awful: false },
+				},
+				"りんごを食べた。満腹度が50回復した",
 			],
 			[
 				{ type: "gold-collected", payload: { amount: 7 } },

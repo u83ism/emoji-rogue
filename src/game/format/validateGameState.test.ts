@@ -1157,7 +1157,10 @@ describe("validateGameState", () => {
 				{ type: "player-hungry", payload: {} },
 				{ type: "player-weak", payload: {} },
 				{ type: "player-fainted", payload: { turns: 5 } },
-				{ type: "player-ate", payload: { amount: 50, awful: false } },
+				{
+					type: "player-ate",
+					payload: { kind: "food-ration", amount: 50, awful: false },
+				},
 				{ type: "player-died", payload: { by: "hunger" } },
 			],
 		});
@@ -1173,7 +1176,12 @@ describe("validateGameState", () => {
 		expectRejected(
 			{
 				...buildValidState(),
-				events: [{ type: "player-ate", payload: { amount: -1, awful: false } }],
+				events: [
+					{
+						type: "player-ate",
+						payload: { kind: "food-ration", amount: -1, awful: false },
+					},
+				],
 			},
 			"events",
 		);

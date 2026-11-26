@@ -8,7 +8,7 @@ import {
 	ROOM_GOLD_CHANCE_PERCENT,
 } from "../balance.js";
 import { rollsCarriedItem } from "../enemies/enemyPack.js";
-import { hasItemIdentity } from "../events.js";
+import { hasItemIdentity, isFoodKind } from "../events.js";
 import { buildFloorItem } from "../items/inventory/heldItemFactory.js";
 import type { Enemy, GoldPile, Position } from "../state.js";
 import { buildSpawnedEnemy, drawEnemyKindForFloor } from "./enemies.js";
@@ -94,7 +94,7 @@ export const drawRoomContents = (
 		}
 		/* original Rogue's give_pack(): one new_thing() for the monster to hold */
 		const kind = drawItemKind(rng, floorsWithoutFood);
-		if (kind === "food-ration") {
+		if (isFoodKind(kind)) {
 			floorsWithoutFood = 0;
 		}
 		enemies.push({

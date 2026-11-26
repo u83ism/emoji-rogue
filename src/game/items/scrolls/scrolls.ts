@@ -4,7 +4,7 @@ import {
 	SLEEP_SCROLL_TURNS_MAX,
 	SLEEP_SCROLL_TURNS_MIN,
 } from "../../balance.js";
-import { buildEventLog, type GameEvent } from "../../events.js";
+import { buildEventLog, type GameEvent, isFoodKind } from "../../events.js";
 import {
 	buildSpawnedEnemy,
 	drawEnemyKindForFloor,
@@ -167,7 +167,7 @@ export const applyUseAggravateMonstersScroll = (
  * — or only the nose tingles.
  */
 export const applyUseFoodDetectionScroll = (state: GameState): GameState => {
-	const food = state.items.filter((item) => item.kind === "food-ration");
+	const food = state.items.filter((item) => isFoodKind(item.kind));
 	return {
 		...state,
 		sensedItems: food.map((item) => ({ x: item.x, y: item.y, kind: "food" })),

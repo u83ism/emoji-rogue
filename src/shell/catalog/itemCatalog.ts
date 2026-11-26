@@ -162,4 +162,10 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		spawn: itemDrawShare("food-ration"),
 		effect: `満腹度を${FOOD_RATION_RESTORE_MIN}〜${FOOD_RATION_RESTORE_MAX}回復する(上限${PLAYER_MAX_FOOD}。開始時は${PLAYER_START_FOOD}で、1ターンに1減る)。${FOOD_AWFUL_CHANCE_PERCENT}%でひどい味がして、経験値が1増える。最初から1個持っている。食料の出ない階が${FOOD_DROUGHT_FLOOR_LIMIT}階を超えて続くと、次のアイテムは必ず食料になる`,
 	},
+	fruit: {
+		catalogName: "りんご",
+		category: "食料",
+		spawn: itemDrawShare("fruit"),
+		effect: `食料と同じく満腹度を${FOOD_RATION_RESTORE_MIN}〜${FOOD_RATION_RESTORE_MAX}回復する。ひどい味がすることは無く、経験値は増えない(本家のスライムモールド)`,
+	},
 };

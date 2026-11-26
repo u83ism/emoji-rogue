@@ -87,7 +87,9 @@ export const decideItemToUse = (
 		return { itemId: healPotion.itemId };
 	}
 
-	const food = findHeld(state, "food-ration", disabledKinds);
+	const food =
+		findHeld(state, "food-ration", disabledKinds) ??
+		findHeld(state, "fruit", disabledKinds);
 	if (
 		state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD &&
 		food !== undefined

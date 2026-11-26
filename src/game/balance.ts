@@ -241,6 +241,8 @@ export const FAINT_TURNS_MAX = 11;
 /** What one food ration adds to playerFood — original Rogue's `HUNGERTIME - 200 + rnd(400)`. */
 export const FOOD_RATION_RESTORE_MIN = 1100;
 export const FOOD_RATION_RESTORE_MAX = 1499;
+/** Percent chance a food ration tastes awful and is worth 1 experience — original Rogue's eat() `rnd(100) > 70` (71..99 of 0..99). */
+export const FOOD_AWFUL_CHANCE_PERCENT = 29;
 /**
  * The items of a floor (floor/items.ts): original Rogue's put_things() makes
  * MAXOBJ = 9 attempts, each producing an item 36% of the time — its kind

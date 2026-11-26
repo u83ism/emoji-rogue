@@ -441,9 +441,9 @@ export type GameEvent =
 			readonly payload: Record<string, never>;
 	  }
 	| {
-			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. */
+			/** amount is the actual food gained — clipped at PLAYER_MAX_FOOD. awful: it tasted awful, and the player gained 1 experience for it (original Rogue's eat()). */
 			readonly type: "player-ate";
-			readonly payload: { readonly amount: number };
+			readonly payload: { readonly amount: number; readonly awful: boolean };
 	  }
 	| {
 			readonly type: "gold-collected";

@@ -140,9 +140,11 @@ export const formatItemUseEvent = (
 		case "items-decursed":
 			return `${nameOf("remove-curse-scroll")}を読んだ。呪いが解け、${event.payload.count}個のアイテムを外せるようになった!`;
 		case "player-ate":
-			return event.payload.amount > 0
-				? `${nameOf("food")}を食べた。満腹度が${event.payload.amount}回復した`
-				: `${nameOf("food")}を食べたが、もう腹に入らなかった`;
+			return `${
+				event.payload.amount > 0
+					? `${nameOf("food")}を食べた。満腹度が${event.payload.amount}回復した`
+					: `${nameOf("food")}を食べたが、もう腹に入らなかった`
+			}${event.payload.awful ? "。ひどい味だった" : ""}`;
 		case "player-poisoned":
 			return event.payload.strengthLost > 0
 				? `毒薬を飲んでしまった。力が${event.payload.strengthLost}下がった`

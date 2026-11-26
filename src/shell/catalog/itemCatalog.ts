@@ -3,6 +3,7 @@ import {
 	ARMOR_FOUND_ENCHANTED_CHANCE_PERCENT,
 	ENCHANT_ARMOR_BONUS,
 	ENCHANT_WEAPON_BONUS,
+	FOOD_AWFUL_CHANCE_PERCENT,
 	FOOD_DROUGHT_FLOOR_LIMIT,
 	FOOD_RATION_RESTORE_MAX,
 	FOOD_RATION_RESTORE_MIN,
@@ -159,6 +160,6 @@ export const ITEM_CATALOG: Readonly<Record<ItemKind, ItemCatalogEntry>> = {
 		catalogName: "食料",
 		category: "食料",
 		spawn: itemDrawShare("food"),
-		effect: `満腹度を${FOOD_RATION_RESTORE_MIN}〜${FOOD_RATION_RESTORE_MAX}回復する(上限${PLAYER_MAX_FOOD}。開始時は${PLAYER_START_FOOD}で、1ターンに1減る)。最初から1個持っている。食料の出ない階が${FOOD_DROUGHT_FLOOR_LIMIT}階を超えて続くと、次のアイテムは必ず食料になる`,
+		effect: `満腹度を${FOOD_RATION_RESTORE_MIN}〜${FOOD_RATION_RESTORE_MAX}回復する(上限${PLAYER_MAX_FOOD}。開始時は${PLAYER_START_FOOD}で、1ターンに1減る)。${FOOD_AWFUL_CHANCE_PERCENT}%でひどい味がして、経験値が1増える。最初から1個持っている。食料の出ない階が${FOOD_DROUGHT_FLOOR_LIMIT}階を超えて続くと、次のアイテムは必ず食料になる`,
 	},
 };

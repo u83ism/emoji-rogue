@@ -345,7 +345,8 @@ const EVENT_PAYLOAD_VALIDATORS: Readonly<
 	"player-hungry": emptyPayload,
 	"player-weak": emptyPayload,
 	"player-fainted": (payload) => isPositiveInteger(payload.turns),
-	"player-ate": (payload) => isNonNegativeInteger(payload.amount),
+	"player-ate": (payload) =>
+		isNonNegativeInteger(payload.amount) && isBooleanValue(payload.awful),
 	"gold-collected": (payload) => isPositiveInteger(payload.amount),
 	/* any kind can deal 0: the zero-damage kinds always, a dart trap when its dart misses */
 	"trap-triggered": (payload) =>

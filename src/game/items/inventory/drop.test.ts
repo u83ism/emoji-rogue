@@ -24,7 +24,7 @@ describe("applyItemDrop", () => {
 	it("drops the only held slot of that item, leaving inventory empty", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			inventory: [{ itemId: 1, kind: "food" as const }],
+			inventory: [{ itemId: 1, kind: "food-ration" as const }],
 		};
 		const next = applyItemDrop(state, 1);
 		expect(next.inventory).toEqual([]);

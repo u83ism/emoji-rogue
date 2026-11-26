@@ -27,7 +27,7 @@ describe("buildStartingInventory", () => {
 	});
 
 	it("carries one food ration, an unwielded +1 bow, and the given number of arrows in one slot", () => {
-		expect(inventory[2]).toEqual({ itemId: 3, kind: "food" });
+		expect(inventory[2]).toEqual({ itemId: 3, kind: "food-ration" });
 		expect(inventory[3]).toMatchObject({
 			weaponKind: "short-bow",
 			equipped: false,

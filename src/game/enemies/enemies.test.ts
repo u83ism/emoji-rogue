@@ -543,7 +543,7 @@ describe("advanceEnemies", () => {
 			inventory: [
 				EXPOSING_ARMOR,
 				plainSword,
-				{ itemId: 3, kind: "food" } as const,
+				{ itemId: 3, kind: "food-ration" } as const,
 			],
 		};
 		const next = advanceEnemies(state);

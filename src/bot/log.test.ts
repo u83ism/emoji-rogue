@@ -22,7 +22,7 @@ describe("buildTurnLogEntry", () => {
 			...buildArenaGameState(5, 5, 1),
 			goldCollected: 12,
 			inventory: [
-				{ itemId: 1, kind: "food" as const },
+				{ itemId: 1, kind: "food-ration" as const },
 				{
 					itemId: 2,
 					kind: "weapon" as const,

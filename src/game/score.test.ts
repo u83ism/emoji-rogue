@@ -38,7 +38,7 @@ describe("calculateScore", () => {
 			hasAmulet: true,
 			identifiedItemKinds: ["teleport-scroll"],
 			inventory: [
-				{ itemId: 1, kind: "food" },
+				{ itemId: 1, kind: "food-ration" },
 				{ itemId: 2, kind: "teleport-scroll" },
 			],
 		});

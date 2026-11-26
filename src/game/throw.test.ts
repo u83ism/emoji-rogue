@@ -75,7 +75,7 @@ describe("applyThrowItem", () => {
 	it("is a no-op for an item that is not held, not a weapon, or the weapon being wielded", () => {
 		const state = buildState([
 			weaponOf(1, "mace", { equipped: true }),
-			{ itemId: 2, kind: "food" },
+			{ itemId: 2, kind: "food-ration" },
 		]);
 		expect(applyThrowItem(state, 99, "east")).toBe(state);
 		expect(applyThrowItem(state, 2, "east")).toBe(state);

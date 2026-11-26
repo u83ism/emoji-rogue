@@ -52,7 +52,7 @@ export const ITEM_NAMES: Readonly<Record<ItemKind, string>> = {
 	/* The category names — a held or picked-up one is shown by its own kind's name, see EQUIPMENT_NAMES. */
 	weapon: "武器",
 	armor: "防具",
-	food: "食料",
+	"food-ration": "食料",
 	poison: "毒薬",
 	"teleport-scroll": "テレポートの巻物",
 	"mapping-scroll": "地図の巻物",

@@ -136,7 +136,7 @@ export const buildFrameGrid = (state: GameState): Cell[][] => {
 		const sensedRow = grid[sensed.y];
 		if (sensedRow !== undefined) {
 			sensedRow[sensed.x] =
-				sensed.kind === "food" ? ITEM_GLYPHS.food : MAGIC_CELL;
+				sensed.kind === "food" ? ITEM_GLYPHS["food-ration"] : MAGIC_CELL;
 		}
 	}
 

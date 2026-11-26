@@ -7,7 +7,7 @@ describe("applyItemEffect", () => {
 		const hungry = { ...buildArenaGameState(9, 3, 1), playerFood: 100 };
 		const fed = applyItemEffect(
 			hungry,
-			{ itemId: 1, kind: "food" },
+			{ itemId: 1, kind: "food-ration" },
 			undefined,
 			undefined,
 		);

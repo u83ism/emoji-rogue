@@ -29,7 +29,7 @@ export const buildStartingInventory = (
 		defenseBonus: 1,
 		rustProtected: false,
 	},
-	{ itemId: 3, kind: "food" },
+	{ itemId: 3, kind: "food-ration" },
 	{
 		itemId: 4,
 		kind: "weapon",

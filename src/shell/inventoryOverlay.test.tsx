@@ -26,7 +26,7 @@ describe("InventoryOverlay", () => {
 			inventory: [
 				{ itemId: 1, kind: "heal-potion" },
 				{ itemId: 2, kind: "heal-potion" },
-				{ itemId: 3, kind: "food" },
+				{ itemId: 3, kind: "food-ration" },
 			] satisfies HeldItem[],
 		};
 		const { lastFrame } = render(
@@ -50,7 +50,10 @@ describe("InventoryOverlay", () => {
 			...buildArenaGameState(9, 3, 1),
 			inventory: Array.from(
 				{ length: INVENTORY_CAPACITY },
-				(_unused, index): HeldItem => ({ itemId: index + 1, kind: "food" }),
+				(_unused, index): HeldItem => ({
+					itemId: index + 1,
+					kind: "food-ration",
+				}),
 			),
 		};
 		const { lastFrame } = render(

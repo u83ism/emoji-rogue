@@ -94,7 +94,7 @@ export const drawRoomContents = (
 		}
 		/* original Rogue's give_pack(): one new_thing() for the monster to hold */
 		const kind = drawItemKind(rng, floorsWithoutFood);
-		if (kind === "food") {
+		if (kind === "food-ration") {
 			floorsWithoutFood = 0;
 		}
 		enemies.push({

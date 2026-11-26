@@ -82,7 +82,7 @@ export const drawFloorItems = (
 			continue;
 		}
 		const kind = drawItemKind(rng, floorsWithoutFood);
-		if (kind === "food") {
+		if (kind === "food-ration") {
 			floorsWithoutFood = 0;
 		}
 		items.push(

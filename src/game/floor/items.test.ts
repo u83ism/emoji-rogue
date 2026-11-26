@@ -66,10 +66,10 @@ describe("drawFloorItems", () => {
 			3,
 			true,
 		);
-		expect(drawn.items[0]?.kind).toBe("food");
-		expect(drawn.items.slice(1).every((item) => item.kind !== "food")).toBe(
-			true,
-		);
+		expect(drawn.items[0]?.kind).toBe("food-ration");
+		expect(
+			drawn.items.slice(1).every((item) => item.kind !== "food-ration"),
+		).toBe(true);
 		expect(drawn.floorsWithoutFood).toBe(0);
 	});
 

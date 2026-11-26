@@ -37,7 +37,7 @@ const isMagicItem = (item: HeldItem): boolean => {
 	if (item.kind === "armor") {
 		return item.defenseBonus !== 0 || item.rustProtected;
 	}
-	return item.kind !== "food";
+	return item.kind !== "food-ration";
 };
 
 /** Takes one item at `itemIndex` — one off a weapon bundle, the whole slot otherwise. */

@@ -47,7 +47,7 @@ export const ITEM_KIND_VALUES = [
 	"heal-potion",
 	"weapon",
 	"armor",
-	"food",
+	"food-ration",
 	"poison",
 	"teleport-scroll",
 	"mapping-scroll",

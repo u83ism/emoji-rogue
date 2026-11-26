@@ -77,7 +77,7 @@ describe("decideItemToUse", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			inventory: [consumable(1, "food")],
+			inventory: [consumable(1, "food-ration")],
 		};
 		expect(decideItemToUse(state)).toEqual({ itemId: 1 });
 	});
@@ -86,7 +86,7 @@ describe("decideItemToUse", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD + 1,
-			inventory: [consumable(1, "food")],
+			inventory: [consumable(1, "food-ration")],
 		};
 		expect(decideItemToUse(state)).toBeUndefined();
 	});
@@ -124,9 +124,9 @@ describe("decideItemToUse", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			inventory: [consumable(1, "food")],
+			inventory: [consumable(1, "food-ration")],
 		};
-		expect(decideItemToUse(state, new Set(["food"]))).toBeUndefined();
+		expect(decideItemToUse(state, new Set(["food-ration"]))).toBeUndefined();
 	});
 
 	it("frees a cursed equipped item with a held remove-curse scroll", () => {

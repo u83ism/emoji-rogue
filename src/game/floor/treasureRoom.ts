@@ -71,7 +71,7 @@ export const drawTreasureRoom = (
 	let floorsWithoutFood = previousFloorsWithoutFood;
 	const drawItem = (tile: Position): Item => {
 		const kind = drawItemKind(rng, floorsWithoutFood);
-		if (kind === "food") {
+		if (kind === "food-ration") {
 			floorsWithoutFood = 0;
 		}
 		const item = buildFloorItem(kind, nextItemId, tile, rng);

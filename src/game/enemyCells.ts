@@ -41,7 +41,7 @@ const DISGUISE_CELLS: Readonly<Record<XerocDisguise, Cell>> = {
 	scroll: ITEM_GLYPHS["teleport-scroll"],
 	ring: ITEM_GLYPHS["regeneration-ring"],
 	wand: ITEM_GLYPHS["slow-wand"],
-	food: ITEM_GLYPHS.food,
+	food: ITEM_GLYPHS["food-ration"],
 	weapon: ITEM_GLYPHS.weapon,
 	armor: ITEM_GLYPHS.armor,
 	stairs: STAIRS_CELL,

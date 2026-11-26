@@ -70,7 +70,7 @@ describe("applyUseFood", () => {
 	it("eating through advanceTurn consumes the ration and spends the turn", () => {
 		const state = {
 			...buildState(100),
-			inventory: [{ itemId: 1, kind: "food" as const }],
+			inventory: [{ itemId: 1, kind: "food-ration" as const }],
 		};
 		const next = advanceTurn(state, {
 			type: "use-item",

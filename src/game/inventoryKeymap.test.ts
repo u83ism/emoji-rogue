@@ -55,7 +55,7 @@ describe("toSelectedHeldItem", () => {
 		const nineItems: readonly HeldItem[] = [
 			potion(1),
 			{ itemId: 2, kind: "poison" },
-			{ itemId: 3, kind: "food" },
+			{ itemId: 3, kind: "food-ration" },
 			weapon(4),
 			{
 				itemId: 5,
@@ -82,7 +82,7 @@ describe("filterScrollTargets", () => {
 			potion(1),
 			weapon(2),
 			{ itemId: 3, kind: "blindness" },
-			{ itemId: 4, kind: "food" },
+			{ itemId: 4, kind: "food-ration" },
 		];
 		expect(filterScrollTargets("identify-potion-scroll", held)).toEqual([
 			potion(1),

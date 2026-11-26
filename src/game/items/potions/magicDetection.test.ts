@@ -39,7 +39,7 @@ describe("applyMagicDetectionPotion", () => {
 			...buildArenaGameState(9, 3, 1),
 			items: [
 				plainSword,
-				{ x: 3, y: 1, kind: "food" as const },
+				{ x: 3, y: 1, kind: "food-ration" as const },
 				{ x: 7, y: 1, kind: "mapping-scroll" as const },
 			],
 			enemies: [carrier],

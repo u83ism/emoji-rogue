@@ -167,7 +167,7 @@ export const applyUseAggravateMonstersScroll = (
  * — or only the nose tingles.
  */
 export const applyUseFoodDetectionScroll = (state: GameState): GameState => {
-	const food = state.items.filter((item) => item.kind === "food");
+	const food = state.items.filter((item) => item.kind === "food-ration");
 	return {
 		...state,
 		sensedItems: food.map((item) => ({ x: item.x, y: item.y, kind: "food" })),

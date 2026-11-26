@@ -275,7 +275,7 @@ describe("picking up a bundled weapon", () => {
 	it("joins the stack even with the inventory full — no slot is needed", () => {
 		const fillers: HeldItem[] = Array.from(
 			{ length: INVENTORY_CAPACITY - 1 },
-			(_, index) => ({ itemId: index + 2, kind: "food" as const }),
+			(_, index) => ({ itemId: index + 2, kind: "food-ration" as const }),
 		);
 		const state = {
 			...buildArenaGameState(5, 5, 1),

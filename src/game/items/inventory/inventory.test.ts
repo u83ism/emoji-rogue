@@ -12,7 +12,7 @@ const healPotion = (itemId: number) => ({
 	itemId,
 	kind: "heal-potion" as const,
 });
-const food = (itemId: number) => ({ itemId, kind: "food" as const });
+const food = (itemId: number) => ({ itemId, kind: "food-ration" as const });
 
 describe("addToInventory", () => {
 	it("appends a new slot when the kind is not yet held", () => {
@@ -132,7 +132,7 @@ describe("findStackTarget", () => {
 			findStackTarget([mace], weaponOf(2, { weaponKind: "mace", quantity: 1 })),
 		).toBeUndefined();
 		expect(
-			findStackTarget([mace], { itemId: 3, kind: "food" }),
+			findStackTarget([mace], { itemId: 3, kind: "food-ration" }),
 		).toBeUndefined();
 	});
 });

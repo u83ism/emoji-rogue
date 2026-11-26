@@ -37,7 +37,7 @@ const isLootTile = (state: GameState, x: number, y: number): boolean => {
 const isFoodTile = (state: GameState, x: number, y: number): boolean =>
 	hasInventorySpace(state) &&
 	state.items.some(
-		(item) => item.kind === "food" && item.x === x && item.y === y,
+		(item) => item.kind === "food-ration" && item.x === x && item.y === y,
 	);
 
 /**
@@ -72,7 +72,9 @@ export const chooseGoal = (
 	const isNotBlacklisted = (x: number, y: number): boolean =>
 		!blacklist.has(encodePointKey(x, y));
 
-	const holdsFood = state.inventory.some((entry) => entry.kind === "food");
+	const holdsFood = state.inventory.some(
+		(entry) => entry.kind === "food-ration",
+	);
 	if (!holdsFood && state.playerFood <= PLAYER_HUNGER_WARNING_THRESHOLD) {
 		const food = findNearestReachableTarget(
 			state.terrain,

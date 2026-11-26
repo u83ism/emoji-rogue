@@ -1126,7 +1126,7 @@ describe("validateGameState", () => {
 				defenseBonus: 1,
 				rustProtected: false,
 			},
-			{ itemId: 5, kind: "food" },
+			{ itemId: 5, kind: "food-ration" },
 		] as const;
 		const accepted = validateGameState({
 			...buildValidState(),

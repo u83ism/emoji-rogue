@@ -12,7 +12,7 @@ const isMagicFloorItem = (item: Item): boolean => {
 	if (item.kind === "armor") {
 		return item.identity.defenseBonus !== 0 || item.identity.rustProtected;
 	}
-	return item.kind !== "food";
+	return item.kind !== "food-ration";
 };
 
 /**

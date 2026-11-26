@@ -36,7 +36,7 @@ const armorAt = (x: number, y: number): Item => ({
 	},
 });
 
-const foodAt = (x: number, y: number): Item => ({ x, y, kind: "food" });
+const foodAt = (x: number, y: number): Item => ({ x, y, kind: "food-ration" });
 
 describe("chooseGoal", () => {
 	it("targets the nearest item when loot is present", () => {
@@ -108,7 +108,7 @@ describe("chooseGoal", () => {
 		const state = {
 			...baseState(),
 			playerFood: PLAYER_HUNGER_WARNING_THRESHOLD,
-			inventory: [{ itemId: 10, kind: "food" as const }],
+			inventory: [{ itemId: 10, kind: "food-ration" as const }],
 			items: [weaponAt(3, 3), foodAt(7, 7)],
 		};
 		expect(chooseGoal(state, new Set())).toEqual({
@@ -136,7 +136,7 @@ describe("chooseGoal", () => {
 			...baseState(),
 			inventory: Array.from({ length: INVENTORY_CAPACITY }, (_, index) => ({
 				itemId: index,
-				kind: "food" as const,
+				kind: "food-ration" as const,
 			})),
 			items: [weaponAt(6, 4)],
 		};

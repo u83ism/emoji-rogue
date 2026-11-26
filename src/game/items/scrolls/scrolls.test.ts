@@ -124,14 +124,14 @@ describe("items/scrolls", () => {
 				...buildArenaGameState(9, 3, 1),
 				inventory: [
 					{ itemId: 1, kind: "identify-potion-scroll" as const },
-					{ itemId: 3, kind: "food" as const },
+					{ itemId: 3, kind: "food-ration" as const },
 				],
 			};
 			const next = advanceTurn(state, {
 				type: "use-item",
 				payload,
 			});
-			expect(next.inventory).toEqual([{ itemId: 3, kind: "food" }]);
+			expect(next.inventory).toEqual([{ itemId: 3, kind: "food-ration" }]);
 			expect(next.identifiedItemKinds).toEqual(["identify-potion-scroll"]);
 			expect(next.events).toEqual([
 				{ type: "scroll-wasted", payload: { kind: "identify-potion-scroll" } },
@@ -315,7 +315,7 @@ describe("the food detection scroll", () => {
 	it("shows every ration for the turn, then the flash goes with the next command", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
-			items: [{ x: 7, y: 1, kind: "food" as const }],
+			items: [{ x: 7, y: 1, kind: "food-ration" as const }],
 			inventory: [{ itemId: 1, kind: "food-detection-scroll" as const }],
 		};
 		const read = advanceTurn(state, {

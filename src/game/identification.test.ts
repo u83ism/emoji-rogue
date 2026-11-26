@@ -75,6 +75,6 @@ describe("revealsItemKind", () => {
 		expect(revealsItemKind("slow-wand", state, state)).toBe(false);
 		expect(revealsItemKind("teleport-wand", state, state)).toBe(false);
 		expect(revealsItemKind("stealth-ring", state, state)).toBe(false);
-		expect(revealsItemKind("food", state, state)).toBe(true);
+		expect(revealsItemKind("food-ration", state, state)).toBe(true);
 	});
 });

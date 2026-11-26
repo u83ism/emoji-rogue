@@ -60,6 +60,10 @@ export const decideWeaponToEquip = (
 	}
 	const weapons = state.inventory.filter(isWeaponItem);
 	const equipped = weapons.find((weapon) => weapon.equipped);
+	/* a cursed weapon in hand cannot be swapped away (equipment.ts) */
+	if (equipped?.cursed === true) {
+		return undefined;
+	}
 	const bestUnequipped = weapons
 		.filter((weapon) => !weapon.equipped)
 		.sort((left, right) => scoreWeapon(right) - scoreWeapon(left))
@@ -86,6 +90,9 @@ export const decideArmorToEquip = (
 	}
 	const armors = state.inventory.filter(isArmorItem);
 	const equipped = armors.find((armor) => armor.equipped);
+	if (equipped?.cursed === true) {
+		return undefined;
+	}
 	const bestUnequipped = armors
 		.filter((armor) => !armor.equipped)
 		.sort((left, right) => scoreArmor(right) - scoreArmor(left))

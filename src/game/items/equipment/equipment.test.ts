@@ -182,6 +182,40 @@ describe("items/equipment", () => {
 		).toBe(true);
 	});
 
+	it("a cursed weapon in hand cannot be swapped away by wielding another — original Rogue's wield() runs dropcheck()", () => {
+		const inventory: readonly HeldItem[] = [
+			{
+				itemId: 1,
+				kind: "weapon",
+				equipped: true,
+				cursed: true,
+				weaponKind: "long-sword",
+				hitBonus: -2,
+				damageBonus: 0,
+				quantity: 1,
+			},
+			{
+				itemId: 2,
+				kind: "weapon",
+				equipped: false,
+				cursed: false,
+				weaponKind: "mace",
+				hitBonus: 0,
+				damageBonus: 0,
+				quantity: 1,
+			},
+		];
+		const state = { ...buildArenaGameState(9, 3, 1), inventory };
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 2 },
+		});
+		expect(next.inventory).toEqual(inventory);
+		expect(next.events).toEqual([
+			{ type: "equip-blocked-cursed", payload: { kind: "weapon" } },
+		]);
+	});
+
 	it("equipping held armor raises the player's effective defense", () => {
 		const state = {
 			...buildArenaGameState(9, 3, 1),
@@ -313,6 +347,38 @@ describe("items/equipment", () => {
 				(event) => event.type === "equip-blocked-cursed",
 			),
 		).toBe(true);
+	});
+
+	it("cursed armor being worn cannot be swapped away by putting on another", () => {
+		const inventory: readonly HeldItem[] = [
+			{
+				itemId: 1,
+				kind: "armor",
+				equipped: true,
+				cursed: true,
+				armorKind: "ring-mail",
+				defenseBonus: -2,
+				rustProtected: false,
+			},
+			{
+				itemId: 2,
+				kind: "armor",
+				equipped: false,
+				cursed: false,
+				armorKind: "plate-mail",
+				defenseBonus: 0,
+				rustProtected: false,
+			},
+		];
+		const state = { ...buildArenaGameState(9, 3, 1), inventory };
+		const next = advanceTurn(state, {
+			type: "use-item",
+			payload: { itemId: 2 },
+		});
+		expect(next.inventory).toEqual(inventory);
+		expect(next.events).toEqual([
+			{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
+		]);
 	});
 
 	it("a worn ring of maintain armor blocks rust like protected armor does", () => {

@@ -59,37 +59,37 @@ export const resolveArmorRust = (inventory: readonly HeldItem[]): ArmorRust => {
 	};
 };
 
-/**
- * Unequips whichever other held item among `otherKinds` (a second weapon; for
- * rings, the other ring kind — regeneration and sustenance share one slot)
- * is currently equipped, if any.
- */
-export const unequipOthers = (
+/** The held item of `kind` other than `keepItemId` that is currently equipped, if any. */
+const findOtherEquipped = (
 	inventory: readonly HeldItem[],
 	keepItemId: number,
-	otherKinds: readonly EquippableItem["kind"][],
-): readonly HeldItem[] => {
-	const previouslyEquipped = inventory.find(
+	kind: "weapon" | "armor",
+): EquippableItem | undefined =>
+	inventory.find(
 		(item): item is EquippableItem =>
 			item.itemId !== keepItemId &&
 			isEquippableItem(item) &&
-			otherKinds.includes(item.kind) &&
+			item.kind === kind &&
 			item.equipped,
 	);
-	if (previouslyEquipped === undefined) {
-		return inventory;
-	}
-	return replaceHeldItem(inventory, previouslyEquipped.itemId, {
-		...previouslyEquipped,
-		equipped: false,
-	});
-};
+
+/** A refused take-off (or swap away from) a cursed weapon/armor: only the equip-blocked-cursed event, nothing else changes. */
+const applyCurseBlocked = (
+	state: GameState,
+	kind: "weapon" | "armor",
+): GameState => ({
+	...state,
+	events: buildEventLog(state.events, [
+		{ type: "equip-blocked-cursed", payload: { kind } },
+	]),
+});
 
 /**
- * Toggles a held weapon's equip state. Equipping unequips any other held
+ * Toggles a held weapon's equip state. Equipping unequips the wielded
  * weapon first and reveals the curse rolled at pickup (see items/inventory/pickups.ts).
- * Unequipping a cursed weapon is refused (logs equip-blocked-cursed, no
- * other state change).
+ * Unequipping a cursed weapon — or wielding another one while it is in hand
+ * (original Rogue's wield() runs dropcheck() on cur_weapon) — is refused
+ * (logs equip-blocked-cursed, no other state change).
  */
 export const applyToggleWeaponEquip = (
 	state: GameState,
@@ -97,12 +97,7 @@ export const applyToggleWeaponEquip = (
 ): GameState => {
 	if (item.equipped) {
 		if (item.cursed) {
-			return {
-				...state,
-				events: buildEventLog(state.events, [
-					{ type: "equip-blocked-cursed", payload: { kind: "weapon" } },
-				]),
-			};
+			return applyCurseBlocked(state, "weapon");
 		}
 		return {
 			...state,
@@ -115,11 +110,21 @@ export const applyToggleWeaponEquip = (
 			]),
 		};
 	}
-	const inventory = replaceHeldItem(
-		unequipOthers(state.inventory, item.itemId, ["weapon"]),
-		item.itemId,
-		{ ...item, equipped: true },
-	);
+	const wielded = findOtherEquipped(state.inventory, item.itemId, "weapon");
+	if (wielded?.cursed === true) {
+		return applyCurseBlocked(state, "weapon");
+	}
+	const unwielded =
+		wielded === undefined
+			? state.inventory
+			: replaceHeldItem(state.inventory, wielded.itemId, {
+					...wielded,
+					equipped: false,
+				});
+	const inventory = replaceHeldItem(unwielded, item.itemId, {
+		...item,
+		equipped: true,
+	});
 	const events: GameEvent[] = [
 		{
 			type: "weapon-equipped",
@@ -146,12 +151,7 @@ export const applyToggleArmorEquip = (
 ): GameState => {
 	if (item.equipped) {
 		if (item.cursed) {
-			return {
-				...state,
-				events: buildEventLog(state.events, [
-					{ type: "equip-blocked-cursed", payload: { kind: "armor" } },
-				]),
-			};
+			return applyCurseBlocked(state, "armor");
 		}
 		return {
 			...state,
@@ -164,11 +164,21 @@ export const applyToggleArmorEquip = (
 			]),
 		};
 	}
-	const inventory = replaceHeldItem(
-		unequipOthers(state.inventory, item.itemId, ["armor"]),
-		item.itemId,
-		{ ...item, equipped: true },
-	);
+	const worn = findOtherEquipped(state.inventory, item.itemId, "armor");
+	if (worn?.cursed === true) {
+		return applyCurseBlocked(state, "armor");
+	}
+	const unworn =
+		worn === undefined
+			? state.inventory
+			: replaceHeldItem(state.inventory, worn.itemId, {
+					...worn,
+					equipped: false,
+				});
+	const inventory = replaceHeldItem(unworn, item.itemId, {
+		...item,
+		equipped: true,
+	});
 	const events: GameEvent[] = [
 		{
 			type: "armor-equipped",
